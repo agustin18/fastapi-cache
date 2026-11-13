@@ -23,7 +23,17 @@ classifiers = [
 packages = [
     { include = "fastapi_cache" }
 ]
-include = ["LICENSE", "NOTICE", "README.md"]
+include = [
+    "LICENSE",
+    "NOTICE",
+    "README.md",
+    "MIGRATION.md",
+    "SUPPORT.md",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "FORK_ORIGIN.md",
+    "COMPATIBILITY.md",
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -97,8 +107,8 @@ package = "fastapi_cache"
 start_string = "<!-- towncrier release notes start -->\n"
 underlines = ["", "", ""]
 template = "changelog.d/changelog_template.jinja"
-title_format = "## [{version}](https://github.com/long2ice/fastapi-cache/tree/{version}) - {project_date}"
-issue_format = "[#{issue}](https://github.com/long2ice/fastapi-cache/issues/{issue})"
+title_format = "## [{version}](https://github.com/agustin18/fastapi-cache/tree/{version}) - {project_date}"
+issue_format = "[#{issue}](https://github.com/agustin18/fastapi-cache/issues/{issue})"
 
 [tool.pyright]
 strict = ["fastapi_cache", "tests"]
@@ -106,6 +116,15 @@ pythonVersion = "3.8"
 
 [tool.pytest.ini_options]
 addopts = "-p no:warnings"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["fastapi_cache"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
 
 [tool.ruff]
 ignore = ["E501"]

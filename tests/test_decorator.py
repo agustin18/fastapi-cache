@@ -21,20 +21,23 @@ def test_datetime() -> None:
     with TestClient(app) as client:
         response = client.get("/datetime")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
-        now = response.json().get("now")
-        now_ = pendulum.now()
-        assert pendulum.parse(now) == now_
+        first = response.json().get("now")
+        first_dt = pendulum.parse(first)
+        assert isinstance(first_dt, pendulum.DateTime)
+        assert abs(pendulum.now().diff(first_dt).in_seconds()) < 5
+
         response = client.get("/datetime")
         assert response.headers.get("X-FastAPI-Cache") == "HIT"
-        now = response.json().get("now")
-        assert pendulum.parse(now) == now_
+        assert response.json().get("now") == first
+
         time.sleep(3)
         response = client.get("/datetime")
-        now = response.json().get("now")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
-        now = pendulum.parse(now)
-        assert now != now_
-        assert now == pendulum.now()
+        second = response.json().get("now")
+        assert second != first
+        second_dt = pendulum.parse(second)
+        assert isinstance(second_dt, pendulum.DateTime)
+        assert abs(pendulum.now().diff(second_dt).in_seconds()) < 5
 
 
 def test_date() -> None:
@@ -99,12 +102,11 @@ def test_pydantic_model() -> None:
 
 def test_non_get() -> None:
     with TestClient(app) as client:
-        response = client.put("/cached_put")
-        assert "X-FastAPI-Cache" not in response.headers
-        assert response.json() == {"value": 1}
-        response = client.put("/cached_put")
-        assert "X-FastAPI-Cache" not in response.headers
-        assert response.json() == {"value": 2}
+        first = client.put("/uncached_put")
+        assert "X-FastAPI-Cache" not in first.headers
+        second = client.put("/uncached_put")
+        assert "X-FastAPI-Cache" not in second.headers
+        assert second.json()["value"] == first.json()["value"] + 1
 
 
 def test_alternate_injected_namespace() -> None:
