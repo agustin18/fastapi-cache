@@ -38,6 +38,7 @@ include = [
 [tool.poetry.dependencies]
 python = "^3.8"
 fastapi = "*"
+pydantic = ">=2.0"
 uvicorn = "*"
 jinja2 = ">=3.0"
 redis = { version = "^4.2.0rc1", optional = true }
