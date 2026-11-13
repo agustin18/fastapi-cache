@@ -1,8 +1,12 @@
-# fastapi-cache
+# fastapi-cache-stable
 
-[![pypi](https://img.shields.io/pypi/v/fastapi-cache2.svg?style=flat)](https://pypi.org/p/fastapi-cache2)
-[![license](https://img.shields.io/github/license/long2ice/fastapi-cache)](https://github.com/long2ice/fastapi-cache/blob/main/LICENSE)
-[![CI/CD](https://github.com/long2ice/fastapi-cache/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/long2ice/fastapi-cache/actions/workflows/ci-cd.yml)
+> **Community-maintained stable fork of fastapi-cache2.**
+> This is an alpha (`0.3.0a0`) based on `v0.2.2`. The `fastapi_cache` import and public API are unchanged.
+> See [MIGRATION.md](MIGRATION.md) and [SUPPORT.md](SUPPORT.md). Not affiliated with the original author.
+
+[![pypi](https://img.shields.io/pypi/v/fastapi-cache-stable.svg?style=flat)](https://pypi.org/p/fastapi-cache-stable)
+[![license](https://img.shields.io/github/license/agustin18/fastapi-cache)](https://github.com/agustin18/fastapi-cache/blob/stable/LICENSE)
+[![CI/CD](https://github.com/agustin18/fastapi-cache/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/agustin18/fastapi-cache/actions/workflows/ci-cd.yml)
 
 ## Introduction
 
@@ -25,25 +29,25 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 ## Install
 
 ```shell
-> pip install fastapi-cache2
+> pip install fastapi-cache-stable
 ```
 
 or
 
 ```shell
-> pip install "fastapi-cache2[redis]"
+> pip install "fastapi-cache-stable[redis]"
 ```
 
 or
 
 ```shell
-> pip install "fastapi-cache2[memcache]"
+> pip install "fastapi-cache-stable[memcache]"
 ```
 
 or
 
 ```shell
-> pip install "fastapi-cache2[dynamodb]"
+> pip install "fastapi-cache-stable[dynamodb]"
 ```
 
 ## Usage

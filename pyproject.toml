@@ -1,18 +1,29 @@
 [tool.poetry]
-name = "fastapi-cache2"
-version = "0.2.2"
-description = "Cache for FastAPI"
-authors = ["long2ice <long2ice@gmail.com>"]
+name = "fastapi-cache-stable"
+version = "0.3.0a0"
+description = "Community-maintained, drop-in stable fork of fastapi-cache2"
+authors = ["Agustin Saiz <agustinsaiz02@gmail.com>"]
 license = "Apache-2.0"
 readme = "README.md"
-homepage = "https://github.com/long2ice/fastapi-cache"
-repository = "https://github.com/long2ice/fastapi-cache.git"
-documentation = "https://github.com/long2ice/fastapi-cache"
+homepage = "https://github.com/agustin18/fastapi-cache"
+repository = "https://github.com/agustin18/fastapi-cache.git"
+documentation = "https://github.com/agustin18/fastapi-cache#readme"
 keywords = ["fastapi", "cache", "caching"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: FastAPI",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Typing :: Typed",
+]
 packages = [
     { include = "fastapi_cache" }
 ]
-include = ["LICENSE", "README.md"]
+include = ["LICENSE", "NOTICE", "README.md"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
