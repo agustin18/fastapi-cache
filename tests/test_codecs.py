@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, field_validator
 from pydantic.v1 import BaseModel as V1BaseModel
 from starlette.responses import JSONResponse, Response
 
@@ -82,6 +82,21 @@ def test_json_coder_validation_error() -> None:
 class V1Item(V1BaseModel):
     name: str
     price: float
+
+
+class TypeErrorItem(BaseModel):
+    quantity: int
+
+    @field_validator("quantity")
+    @classmethod
+    def check_quantity(cls, value: int) -> int:
+        raise TypeError("validator error")
+
+
+def test_typed_json_coder_propagates_v2_validator_type_error() -> None:
+    encoded = b'{"quantity": 1}'
+    with pytest.raises(TypeError, match="validator error"):
+        TypedJsonCoder.decode_as_type(encoded, type_=TypeErrorItem)
 
 
 def test_json_coder_unsupported_annotations_fall_back() -> None:

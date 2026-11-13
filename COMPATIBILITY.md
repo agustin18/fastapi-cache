@@ -144,7 +144,7 @@ documented in [`MIGRATION.md`](MIGRATION.md) and covered by a regression test wh
 | Version | Change | Why | Status |
 |---|---|---|---|
 | 0.3.0 | Error `Response` objects (status >= 400) are not cached | A cached 404 could be returned as 200 | Implemented on `stable` |
-| 0.3.0 | Opt-in `TypedJsonCoder` decodes cached JSON into the annotated return type on Pydantic v2 | Default `JsonCoder` and Pydantic v1 keep the legacy decoded behavior | Implemented on `stable` |
+| 0.3.0 | Opt-in `TypedJsonCoder` decodes cached JSON into the annotated return type on Pydantic v2 | Default `JsonCoder` and Pydantic v1 keep the legacy decoded behavior; `TypedJsonCoder` propagates validation errors | Implemented on `stable` |
 | 0.3.0 | Authenticated requests bypass the cache by default | Prevent cross-user response reuse | Targeted |
 | 0.3.0 | ETag is stable across processes and correctly quoted | `hash()` is randomized per process and the old header was invalid | Targeted |
 | 0.3.0 | `clear(key=...)` deletes only that key | It used to delete the whole prefix namespace | Targeted |

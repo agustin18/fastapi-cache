@@ -10,6 +10,7 @@ from typing import (
     Optional,
     TypeVar,
     Union,
+    get_args,
     overload,
 )
 
@@ -22,6 +23,16 @@ from starlette.templating import (
 )
 
 TypeAdapter = getattr(pydantic, "TypeAdapter", None)
+
+_TYPE_ADAPTER_ERRORS = tuple(
+    error
+    for error in (
+        getattr(pydantic, "PydanticSchemaGenerationError", None),
+        getattr(pydantic, "PydanticUserError", None),
+        TypeError,
+    )
+    if error is not None
+)
 
 _T = TypeVar("_T", bound=type)
 
@@ -38,6 +49,12 @@ def _is_pydantic_v1_model(type_: Any) -> bool:
     v1 = getattr(pydantic, "v1", None)
     base: Any = getattr(v1, "BaseModel", None)
     return bool(base) and isinstance(type_, type) and issubclass(type_, base)
+
+
+def _contains_pydantic_v1_model(type_: Any) -> bool:
+    if _is_pydantic_v1_model(type_):
+        return True
+    return any(_contains_pydantic_v1_model(arg) for arg in get_args(type_))
 
 
 class JsonEncoder(json.JSONEncoder):
@@ -114,7 +131,7 @@ class TypedJsonCoder(JsonCoder):
     @classmethod
     def decode_as_type(cls, value: bytes, *, type_: Any) -> Any:
         result = cls.decode(value)
-        if type_ is None or _is_pydantic_v1_model(type_):
+        if type_ is None or _contains_pydantic_v1_model(type_):
             return result
 
         type_adapter = TypeAdapter
@@ -127,13 +144,10 @@ class TypedJsonCoder(JsonCoder):
         except KeyError:
             try:
                 adapter = type_adapter(type_)
-            except Exception:
+            except _TYPE_ADAPTER_ERRORS:
                 return result
             cls._type_adapter_cache[type_] = adapter
-        try:
-            return adapter.validate_python(result)
-        except TypeError:
-            return result
+        return adapter.validate_python(result)
 
 
 class PickleCoder(Coder):

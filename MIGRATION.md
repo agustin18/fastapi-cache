@@ -38,6 +38,9 @@ FastAPICache.init(backend, coder=TypedJsonCoder)
 
 You can also enable it per endpoint with `@cache(coder=TypedJsonCoder)`.
 
+`TypedJsonCoder` validates cached data and propagates validation errors. It only falls back
+for Pydantic v1 models and annotations that cannot be represented by a Pydantic v2 schema.
+
 ## Who should not migrate yet
 
 - You need full Memcached or DynamoDB parity. They are experimental in `0.3.x`.
@@ -98,7 +101,7 @@ you.
 | Change | Before (0.2.2) | After (0.3.0) |
 |---|---|---|
 | Error responses | A cached 404 could be returned as 200 | Responses with status >= 400 are not cached |
-| Typed JSON decode | Cache hits returned plain dicts/lists | Opt-in `TypedJsonCoder` on Pydantic v2; default `JsonCoder`, Pydantic v1 and unsupported annotations keep the legacy decoded behavior |
+| Typed JSON decode | Cache hits returned plain dicts/lists | Opt-in `TypedJsonCoder` on Pydantic v2; default `JsonCoder`, Pydantic v1 and unsupported annotations keep the legacy decoded behavior; validation errors propagate |
 | Authenticated requests | Two users could share a cache key | Requests with `Authorization`/`Cookie`/session bypass the cache by default; opt-in with a safe `key_builder` |
 | ETag | `hash()` changes per process; header unquoted | Stable digest, quoted weak ETag, correct `If-None-Match` |
 | `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key |
