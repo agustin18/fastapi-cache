@@ -12,6 +12,7 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 - Community-maintained stable fork of fastapi-cache2, based on v0.2.2.
 - Distribution renamed to `fastapi-cache-stable`; the `fastapi_cache` import and public API are unchanged.
+- Declare `jinja2` as a direct dependency; the `starlette.templating` import in `coder.py` requires it.
 - This is an alpha to reserve the PyPI distribution name. The 0.3.0 release will include the P0 correctness fixes and compatibility tests.
 
 ## 0.2
