@@ -185,6 +185,8 @@ def cache(
 
             if cached is None  or (request is not None and request.headers.get("Cache-Control") == "no-cache") :  # cache miss
                 result = await ensure_async_func(*args, **kwargs)
+                if isinstance(result, Response) and result.status_code >= 400:
+                    return result
                 to_cache = coder.encode(result)
 
                 try:
