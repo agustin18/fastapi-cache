@@ -1,12 +1,20 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
+import pydantic
 import pytest
-from pydantic import BaseModel, ValidationError, field_validator
-from pydantic.v1 import BaseModel as V1BaseModel
+from pydantic import BaseModel, ValidationError
 from starlette.responses import JSONResponse, Response
 
 from fastapi_cache.coder import Coder, JsonCoder, PickleCoder, TypedJsonCoder
+
+PYDANTIC_V2 = hasattr(pydantic, "TypeAdapter")
+if PYDANTIC_V2:
+    from pydantic import field_validator
+    from pydantic.v1 import BaseModel as V1BaseModel
+else:
+    field_validator = None
+    V1BaseModel = BaseModel
 
 
 @dataclass
@@ -43,19 +51,33 @@ def test_pickle_coder(value: Any) -> None:
     assert decoded_value == value
 
 
+V2_TYPED_DECODE = pytest.mark.skipif(
+    not PYDANTIC_V2, reason="Pydantic v2 typed decode"
+)
+
+
 @pytest.mark.parametrize(
     ("value", "return_type"),
     [
         (1, None),
         ("some_string", None),
-        ((1, 2), Tuple[int, int]),
+        pytest.param((1, 2), Tuple[int, int], marks=V2_TYPED_DECODE),
         ([1, 2, 3], None),
         ({"some_key": 1, "other_key": 2}, None),
-        (DCItem(name="foo", price=42.0, description="some dataclass item", tax=0.2), DCItem),
-        (PDItem(name="foo", price=42.0, description="some pydantic item", tax=0.2), PDItem),
-        (
+        pytest.param(
+            DCItem(name="foo", price=42.0, description="some dataclass item", tax=0.2),
+            DCItem,
+            marks=V2_TYPED_DECODE,
+        ),
+        pytest.param(
+            PDItem(name="foo", price=42.0, description="some pydantic item", tax=0.2),
+            PDItem,
+            marks=V2_TYPED_DECODE,
+        ),
+        pytest.param(
             [PDItem(name="foo", price=42.0, description="some pydantic item", tax=0.2)],
             List[PDItem],
+            marks=V2_TYPED_DECODE,
         ),
     ],
 )
@@ -73,6 +95,7 @@ def test_json_coder_default_is_legacy() -> None:
     assert isinstance(decoded_value, dict)
 
 
+@pytest.mark.skipif(not PYDANTIC_V2, reason="Pydantic v2 typed decode")
 def test_json_coder_validation_error() -> None:
     invalid = b'{"name": "incomplete"}'
     with pytest.raises(ValidationError):
@@ -84,15 +107,18 @@ class V1Item(V1BaseModel):
     price: float
 
 
-class TypeErrorItem(BaseModel):
-    quantity: int
+if PYDANTIC_V2:
 
-    @field_validator("quantity")
-    @classmethod
-    def check_quantity(cls, value: int) -> int:
-        raise TypeError("validator error")
+    class TypeErrorItem(BaseModel):
+        quantity: int
+
+        @field_validator("quantity")
+        @classmethod
+        def check_quantity(cls, value: int) -> int:
+            raise TypeError("validator error")
 
 
+@pytest.mark.skipif(not PYDANTIC_V2, reason="Pydantic v2 field_validator")
 def test_typed_json_coder_propagates_v2_validator_type_error() -> None:
     encoded = b'{"quantity": 1}'
     with pytest.raises(TypeError, match="validator error"):

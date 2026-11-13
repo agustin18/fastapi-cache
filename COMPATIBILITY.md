@@ -107,10 +107,25 @@ classmethod decode(value: bytes) -> Any
 classmethod decode_as_type(value: bytes, *, type_) -> Any
 ```
 
+## Support levels
+
+- **Migration compatibility:** tested legacy combinations are kept so existing applications can
+  move to this fork without code changes. This is not a recommendation for new production
+  deployments.
+- **Security-supported environment:** current Python, FastAPI and Pydantic releases that still
+  receive upstream security fixes. This project does not backport security fixes for
+  end-of-life upstreams.
+
+Python 3.8, 3.9 and 3.10 are end-of-life, and Pydantic v1 is end-of-life with 1.10.27 as its
+final release. They remain in the migration matrix for compatibility, not as supported
+security targets.
+
 ## Supported matrix for `0.3.x`
 
-> The current `0.3.0a0` alpha still carries the inherited `>=3.8` metadata. The `0.3.0`
-> release will align `pyproject.toml`, classifiers, tox and CI with the matrix below.
+> The `0.3.0` line keeps `python = "^3.8"` for legacy migration. Python 3.8/3.9/3.10 and
+> Pydantic v1 are end-of-life upstream; they are tested for migration, not recommended for
+> new production deployments. The minimum supported Python will be revisited only after the
+> compatibility matrix and an explicit floor decision.
 
 Status definitions:
 
@@ -121,12 +136,12 @@ Status definitions:
 
 | Component | Status | Notes |
 |---|---|---|
-| Python 3.10–3.13 | Verified | CI matrix runs the suite on each version |
-| Python 3.8/3.9 | Legacy compatibility | Intended for migration; compatibility matrix validation pending |
+| Python 3.10–3.13 | Verified | CI matrix runs the suite; Python 3.10 is EOL and kept for migration |
+| Python 3.8/3.9 | Verified for migration | Legacy CI job with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2; EOL, not recommended for new production |
 | Python 3.14 | Targeted | Evaluated after the first stable release |
-| FastAPI | Targeted | No pinned range yet (`fastapi = "*"`); pin before beta |
-| Pydantic 2.x | Typed restoration available | Opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
-| Pydantic v1 | Legacy behavior preserved | Migration works without code changes; typed restoration is not applied |
+| FastAPI | Verified with 0.111.1 and current 0.x | Older 0.100.x validation is a beta gate; no upper pin yet (`fastapi = "*"`) |
+| Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
+| Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
 | `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
 | Redis standalone | Targeted | redis-py 5/6; no real Redis integration test yet |
 | Redis Cluster | Unsupported | `clear` limitations documented; no complete namespace clearing |
@@ -170,9 +185,12 @@ documented in [`MIGRATION.md`](MIGRATION.md) and covered by a regression test wh
 - API signature tests for the public names above.
 - Characterization tests for the normal GET success path.
 - Regression tests for every behavior change.
-- CI currently tests Python 3.10–3.13 with resolver-selected FastAPI and Pydantic versions.
-  Version-specific compatibility matrices and backend integration tests are planned.
+- CI tests Python 3.10–3.13 with resolver-selected FastAPI and Pydantic versions.
+- A `legacy-compat` job tests Python 3.8/3.9 with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2,
+  plus Python 3.10/3.11 with Pydantic 1.10.27.
+- A `legacy-smoke` job builds the wheel and installs it on Python 3.8 with Pydantic 1.10.27.
 - Wheel and sdist smoke tests in a clean virtual environment.
+- Backend integration tests are planned.
 - Migration tests that install the package and run a small app.
 
 ## If we break something
