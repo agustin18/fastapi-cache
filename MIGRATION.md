@@ -67,9 +67,9 @@ python -c "from fastapi_cache import FastAPICache; print('ok')"
 | Pydantic 2.x | Targeted | CI installs the latest resolution; minimum version not verified |
 | Redis standalone | Targeted | redis-py 5/6; no real Redis integration test yet |
 | Redis Cluster | Unsupported | `clear` limitations documented; no complete namespace clearing |
-| InMemory | Verified | Unit tests; instance-scoped; no size cap yet |
+| InMemory | Verified for basic operations | Unit tests; instance isolation is targeted for 0.3.0; the current implementation shares state between instances; no size cap yet |
 | Memcached | Experimental | No full `clear`/TTL parity |
-| DynamoDB | Experimental | No `clear`; `close` fixed |
+| DynamoDB | Experimental | `clear` is not implemented; the client cleanup issue remains open and is targeted for a future fix |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
 | Pydantic v1 | Unsupported | Not supported in 0.3.x |
 | Python 3.8/3.9 | Unsupported | Metadata still allows them temporarily; no 0.3.x guarantee |
@@ -134,6 +134,7 @@ regenerated. Flush the namespace if you were affected by an error-response or cl
 **Is Redis Cluster supported?** Only with the documented limitations; complete namespace
 clearing is not promised.
 **Are Memcached and DynamoDB supported?** Experimental until they have parity tests.
+DynamoDB `clear` is not implemented and the client cleanup issue remains open.
 **Is this an official successor?** No. It is an independent fork, not endorsed by the
 original author.
 **How do I report a bug?** Use the fork's issues (when enabled) or a private security
@@ -144,9 +145,11 @@ advisory for vulnerabilities.
 - No tags, stale-while-revalidate, stampede protection or POST caching.
 - No full backend parity.
 - No perfect OpenAPI/`response_model` behavior.
-- No memory cap in `InMemoryBackend`.
+- No memory cap in `InMemoryBackend`; instances currently share state, and instance
+  isolation is targeted for 0.3.0.
 - No guarantee of compatibility with every FastAPI/Pydantic version.
-- No multi-year support promise until a co-maintainer is in place.
+- The 24-month `1.x` support window in `SUPPORT.md` is conditional on the `1.x` release and
+  a co-maintainer being in place; no multi-year promise is active today.
 
 ## Verification checklist
 

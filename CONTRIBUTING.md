@@ -61,6 +61,9 @@ Tool versions:
   first beta reconciliation.
 - `stable` requires a pull request and the CI checks; force pushes and branch deletion are
   blocked.
+- The `pypi` environment only allows `stable` and `v*` tags and has a 5-minute wait timer.
+  The timer is not a human approval step; required reviewers are a future step when a
+  co-maintainer joins.
 
 ## Pull request title
 

@@ -112,17 +112,18 @@ Status definitions:
 | Pydantic 2.x | Targeted | CI installs the latest resolution; minimum version not verified |
 | Redis standalone | Targeted | redis-py 5/6; no real Redis integration test yet |
 | Redis Cluster | Unsupported | `clear` limitations documented; no complete namespace clearing |
-| InMemory | Verified | Unit tests; instance-scoped; no size cap yet |
+| InMemory | Verified for basic operations | Unit tests; instance isolation is targeted for 0.3.0; the current implementation shares state between instances; no size cap yet |
 | Memcached | Experimental | No full `clear`/TTL parity |
-| DynamoDB | Experimental | No `clear`; `close` fixed |
+| DynamoDB | Experimental | `clear` is not implemented; the client cleanup issue remains open and is targeted for a future fix |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
 | Pydantic v1 | Unsupported | Not supported in 0.3.x |
 | Python 3.8/3.9 | Unsupported | Metadata still allows them temporarily; no 0.3.x guarantee |
 
 ## Intentional behavior changes
 
-These are bug fixes that change edge-case behavior. Each one is documented in
-[`MIGRATION.md`](MIGRATION.md) and covered by a regression test.
+These are bug fixes targeted for `0.3.0`. The current alpha does not include all of them.
+Each one will be documented in [`MIGRATION.md`](MIGRATION.md) and covered by a regression
+test when implemented.
 
 | Version | Change | Why |
 |---|---|---|
@@ -152,7 +153,8 @@ These are bug fixes that change edge-case behavior. Each one is documented in
 - API signature tests for the public names above.
 - Characterization tests for the normal GET success path.
 - Regression tests for every behavior change.
-- Matrix CI for the supported Python/FastAPI/Pydantic versions.
+- CI currently tests Python 3.10–3.13 with resolver-selected FastAPI and Pydantic versions.
+  Version-specific compatibility matrices and backend integration tests are planned.
 - Wheel and sdist smoke tests in a clean virtual environment.
 - Migration tests that install the package and run a small app.
 
