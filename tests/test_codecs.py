@@ -6,7 +6,7 @@ from pydantic import BaseModel, ValidationError
 from pydantic.v1 import BaseModel as V1BaseModel
 from starlette.responses import JSONResponse, Response
 
-from fastapi_cache.coder import Coder, JsonCoder, PickleCoder
+from fastapi_cache.coder import Coder, JsonCoder, PickleCoder, TypedJsonCoder
 
 
 @dataclass
@@ -60,16 +60,23 @@ def test_pickle_coder(value: Any) -> None:
     ],
 )
 def test_json_coder(value: Any, return_type: Any) -> None:
-    encoded_value = JsonCoder.encode(value)
+    encoded_value = TypedJsonCoder.encode(value)
     assert isinstance(encoded_value, bytes)
-    decoded_value = JsonCoder.decode_as_type(encoded_value, type_=return_type)
+    decoded_value = TypedJsonCoder.decode_as_type(encoded_value, type_=return_type)
     assert decoded_value == value
+
+
+def test_json_coder_default_is_legacy() -> None:
+    value = PDItem(name="foo", price=42.0, description="some pydantic item", tax=0.2)
+    encoded_value = JsonCoder.encode(value)
+    decoded_value = JsonCoder.decode_as_type(encoded_value, type_=PDItem)
+    assert isinstance(decoded_value, dict)
 
 
 def test_json_coder_validation_error() -> None:
     invalid = b'{"name": "incomplete"}'
     with pytest.raises(ValidationError):
-        JsonCoder.decode_as_type(invalid, type_=PDItem)
+        TypedJsonCoder.decode_as_type(invalid, type_=PDItem)
 
 
 class V1Item(V1BaseModel):
@@ -79,23 +86,50 @@ class V1Item(V1BaseModel):
 
 def test_json_coder_unsupported_annotations_fall_back() -> None:
     value = {"ok": True}
-    encoded = JsonCoder.encode(value)
+    encoded = TypedJsonCoder.encode(value)
     for type_ in (Response, JSONResponse):
-        decoded = JsonCoder.decode_as_type(encoded, type_=type_)
+        decoded = TypedJsonCoder.decode_as_type(encoded, type_=type_)
         assert decoded == value
 
 
 def test_json_coder_pydantic_v1_falls_back() -> None:
     encoded = b'{"name": "foo", "price": 1.0}'
-    decoded = JsonCoder.decode_as_type(encoded, type_=V1Item)
+    decoded = TypedJsonCoder.decode_as_type(encoded, type_=V1Item)
     assert isinstance(decoded, dict)
     assert decoded["name"] == "foo"
 
 
+def test_typed_json_coder_pydantic_v1_composite_falls_back() -> None:
+    encoded_list = b'[{"name": "foo", "price": 1.0}]'
+    decoded_list = TypedJsonCoder.decode_as_type(encoded_list, type_=List[V1Item])
+    assert isinstance(decoded_list, list)
+    assert decoded_list[0]["name"] == "foo"
+
+    encoded_optional = b'{"name": "foo", "price": 1.0}'
+    decoded_optional = TypedJsonCoder.decode_as_type(encoded_optional, type_=Optional[V1Item])
+    assert isinstance(decoded_optional, dict)
+    assert decoded_optional["name"] == "foo"
+
+
 def test_json_coder_without_type_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("fastapi_cache.coder.TypeAdapter", None)
-    encoded = JsonCoder.encode({"a": 1})
-    assert JsonCoder.decode_as_type(encoded, type_=Dict[str, int]) == {"a": 1}
+    encoded = TypedJsonCoder.encode({"a": 1})
+    assert TypedJsonCoder.decode_as_type(encoded, type_=Dict[str, int]) == {"a": 1}
+
+
+class CustomCoder(JsonCoder):
+    @classmethod
+    def encode(cls, value: Any) -> bytes:
+        return b"custom:" + super().encode(value)
+
+    @classmethod
+    def decode(cls, value: bytes) -> Any:
+        return super().decode(value[len(b"custom:") :])
+
+
+def test_custom_coder_legacy_decode() -> None:
+    encoded = CustomCoder.encode({"a": 1})
+    assert CustomCoder.decode_as_type(encoded, type_=None) == {"a": 1}
 
 
 def test_coder_base_methods_raise() -> None:

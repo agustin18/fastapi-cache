@@ -25,8 +25,18 @@ contract.
 - Your endpoints are GET and return JSON, Pydantic models, dataclasses or standard types.
 - You need a maintained package without changing the `fastapi_cache` import.
 
-Pydantic v2 users get typed restoration on cache hits. Pydantic v1 users keep the legacy
-decoded behavior, so migration does not require a Pydantic upgrade or application changes.
+The default `JsonCoder` keeps the legacy decoded behavior. Pydantic v2 users can opt into
+typed restoration with `TypedJsonCoder`; Pydantic v1 users keep the legacy behavior, so
+migration does not require a Pydantic upgrade or application changes.
+
+```python
+from fastapi_cache import FastAPICache
+from fastapi_cache.coder import TypedJsonCoder
+
+FastAPICache.init(backend, coder=TypedJsonCoder)
+```
+
+You can also enable it per endpoint with `@cache(coder=TypedJsonCoder)`.
 
 ## Who should not migrate yet
 
@@ -68,7 +78,7 @@ python -c "from fastapi_cache import FastAPICache; print('ok')"
 | Python 3.8/3.9 | Legacy compatibility | Intended for migration; compatibility matrix validation pending |
 | Python 3.14 | Targeted | Evaluated after the first stable release |
 | FastAPI | Targeted | No pinned range yet (`fastapi = "*"`); pin before beta |
-| Pydantic 2.x | Verified for typed decode | CI installs the latest resolution; minimum version not verified |
+| Pydantic 2.x | Typed restoration available | Opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Legacy behavior preserved | Migration works without code changes; typed restoration is not applied |
 | `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
 | Redis standalone | Targeted | redis-py 5/6; no real Redis integration test yet |
@@ -88,7 +98,7 @@ you.
 | Change | Before (0.2.2) | After (0.3.0) |
 |---|---|---|
 | Error responses | A cached 404 could be returned as 200 | Responses with status >= 400 are not cached |
-| Typed JSON decode | Cache hits returned plain dicts/lists | On Pydantic v2, `TypeAdapter` restores the annotated type; Pydantic v1 and unsupported annotations keep the legacy decoded behavior |
+| Typed JSON decode | Cache hits returned plain dicts/lists | Opt-in `TypedJsonCoder` on Pydantic v2; default `JsonCoder`, Pydantic v1 and unsupported annotations keep the legacy decoded behavior |
 | Authenticated requests | Two users could share a cache key | Requests with `Authorization`/`Cookie`/session bypass the cache by default; opt-in with a safe `key_builder` |
 | ETag | `hash()` changes per process; header unquoted | Stable digest, quoted weak ETag, correct `If-None-Match` |
 | `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key |
@@ -158,8 +168,8 @@ advisory for vulnerabilities.
 - No perfect OpenAPI/`response_model` behavior.
 - No memory cap in `InMemoryBackend`; instances currently share state, and instance
   isolation is targeted for 0.3.0.
-- Pydantic v1 and unsupported annotations keep the legacy decoded behavior; typed
-  restoration requires Pydantic v2.
+- Typed restoration is opt-in via `TypedJsonCoder` and requires Pydantic v2. Pydantic v1
+  and unsupported annotations keep the legacy decoded behavior.
 - Python 3.8/3.9 legacy compatibility will be validated by the compatibility matrix before
   `0.3.0a1`.
 - The 24-month `1.x` support window in `SUPPORT.md` is conditional on the `1.x` release and

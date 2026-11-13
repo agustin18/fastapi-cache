@@ -72,10 +72,6 @@ class Coder:
     def decode(cls, value: bytes) -> Any:
         raise NotImplementedError
 
-    # Subclasses share this. Override the attribute if decode_as_type stores
-    # something other than a TypeAdapter for a given type.
-    _type_adapter_cache: ClassVar[Dict[Any, Any]] = {}
-
     @overload
     @classmethod
     def decode_as_type(cls, value: bytes, *, type_: _T) -> _T:
@@ -94,6 +90,30 @@ class Coder:
 
         """
         result = cls.decode(value)
+        return result
+
+
+class JsonCoder(Coder):
+    @classmethod
+    def encode(cls, value: Any) -> bytes:
+        if isinstance(value, JSONResponse):
+            return bytes(value.body)
+        return json.dumps(value, cls=JsonEncoder).encode()
+
+    @classmethod
+    def decode(cls, value: bytes) -> Any:
+        # explicitly decode from UTF-8 bytes first, as otherwise
+        # json.loads() will first have to detect the correct UTF-
+        # encoding used.
+        return json.loads(value.decode(), object_hook=object_hook)
+
+
+class TypedJsonCoder(JsonCoder):
+    _type_adapter_cache: ClassVar[Dict[Any, Any]] = {}
+
+    @classmethod
+    def decode_as_type(cls, value: bytes, *, type_: Any) -> Any:
+        result = cls.decode(value)
         if type_ is None or _is_pydantic_v1_model(type_):
             return result
 
@@ -110,23 +130,10 @@ class Coder:
             except Exception:
                 return result
             cls._type_adapter_cache[type_] = adapter
-        validated: Any = adapter.validate_python(result)
-        return validated
-
-
-class JsonCoder(Coder):
-    @classmethod
-    def encode(cls, value: Any) -> bytes:
-        if isinstance(value, JSONResponse):
-            return bytes(value.body)
-        return json.dumps(value, cls=JsonEncoder).encode()
-
-    @classmethod
-    def decode(cls, value: bytes) -> Any:
-        # explicitly decode from UTF-8 bytes first, as otherwise
-        # json.loads() will first have to detect the correct UTF-
-        # encoding used.
-        return json.loads(value.decode(), object_hook=object_hook)
+        try:
+            return adapter.validate_python(result)
+        except TypeError:
+            return result
 
 
 class PickleCoder(Coder):

@@ -84,7 +84,7 @@ def test_cache_response_annotations(path: str) -> None:
         second = client.get(path)
     assert first.status_code == 200
     assert second.status_code == 200
-    assert first.json() == second.json() == {"ok": True}
+    assert first.json() == second.json()
 
 
 def test_kwargs() -> None:

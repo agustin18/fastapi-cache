@@ -1,7 +1,7 @@
 from importlib.metadata import version
 from typing import ClassVar, Optional, Type
 
-from fastapi_cache.coder import Coder, JsonCoder
+from fastapi_cache.coder import Coder, JsonCoder, TypedJsonCoder
 from fastapi_cache.key_builder import default_key_builder
 from fastapi_cache.types import Backend, KeyBuilder
 
@@ -12,6 +12,7 @@ __all__ = [
     "FastAPICache",
     "JsonCoder",
     "KeyBuilder",
+    "TypedJsonCoder",
     "default_key_builder",
 ]
 

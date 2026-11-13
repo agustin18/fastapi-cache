@@ -5,6 +5,9 @@
 > See [COMPATIBILITY.md](COMPATIBILITY.md), [MIGRATION.md](MIGRATION.md), [SUPPORT.md](SUPPORT.md),
 > [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
 
+> **Typed restoration:** opt-in via `TypedJsonCoder` (Pydantic v2). The default `JsonCoder`
+> keeps the legacy decoded behavior; Pydantic v1 and unsupported annotations are unchanged.
+
 > **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
 > upstream project and is not a second development branch.
 
