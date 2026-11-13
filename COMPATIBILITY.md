@@ -121,13 +121,14 @@ Status definitions:
 
 ## Intentional behavior changes
 
-These are bug fixes targeted for `0.3.0`. The error-response fix is implemented on `stable`;
-the remaining rows are targeted for later pre-releases. Each one is documented in
-[`MIGRATION.md`](MIGRATION.md) and covered by a regression test when implemented.
+These are bug fixes targeted for `0.3.0`. The error-response and typed-decode fixes are
+implemented on `stable`; the remaining rows are targeted for later pre-releases. Each one is
+documented in [`MIGRATION.md`](MIGRATION.md) and covered by a regression test when implemented.
 
 | Version | Change | Why | Status |
 |---|---|---|---|
 | 0.3.0 | Error `Response` objects (status >= 400) are not cached | A cached 404 could be returned as 200 | Implemented on `stable` |
+| 0.3.0 | Cached JSON is decoded into the annotated return type | Cache hits returned plain dicts/lists | Implemented on `stable` |
 | 0.3.0 | Authenticated requests bypass the cache by default | Prevent cross-user response reuse | Targeted |
 | 0.3.0 | ETag is stable across processes and correctly quoted | `hash()` is randomized per process and the old header was invalid | Targeted |
 | 0.3.0 | `clear(key=...)` deletes only that key | It used to delete the whole prefix namespace | Targeted |

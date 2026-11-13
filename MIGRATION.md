@@ -76,13 +76,15 @@ python -c "from fastapi_cache import FastAPICache; print('ok')"
 
 ## Behavior changes in 0.3.0
 
-These are intentional bug fixes targeted for `0.3.0`. The error-response fix is implemented
-on `stable`; the remaining changes are targeted for later pre-releases. Each one will have a
-regression test and is listed here so you can decide whether it affects you.
+These are intentional bug fixes targeted for `0.3.0`. The error-response and typed-decode
+fixes are implemented on `stable`; the remaining changes are targeted for later pre-releases.
+Each one will have a regression test and is listed here so you can decide whether it affects
+you.
 
 | Change | Before (0.2.2) | After (0.3.0) |
 |---|---|---|
 | Error responses | A cached 404 could be returned as 200 | Responses with status >= 400 are not cached |
+| Typed JSON decode | Cache hits returned plain dicts/lists | Pydantic v2 `TypeAdapter` restores the annotated type |
 | Authenticated requests | Two users could share a cache key | Requests with `Authorization`/`Cookie`/session bypass the cache by default; opt-in with a safe `key_builder` |
 | ETag | `hash()` changes per process; header unquoted | Stable digest, quoted weak ETag, correct `If-None-Match` |
 | `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key |
@@ -93,8 +95,8 @@ regression test and is listed here so you can decide whether it affects you.
 | Non-JSON responses | Streaming/file/redirect could be cached incorrectly | Bypassed unless the coder supports them |
 | Second `init` | Silent no-op | Reconfiguration is explicit and documented |
 
-The error-response fix is implemented on `stable`. The remaining rows are targeted for later
-`0.3.0` pre-releases.
+The error-response and typed-decode fixes are implemented on `stable`. The remaining rows are
+targeted for later `0.3.0` pre-releases.
 
 **Action required:** if you were affected by cached error responses or by `clear(key=...)`,
 flush the cache namespace after upgrading. If the ETag changes, clients may revalidate once.
