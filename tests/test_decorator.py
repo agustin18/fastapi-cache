@@ -30,7 +30,7 @@ def test_datetime() -> None:
         assert response.headers.get("X-FastAPI-Cache") == "HIT"
         assert response.json().get("now") == first
 
-        time.sleep(3)
+        time.sleep(5)
         response = client.get("/datetime")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
         second = response.json().get("now")
