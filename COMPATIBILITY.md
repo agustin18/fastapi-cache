@@ -14,11 +14,26 @@
 - Existing `@cache(...)` and `FastAPICache.init(...)` calls keep working without code changes.
 - Existing custom backends, coders and key builders that implement the documented protocols
   keep working.
+- Migration from `fastapi-cache2` does not require application code changes for valid legacy
+  use cases.
+- Pydantic v2 users can opt into `TypedJsonCoder` for typed restoration; the default
+  `JsonCoder` keeps the legacy decoded behavior. Pydantic v1 and unsupported annotations
+  keep the legacy behavior.
+- Python 3.8/3.9 legacy compatibility is intended; the compatibility matrix will validate it
+  before `0.3.0a1`.
 
 ## Public surface
 
 ```python
-from fastapi_cache import FastAPICache, Backend, Coder, JsonCoder, KeyBuilder, default_key_builder
+from fastapi_cache import (
+    Backend,
+    Coder,
+    FastAPICache,
+    JsonCoder,
+    KeyBuilder,
+    TypedJsonCoder,
+    default_key_builder,
+)
 from fastapi_cache.decorator import cache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
@@ -107,27 +122,29 @@ Status definitions:
 | Component | Status | Notes |
 |---|---|---|
 | Python 3.10–3.13 | Verified | CI matrix runs the suite on each version |
+| Python 3.8/3.9 | Legacy compatibility | Intended for migration; compatibility matrix validation pending |
 | Python 3.14 | Targeted | Evaluated after the first stable release |
 | FastAPI | Targeted | No pinned range yet (`fastapi = "*"`); pin before beta |
-| Pydantic 2.x | Targeted | CI installs the latest resolution; minimum version not verified |
+| Pydantic 2.x | Typed restoration available | Opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
+| Pydantic v1 | Legacy behavior preserved | Migration works without code changes; typed restoration is not applied |
+| `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
 | Redis standalone | Targeted | redis-py 5/6; no real Redis integration test yet |
 | Redis Cluster | Unsupported | `clear` limitations documented; no complete namespace clearing |
 | InMemory | Verified for basic operations | Unit tests; instance isolation is targeted for 0.3.0; the current implementation shares state between instances; no size cap yet |
 | Memcached | Experimental | No full `clear`/TTL parity |
 | DynamoDB | Experimental | `clear` is not implemented; the client cleanup issue remains open and is targeted for a future fix |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
-| Pydantic v1 | Unsupported | Not supported in 0.3.x |
-| Python 3.8/3.9 | Unsupported | Metadata still allows them temporarily; no 0.3.x guarantee |
 
 ## Intentional behavior changes
 
-These are bug fixes targeted for `0.3.0`. The error-response fix is implemented on `stable`;
-the remaining rows are targeted for later pre-releases. Each one is documented in
-[`MIGRATION.md`](MIGRATION.md) and covered by a regression test when implemented.
+These are bug fixes targeted for `0.3.0`. The error-response and typed-decode fixes are
+implemented on `stable`; the remaining rows are targeted for later pre-releases. Each one is
+documented in [`MIGRATION.md`](MIGRATION.md) and covered by a regression test when implemented.
 
 | Version | Change | Why | Status |
 |---|---|---|---|
 | 0.3.0 | Error `Response` objects (status >= 400) are not cached | A cached 404 could be returned as 200 | Implemented on `stable` |
+| 0.3.0 | Opt-in `TypedJsonCoder` decodes cached JSON into the annotated return type on Pydantic v2 | Default `JsonCoder` and Pydantic v1 keep the legacy decoded behavior; `TypedJsonCoder` propagates validation errors | Implemented on `stable` |
 | 0.3.0 | Authenticated requests bypass the cache by default | Prevent cross-user response reuse | Targeted |
 | 0.3.0 | ETag is stable across processes and correctly quoted | `hash()` is randomized per process and the old header was invalid | Targeted |
 | 0.3.0 | `clear(key=...)` deletes only that key | It used to delete the whole prefix namespace | Targeted |

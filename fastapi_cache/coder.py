@@ -10,19 +10,29 @@ from typing import (
     Optional,
     TypeVar,
     Union,
+    get_args,
     overload,
 )
 
 import pendulum
+import pydantic
 from fastapi.encoders import jsonable_encoder
 from starlette.responses import JSONResponse
 from starlette.templating import (
     _TemplateResponse as TemplateResponse,  # pyright: ignore[reportPrivateUsage]
 )
 
+TypeAdapter = getattr(pydantic, "TypeAdapter", None)
 
-class ModelField:
-    pass
+_TYPE_ADAPTER_ERRORS = tuple(
+    error
+    for error in (
+        getattr(pydantic, "PydanticSchemaGenerationError", None),
+        getattr(pydantic, "PydanticUserError", None),
+        TypeError,
+    )
+    if error is not None
+)
 
 _T = TypeVar("_T", bound=type)
 
@@ -33,6 +43,18 @@ CONVERTERS: Dict[str, Callable[[str], Any]] = {
     "datetime": lambda x: pendulum.parse(x, exact=True),
     "decimal": Decimal,
 }
+
+
+def _is_pydantic_v1_model(type_: Any) -> bool:
+    v1 = getattr(pydantic, "v1", None)
+    base: Any = getattr(v1, "BaseModel", None)
+    return bool(base) and isinstance(type_, type) and issubclass(type_, base)
+
+
+def _contains_pydantic_v1_model(type_: Any) -> bool:
+    if _is_pydantic_v1_model(type_):
+        return True
+    return any(_contains_pydantic_v1_model(arg) for arg in get_args(type_))
 
 
 class JsonEncoder(json.JSONEncoder):
@@ -67,13 +89,6 @@ class Coder:
     def decode(cls, value: bytes) -> Any:
         raise NotImplementedError
 
-    # (Shared) cache for endpoint return types to Pydantic model fields.
-    # Note that subclasses share this cache! If a subclass overrides the
-    # decode_as_type method and then stores a different kind of field for a
-    # given type, do make sure that the subclass provides its own class
-    # attribute for this cache.
-    _type_field_cache: ClassVar[Dict[Any, ModelField]] = {}
-
     @overload
     @classmethod
     def decode_as_type(cls, value: bytes, *, type_: _T) -> _T:
@@ -99,7 +114,7 @@ class JsonCoder(Coder):
     @classmethod
     def encode(cls, value: Any) -> bytes:
         if isinstance(value, JSONResponse):
-            return value.body
+            return bytes(value.body)
         return json.dumps(value, cls=JsonEncoder).encode()
 
     @classmethod
@@ -108,6 +123,31 @@ class JsonCoder(Coder):
         # json.loads() will first have to detect the correct UTF-
         # encoding used.
         return json.loads(value.decode(), object_hook=object_hook)
+
+
+class TypedJsonCoder(JsonCoder):
+    _type_adapter_cache: ClassVar[Dict[Any, Any]] = {}
+
+    @classmethod
+    def decode_as_type(cls, value: bytes, *, type_: Any) -> Any:
+        result = cls.decode(value)
+        if type_ is None or _contains_pydantic_v1_model(type_):
+            return result
+
+        type_adapter = TypeAdapter
+        if type_adapter is None:
+            return result
+
+        adapter: Any
+        try:
+            adapter = cls._type_adapter_cache[type_]
+        except KeyError:
+            try:
+                adapter = type_adapter(type_)
+            except _TYPE_ADAPTER_ERRORS:
+                return result
+            cls._type_adapter_cache[type_] = adapter
+        return adapter.validate_python(result)
 
 
 class PickleCoder(Coder):

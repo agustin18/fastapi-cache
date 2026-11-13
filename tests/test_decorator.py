@@ -30,7 +30,7 @@ def test_datetime() -> None:
         assert response.headers.get("X-FastAPI-Cache") == "HIT"
         assert response.json().get("now") == first
 
-        time.sleep(3)
+        time.sleep(5)
         response = client.get("/datetime")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
         second = response.json().get("now")
@@ -75,6 +75,16 @@ def test_cache_response_obj() -> None:
         assert get_cache_response.json() == {"a": 1}
         assert get_cache_response.headers.get("cache-control")
         assert get_cache_response.headers.get("etag")
+
+
+@pytest.mark.parametrize("path", ["/response_annotation", "/json_response_annotation"])
+def test_cache_response_annotations(path: str) -> None:
+    with TestClient(app) as client:
+        first = client.get(path)
+        second = client.get(path)
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert first.json() == second.json()
 
 
 def test_kwargs() -> None:
