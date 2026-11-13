@@ -48,10 +48,19 @@ Blocking for every pull request:
 
 Baseline gates (ratchet, do not regress):
 
-- `mypy` and `pyright` on `fastapi_cache`
+- `mypy` on changed Python files (blocking); full-repo `mypy`/`pyright` is a follow-up
 - overall coverage
 - `pip-audit`
 - Markdown link checks
+
+Tool versions:
+
+- Ruff is pinned to the `0.17.x` series in `pyproject.toml` and `poetry.lock`; CI uses
+  `0.17.5`.
+- Mypy and Pyright target Python 3.10; the package metadata still allows 3.8/3.9 until the
+  first beta reconciliation.
+- `stable` requires a pull request and the CI checks; force pushes and branch deletion are
+  blocked.
 
 ## Pull request title
 

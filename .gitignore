@@ -161,15 +161,3 @@ pip-wheel-metadata/
 # OS files
 .DS_Store
 Thumbs.db
-
-# Local tooling
-.vscode/
-.pyright/
-.direnv/
-pip-wheel-metadata/
-*.orig
-*.rej
-
-# OS files
-.DS_Store
-Thumbs.db

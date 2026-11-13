@@ -54,21 +54,31 @@ python -c "from fastapi_cache import FastAPICache; print('ok')"
 
 ## Compatibility matrix
 
-| Component | Supported in 0.3.x | Notes |
+- **Verified**: tested in CI with identified versions.
+- **Targeted for 0.3.0**: intended behavior, not yet guaranteed.
+- **Experimental**: interface available, coverage insufficient.
+- **Unsupported**: outside the compatibility contract.
+
+| Component | Status | Notes |
 |---|---|---|
-| Python | 3.10–3.13 | 3.14 evaluated after tests |
-| FastAPI | versions tested in CI | Pinned range in `pyproject.toml` |
-| Pydantic | 2.x | v1 is not supported |
-| Redis | standalone, redis-py 5/6 | Cluster: documented limitations |
-| InMemory | yes | Instance-scoped; no size cap yet |
-| Memcached | experimental | No full `clear`/TTL parity |
-| DynamoDB | experimental | No `clear`; `close` fixed |
-| Import | `fastapi_cache` | Same as the original |
+| Python 3.10–3.13 | Verified | CI matrix runs the suite on each version |
+| Python 3.14 | Targeted | Evaluated after the first stable release |
+| FastAPI | Targeted | No pinned range yet (`fastapi = "*"`); pin before beta |
+| Pydantic 2.x | Targeted | CI installs the latest resolution; minimum version not verified |
+| Redis standalone | Targeted | redis-py 5/6; no real Redis integration test yet |
+| Redis Cluster | Unsupported | `clear` limitations documented; no complete namespace clearing |
+| InMemory | Verified | Unit tests; instance-scoped; no size cap yet |
+| Memcached | Experimental | No full `clear`/TTL parity |
+| DynamoDB | Experimental | No `clear`; `close` fixed |
+| Import `fastapi_cache` | Verified | Covered by compatibility tests |
+| Pydantic v1 | Unsupported | Not supported in 0.3.x |
+| Python 3.8/3.9 | Unsupported | Metadata still allows them temporarily; no 0.3.x guarantee |
 
 ## Behavior changes in 0.3.0
 
-These are intentional bug fixes. Each one has a regression test and is listed here so you
-can decide whether it affects you.
+These are intentional bug fixes targeted for `0.3.0`. The current alpha does not include
+all of them yet. Each one will have a regression test and is listed here so you can decide
+whether it affects you.
 
 | Change | Before (0.2.2) | After (0.3.0) |
 |---|---|---|
