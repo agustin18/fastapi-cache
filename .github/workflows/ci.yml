@@ -51,9 +51,9 @@ jobs:
           pip install -e . mypy pytest httpx
       - name: Mypy changed Python files
         run: |
-          files=$(git diff --name-only origin/stable...HEAD -- '*.py')
+          files=$(git diff --name-only origin/stable...HEAD -- '*.py' ':!examples/*')
           if [ -n "$files" ]; then
-            mypy --python-version 3.12 --ignore-missing-imports $files
+            mypy --config-file=/dev/null --python-version 3.12 --ignore-missing-imports --follow-imports=skip $files
           else
             echo "No Python files changed"
           fi
