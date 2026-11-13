@@ -109,6 +109,16 @@ def test_non_get() -> None:
         assert second.json()["value"] == first.json()["value"] + 1
 
 
+def test_cache_error_response_obj_is_not_cached() -> None:
+    with TestClient(app) as client:
+        for status_code in (404, 500):
+            first = client.get("/error_response_obj", params={"status_code": status_code})
+            second = client.get("/error_response_obj", params={"status_code": status_code})
+            assert first.status_code == status_code
+            assert second.status_code == status_code
+            assert second.json()["n"] == first.json()["n"] + 1
+
+
 def test_alternate_injected_namespace() -> None:
     with TestClient(app) as client:
         response = client.get("/namespaced_injection")

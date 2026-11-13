@@ -14,9 +14,9 @@ normal success-path behavior. Bug fixes that change edge-case behavior are liste
 are covered by regression tests. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full
 contract.
 
-> **Status:** this guide describes the target `0.3.0` behavior. The current `0.3.0a0` alpha
-> does not include these changes yet; they land in the `0.3.0` pre-releases. Check the
-> installed version before relying on a behavior listed here.
+> **Status:** this guide describes the target `0.3.0` behavior. The error-response fix is
+> implemented on `stable`; the remaining changes are targeted for later `0.3.0` pre-releases.
+> Check the installed version before relying on a behavior listed here.
 
 ## Who should migrate
 
@@ -76,9 +76,9 @@ python -c "from fastapi_cache import FastAPICache; print('ok')"
 
 ## Behavior changes in 0.3.0
 
-These are intentional bug fixes targeted for `0.3.0`. The current alpha does not include
-all of them yet. Each one will have a regression test and is listed here so you can decide
-whether it affects you.
+These are intentional bug fixes targeted for `0.3.0`. The error-response fix is implemented
+on `stable`; the remaining changes are targeted for later pre-releases. Each one will have a
+regression test and is listed here so you can decide whether it affects you.
 
 | Change | Before (0.2.2) | After (0.3.0) |
 |---|---|---|
@@ -92,6 +92,9 @@ whether it affects you.
 | `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced; user data is preserved |
 | Non-JSON responses | Streaming/file/redirect could be cached incorrectly | Bypassed unless the coder supports them |
 | Second `init` | Silent no-op | Reconfiguration is explicit and documented |
+
+The error-response fix is implemented on `stable`. The remaining rows are targeted for later
+`0.3.0` pre-releases.
 
 **Action required:** if you were affected by cached error responses or by `clear(key=...)`,
 flush the cache namespace after upgrading. If the ETag changes, clients may revalidate once.

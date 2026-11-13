@@ -121,22 +121,22 @@ Status definitions:
 
 ## Intentional behavior changes
 
-These are bug fixes targeted for `0.3.0`. The current alpha does not include all of them.
-Each one will be documented in [`MIGRATION.md`](MIGRATION.md) and covered by a regression
-test when implemented.
+These are bug fixes targeted for `0.3.0`. The error-response fix is implemented on `stable`;
+the remaining rows are targeted for later pre-releases. Each one is documented in
+[`MIGRATION.md`](MIGRATION.md) and covered by a regression test when implemented.
 
-| Version | Change | Why |
-|---|---|---|
-| 0.3.0 | Error `Response` objects (status >= 400) are not cached | A cached 404 could be returned as 200 |
-| 0.3.0 | Authenticated requests bypass the cache by default | Prevent cross-user response reuse |
-| 0.3.0 | ETag is stable across processes and correctly quoted | `hash()` is randomized per process and the old header was invalid |
-| 0.3.0 | `clear(key=...)` deletes only that key | It used to delete the whole prefix namespace |
-| 0.3.0 | `clear("app:user")` does not delete `app:users` | Namespace matching requires the `:` boundary |
-| 0.3.0 | `expire=None` means no expiration in `InMemoryBackend` | It used to expire almost immediately |
-| 0.3.0 | `Cache-Control` never emits `max-age=None` or `max-age=-1` | Invalid headers |
-| 0.3.0 | User payloads with a `_spec_type` key are not interpreted as internal metadata | The marker collided with user data |
-| 0.3.0 | Non-JSON responses (streaming, file, redirect) are not cached blindly | Status/headers/body were lost or corrupted |
-| 0.3.0 | A second `FastAPICache.init(...)` is not a silent no-op | Configuration was impossible to change |
+| Version | Change | Why | Status |
+|---|---|---|---|
+| 0.3.0 | Error `Response` objects (status >= 400) are not cached | A cached 404 could be returned as 200 | Implemented on `stable` |
+| 0.3.0 | Authenticated requests bypass the cache by default | Prevent cross-user response reuse | Targeted |
+| 0.3.0 | ETag is stable across processes and correctly quoted | `hash()` is randomized per process and the old header was invalid | Targeted |
+| 0.3.0 | `clear(key=...)` deletes only that key | It used to delete the whole prefix namespace | Targeted |
+| 0.3.0 | `clear("app:user")` does not delete `app:users` | Namespace matching requires the `:` boundary | Targeted |
+| 0.3.0 | `expire=None` means no expiration in `InMemoryBackend` | It used to expire almost immediately | Targeted |
+| 0.3.0 | `Cache-Control` never emits `max-age=None` or `max-age=-1` | Invalid headers | Targeted |
+| 0.3.0 | User payloads with a `_spec_type` key are not interpreted as internal metadata | The marker collided with user data | Targeted |
+| 0.3.0 | Non-JSON responses (streaming, file, redirect) are not cached blindly | Status/headers/body were lost or corrupted | Targeted |
+| 0.3.0 | A second `FastAPICache.init(...)` is not a silent no-op | Configuration was impossible to change | Targeted |
 
 ## Cache data compatibility
 

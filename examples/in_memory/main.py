@@ -78,6 +78,17 @@ async def cache_response_obj():
     return JSONResponse({"a": 1})
 
 
+error_ret = 0
+
+
+@app.get("/error_response_obj")
+@cache(namespace="test", expire=5)
+async def error_response_obj(status_code: int = 404):
+    global error_ret
+    error_ret += 1
+    return JSONResponse({"error": "error response", "n": error_ret}, status_code=status_code)
+
+
 class SomeClass:
     def __init__(self, value):
         self.value = value
