@@ -14,12 +14,14 @@ from typing import (
 )
 
 import pendulum
+import pydantic
 from fastapi.encoders import jsonable_encoder
-from pydantic import TypeAdapter
 from starlette.responses import JSONResponse
 from starlette.templating import (
     _TemplateResponse as TemplateResponse,  # pyright: ignore[reportPrivateUsage]
 )
+
+TypeAdapter = getattr(pydantic, "TypeAdapter", None)
 
 _T = TypeVar("_T", bound=type)
 
@@ -30,6 +32,12 @@ CONVERTERS: Dict[str, Callable[[str], Any]] = {
     "datetime": lambda x: pendulum.parse(x, exact=True),
     "decimal": Decimal,
 }
+
+
+def _is_pydantic_v1_model(type_: Any) -> bool:
+    v1 = getattr(pydantic, "v1", None)
+    base: Any = getattr(v1, "BaseModel", None)
+    return bool(base) and isinstance(type_, type) and issubclass(type_, base)
 
 
 class JsonEncoder(json.JSONEncoder):
@@ -66,7 +74,7 @@ class Coder:
 
     # Subclasses share this. Override the attribute if decode_as_type stores
     # something other than a TypeAdapter for a given type.
-    _type_adapter_cache: ClassVar[Dict[Any, TypeAdapter[Any]]] = {}
+    _type_adapter_cache: ClassVar[Dict[Any, Any]] = {}
 
     @overload
     @classmethod
@@ -86,14 +94,21 @@ class Coder:
 
         """
         result = cls.decode(value)
-        if type_ is None:
+        if type_ is None or _is_pydantic_v1_model(type_):
             return result
 
-        adapter: TypeAdapter[Any]
+        type_adapter = TypeAdapter
+        if type_adapter is None:
+            return result
+
+        adapter: Any
         try:
             adapter = cls._type_adapter_cache[type_]
         except KeyError:
-            adapter = TypeAdapter(type_)
+            try:
+                adapter = type_adapter(type_)
+            except Exception:
+                return result
             cls._type_adapter_cache[type_] = adapter
         validated: Any = adapter.validate_python(result)
         return validated

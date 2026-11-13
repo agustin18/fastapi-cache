@@ -77,6 +77,16 @@ def test_cache_response_obj() -> None:
         assert get_cache_response.headers.get("etag")
 
 
+@pytest.mark.parametrize("path", ["/response_annotation", "/json_response_annotation"])
+def test_cache_response_annotations(path: str) -> None:
+    with TestClient(app) as client:
+        first = client.get(path)
+        second = client.get(path)
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert first.json() == second.json() == {"ok": True}
+
+
 def test_kwargs() -> None:
     with TestClient(app) as client:
         name = "Jon"

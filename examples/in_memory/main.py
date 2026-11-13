@@ -78,6 +78,18 @@ async def cache_response_obj():
     return JSONResponse({"a": 1})
 
 
+@app.get("/response_annotation")
+@cache(namespace="test", expire=5)
+async def response_annotation() -> Response:
+    return JSONResponse({"ok": True})
+
+
+@app.get("/json_response_annotation")
+@cache(namespace="test", expire=5)
+async def json_response_annotation() -> JSONResponse:
+    return JSONResponse({"ok": True})
+
+
 error_ret = 0
 
 

@@ -1,10 +1,12 @@
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
 from pydantic import BaseModel, ValidationError
+from pydantic.v1 import BaseModel as V1BaseModel
+from starlette.responses import JSONResponse, Response
 
-from fastapi_cache.coder import JsonCoder, PickleCoder
+from fastapi_cache.coder import Coder, JsonCoder, PickleCoder
 
 
 @dataclass
@@ -68,3 +70,36 @@ def test_json_coder_validation_error() -> None:
     invalid = b'{"name": "incomplete"}'
     with pytest.raises(ValidationError):
         JsonCoder.decode_as_type(invalid, type_=PDItem)
+
+
+class V1Item(V1BaseModel):
+    name: str
+    price: float
+
+
+def test_json_coder_unsupported_annotations_fall_back() -> None:
+    value = {"ok": True}
+    encoded = JsonCoder.encode(value)
+    for type_ in (Response, JSONResponse):
+        decoded = JsonCoder.decode_as_type(encoded, type_=type_)
+        assert decoded == value
+
+
+def test_json_coder_pydantic_v1_falls_back() -> None:
+    encoded = b'{"name": "foo", "price": 1.0}'
+    decoded = JsonCoder.decode_as_type(encoded, type_=V1Item)
+    assert isinstance(decoded, dict)
+    assert decoded["name"] == "foo"
+
+
+def test_json_coder_without_type_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("fastapi_cache.coder.TypeAdapter", None)
+    encoded = JsonCoder.encode({"a": 1})
+    assert JsonCoder.decode_as_type(encoded, type_=Dict[str, int]) == {"a": 1}
+
+
+def test_coder_base_methods_raise() -> None:
+    with pytest.raises(NotImplementedError):
+        Coder.encode(1)
+    with pytest.raises(NotImplementedError):
+        Coder.decode(b"1")

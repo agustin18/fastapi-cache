@@ -20,16 +20,19 @@ contract.
 
 ## Who should migrate
 
-- You use `fastapi-cache2` 0.2.2 on Python 3.10–3.13.
+- You use `fastapi-cache2` 0.2.2 on Python 3.8–3.13.
 - You use `InMemoryBackend` or `RedisBackend` (standalone Redis).
-- Your endpoints are GET and return JSON, Pydantic v2 models, dataclasses or standard types.
+- Your endpoints are GET and return JSON, Pydantic models, dataclasses or standard types.
 - You need a maintained package without changing the `fastapi_cache` import.
+
+Pydantic v2 users get typed restoration on cache hits. Pydantic v1 users keep the legacy
+decoded behavior, so migration does not require a Pydantic upgrade or application changes.
 
 ## Who should not migrate yet
 
 - You need full Memcached or DynamoDB parity. They are experimental in `0.3.x`.
 - You use Redis Cluster and need complete namespace clearing.
-- You are on Pydantic v1 or Python 3.8/3.9.
+- You need typed restoration on Pydantic v1; the legacy decoded behavior is preserved instead.
 - You need tags, stale-while-revalidate, stampede protection or POST caching.
 - You need perfect OpenAPI/`response_model` behavior or `fastapi-pagination`.
 
@@ -62,17 +65,18 @@ python -c "from fastapi_cache import FastAPICache; print('ok')"
 | Component | Status | Notes |
 |---|---|---|
 | Python 3.10–3.13 | Verified | CI matrix runs the suite on each version |
+| Python 3.8/3.9 | Legacy compatibility | Intended for migration; compatibility matrix validation pending |
 | Python 3.14 | Targeted | Evaluated after the first stable release |
 | FastAPI | Targeted | No pinned range yet (`fastapi = "*"`); pin before beta |
-| Pydantic 2.x | Targeted | CI installs the latest resolution; minimum version not verified |
+| Pydantic 2.x | Verified for typed decode | CI installs the latest resolution; minimum version not verified |
+| Pydantic v1 | Legacy behavior preserved | Migration works without code changes; typed restoration is not applied |
+| `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
 | Redis standalone | Targeted | redis-py 5/6; no real Redis integration test yet |
 | Redis Cluster | Unsupported | `clear` limitations documented; no complete namespace clearing |
 | InMemory | Verified for basic operations | Unit tests; instance isolation is targeted for 0.3.0; the current implementation shares state between instances; no size cap yet |
 | Memcached | Experimental | No full `clear`/TTL parity |
 | DynamoDB | Experimental | `clear` is not implemented; the client cleanup issue remains open and is targeted for a future fix |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
-| Pydantic v1 | Unsupported | Not supported in 0.3.x |
-| Python 3.8/3.9 | Unsupported | Metadata still allows them temporarily; no 0.3.x guarantee |
 
 ## Behavior changes in 0.3.0
 
@@ -84,7 +88,7 @@ you.
 | Change | Before (0.2.2) | After (0.3.0) |
 |---|---|---|
 | Error responses | A cached 404 could be returned as 200 | Responses with status >= 400 are not cached |
-| Typed JSON decode | Cache hits returned plain dicts/lists | Pydantic v2 `TypeAdapter` restores the annotated type |
+| Typed JSON decode | Cache hits returned plain dicts/lists | On Pydantic v2, `TypeAdapter` restores the annotated type; Pydantic v1 and unsupported annotations keep the legacy decoded behavior |
 | Authenticated requests | Two users could share a cache key | Requests with `Authorization`/`Cookie`/session bypass the cache by default; opt-in with a safe `key_builder` |
 | ETag | `hash()` changes per process; header unquoted | Stable digest, quoted weak ETag, correct `If-None-Match` |
 | `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key |
@@ -134,8 +138,10 @@ restore cache entries written with the new format; they are regenerated.
 **Can I install both packages?** No, not in the same environment.
 **What happens to my cached data?** If the key format or ETag changed, entries are
 regenerated. Flush the namespace if you were affected by an error-response or clear bug.
-**Is Pydantic v1 supported?** No in 0.3.x.
-**Is Python 3.8/3.9 supported?** No in 0.3.x.
+**Is Pydantic v1 supported?** Yes for migration; typed restoration is not applied. Pydantic v2
+gets typed restoration.
+**Is Python 3.8/3.9 supported?** Legacy compatibility is intended; the compatibility matrix
+will validate it before 0.3.0a1.
 **Is Redis Cluster supported?** Only with the documented limitations; complete namespace
 clearing is not promised.
 **Are Memcached and DynamoDB supported?** Experimental until they have parity tests.
@@ -152,7 +158,10 @@ advisory for vulnerabilities.
 - No perfect OpenAPI/`response_model` behavior.
 - No memory cap in `InMemoryBackend`; instances currently share state, and instance
   isolation is targeted for 0.3.0.
-- No guarantee of compatibility with every FastAPI/Pydantic version.
+- Pydantic v1 and unsupported annotations keep the legacy decoded behavior; typed
+  restoration requires Pydantic v2.
+- Python 3.8/3.9 legacy compatibility will be validated by the compatibility matrix before
+  `0.3.0a1`.
 - The 24-month `1.x` support window in `SUPPORT.md` is conditional on the `1.x` release and
   a co-maintainer being in place; no multi-year promise is active today.
 
