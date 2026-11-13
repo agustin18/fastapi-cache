@@ -83,6 +83,106 @@ jobs:
         if: github.event_name == 'pull_request'
         run: diff-cover coverage.xml --compare-branch=origin/stable --fail-under=100
 
+  legacy-compat:
+    name: Legacy compat Python ${{ matrix.python }} / Pydantic ${{ matrix.pydantic }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python: "3.8"
+            pydantic: "1.10.27"
+          - python: "3.8"
+            pydantic: "2.8.2"
+          - python: "3.9"
+            pydantic: "1.10.27"
+          - python: "3.9"
+            pydantic: "2.8.2"
+          - python: "3.10"
+            pydantic: "1.10.27"
+          - python: "3.11"
+            pydantic: "1.10.27"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e . pytest==8.3.5 httpx==0.27.0 \
+            "fastapi==0.111.1" \
+            "pydantic==${{ matrix.pydantic }}"
+      - name: Show installed versions
+        run: |
+          python -c "import fastapi, httpx, pydantic, pytest; print('fastapi', fastapi.__version__); print('httpx', httpx.__version__); print('pydantic', pydantic.VERSION); print('pytest', pytest.__version__)"
+      - name: Run tests
+        run: python -m pytest -q -rs
+
+  legacy-smoke:
+    name: Legacy wheel smoke (Python 3.8)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.8"
+          cache: pip
+      - name: Build distributions
+        run: |
+          python -m pip install --upgrade pip
+          pip install build==1.2.2
+          python -m build
+      - name: Smoke install wheel
+        run: |
+          python -m venv /tmp/legacy-smoke
+          /tmp/legacy-smoke/bin/pip install --upgrade pip
+          /tmp/legacy-smoke/bin/pip install dist/*.whl "fastapi==0.111.1" "pydantic==1.10.27" "httpx==0.27.0"
+          cd /tmp
+          /tmp/legacy-smoke/bin/python -c "import fastapi_cache, importlib.metadata; print(importlib.metadata.version('fastapi-cache-stable'))"
+          /tmp/legacy-smoke/bin/pip check
+      - name: Show installed versions
+        run: |
+          /tmp/legacy-smoke/bin/python -c "import fastapi, pydantic; print('fastapi', fastapi.__version__); print('pydantic', pydantic.VERSION)"
+      - name: Smoke cache MISS -> HIT
+        run: |
+          cd /tmp
+          /tmp/legacy-smoke/bin/python - <<'PY'
+          import pathlib
+
+          import fastapi_cache
+          from fastapi import FastAPI
+          from starlette.testclient import TestClient
+
+          from fastapi_cache import FastAPICache
+          from fastapi_cache.backends.inmemory import InMemoryBackend
+          from fastapi_cache.decorator import cache
+
+          assert "site-packages" in str(pathlib.Path(fastapi_cache.__file__).resolve())
+
+          FastAPICache.init(InMemoryBackend(), prefix="legacy-smoke")
+          app = FastAPI()
+          calls = {"n": 0}
+
+          @app.get("/value")
+          @cache(expire=60)
+          async def value():
+              calls["n"] += 1
+              return {"n": calls["n"]}
+
+          with TestClient(app) as client:
+              first = client.get("/value")
+              second = client.get("/value")
+
+          assert first.status_code == 200
+          assert first.headers["X-FastAPI-Cache"] == "MISS"
+          assert second.headers["X-FastAPI-Cache"] == "HIT"
+          assert first.json() == second.json() == {"n": 1}
+          assert calls["n"] == 1
+          print("legacy cache smoke OK")
+          PY
+
   build:
     name: Build and inspect distributions
     runs-on: ubuntu-latest

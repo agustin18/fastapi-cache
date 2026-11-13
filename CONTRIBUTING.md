@@ -39,6 +39,9 @@ Blocking for every pull request:
 
 - `ruff check .`
 - `pytest` on Python 3.10–3.13
+- `legacy-compat` on Python 3.8/3.9 with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2, plus
+  Python 3.10/3.11 with Pydantic 1.10.27
+- `legacy-smoke`: wheel install on Python 3.8 with Pydantic 1.10.27
 - changed-line coverage with `diff-cover` for runtime changes
 - `python -m build` and `twine check`
 - clean-install smoke test for wheel and sdist
@@ -57,8 +60,9 @@ Tool versions:
 
 - Ruff is pinned to the `0.17.x` series in `pyproject.toml` and `poetry.lock`; CI uses
   `0.17.5`.
-- Mypy and Pyright target Python 3.10; the package metadata still allows 3.8/3.9 until the
-  first beta reconciliation.
+- Mypy and Pyright target Python 3.10; the package metadata keeps 3.8/3.9 for legacy
+  migration. The minimum Python will be revisited only after the compatibility matrix and an
+  explicit floor decision.
 - `stable` requires a pull request and the CI checks; force pushes and branch deletion are
   blocked.
 - The `pypi` environment only allows `stable` and `v*` tags and has a 5-minute wait timer.
