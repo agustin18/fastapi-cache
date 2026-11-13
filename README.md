@@ -2,11 +2,15 @@
 
 > **Community-maintained stable fork of fastapi-cache2.**
 > This is an alpha (`0.3.0a0`) based on `v0.2.2`. The `fastapi_cache` import and public API are unchanged.
-> See [MIGRATION.md](MIGRATION.md) and [SUPPORT.md](SUPPORT.md). Not affiliated with the original author.
+> See [COMPATIBILITY.md](COMPATIBILITY.md), [MIGRATION.md](MIGRATION.md), [SUPPORT.md](SUPPORT.md),
+> [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
+
+> **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
+> upstream project and is not a second development branch.
 
 [![pypi](https://img.shields.io/pypi/v/fastapi-cache-stable.svg?style=flat)](https://pypi.org/p/fastapi-cache-stable)
 [![license](https://img.shields.io/github/license/agustin18/fastapi-cache)](https://github.com/agustin18/fastapi-cache/blob/stable/LICENSE)
-[![CI/CD](https://github.com/agustin18/fastapi-cache/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/agustin18/fastapi-cache/actions/workflows/ci-cd.yml)
+[![CI](https://github.com/agustin18/fastapi-cache/actions/workflows/ci.yml/badge.svg)](https://github.com/agustin18/fastapi-cache/actions/workflows/ci.yml)
 
 ## Introduction
 
@@ -235,4 +239,4 @@ xdg-open htmlcov/index.html
 
 ## License
 
-This project is licensed under the [Apache-2.0](https://github.com/long2ice/fastapi-cache/blob/master/LICENSE) License.
+This project is licensed under the [Apache-2.0](https://github.com/agustin18/fastapi-cache/blob/stable/LICENSE) License.
