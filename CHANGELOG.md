@@ -8,6 +8,29 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.3.0a1](https://github.com/agustin18/fastapi-cache/tree/v0.3.0a1) - 2026-11-14
+
+### Bugfixes
+
+- Avoid caching explicitly returned `Response` objects with status codes >= 400. Adapted from upstream PR #575 by RitiGrover. [#2](https://github.com/agustin18/fastapi-cache/issues/2)
+- Add opt-in `TypedJsonCoder` for Pydantic v2 typed restoration. `JsonCoder` keeps the legacy decoded behavior; Pydantic v1 and unsupported annotations fall back; validation errors propagate. Adapted from upstream PR #576 by bezff. [#4](https://github.com/agustin18/fastapi-cache/issues/4)
+- Fix `clear(key=...)` so it deletes only the requested key, and require the `:` boundary for
+  namespace clears in InMemory and Redis. Redis standalone now uses `SCAN`/`UNLINK`; Redis
+  Cluster namespace clearing raises `NotImplementedError`. Memcached/DynamoDB clear remains
+  unsupported. [#7](https://github.com/agustin18/fastapi-cache/issues/7)
+
+### Improved Documentation
+
+- Document and verify the legacy compatibility matrix: Python 3.8/3.9, FastAPI 0.111.1, and
+  Pydantic 1.10.27/2.8.2. Add a legacy CI job and a Python 3.8 wheel smoke test. No runtime
+  behavior changes. [#5](https://github.com/agustin18/fastapi-cache/issues/5)
+
+### Misc
+
+- Bump the transitive `certifi` dev/test dependency from 2024.7.4 to 2026.10.23. [#6](https://github.com/agustin18/fastapi-cache/issues/6)
+- Add a manual TestPyPI publishing workflow with a separate `testpypi` environment and Trusted Publisher. It never runs on `release: published`. [#8](https://github.com/agustin18/fastapi-cache/issues/8)
+- Make PyPI publishing manual-only by removing the `release: published` trigger. [#9](https://github.com/agustin18/fastapi-cache/issues/9)
+
 ## 0.3.0a0
 
 - Community-maintained stable fork of fastapi-cache2, based on v0.2.2.

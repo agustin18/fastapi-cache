@@ -14,10 +14,11 @@ normal success-path behavior. Bug fixes that change edge-case behavior are liste
 are covered by regression tests. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full
 contract.
 
-> **Status:** this guide describes the target `0.3.0` behavior. The error-response fix and the
-> opt-in `TypedJsonCoder` are implemented on `stable`; the remaining changes are targeted for
-> later `0.3.0` pre-releases. Check the installed version before relying on a behavior listed
-> here.
+> **Status:** this guide describes `0.3.0a1` and the target `0.3.0` behavior. `0.3.0a1`
+> implements the error-response fix, the opt-in `TypedJsonCoder`, the `clear()` fixes and the
+> legacy compatibility matrix. Auth/privacy, ETag, InMemory expiry/isolation, non-JSON bypass,
+> `_spec_type` and second-`init` fixes are targeted for later `0.3.0` pre-releases. Check the
+> installed version before relying on a behavior listed here.
 
 ## Who should migrate
 
@@ -49,6 +50,8 @@ for Pydantic v1 models and annotations that cannot be represented by a Pydantic 
 ## Who should not migrate yet
 
 - You need full Memcached or DynamoDB parity. They are experimental in `0.3.x`.
+- You need the auth/privacy, ETag, InMemory expiry/isolation, non-JSON bypass, `_spec_type`
+  or second-`init` fixes; they are targeted for later `0.3.0` pre-releases.
 - You use Redis Cluster and need complete namespace clearing.
 - You need typed restoration on Pydantic v1; the legacy decoded behavior is preserved instead.
   Pydantic v1 is end-of-life; plan an upgrade to Pydantic v2 for typed restoration and
@@ -75,6 +78,27 @@ python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 python -c "from fastapi_cache import FastAPICache; print('ok')"
 ```
 
+### Alpha installation from TestPyPI
+
+`0.3.0a1` will be published to TestPyPI first; it is not published yet. TestPyPI is a
+separate index and may not have all dependencies. To verify the exact artifact uploaded to
+TestPyPI, download it from that index and install the local wheel:
+
+```sh
+python -m pip download --no-deps --only-binary=:all: \
+  --index-url https://test.pypi.org/simple/ \
+  -d testpypi-dist \
+  "fastapi-cache-stable==0.3.0a1"
+
+python -m pip install testpypi-dist/*.whl
+python -m pip check
+python -c "import fastapi_cache; print(fastapi_cache.__version__)"
+```
+
+Dependencies are resolved from PyPI by the normal install of the wheel. TestPyPI is for
+validating the distribution, not for production. The same version can be published to PyPI
+later.
+
 ## Compatibility matrix
 
 - **Verified**: tested in CI with identified versions.
@@ -91,37 +115,41 @@ python -c "from fastapi_cache import FastAPICache; print('ok')"
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
 | `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
-| Redis standalone | Targeted | redis-py 5/6; no real Redis integration test yet |
+| Redis standalone | Verified for clear semantics | Redis 7 service in CI with redis-py 4.6.0; key-only clear and namespace boundary tested. redis-py 5/6 are not supported by the current `^4.2.0rc1` constraint and are untested |
 | Redis Cluster | Unsupported | `clear` limitations documented; no complete namespace clearing |
 | InMemory | Verified for basic operations | Unit tests; instance isolation is targeted for 0.3.0; the current implementation shares state between instances; no size cap yet |
 | Memcached | Experimental | No full `clear`/TTL parity |
 | DynamoDB | Experimental | `clear` is not implemented; the client cleanup issue remains open and is targeted for a future fix |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
 
+> The Redis integration job installs the resolver-selected `redis` version from the project
+> constraint (`^4.2.0rc1`), currently 4.6.0, and runs against a Redis 7 service. Other client
+> or server versions are not verified in `0.3.0a1`.
+
 ## Behavior changes in 0.3.0
 
-These are intentional bug fixes targeted for `0.3.0`. The error-response and typed-decode
-fixes are implemented on `stable`; the remaining changes are targeted for later pre-releases.
-Each one will have a regression test and is listed here so you can decide whether it affects
-you.
+These are intentional bug fixes targeted for `0.3.0`. `0.3.0a1` implements the error-response,
+typed-decode and clear-semantics fixes; the remaining changes are targeted for later
+pre-releases. Each one will have a regression test and is listed here so you can decide
+whether it affects you.
 
-| Change | Before (0.2.2) | After (0.3.0) |
-|---|---|---|
-| Error responses | A cached 404 could be returned as 200 | Responses with status >= 400 are not cached |
-| Typed JSON decode | Cache hits returned plain dicts/lists | Opt-in `TypedJsonCoder` on Pydantic v2; default `JsonCoder`, Pydantic v1 and unsupported annotations keep the legacy decoded behavior; validation errors propagate |
-| Authenticated requests | Two users could share a cache key | Requests with `Authorization`/`Cookie`/session bypass the cache by default; opt-in with a safe `key_builder` |
-| ETag | `hash()` changes per process; header unquoted | Stable digest, quoted weak ETag, correct `If-None-Match` |
-| `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key; pass the full key |
-| Namespace boundary | `clear("app:user")` also deleted `app:users` | Requires the `:` boundary |
-| Redis Cluster namespace clear | Partial/unsafe clearing | Raises `NotImplementedError`; use key-only clear or flush out of band |
-| `expire=None` in InMemory | Expired almost immediately | Means no expiration |
-| `Cache-Control` | Could emit `max-age=None` or `max-age=-1` | Only valid values |
-| `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced; user data is preserved |
-| Non-JSON responses | Streaming/file/redirect could be cached incorrectly | Bypassed unless the coder supports them |
-| Second `init` | Silent no-op | Reconfiguration is explicit and documented |
+| Change | Before (0.2.2) | After (0.3.0) | Status |
+|---|---|---|---|
+| Error responses | A cached 404 could be returned as 200 | Responses with status >= 400 are not cached | Implemented in 0.3.0a1 |
+| Typed JSON decode | Cache hits returned plain dicts/lists | Opt-in `TypedJsonCoder` on Pydantic v2; default `JsonCoder`, Pydantic v1 and unsupported annotations keep the legacy decoded behavior; validation errors propagate | Implemented in 0.3.0a1 |
+| Authenticated requests | Two users could share a cache key | Requests with `Authorization`/`Cookie`/session bypass the cache by default; opt-in with a safe `key_builder` | Targeted |
+| ETag | `hash()` changes per process; header unquoted | Stable digest, quoted weak ETag, correct `If-None-Match` | Targeted |
+| `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key; pass the full key | Implemented in 0.3.0a1 |
+| Namespace boundary | `clear("app:user")` also deleted `app:users` | Requires the `:` boundary | Implemented in 0.3.0a1 |
+| Redis Cluster namespace clear | Partial/unsafe clearing | Raises `NotImplementedError`; use key-only clear or flush out of band | Implemented in 0.3.0a1 |
+| `expire=None` in InMemory | Expired almost immediately | Means no expiration | Targeted |
+| `Cache-Control` | Could emit `max-age=None` or `max-age=-1` | Only valid values | Targeted |
+| `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced; user data is preserved | Targeted |
+| Non-JSON responses | Streaming/file/redirect could be cached incorrectly | Bypassed unless the coder supports them | Targeted |
+| Second `init` | Silent no-op | Reconfiguration is explicit and documented | Targeted |
 
-The error-response and typed-decode fixes are implemented on `stable`. The remaining rows are
-targeted for later `0.3.0` pre-releases.
+The error-response, typed-decode and clear-semantics fixes are implemented in `0.3.0a1`.
+The remaining rows are targeted for later `0.3.0` pre-releases.
 
 **Action required:** if you were affected by cached error responses or by `clear(key=...)`,
 flush the cache namespace after upgrading. If you relied on `clear(key=...)` clearing the whole
@@ -141,8 +169,9 @@ revalidate once.
    `fastapi-cache-stable`, and verify `fastapi_cache.__version__`.
 4. **Configure once.** Call `FastAPICache.init(...)` once during startup. Define prefix,
    expire, coder and key builder. Review authenticated endpoints.
-5. **Run tests.** Expect changes in ETag, error responses, auth and `clear`. Update asserts
-   with the documented behavior.
+5. **Run tests.** Expect changes in error responses and `clear()` in `0.3.0a1`; ETag and
+   auth changes are targeted for later pre-releases. Update asserts with the documented
+   behavior.
 6. **Flush if needed.** If the key format or ETag changed, clear the old namespace.
 7. **Observe.** Compare HIT/MISS, latency, errors and memory with your baseline.
 8. **Roll back if needed.** See below.
@@ -164,6 +193,12 @@ restore cache entries written with the new format; they are regenerated.
 **Can I install both packages?** No, not in the same environment.
 **What happens to my cached data?** If the key format or ETag changed, entries are
 regenerated. Flush the namespace if you were affected by an error-response or clear bug.
+**Is `0.3.0a1` production-ready?** No. It is an alpha for migration and distribution testing.
+**What is implemented in `0.3.0a1`?** Error responses are not cached, opt-in `TypedJsonCoder`
+for Pydantic v2, `clear()` key/namespace semantics, and the legacy compatibility matrix.
+**What is still missing?** Auth/privacy defaults, stable ETag, InMemory expiry/isolation,
+non-JSON bypass, `_spec_type` collision handling and explicit re-`init()` are targeted for
+later `0.3.0` pre-releases.
 **Is Pydantic v1 supported?** Migration compatibility only. Pydantic v1 is end-of-life
 (1.10.27 is the final release) and receives no new security fixes. Typed restoration requires
 Pydantic v2.
@@ -181,6 +216,10 @@ advisory for vulnerabilities.
 ## Known limitations in 0.3.x
 
 - No tags, stale-while-revalidate, stampede protection or POST caching.
+- Auth/privacy, ETag, InMemory expiry/isolation, non-JSON bypass, `_spec_type` and
+  second-`init` fixes are not in `0.3.0a1`; they are targeted for later `0.3.0` pre-releases.
+- Redis standalone is verified with Redis 7 and redis-py 4.6.0; redis-py 5/6 are not
+  supported by the current dependency constraint and are untested.
 - No full backend parity.
 - No perfect OpenAPI/`response_model` behavior.
 - No memory cap in `InMemoryBackend`; instances currently share state, and instance
@@ -194,15 +233,24 @@ advisory for vulnerabilities.
 
 ## Verification checklist
 
-- [ ] `pip uninstall fastapi-cache2` and `pip install fastapi-cache-stable` in a clean venv.
+### `0.3.0a1`
+
+- [ ] `pip uninstall fastapi-cache2` and `pip install fastapi-cache-stable==0.3.0a1` in a clean venv.
 - [ ] `import fastapi_cache` and `__version__` are correct.
 - [ ] Characterization tests pass or are updated with justification.
-- [ ] HIT/MISS, status, headers and types verified.
+- [ ] HIT/MISS, status and types verified.
 - [ ] `clear(namespace)` and `clear(key)` verified.
+- [ ] Rollback tested in staging.
+
+### Before `0.3.0` stable
+
 - [ ] Two users with different credentials do not share a response.
 - [ ] ETag is stable across worker processes.
-- [ ] Redis/InMemory TTLs behave as documented.
-- [ ] Rollback tested in staging.
+- [ ] `Cache-Control`/`max-age` behavior is correct.
+- [ ] InMemory `expire=None` and instance isolation behave as documented.
+- [ ] Non-JSON responses (streaming/file/redirect) are bypassed.
+- [ ] `_spec_type` user payloads are preserved.
+- [ ] A second `init()` is explicit.
 
 ## See also
 

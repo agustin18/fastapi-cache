@@ -1,12 +1,15 @@
 # fastapi-cache-stable
 
 > **Community-maintained stable fork of fastapi-cache2.**
-> This is an alpha (`0.3.0a0`) based on `v0.2.2`. The `fastapi_cache` import and public API are unchanged.
+> This is an alpha (`0.3.0a1`) based on `v0.2.2`. It is experimental and not recommended for
+> production. The `fastapi_cache` import and public API are unchanged.
 > See [COMPATIBILITY.md](COMPATIBILITY.md), [MIGRATION.md](MIGRATION.md), [SUPPORT.md](SUPPORT.md),
 > [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
 
-> **Typed restoration:** opt-in via `TypedJsonCoder` (Pydantic v2). The default `JsonCoder`
-> keeps the legacy decoded behavior; Pydantic v1 and unsupported annotations are unchanged.
+> **Implemented in this alpha:** error responses are not cached, opt-in `TypedJsonCoder` for
+> Pydantic v2, and the `clear()` fixes. Auth/privacy, ETag, InMemory expiry/isolation, non-JSON
+> bypass and `_spec_type` fixes are targeted for later `0.3.0` pre-releases; see
+> [MIGRATION.md](MIGRATION.md).
 
 > **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
 > upstream project and is not a second development branch.
@@ -24,7 +27,11 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 - Supports `redis`, `memcache`, `dynamodb`, and `in-memory` backends.
 - Easy integration with [FastAPI](https://fastapi.tiangolo.com/).
-- Support for HTTP cache headers like `ETag` and `Cache-Control`, as well as conditional `If-Match-None` requests.
+- Inherited `ETag` and `Cache-Control` support, including conditional `If-None-Match`
+  requests. Correctness fixes for these headers are targeted for later `0.3.0` pre-releases.
+
+> **Alpha caveat:** `ETag`/`Cache-Control` correctness, auth/privacy defaults and InMemory
+> expiration/isolation are not fixed in `0.3.0a1`. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Requirements
 
@@ -133,25 +140,36 @@ prefix used if those names would clash anyway.
 
 ### Supported data types
 
-When using the (default) `JsonCoder`, the cache can store any data type that FastAPI can convert to JSON, including Pydantic models and dataclasses,
-_provided_ that your endpoint has a correct return type annotation. An
-annotation is not needed if the return type is a standard JSON-supported Python
-type such as a dictionary or a list.
+The default `JsonCoder` stores any data type that FastAPI can convert to JSON, including
+Pydantic models and dataclasses. On a cache hit it returns the decoded JSON value (plain
+dicts/lists), not the annotated model; this is the legacy `fastapi-cache2` behavior.
 
-E.g. for an endpoint that returns a Pydantic model named `SomeModel`, the return annotation is used to ensure that the cached result is converted back to the correct class:
+Pydantic v2 users can opt into typed restoration with `TypedJsonCoder`:
+
+```python
+from fastapi_cache import FastAPICache
+from fastapi_cache.coder import TypedJsonCoder
+
+FastAPICache.init(backend, coder=TypedJsonCoder)
+```
+
+or per endpoint:
 
 ```python
 from .models import SomeModel, create_some_model
 
 @app.get("/foo")
-@cache(expire=60)
+@cache(expire=60, coder=TypedJsonCoder)
 async def foo() -> SomeModel:
     return create_some_model()
 ```
 
-It is not sufficient to configure a response model in the route decorator; the cache needs to know what the method itself returns. If no return type decorator is given, the primitive JSON type is returned instead.
+`TypedJsonCoder` uses the endpoint return annotation to restore the annotated type and
+propagates validation errors. It requires Pydantic v2; Pydantic v1 and annotations that
+cannot be represented by a Pydantic v2 schema keep the legacy decoded behavior.
 
-For broader type support, use the `fastapi_cache.coder.PickleCoder` or implement a custom coder (see below).
+For broader type support, use `fastapi_cache.coder.PickleCoder` or implement a custom coder
+(see below).
 
 ### Custom coder
 

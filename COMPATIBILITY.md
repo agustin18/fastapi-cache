@@ -19,8 +19,8 @@
 - Pydantic v2 users can opt into `TypedJsonCoder` for typed restoration; the default
   `JsonCoder` keeps the legacy decoded behavior. Pydantic v1 and unsupported annotations
   keep the legacy behavior.
-- Python 3.8/3.9 legacy compatibility is intended; the compatibility matrix will validate it
-  before `0.3.0a1`.
+- Python 3.8/3.9 legacy compatibility is validated in CI with FastAPI 0.111.1 and
+  Pydantic 1.10.27/2.8.2; it is migration compatibility, not a new-production recommendation.
 
 ## Public surface
 
@@ -143,12 +143,24 @@ Status definitions:
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
 | `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
-| Redis standalone | Verified for clear semantics | Redis 7 service in CI; key-only clear and namespace boundary tested |
+| Redis standalone | Verified for clear semantics | Redis 7 service in CI with redis-py 4.6.0; key-only clear and namespace boundary tested. redis-py 5/6 are not supported by the current `^4.2.0rc1` constraint and are untested |
 | Redis Cluster | Unsupported for namespace clear | Key-only clear is supported; namespace clear raises `NotImplementedError`; no complete namespace clearing |
 | InMemory | Verified for basic operations and clear semantics | Unit tests; instance isolation is targeted for 0.3.0; the current implementation shares state between instances; no size cap yet |
 | Memcached | Experimental | No full `clear`/TTL parity; `clear` raises `NotImplementedError` |
 | DynamoDB | Experimental | `clear` raises `NotImplementedError`; the client cleanup issue remains open and is targeted for a future fix |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
+
+> Redis results in `0.3.0a1` cover Redis 7 with redis-py 4.6.0. Other client or server
+> versions are not verified; do not infer support from the Redis 7 job alone.
+
+### `0.3.0a1` status
+
+Implemented: error responses, opt-in `TypedJsonCoder`, `clear()` key/namespace semantics,
+Redis Cluster namespace `NotImplementedError`, and the legacy compatibility matrix.
+
+Targeted for later pre-releases: auth/privacy defaults, stable ETag, InMemory expiry and
+instance isolation, `Cache-Control`/`max-age`, non-JSON bypass, `_spec_type` collision
+handling, explicit re-`init()`, and the Redis client/server matrix.
 
 ### Clear semantics
 
@@ -165,9 +177,10 @@ Status definitions:
 
 ## Intentional behavior changes
 
-These are bug fixes targeted for `0.3.0`. The error-response and typed-decode fixes are
-implemented on `stable`; the remaining rows are targeted for later pre-releases. Each one is
-documented in [`MIGRATION.md`](MIGRATION.md) and covered by a regression test when implemented.
+These are bug fixes targeted for `0.3.0`. The error-response, typed-decode and
+clear-semantics fixes are implemented in `0.3.0a1`; the remaining rows are targeted for
+later pre-releases. Each one is documented in [`MIGRATION.md`](MIGRATION.md) and covered by
+a regression test when implemented.
 
 | Version | Change | Why | Status |
 |---|---|---|---|
@@ -204,7 +217,8 @@ documented in [`MIGRATION.md`](MIGRATION.md) and covered by a regression test wh
   plus Python 3.10/3.11 with Pydantic 1.10.27.
 - A `legacy-smoke` job builds the wheel and installs it on Python 3.8 with Pydantic 1.10.27.
 - Wheel and sdist smoke tests in a clean virtual environment.
-- Backend integration tests are planned.
+- Redis 7 integration tests run in CI; Memcached and DynamoDB backend integration tests are
+  planned.
 - Migration tests that install the package and run a small app.
 
 ## If we break something
