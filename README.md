@@ -42,26 +42,28 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 ## Install
 
+`0.3.0a1` is a pre-release. Install the exact version:
+
 ```shell
-> pip install fastapi-cache-stable
+> pip install "fastapi-cache-stable==0.3.0a1"
 ```
 
 or
 
 ```shell
-> pip install "fastapi-cache-stable[redis]"
+> pip install "fastapi-cache-stable[redis]==0.3.0a1"
 ```
 
 or
 
 ```shell
-> pip install "fastapi-cache-stable[memcache]"
+> pip install "fastapi-cache-stable[memcache]==0.3.0a1"
 ```
 
 or
 
 ```shell
-> pip install "fastapi-cache-stable[dynamodb]"
+> pip install "fastapi-cache-stable[dynamodb]==0.3.0a1"
 ```
 
 ## Usage
