@@ -184,12 +184,17 @@ For broader type support, use `fastapi_cache.coder.PickleCoder` or implement a c
 
 ### Response handling
 
-`JsonCoder` caches `JSONResponse` bodies. Other `Response` subclasses are returned directly
-and are not cached: `StreamingResponse`, `FileResponse`, `RedirectResponse`, plain
-`Response`, and template responses. Custom coders can override `Coder.can_encode()` to opt
-in; `PickleCoder` can round-trip response objects. User payloads that contain `_spec_type`
-are preserved as normal data; the internal marker is namespaced as
-`__fastapi_cache_spec_type__`.
+`JsonCoder` caches only simple `JSONResponse` objects: status `200`, media type
+`application/json`, no custom headers, and no background task. Other `Response` subclasses
+are returned directly and are not cached: `StreamingResponse`, `FileResponse`,
+`RedirectResponse`, plain `Response`, template responses, and `JSONResponse` objects with
+metadata that would be lost on a cache hit. Custom coders can override
+`Coder.can_encode()` to opt in; `PickleCoder` caches response objects it can reproduce
+faithfully (`JSONResponse`, plain `Response`, `RedirectResponse`) and bypasses streaming,
+file, and template responses. Responses with `Set-Cookie`, `Cache-Control: no-store` or
+`Cache-Control: private`, or a background task are never cached, regardless of the coder.
+User payloads that contain `_spec_type` are preserved as normal data; the internal marker is
+namespaced as `__fastapi_cache_spec_type__`.
 
 ### Custom coder
 

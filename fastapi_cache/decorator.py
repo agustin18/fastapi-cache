@@ -105,6 +105,30 @@ def _cache_control_header(seconds: Optional[int]) -> Optional[str]:
     return f"max-age={seconds}"
 
 
+def _cache_control_blocks_storage(value: str) -> bool:
+    """Return true when Cache-Control forbids storing or sharing the response."""
+    for directive in value.split(","):
+        name = directive.split("=", 1)[0].strip().lower()
+        if name in {"no-store", "private"}:
+            return True
+    return False
+
+
+def _response_cache_bypass(result: object) -> bool:
+    """Return true when a response must not be cached for safety reasons."""
+    if not isinstance(result, Response):
+        return False
+    if result.background is not None:
+        return True
+    for name, value in result.headers.items():
+        lower_name = name.lower()
+        if lower_name == "set-cookie":
+            return True
+        if lower_name == "cache-control" and _cache_control_blocks_storage(value):
+            return True
+    return False
+
+
 def _etag_for(data: bytes) -> str:
     """Return a stable, quoted weak ETag for the cached representation."""
     return f'W/"{hashlib.sha256(data).hexdigest()}"'
@@ -297,6 +321,8 @@ def cache(
             if cached is None  or (request is not None and request.headers.get("Cache-Control") == "no-cache") :  # cache miss
                 result = await ensure_async_func(*args, **kwargs)
                 if isinstance(result, Response) and result.status_code >= 400:
+                    return result
+                if _response_cache_bypass(result):
                     return result
                 if not coder.can_encode(result):
                     return result

@@ -6,7 +6,17 @@ import pendulum
 import pydantic
 import pytest
 from pydantic import BaseModel, ValidationError
-from starlette.responses import JSONResponse, Response, StreamingResponse
+from starlette.background import BackgroundTask
+from starlette.responses import (
+    FileResponse,
+    JSONResponse,
+    RedirectResponse,
+    Response,
+    StreamingResponse,
+)
+from starlette.templating import (
+    _TemplateResponse as TemplateResponse,  # pyright: ignore[reportPrivateUsage]
+)
 
 from fastapi_cache.coder import Coder, JsonCoder, PickleCoder, TypedJsonCoder
 
@@ -104,7 +114,7 @@ def test_json_coder_validation_error() -> None:
         TypedJsonCoder.decode_as_type(invalid, type_=PDItem)
 
 
-class V1Item(V1BaseModel):
+class V1Item(V1BaseModel):  # pyright: ignore[reportGeneralTypeIssues, reportUntypedBaseClass]
     name: str
     price: float
 
@@ -114,7 +124,7 @@ if PYDANTIC_V2:
     class TypeErrorItem(BaseModel):
         quantity: int
 
-        @field_validator("quantity")
+        @field_validator("quantity")  # pyright: ignore[reportOptionalCall]
         @classmethod
         def check_quantity(cls, value: int) -> int:
             raise TypeError("validator error")
@@ -189,8 +199,51 @@ def test_coder_can_encode_default() -> None:
 def test_json_coder_can_encode_responses() -> None:
     assert JsonCoder.can_encode({"a": 1}) is True
     assert JsonCoder.can_encode(JSONResponse({"a": 1})) is True
+    assert JsonCoder.can_encode(JSONResponse({"a": 1}, status_code=201)) is False
+    assert (
+        JsonCoder.can_encode(JSONResponse({"a": 1}, headers={"X-Operation": "created"}))
+        is False
+    )
+    assert (
+        JsonCoder.can_encode(
+            JSONResponse({"a": 1}, media_type="application/vnd.api+json")
+        )
+        is False
+    )
+    assert (
+        JsonCoder.can_encode(
+            JSONResponse({"a": 1}, headers={"content-type": "text/plain"})
+        )
+        is False
+    )
+    assert (
+        JsonCoder.can_encode(
+            JSONResponse({"a": 1}, background=BackgroundTask(lambda: None))
+        )
+        is False
+    )
     assert JsonCoder.can_encode(Response("ok")) is False
     assert JsonCoder.can_encode(StreamingResponse(iter([b"ok"]))) is False
+
+
+class _Template:
+    def render(self, context: Dict[str, Any]) -> str:
+        return "ok"
+
+
+def test_pickle_coder_can_encode_responses() -> None:
+    assert PickleCoder.can_encode({"a": 1}) is True
+    assert (
+        PickleCoder.can_encode(
+            JSONResponse({"a": 1}, status_code=201, headers={"X-Operation": "created"})
+        )
+        is True
+    )
+    assert PickleCoder.can_encode(Response("ok")) is True
+    assert PickleCoder.can_encode(RedirectResponse("/target")) is True
+    assert PickleCoder.can_encode(StreamingResponse(iter([b"ok"]))) is False
+    assert PickleCoder.can_encode(FileResponse(__file__)) is False
+    assert PickleCoder.can_encode(TemplateResponse(_Template(), {})) is False
 
 
 def test_json_coder_preserves_user_spec_type() -> None:

@@ -12,6 +12,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
     get_args,
     overload,
 )
@@ -19,7 +20,12 @@ from typing import (
 import pendulum
 import pydantic
 from fastapi.encoders import jsonable_encoder
-from starlette.responses import JSONResponse, Response
+from starlette.responses import (
+    FileResponse,
+    JSONResponse,
+    Response,
+    StreamingResponse,
+)
 from starlette.templating import (
     _TemplateResponse as TemplateResponse,  # pyright: ignore[reportPrivateUsage]
 )
@@ -27,13 +33,13 @@ from starlette.templating import (
 TypeAdapter = getattr(pydantic, "TypeAdapter", None)
 
 _TYPE_ADAPTER_ERRORS: Tuple[Type[BaseException], ...] = tuple(
-    error
+    cast(Type[BaseException], error)
     for error in (
         getattr(pydantic, "PydanticSchemaGenerationError", TypeError),
         getattr(pydantic, "PydanticUserError", TypeError),
         TypeError,
     )
-    if isinstance(error, type) and issubclass(error, BaseException)
+    if isinstance(error, type)
 )
 
 _T = TypeVar("_T", bound=type)
@@ -122,8 +128,22 @@ class Coder:
 class JsonCoder(Coder):
     @classmethod
     def can_encode(cls, value: Any) -> bool:
-        if isinstance(value, Response):
-            return isinstance(value, JSONResponse)
+        if not isinstance(value, Response):
+            return True
+        if type(value) is not JSONResponse:
+            return False
+        if value.status_code != 200:
+            return False
+        if value.background is not None:
+            return False
+        if value.media_type != "application/json":
+            return False
+        for name, header_value in value.headers.items():
+            lower_name = name.lower()
+            if lower_name not in {"content-type", "content-length"}:
+                return False
+            if lower_name == "content-type" and header_value.lower() != "application/json":
+                return False
         return True
 
     @classmethod
@@ -166,6 +186,10 @@ class TypedJsonCoder(JsonCoder):
 
 
 class PickleCoder(Coder):
+    @classmethod
+    def can_encode(cls, value: Any) -> bool:
+        return not isinstance(value, (StreamingResponse, FileResponse, TemplateResponse))
+
     @classmethod
     def encode(cls, value: Any) -> bytes:
         if isinstance(value, TemplateResponse):

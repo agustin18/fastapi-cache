@@ -156,7 +156,7 @@ you.
 | `expire=None` in InMemory | Expired almost immediately | Means no expiration; `get_with_ttl` returns `-1` | Implemented on stable (unreleased; target 0.3.0a2) |
 | `Cache-Control` | Could emit `max-age=None` or `max-age=-1` | Only valid values; `max-age` is omitted when no valid expiry exists | Implemented on stable (unreleased; target 0.3.0a2) |
 | `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced as `__fastapi_cache_spec_type__`; user data is preserved | Implemented on stable (unreleased; target 0.3.0a2) |
-| Non-JSON responses | Streaming/file/redirect could be cached incorrectly | Bypassed unless the coder's `can_encode` supports them | Implemented on stable (unreleased; target 0.3.0a2) |
+| Response caching | Streaming/file/redirect and metadata-bearing `JSONResponse` could be cached incorrectly | `JsonCoder` caches only simple `200`/`application/json` `JSONResponse`; other responses bypass; `PickleCoder` bypasses streaming/file/template; `Set-Cookie`, `Cache-Control: no-store/private` and background tasks never cache | Implemented on stable (unreleased; target 0.3.0a2) |
 | Second `init` | Silent no-op | Reconfiguration is explicit and documented | Targeted |
 
 The error-response, typed-decode and clear-semantics fixes are implemented in `0.3.0a1`.
@@ -284,11 +284,16 @@ conversions.
 
 ### Non-JSON responses
 
-`JsonCoder` only caches `JSONResponse` objects. `StreamingResponse`, `FileResponse`,
-`RedirectResponse`, plain `Response`, and template responses are returned directly and are
-not cached. Custom coders can override `Coder.can_encode()` to opt in; `PickleCoder` can
-round-trip response objects. A plain `Response` with a JSON media type is bypassed unless it
-is a `JSONResponse` or a custom coder supports it.
+`JsonCoder` only caches simple `JSONResponse` objects: status `200`, media type
+`application/json`, no custom headers, and no background task. `StreamingResponse`,
+`FileResponse`, `RedirectResponse`, plain `Response`, template responses, and `JSONResponse`
+objects with additional status/header metadata are returned directly and are not cached.
+Custom coders can override `Coder.can_encode()` to opt in; `PickleCoder` caches
+`JSONResponse`, plain `Response`, and `RedirectResponse` objects, and bypasses streaming,
+file, and template responses. Responses with `Set-Cookie`, `Cache-Control: no-store` or
+`Cache-Control: private`, or a background task are never cached, regardless of the coder.
+A plain `Response` with a JSON media type is bypassed unless it is a `JSONResponse` or a
+custom coder supports it.
 
 **Action required:** if you were affected by cached error responses or by `clear(key=...)`,
 flush the cache namespace after upgrading. If you relied on `clear(key=...)` clearing the whole
@@ -296,7 +301,8 @@ prefix, switch to `clear()` or `clear(namespace=...)`. If you relied on `clear("
 deleting `app:users`, use the exact namespace. Redis Cluster users must use key-only clear or
 flush the database out of band. Namespace clear is best-effort and not atomic. `clear()` is an
 administrative operation; do not expose it to untrusted input. If the ETag changes, clients may
-revalidate once.
+revalidate once. If you previously cached responses with cookies or private data, flush the
+namespace as well.
 
 ## Step by step
 
@@ -390,8 +396,9 @@ advisory for vulnerabilities.
 - [x] ETag is stable across worker processes (implemented on `stable`, unreleased).
 - [x] `Cache-Control`/`max-age` behavior is correct (implemented on `stable`, unreleased).
 - [ ] InMemory `expire=None` and instance isolation behave as documented.
-- [x] Non-JSON responses (streaming/file/redirect) are bypassed (implemented on `stable`,
-  unreleased).
+- [x] Non-JSON responses and metadata-bearing `JSONResponse` are bypassed; responses with
+  `Set-Cookie`, `Cache-Control: no-store/private`, or a background task are never cached
+  (implemented on `stable`, unreleased).
 - [x] `_spec_type` user payloads are preserved (implemented on `stable`, unreleased).
 - [ ] A second `init()` is explicit.
 

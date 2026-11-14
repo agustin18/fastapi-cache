@@ -179,8 +179,10 @@ omits `max-age` for `expire=None` and no-expiration hits. `expire=0` keeps the l
 fallback to the global `expire` value. ETags are quoted weak validators derived from a
 stable SHA-256 digest; `If-None-Match` uses weak comparison, supports lists and `*`, is
 evaluated on hits and misses, and ignores malformed entity-tags. `_spec_type` user payloads
-are preserved via a namespaced internal marker. Non-JSON responses are bypassed unless the
-coder's `can_encode` supports them.
+are preserved via a namespaced internal marker. `JsonCoder` caches only simple `200`
+`application/json` `JSONResponse` objects; other responses are bypassed unless the coder's
+`can_encode` supports them. Responses with `Set-Cookie`, `Cache-Control: no-store/private`,
+or a background task are never cached.
 
 Targeted for later pre-releases: explicit re-`init()` and the Redis client/server matrix.
 
@@ -218,7 +220,8 @@ regression test when implemented.
 | 0.3.0 | `InMemoryBackend` instances do not share state | The class-level store leaked entries between instances | Implemented on `stable` (unreleased; target 0.3.0a2) |
 | 0.3.0 | `Cache-Control` never emits `max-age=None` or `max-age=-1` | Invalid headers | Implemented on `stable` (unreleased; target 0.3.0a2) |
 | 0.3.0 | User payloads with a `_spec_type` key are not interpreted as internal metadata | The marker collided with user data | Implemented on `stable` (unreleased; target 0.3.0a2) |
-| 0.3.0 | Non-JSON responses (streaming, file, redirect) are not cached blindly | Status/headers/body were lost or corrupted | Implemented on `stable` (unreleased; target 0.3.0a2) |
+| 0.3.0 | Only simple `JSONResponse` objects are cached by `JsonCoder`; other responses bypass | Status/headers/body were lost or corrupted | Implemented on `stable` (unreleased; target 0.3.0a2) |
+| 0.3.0 | Responses with `Set-Cookie`, `Cache-Control: no-store/private`, or a background task are never cached | Cookies and private data could be replayed to other clients | Implemented on `stable` (unreleased; target 0.3.0a2) |
 | 0.3.0 | A second `FastAPICache.init(...)` is not a silent no-op | Configuration was impossible to change | Targeted |
 
 ## Cache data compatibility
