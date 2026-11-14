@@ -4,7 +4,7 @@ import tempfile
 from typing import AsyncIterator, Dict, Generator
 
 import pytest
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Request
 from starlette.background import BackgroundTask
 from starlette.responses import (
     FileResponse,
@@ -41,6 +41,11 @@ counters = {
     "pickle_file": 0,
     "pickle_redirect": 0,
     "pickle_plain": 0,
+    "injected_cookie": 0,
+    "injected_private": 0,
+    "injected_status": 0,
+    "injected_public": 0,
+    "injected_dependency": 0,
     "background_runs": 0,
     "user_spec": 0,
 }
@@ -202,6 +207,52 @@ async def pickle_redirect() -> RedirectResponse:
 async def pickle_plain() -> Response:
     counters["pickle_plain"] += 1
     return PlainTextResponse(f"plain-{counters['pickle_plain']}")
+
+
+@app.get("/injected-cookie")
+@cache(namespace="test", expire=60)
+async def injected_cookie(response: Response) -> Dict[str, int]:
+    counters["injected_cookie"] += 1
+    response.set_cookie("session", "secret")
+    return {"n": counters["injected_cookie"]}
+
+
+@app.get("/injected-private")
+@cache(namespace="test", expire=60)
+async def injected_private(response: Response) -> Dict[str, int]:
+    counters["injected_private"] += 1
+    response.headers["Cache-Control"] = "private, no-store"
+    return {"n": counters["injected_private"]}
+
+
+@app.get("/injected-status")
+@cache(namespace="test", expire=60)
+async def injected_status(response: Response) -> Dict[str, int]:
+    counters["injected_status"] += 1
+    response.status_code = 201
+    return {"n": counters["injected_status"]}
+
+
+@app.get("/injected-public")
+@cache(namespace="test", expire=60)
+async def injected_public(response: Response) -> Dict[str, int]:
+    counters["injected_public"] += 1
+    return {"n": counters["injected_public"]}
+
+
+async def _private_dependency(request: Request, response: Response) -> None:
+    if request.headers.get("X-Private") == "1":
+        response.headers["Cache-Control"] = "private"
+
+
+@app.get("/injected-dependency")
+@cache(namespace="test", expire=60)
+async def injected_dependency(
+    response: Response,
+    _: None = Depends(_private_dependency),
+) -> Dict[str, int]:
+    counters["injected_dependency"] += 1
+    return {"n": counters["injected_dependency"]}
 
 
 @pytest.fixture(autouse=True)
@@ -420,3 +471,64 @@ def test_pickle_coder_caches_plain_responses() -> None:
     assert first.text == "plain-1"
     assert second.text == "plain-1"
     assert counters["pickle_plain"] == 1
+
+
+def test_injected_response_cookie_is_not_cached() -> None:
+    with TestClient(app) as client:
+        first = client.get("/injected-cookie")
+        client.cookies.clear()
+        second = client.get("/injected-cookie")
+
+    assert first.json() == {"n": 1}
+    assert second.json() == {"n": 2}
+    assert "session=secret" in first.headers["set-cookie"]
+    assert "session=secret" in second.headers["set-cookie"]
+    assert counters["injected_cookie"] == 2
+
+
+def test_injected_response_private_is_not_cached() -> None:
+    with TestClient(app) as client:
+        first = client.get("/injected-private")
+        second = client.get("/injected-private")
+
+    assert first.json() == {"n": 1}
+    assert second.json() == {"n": 2}
+    assert first.headers["Cache-Control"] == "private, no-store"
+    assert second.headers["Cache-Control"] == "private, no-store"
+    assert counters["injected_private"] == 2
+
+
+def test_injected_response_custom_status_is_not_cached() -> None:
+    with TestClient(app) as client:
+        first = client.get("/injected-status")
+        second = client.get("/injected-status")
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+    assert first.json() == {"n": 1}
+    assert second.json() == {"n": 2}
+    assert counters["injected_status"] == 2
+
+
+def test_injected_response_public_endpoint_is_cached() -> None:
+    with TestClient(app) as client:
+        first = client.get("/injected-public")
+        second = client.get("/injected-public")
+
+    assert first.json() == {"n": 1}
+    assert second.json() == {"n": 1}
+    assert counters["injected_public"] == 1
+    assert second.headers["X-FastAPI-Cache"] == "HIT"
+
+
+def test_injected_response_dependency_metadata_bypasses_cache() -> None:
+    with TestClient(app) as client:
+        first = client.get("/injected-dependency")
+        second = client.get("/injected-dependency", headers={"X-Private": "1"})
+        third = client.get("/injected-dependency")
+
+    assert first.json() == {"n": 1}
+    assert second.json() == {"n": 2}
+    assert second.headers["Cache-Control"] == "private"
+    assert third.json() == {"n": 1}
+    assert counters["injected_dependency"] == 2

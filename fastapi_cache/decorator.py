@@ -129,6 +129,16 @@ def _response_cache_bypass(result: object) -> bool:
     return False
 
 
+def _injected_response_cache_bypass(response: Optional[Response]) -> bool:
+    """Return true when the injected response carries metadata a cached value cannot reproduce."""
+    if response is None:
+        return False
+    status_code = getattr(response, "status_code", None)
+    if status_code is not None and status_code != 200:
+        return True
+    return _response_cache_bypass(response)
+
+
 def _etag_for(data: bytes) -> str:
     """Return a stable, quoted weak ETag for the cached representation."""
     return f'W/"{hashlib.sha256(data).hexdigest()}"'
@@ -261,7 +271,7 @@ def cache(
             request: Optional[Request] = copy_kwargs.pop(request_param.name, None)  # type: ignore[assignment]
             response: Optional[Response] = copy_kwargs.pop(response_param.name, None)  # type: ignore[assignment]
 
-            if _uncacheable(request):
+            if _uncacheable(request) or _injected_response_cache_bypass(response):
                 return await ensure_async_func(*args, **kwargs)
 
             prefix = FastAPICache.get_prefix()
@@ -323,6 +333,8 @@ def cache(
                 if isinstance(result, Response) and result.status_code >= 400:
                     return result
                 if _response_cache_bypass(result):
+                    return result
+                if _injected_response_cache_bypass(response):
                     return result
                 if not coder.can_encode(result):
                     return result

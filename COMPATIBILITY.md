@@ -182,7 +182,9 @@ evaluated on hits and misses, and ignores malformed entity-tags. `_spec_type` us
 are preserved via a namespaced internal marker. `JsonCoder` caches only simple `200`
 `application/json` `JSONResponse` objects; other responses are bypassed unless the coder's
 `can_encode` supports them. Responses with `Set-Cookie`, `Cache-Control: no-store/private`,
-or a background task are never cached.
+or a background task are never cached. The injected `response` object is checked before a
+cache read and before a write; those directives and a non-`200` status bypass the cache for
+dict/list returns.
 
 Targeted for later pre-releases: explicit re-`init()` and the Redis client/server matrix.
 
@@ -222,6 +224,7 @@ regression test when implemented.
 | 0.3.0 | User payloads with a `_spec_type` key are not interpreted as internal metadata | The marker collided with user data | Implemented on `stable` (unreleased; target 0.3.0a2) |
 | 0.3.0 | Only simple `JSONResponse` objects are cached by `JsonCoder`; other responses bypass | Status/headers/body were lost or corrupted | Implemented on `stable` (unreleased; target 0.3.0a2) |
 | 0.3.0 | Responses with `Set-Cookie`, `Cache-Control: no-store/private`, or a background task are never cached | Cookies and private data could be replayed to other clients | Implemented on `stable` (unreleased; target 0.3.0a2) |
+| 0.3.0 | Injected `response` metadata is checked before cache reads and writes | Dict/list responses could cache cookies, private data, or custom statuses | Implemented on `stable` (unreleased; target 0.3.0a2) |
 | 0.3.0 | A second `FastAPICache.init(...)` is not a silent no-op | Configuration was impossible to change | Targeted |
 
 ## Cache data compatibility
