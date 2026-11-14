@@ -19,7 +19,7 @@ from fastapi_cache.decorator import cache
 
 
 @pytest.fixture(autouse=True)
-def _reset_cache() -> Generator[None, None, None]:
+def _reset_cache() -> Generator[None, None, None]:  # pyright: ignore[reportUnusedFunction]
     FastAPICache.reset()
     yield
     FastAPICache.reset()
@@ -44,6 +44,7 @@ def test_init_signature() -> None:
         "key_builder",
         "cache_status_header",
         "enable",
+        "cache_authenticated",
     ]
     assert params["prefix"].default == ""
     assert params["expire"].default is None
@@ -51,6 +52,7 @@ def test_init_signature() -> None:
     assert params["key_builder"].default is default_key_builder
     assert params["cache_status_header"].default == "X-FastAPI-Cache"
     assert params["enable"].default is True
+    assert params["cache_authenticated"].default is False
 
 
 def test_cache_signature() -> None:
@@ -61,12 +63,14 @@ def test_cache_signature() -> None:
         "key_builder",
         "namespace",
         "injected_dependency_namespace",
+        "cache_authenticated",
     ]
     assert params["expire"].default is None
     assert params["coder"].default is None
     assert params["key_builder"].default is None
     assert params["namespace"].default == ""
     assert params["injected_dependency_namespace"].default == "__fastapi_cache"
+    assert params["cache_authenticated"].default is None
 
 
 def test_backend_protocol() -> None:
@@ -104,7 +108,7 @@ def test_decorator_success_path() -> None:
 
     @app.get("/value")
     @cache(expire=60)
-    async def value() -> Dict[str, int]:
+    async def value() -> Dict[str, int]:  # pyright: ignore[reportUnusedFunction]
         calls["n"] += 1
         return {"n": calls["n"]}
 

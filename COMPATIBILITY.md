@@ -12,6 +12,9 @@
   miss calls the endpoint, cache hit returns the cached value, and the cache status header
   reports `MISS`/`HIT`.
 - Existing `@cache(...)` and `FastAPICache.init(...)` calls keep working without code changes.
+- Authenticated requests bypass the cache by default. This is an intentional privacy behavior
+  change; authenticated endpoints must opt in with `cache_authenticated=True` and an
+  identity-aware `key_builder` to keep caching.
 - Existing custom backends, coders and key builders that implement the documented protocols
   keep working.
 - Migration from `fastapi-cache2` does not require application code changes for valid legacy
@@ -52,6 +55,7 @@ FastAPICache.init(
     key_builder=default_key_builder,
     cache_status_header="X-FastAPI-Cache",
     enable=True,
+    cache_authenticated=False,
 )
 FastAPICache.clear(namespace=None, key=None)
 FastAPICache.reset()
@@ -62,6 +66,7 @@ FastAPICache.get_coder()
 FastAPICache.get_key_builder()
 FastAPICache.get_cache_status_header()
 FastAPICache.get_enable()
+FastAPICache.get_cache_authenticated()
 ```
 
 ### `@cache(...)`
@@ -73,6 +78,7 @@ cache(
     key_builder=None,
     namespace="",
     injected_dependency_namespace="__fastapi_cache",
+    cache_authenticated=None,
 )
 ```
 
@@ -158,9 +164,15 @@ Status definitions:
 Implemented: error responses, opt-in `TypedJsonCoder`, `clear()` key/namespace semantics,
 Redis Cluster namespace `NotImplementedError`, and the legacy compatibility matrix.
 
-Targeted for later pre-releases: auth/privacy defaults, stable ETag, InMemory expiry and
-instance isolation, `Cache-Control`/`max-age`, non-JSON bypass, `_spec_type` collision
-handling, explicit re-`init()`, and the Redis client/server matrix.
+### Unreleased on `stable`
+
+Implemented on `stable` (unreleased; target `0.3.0a2`): authenticated requests bypass the
+cache by default; opt-in with `cache_authenticated=True` and an identity-aware `key_builder`.
+Opting in with the default key builder raises `ValueError` for authenticated requests.
+
+Targeted for later pre-releases: stable ETag, InMemory expiry and instance isolation,
+`Cache-Control`/`max-age`, non-JSON bypass, `_spec_type` collision handling, explicit
+re-`init()`, and the Redis client/server matrix.
 
 ### Clear semantics
 
@@ -178,15 +190,16 @@ handling, explicit re-`init()`, and the Redis client/server matrix.
 ## Intentional behavior changes
 
 These are bug fixes targeted for `0.3.0`. The error-response, typed-decode and
-clear-semantics fixes are implemented in `0.3.0a1`; the remaining rows are targeted for
-later pre-releases. Each one is documented in [`MIGRATION.md`](MIGRATION.md) and covered by
-a regression test when implemented.
+clear-semantics fixes are implemented in `0.3.0a1`; the auth/privacy bypass is implemented
+on `stable` (unreleased; target `0.3.0a2`); the remaining rows are targeted for later
+pre-releases. Each one is documented in [`MIGRATION.md`](MIGRATION.md) and covered by a
+regression test when implemented.
 
 | Version | Change | Why | Status |
 |---|---|---|---|
 | 0.3.0 | Error `Response` objects (status >= 400) are not cached | A cached 404 could be returned as 200 | Implemented on `stable` |
 | 0.3.0 | Opt-in `TypedJsonCoder` decodes cached JSON into the annotated return type on Pydantic v2 | Default `JsonCoder` and Pydantic v1 keep the legacy decoded behavior; `TypedJsonCoder` propagates validation errors | Implemented on `stable` |
-| 0.3.0 | Authenticated requests bypass the cache by default | Prevent cross-user response reuse | Targeted |
+| 0.3.0 | Authenticated requests bypass the cache by default | Prevent cross-user response reuse | Implemented on `stable` (unreleased; target 0.3.0a2) |
 | 0.3.0 | ETag is stable across processes and correctly quoted | `hash()` is randomized per process and the old header was invalid | Targeted |
 | 0.3.0 | `clear(key=...)` deletes only that key | It used to delete the whole prefix namespace | Implemented on `stable` |
 | 0.3.0 | `clear("app:user")` does not delete `app:users` | Namespace matching requires the `:` boundary | Implemented on `stable` |
@@ -204,6 +217,10 @@ a regression test when implemented.
   unreachable. Flush the cache namespace after upgrading.
 - **Error responses:** old cached error entries may remain until their TTL expires. Flush
   the cache namespace if you were affected.
+- **Authenticated responses:** entries written by versions that cached authenticated requests
+  under the default key may remain. Clear or rotate the cache namespace before deploying the
+  bypass, including all instances/workers and persistent Redis caches. The bypass is not
+  retroactive.
 - **Pydantic/dataclass values:** old entries encoded as plain JSON still decode; the
   annotated type is restored on read. No flush required for this fix alone.
 
@@ -211,6 +228,8 @@ a regression test when implemented.
 
 - API signature tests for the public names above.
 - Characterization tests for the normal GET success path.
+- Auth/privacy tests for default bypass, opt-in isolation, backend non-access, and legacy
+  cache-entry invalidation.
 - Regression tests for every behavior change.
 - CI tests Python 3.10–3.13 with resolver-selected FastAPI and Pydantic versions.
 - A `legacy-compat` job tests Python 3.8/3.9 with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2,

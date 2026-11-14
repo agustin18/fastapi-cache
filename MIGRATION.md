@@ -16,7 +16,8 @@ contract.
 
 > **Status:** this guide describes `0.3.0a1` and the target `0.3.0` behavior. `0.3.0a1`
 > implements the error-response fix, the opt-in `TypedJsonCoder`, the `clear()` fixes and the
-> legacy compatibility matrix. Auth/privacy, ETag, InMemory expiry/isolation, non-JSON bypass,
+> legacy compatibility matrix. The auth/privacy bypass is implemented on `stable`
+> (unreleased; target `0.3.0a2`). ETag, InMemory expiry/isolation, non-JSON bypass,
 > `_spec_type` and second-`init` fixes are targeted for later `0.3.0` pre-releases. Check the
 > installed version before relying on a behavior listed here.
 
@@ -50,8 +51,11 @@ for Pydantic v1 models and annotations that cannot be represented by a Pydantic 
 ## Who should not migrate yet
 
 - You need full Memcached or DynamoDB parity. They are experimental in `0.3.x`.
-- You need the auth/privacy, ETag, InMemory expiry/isolation, non-JSON bypass, `_spec_type`
-  or second-`init` fixes; they are targeted for later `0.3.0` pre-releases.
+- You need the auth/privacy fix in a published distribution. It is implemented on `stable`
+  but not in `0.3.0a1`; it is targeted for `0.3.0a2`. The published alpha still caches
+  authenticated requests by default.
+- You need the ETag, InMemory expiry/isolation, non-JSON bypass, `_spec_type` or
+  second-`init` fixes; they are targeted for later `0.3.0` pre-releases.
 - You use Redis Cluster and need complete namespace clearing.
 - You need typed restoration on Pydantic v1; the legacy decoded behavior is preserved instead.
   Pydantic v1 is end-of-life; plan an upgrade to Pydantic v2 for typed restoration and
@@ -130,15 +134,16 @@ validating the distribution, not for production. The same version is also publis
 ## Behavior changes in 0.3.0
 
 These are intentional bug fixes targeted for `0.3.0`. `0.3.0a1` implements the error-response,
-typed-decode and clear-semantics fixes; the remaining changes are targeted for later
-pre-releases. Each one will have a regression test and is listed here so you can decide
-whether it affects you.
+typed-decode and clear-semantics fixes; the auth/privacy bypass is implemented on `stable`
+(unreleased; target `0.3.0a2`); the remaining changes are targeted for later pre-releases.
+Each one will have a regression test and is listed here so you can decide whether it affects
+you.
 
 | Change | Before (0.2.2) | After (0.3.0) | Status |
 |---|---|---|---|
 | Error responses | A cached 404 could be returned as 200 | Responses with status >= 400 are not cached | Implemented in 0.3.0a1 |
 | Typed JSON decode | Cache hits returned plain dicts/lists | Opt-in `TypedJsonCoder` on Pydantic v2; default `JsonCoder`, Pydantic v1 and unsupported annotations keep the legacy decoded behavior; validation errors propagate | Implemented in 0.3.0a1 |
-| Authenticated requests | Two users could share a cache key | Requests with `Authorization`/`Cookie`/session bypass the cache by default; opt-in with a safe `key_builder` | Targeted |
+| Authenticated requests | Two users could share a cache key | Requests with `Authorization`/`Cookie`/session bypass the cache by default; opt-in with `cache_authenticated=True` and a safe `key_builder` | Implemented on stable (unreleased; target 0.3.0a2) |
 | ETag | `hash()` changes per process; header unquoted | Stable digest, quoted weak ETag, correct `If-None-Match` | Targeted |
 | `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key; pass the full key | Implemented in 0.3.0a1 |
 | Namespace boundary | `clear("app:user")` also deleted `app:users` | Requires the `:` boundary | Implemented in 0.3.0a1 |
@@ -150,7 +155,84 @@ whether it affects you.
 | Second `init` | Silent no-op | Reconfiguration is explicit and documented | Targeted |
 
 The error-response, typed-decode and clear-semantics fixes are implemented in `0.3.0a1`.
+The auth/privacy bypass is implemented on `stable` (unreleased; target `0.3.0a2`).
 The remaining rows are targeted for later `0.3.0` pre-releases.
+
+### Authenticated requests
+
+`0.3.0a1` caches requests with `Authorization`/`Cookie` using the default key. The fix on
+`stable` (unreleased; target `0.3.0a2`) bypasses the cache for requests with a non-empty
+`Authorization` or `Cookie` header. Public requests keep caching. Functions decorated
+without a `Request` parameter have no HTTP identity context and keep using the cache.
+
+To cache authenticated responses, opt in explicitly and provide a key builder that includes
+the identity. The key builder must include every dimension that affects the response: token,
+session, tenant, permissions, and any other validated principal state. Prefer the principal
+your application already validated over raw headers. Do not put credentials in plaintext in
+keys or logs; use HMAC-SHA256 with an application secret.
+
+```python
+import hashlib
+import hmac
+import os
+
+from fastapi_cache import FastAPICache
+from fastapi_cache.decorator import cache
+
+CACHE_KEY_SECRET = os.environ["CACHE_KEY_SECRET"].encode()
+
+
+def identity_key_builder(
+    func,
+    namespace: str = "",
+    *,
+    request=None,
+    response=None,
+    args,
+    kwargs,
+):
+    identity = ""
+    if request is not None:
+        identity = "|".join(
+            [
+                request.headers.get("Authorization", ""),
+                request.headers.get("Cookie", ""),
+            ]
+        )
+    key_material = f"{identity}|{args}|{kwargs}"
+    digest = hmac.new(
+        CACHE_KEY_SECRET,
+        key_material.encode(),
+        hashlib.sha256,
+    ).hexdigest()
+    return f"{namespace}:{func.__module__}:{func.__name__}:{digest}"
+
+
+FastAPICache.init(backend, cache_authenticated=True, key_builder=identity_key_builder)
+
+
+@app.get("/me")
+@cache(expire=60)
+async def me(request):
+    ...
+```
+
+If `cache_authenticated=True` is used with the default key builder, an authenticated request
+raises `ValueError` before the cache is accessed. A custom key builder alone does not opt in;
+the explicit flag is required.
+
+The automatic bypass only detects `Authorization` and `Cookie`. Applications that use
+`X-API-Key`, proxy-injected headers, `request.state`, or internal dependencies must review
+their cache strategy. `cache_authenticated=True` does not make an unsafe key builder safe.
+
+This fix protects the application cache. It does not configure CDN, reverse-proxy, or browser
+caching.
+
+**Action required when upgrading from `0.3.0a1` or earlier:** entries written for
+authenticated requests may remain under the old default key. The bypass only affects new
+requests. Before deploying, clear or rotate the cache namespace, including all
+instances/workers and persistent Redis caches. A public request could otherwise read an old
+private entry.
 
 **Action required:** if you were affected by cached error responses or by `clear(key=...)`,
 flush the cache namespace after upgrading. If you relied on `clear(key=...)` clearing the whole
@@ -170,10 +252,11 @@ revalidate once.
    `fastapi-cache-stable`, and verify `fastapi_cache.__version__`.
 4. **Configure once.** Call `FastAPICache.init(...)` once during startup. Define prefix,
    expire, coder and key builder. Review authenticated endpoints.
-5. **Run tests.** Expect changes in error responses and `clear()` in `0.3.0a1`; ETag and
-   auth changes are targeted for later pre-releases. Update asserts with the documented
-   behavior.
-6. **Flush if needed.** If the key format or ETag changed, clear the old namespace.
+5. **Run tests.** Expect changes in error responses and `clear()` in `0.3.0a1`; on `stable`,
+   authenticated requests bypass the cache. ETag and other changes remain targeted. Update
+   asserts with the documented behavior.
+6. **Flush if needed.** If the key format or ETag changed, clear the old namespace. For the
+   auth bypass, clearing or rotating the namespace is required, not optional.
 7. **Observe.** Compare HIT/MISS, latency, errors and memory with your baseline.
 8. **Roll back if needed.** See below.
 

@@ -29,6 +29,7 @@ from starlette.status import HTTP_304_NOT_MODIFIED
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
+from fastapi_cache.key_builder import default_key_builder
 from fastapi_cache.types import KeyBuilder
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -74,6 +75,9 @@ def _uncacheable(request: Optional[Request]) -> bool:
     - This is not a GET request
     - The request has a Cache-Control header with a value of "no-store"
 
+    Authentication bypass is handled separately because it depends on the
+    effective cache_authenticated setting.
+
     """
     if not FastAPICache.get_enable():
         return True
@@ -84,12 +88,22 @@ def _uncacheable(request: Optional[Request]) -> bool:
     return request.headers.get("Cache-Control") == "no-store"
 
 
+def _has_auth_headers(request: Optional[Request]) -> bool:
+    """Return true when the request carries an authentication header."""
+    if request is None:
+        return False
+    return bool(request.headers.get("Authorization")) or bool(
+        request.headers.get("Cookie")
+    )
+
+
 def cache(
     expire: Optional[int] = None,
     coder: Optional[Type[Coder]] = None,
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
+    cache_authenticated: Optional[bool] = None,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -98,6 +112,8 @@ def cache(
     :param expire:
     :param coder:
     :param key_builder:
+    :param cache_authenticated: opt in to caching authenticated requests; requires an
+        identity-aware key_builder
 
     :return:
     """
@@ -127,7 +143,6 @@ def cache(
         async def inner(*args: P.args, **kwargs: P.kwargs) -> Union[R, Response]:
             nonlocal coder
             nonlocal expire
-            nonlocal key_builder
 
             async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
                 """Run cached sync functions in thread pool just like FastAPI."""
@@ -156,13 +171,30 @@ def cache(
                 return await ensure_async_func(*args, **kwargs)
 
             prefix = FastAPICache.get_prefix()
+            has_auth_headers = _has_auth_headers(request)
+            cache_authenticated_enabled = (
+                cache_authenticated
+                if cache_authenticated is not None
+                else FastAPICache.get_cache_authenticated()
+            )
+            if has_auth_headers and not cache_authenticated_enabled:
+                return await ensure_async_func(*args, **kwargs)
+
             coder = coder or FastAPICache.get_coder()
             expire = expire or FastAPICache.get_expire()
-            key_builder = key_builder or FastAPICache.get_key_builder()
+            effective_key_builder = key_builder or FastAPICache.get_key_builder()
+            if (
+                has_auth_headers
+                and cache_authenticated_enabled
+                and effective_key_builder is default_key_builder
+            ):
+                raise ValueError(
+                    "Authenticated caching requires a custom, identity-aware key_builder"
+                )
             backend = FastAPICache.get_backend()
             cache_status_header = FastAPICache.get_cache_status_header()
 
-            cache_key = key_builder(
+            cache_key = effective_key_builder(
                 func,
                 f"{prefix}:{namespace}",
                 request=request,
@@ -176,10 +208,14 @@ def cache(
 
             try:
                 ttl, cached = await backend.get_with_ttl(cache_key)
-            except Exception:
+            except Exception as exc:
                 logger.warning(
-                    f"Error retrieving cache key '{cache_key}' from backend:",
-                    exc_info=True,
+                    "Error retrieving cache entry for %s.%s in namespace %r "
+                    "(backend error: %s)",
+                    func.__module__,
+                    func.__name__,
+                    namespace,
+                    type(exc).__name__,
                 )
                 ttl, cached = 0, None
 
@@ -191,10 +227,14 @@ def cache(
 
                 try:
                     await backend.set(cache_key, to_cache, expire)
-                except Exception:
+                except Exception as exc:
                     logger.warning(
-                        f"Error setting cache key '{cache_key}' in backend:",
-                        exc_info=True,
+                        "Error setting cache entry for %s.%s in namespace %r "
+                        "(backend error: %s)",
+                        func.__module__,
+                        func.__name__,
+                        namespace,
+                        type(exc).__name__,
                     )
 
                 if response:

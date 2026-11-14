@@ -7,8 +7,9 @@
 > [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
 
 > **Implemented in this alpha:** error responses are not cached, opt-in `TypedJsonCoder` for
-> Pydantic v2, and the `clear()` fixes. Auth/privacy, ETag, InMemory expiry/isolation, non-JSON
-> bypass and `_spec_type` fixes are targeted for later `0.3.0` pre-releases; see
+> Pydantic v2, and the `clear()` fixes. The auth/privacy bypass is implemented on `stable`
+> and is targeted for `0.3.0a2`; ETag, InMemory expiry/isolation, non-JSON bypass and
+> `_spec_type` fixes remain targeted for later `0.3.0` pre-releases; see
 > [MIGRATION.md](MIGRATION.md).
 
 > **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
@@ -30,8 +31,9 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 - Inherited `ETag` and `Cache-Control` support, including conditional `If-None-Match`
   requests. Correctness fixes for these headers are targeted for later `0.3.0` pre-releases.
 
-> **Alpha caveat:** `ETag`/`Cache-Control` correctness, auth/privacy defaults and InMemory
-> expiration/isolation are not fixed in `0.3.0a1`. See [COMPATIBILITY.md](COMPATIBILITY.md).
+> **Alpha caveat:** `ETag`/`Cache-Control` correctness and InMemory expiration/isolation are
+> not fixed in `0.3.0a1`. The auth/privacy bypass is implemented on `stable` (unreleased;
+> target `0.3.0a2`). See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Requirements
 
@@ -123,6 +125,7 @@ Parameter | type | default | description
 `key_builder` | `KeyBuilder` callable | `default_key_builder` | which key builder to use
 `injected_dependency_namespace` | `str` | `__fastapi_cache` | prefix for injected dependency keywords.
 `cache_status_header` | `str` | `X-FastAPI-Cache` | Name for the header on the response indicating if the request was served from cache; either `HIT` or `MISS`.
+`cache_authenticated` | `bool` | `None` | per-endpoint override for caching authenticated requests; global default is `False`; requires an identity-aware `key_builder`.
 
 You can also use the `@cache` decorator on regular functions to cache their result.
 
@@ -237,6 +240,88 @@ def request_key_builder(
 async def index():
     return dict(hello="world")
 ```
+
+### Authenticated requests
+
+By default, requests with a non-empty `Authorization` or `Cookie` header bypass the cache:
+the endpoint runs normally and nothing is read from or written to the backend. Public
+requests keep caching.
+
+This is a conservative default. Session cookies are covered because they use the `Cookie`
+header. Empty headers are treated as unauthenticated. Functions decorated without a
+`Request` parameter have no HTTP identity context and keep using the cache.
+
+To cache authenticated responses, opt in explicitly and provide a key builder that includes
+the identity:
+
+```python
+import hashlib
+import hmac
+import os
+
+from starlette.requests import Request
+
+from fastapi_cache import FastAPICache
+from fastapi_cache.decorator import cache
+
+CACHE_KEY_SECRET = os.environ["CACHE_KEY_SECRET"].encode()
+
+
+def identity_key_builder(
+    func,
+    namespace: str = "",
+    *,
+    request: Request = None,
+    response=None,
+    args,
+    kwargs,
+):
+    identity = ""
+    if request is not None:
+        identity = "|".join(
+            [
+                request.headers.get("Authorization", ""),
+                request.headers.get("Cookie", ""),
+                request.headers.get("X-Tenant-Id", ""),
+            ]
+        )
+    key_material = f"{identity}|{args}|{kwargs}"
+    digest = hmac.new(
+        CACHE_KEY_SECRET,
+        key_material.encode(),
+        hashlib.sha256,
+    ).hexdigest()
+    return f"{namespace}:{func.__module__}:{func.__name__}:{digest}"
+
+
+FastAPICache.init(backend, cache_authenticated=True, key_builder=identity_key_builder)
+
+
+@app.get("/me")
+@cache(expire=60)
+async def me(request: Request):
+    ...
+```
+
+The key builder must include every dimension that affects the response: token, session,
+tenant, permissions, and any other validated principal state. Prefer the principal your app
+already validated over raw headers. Do not put credentials in plaintext in keys or logs; use
+HMAC-SHA256 with an application secret.
+
+If `cache_authenticated=True` is used with the default key builder, an authenticated request
+raises `ValueError` before the cache is accessed. The flag can also be set per endpoint:
+`@cache(cache_authenticated=True, key_builder=identity_key_builder)`.
+
+The automatic bypass only detects `Authorization` and `Cookie`. If your app uses `X-API-Key`,
+proxy-injected headers, `request.state`, or internal dependencies, review your cache strategy.
+`cache_authenticated=True` does not make an unsafe key builder safe.
+
+This protects the application cache. It does not configure CDN, reverse-proxy, or browser
+caching.
+
+**Upgrading from `0.3.0a1` or earlier:** old entries written for authenticated requests may
+remain under the default key. Clear or rotate the cache namespace before deploying, including
+all instances/workers and persistent Redis caches. The bypass is not retroactive.
 
 ## Backend notes
 
