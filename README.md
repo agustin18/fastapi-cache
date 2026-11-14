@@ -1,12 +1,15 @@
 # fastapi-cache-stable
 
 > **Community-maintained stable fork of fastapi-cache2.**
-> This is an alpha (`0.3.0a0`) based on `v0.2.2`. The `fastapi_cache` import and public API are unchanged.
+> This is an alpha (`0.3.0a1`) based on `v0.2.2`. It is experimental and not recommended for
+> production. The `fastapi_cache` import and public API are unchanged.
 > See [COMPATIBILITY.md](COMPATIBILITY.md), [MIGRATION.md](MIGRATION.md), [SUPPORT.md](SUPPORT.md),
 > [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
 
-> **Typed restoration:** opt-in via `TypedJsonCoder` (Pydantic v2). The default `JsonCoder`
-> keeps the legacy decoded behavior; Pydantic v1 and unsupported annotations are unchanged.
+> **Implemented in this alpha:** error responses are not cached, opt-in `TypedJsonCoder` for
+> Pydantic v2, and the `clear()` fixes. Auth/privacy, ETag, InMemory expiry/isolation, non-JSON
+> bypass and `_spec_type` fixes are targeted for later `0.3.0` pre-releases; see
+> [MIGRATION.md](MIGRATION.md).
 
 > **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
 > upstream project and is not a second development branch.
@@ -24,7 +27,11 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 - Supports `redis`, `memcache`, `dynamodb`, and `in-memory` backends.
 - Easy integration with [FastAPI](https://fastapi.tiangolo.com/).
-- Support for HTTP cache headers like `ETag` and `Cache-Control`, as well as conditional `If-Match-None` requests.
+- Inherited `ETag` and `Cache-Control` support, including conditional `If-None-Match`
+  requests. Correctness fixes for these headers are targeted for later `0.3.0` pre-releases.
+
+> **Alpha caveat:** `ETag`/`Cache-Control` correctness, auth/privacy defaults and InMemory
+> expiration/isolation are not fixed in `0.3.0a1`. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Requirements
 

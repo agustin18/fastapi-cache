@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-cache-stable"
-version = "0.3.0a0"
+version = "0.3.0a1"
 description = "Community-maintained, drop-in stable fork of fastapi-cache2"
 authors = ["Agustin Saiz <agustinsaiz02@gmail.com>"]
 license = "Apache-2.0"
@@ -109,7 +109,7 @@ package = "fastapi_cache"
 start_string = "<!-- towncrier release notes start -->\n"
 underlines = ["", "", ""]
 template = "changelog.d/changelog_template.jinja"
-title_format = "## [{version}](https://github.com/agustin18/fastapi-cache/tree/{version}) - {project_date}"
+title_format = "## [{version}](https://github.com/agustin18/fastapi-cache/tree/v{version}) - {project_date}"
 issue_format = "[#{issue}](https://github.com/agustin18/fastapi-cache/issues/{issue})"
 
 [tool.pyright]
