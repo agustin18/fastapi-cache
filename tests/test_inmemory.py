@@ -18,11 +18,16 @@ def _reset_cache() -> Generator[None, None, None]:  # pyright: ignore[reportUnus
 
 
 def test_store_and_lock_are_instance_scoped() -> None:
-    first = InMemoryBackend()
-    second = InMemoryBackend()
+    async def run() -> None:
+        first = InMemoryBackend()
+        second = InMemoryBackend()
+        first_lock = first._get_lock()  # pyright: ignore[reportPrivateUsage]
+        second_lock = second._get_lock()  # pyright: ignore[reportPrivateUsage]
 
-    assert first._store is not second._store  # pyright: ignore[reportPrivateUsage]
-    assert first._lock is not second._lock  # pyright: ignore[reportPrivateUsage]
+        assert first._store is not second._store  # pyright: ignore[reportPrivateUsage]
+        assert first_lock is not second_lock
+
+    asyncio.run(run())
 
 
 def test_instances_do_not_share_store() -> None:
