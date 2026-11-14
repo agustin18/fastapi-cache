@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import logging
 import time
 from typing import Any, Callable, Dict, Generator, Optional, Tuple
 
@@ -124,6 +125,45 @@ class SpyBackend(InMemoryBackend):
     async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
         self.set_calls += 1
         await super().set(key, value, expire)
+
+
+class FailingBackend(InMemoryBackend):
+    async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
+        raise RuntimeError("get failed")
+
+    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
+        raise RuntimeError("set failed")
+
+
+def test_backend_errors_do_not_log_cache_key(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    backend = FailingBackend()
+    FastAPICache.init(backend, prefix="auth-test")
+    identity_key = "identity-bearing-cache-key"
+
+    def secret_key_builder(
+        func: Callable[..., Any],
+        namespace: str = "",
+        *,
+        request: Optional[Request] = None,
+        response: Optional[Response] = None,
+        args: Tuple[Any, ...],
+        kwargs: Dict[str, Any],
+    ) -> str:
+        return identity_key
+
+    app, calls, _ = build_app(key_builder=secret_key_builder)
+
+    with caplog.at_level(logging.WARNING):
+        with TestClient(app) as client:
+            response = client.get("/me")
+
+    assert response.status_code == 200
+    assert calls["n"] == 1
+    assert identity_key not in caplog.text
+    assert "Error retrieving cache key" in caplog.text
+    assert "Error setting cache key" in caplog.text
 
 
 def test_authorization_bypasses_by_default() -> None:
