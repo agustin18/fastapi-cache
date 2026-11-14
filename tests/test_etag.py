@@ -134,6 +134,7 @@ def test_if_none_match_rejects_malformed_etags() -> None:
             f'w/"{digest}"',
             f'W/ "{digest}"',
             f'W/"{digest}',
+            'W/"bad tag"',
             f"*, {etag}",
             f"{etag}, {digest}",
         ]
