@@ -105,6 +105,42 @@ def _cache_control_header(seconds: Optional[int]) -> Optional[str]:
     return f"max-age={seconds}"
 
 
+def _cache_control_blocks_storage(value: str) -> bool:
+    """Return true when Cache-Control forbids storing or sharing the response."""
+    for directive in value.split(","):
+        name = directive.split("=", 1)[0].strip().lower()
+        if name in {"no-store", "private"}:
+            return True
+    return False
+
+
+def _response_cache_bypass(result: object) -> bool:
+    """Return true when a response must not be cached for safety reasons."""
+    if not isinstance(result, Response):
+        return False
+    if result.background is not None:
+        return True
+    for name, value in result.headers.items():
+        lower_name = name.lower()
+        if lower_name == "set-cookie":
+            return True
+        if lower_name == "cache-control" and _cache_control_blocks_storage(value):
+            return True
+    return False
+
+
+def _injected_response_cache_bypass(response: Optional[Response]) -> bool:
+    """Return true when the injected response carries metadata a cached value cannot reproduce."""
+    if response is None:
+        return False
+    status_code = getattr(response, "status_code", None)
+    if status_code is not None and status_code != 200:
+        return True
+    if any(name.lower() != "content-length" for name, _ in response.headers.items()):
+        return True
+    return response.background is not None
+
+
 def _etag_for(data: bytes) -> str:
     """Return a stable, quoted weak ETag for the cached representation."""
     return f'W/"{hashlib.sha256(data).hexdigest()}"'
@@ -237,7 +273,7 @@ def cache(
             request: Optional[Request] = copy_kwargs.pop(request_param.name, None)  # type: ignore[assignment]
             response: Optional[Response] = copy_kwargs.pop(response_param.name, None)  # type: ignore[assignment]
 
-            if _uncacheable(request):
+            if _uncacheable(request) or _injected_response_cache_bypass(response):
                 return await ensure_async_func(*args, **kwargs)
 
             prefix = FastAPICache.get_prefix()
@@ -297,6 +333,12 @@ def cache(
             if cached is None  or (request is not None and request.headers.get("Cache-Control") == "no-cache") :  # cache miss
                 result = await ensure_async_func(*args, **kwargs)
                 if isinstance(result, Response) and result.status_code >= 400:
+                    return result
+                if _response_cache_bypass(result):
+                    return result
+                if _injected_response_cache_bypass(response):
+                    return result
+                if not coder.can_encode(result):
                     return result
                 to_cache = coder.encode(result)
 

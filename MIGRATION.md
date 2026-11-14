@@ -17,10 +17,10 @@ contract.
 > **Status:** this guide describes `0.3.0a1` and the target `0.3.0` behavior. `0.3.0a1`
 > implements the error-response fix, the opt-in `TypedJsonCoder`, the `clear()` fixes and the
 > legacy compatibility matrix. The auth/privacy bypass, the InMemory
-> `expire=None`/instance-isolation fixes, the `Cache-Control` fix and the stable ETag are
-> implemented on `stable` (unreleased; target `0.3.0a2`). Non-JSON bypass, `_spec_type` and
-> second-`init` fixes are targeted for later `0.3.0` pre-releases. Check the installed
-> version before relying on a behavior listed here.
+> `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
+> `_spec_type` namespacing and the non-JSON response bypass are implemented on `stable`
+> (unreleased; target `0.3.0a2`). The second-`init` fix is targeted for a later `0.3.0`
+> pre-release. Check the installed version before relying on a behavior listed here.
 
 ## Who should migrate
 
@@ -57,10 +57,10 @@ for Pydantic v1 models and annotations that cannot be represented by a Pydantic 
   authenticated requests by default.
 - You need the InMemory `expire=None`/instance-isolation fix in a published distribution. It
   is implemented on `stable` but not in `0.3.0a1`; it is targeted for `0.3.0a2`.
-- You need the stable ETag in a published distribution. It is implemented on `stable` but not
-  in `0.3.0a1`; it is targeted for `0.3.0a2`.
-- You need the non-JSON bypass, `_spec_type` or second-`init` fixes; they are targeted for
-  later `0.3.0` pre-releases.
+- You need the stable ETag, `_spec_type` or non-JSON response fixes in a published
+  distribution. They are implemented on `stable` but not in `0.3.0a1`; they are targeted for
+  `0.3.0a2`.
+- You need the second-`init` fix; it is targeted for a later `0.3.0` pre-release.
 - You use Redis Cluster and need complete namespace clearing.
 - You need typed restoration on Pydantic v1; the legacy decoded behavior is preserved instead.
   Pydantic v1 is end-of-life; plan an upgrade to Pydantic v2 for typed restoration and
@@ -155,13 +155,14 @@ you.
 | Redis Cluster namespace clear | Partial/unsafe clearing | Raises `NotImplementedError`; use key-only clear or flush out of band | Implemented in 0.3.0a1 |
 | `expire=None` in InMemory | Expired almost immediately | Means no expiration; `get_with_ttl` returns `-1` | Implemented on stable (unreleased; target 0.3.0a2) |
 | `Cache-Control` | Could emit `max-age=None` or `max-age=-1` | Only valid values; `max-age` is omitted when no valid expiry exists | Implemented on stable (unreleased; target 0.3.0a2) |
-| `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced; user data is preserved | Targeted |
-| Non-JSON responses | Streaming/file/redirect could be cached incorrectly | Bypassed unless the coder supports them | Targeted |
+| `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced as `__fastapi_cache_spec_type__`; user data is preserved | Implemented on stable (unreleased; target 0.3.0a2) |
+| Response caching | Streaming/file/redirect and metadata-bearing `JSONResponse` could be cached incorrectly | `JsonCoder` caches only simple `200`/`application/json` `JSONResponse`; other responses bypass; `PickleCoder` bypasses streaming/file/template; `Set-Cookie`, `Cache-Control: no-store/private` and background tasks never cache | Implemented on stable (unreleased; target 0.3.0a2) |
 | Second `init` | Silent no-op | Reconfiguration is explicit and documented | Targeted |
 
 The error-response, typed-decode and clear-semantics fixes are implemented in `0.3.0a1`.
-The auth/privacy bypass is implemented on `stable` (unreleased; target `0.3.0a2`).
-The remaining rows are targeted for later `0.3.0` pre-releases.
+The auth/privacy bypass, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
+implemented on `stable` (unreleased; target `0.3.0a2`). The second-`init` row is targeted for
+a later `0.3.0` pre-release.
 
 ### Authenticated requests
 
@@ -272,13 +273,39 @@ with the ETag and cache-status headers and no body. The ETag value changes once 
 upgrading from `0.3.0a1`/0.2.2 because the format changed; clients revalidate and receive
 the new value.
 
+### `_spec_type` and user payloads
+
+The internal marker is now `__fastapi_cache_spec_type__` instead of `_spec_type`. User
+payloads that contain `_spec_type` are preserved as normal data. The decoder only interprets
+the namespaced marker when the object contains exactly the marker and `val`; any other shape
+is returned unchanged. Old cached entries written with the `_spec_type` marker are no longer
+converted to `datetime`/`date`/`Decimal`; flush the cache namespace if you rely on those
+conversions.
+
+### Non-JSON responses
+
+`JsonCoder` only caches simple `JSONResponse` objects: status `200`, media type
+`application/json`, no custom headers, and no background task. `StreamingResponse`,
+`FileResponse`, `RedirectResponse`, plain `Response`, template responses, and `JSONResponse`
+objects with additional status/header metadata are returned directly and are not cached.
+Custom coders can override `Coder.can_encode()` to opt in; `PickleCoder` caches
+`JSONResponse`, plain `Response`, and `RedirectResponse` objects, and bypasses streaming,
+file, and template responses. Responses with `Set-Cookie`, `Cache-Control: no-store` or
+`Cache-Control: private`, or a background task are never cached, regardless of the coder.
+A plain `Response` with a JSON media type is bypassed unless it is a `JSONResponse` or a
+custom coder supports it. The injected `response` object is checked before a cache read and
+before a write; `Set-Cookie`, `Cache-Control: no-store`/`private`, a background task, a
+non-`200` status, or any header other than the automatic `content-length` bypasses the cache
+for dict/list returns.
+
 **Action required:** if you were affected by cached error responses or by `clear(key=...)`,
 flush the cache namespace after upgrading. If you relied on `clear(key=...)` clearing the whole
 prefix, switch to `clear()` or `clear(namespace=...)`. If you relied on `clear("app:user")`
 deleting `app:users`, use the exact namespace. Redis Cluster users must use key-only clear or
 flush the database out of band. Namespace clear is best-effort and not atomic. `clear()` is an
 administrative operation; do not expose it to untrusted input. If the ETag changes, clients may
-revalidate once.
+revalidate once. If you previously cached responses with cookies or private data, flush the
+namespace as well.
 
 ## Step by step
 
@@ -291,9 +318,10 @@ revalidate once.
 4. **Configure once.** Call `FastAPICache.init(...)` once during startup. Define prefix,
    expire, coder and key builder. Review authenticated endpoints.
 5. **Run tests.** Expect changes in error responses and `clear()` in `0.3.0a1`; on `stable`,
-   authenticated requests bypass the cache, InMemory expiry/isolation changes apply, and the
-   ETag format changes once. Non-JSON and `_spec_type` changes remain targeted. Update asserts
-   with the documented behavior.
+   authenticated requests bypass the cache, InMemory expiry/isolation changes apply, the ETag
+   format changes once, `_spec_type` user payloads are preserved, and non-JSON responses
+   bypass the cache. The second-`init` change remains targeted. Update asserts with the
+   documented behavior.
 6. **Flush if needed.** If the key format or ETag changed, clear the old namespace. For the
    auth bypass, clearing or rotating the namespace is required, not optional.
 7. **Observe.** Compare HIT/MISS, latency, errors and memory with your baseline.
@@ -319,9 +347,9 @@ regenerated. Flush the namespace if you were affected by an error-response or cl
 **Is `0.3.0a1` production-ready?** No. It is an alpha for migration and distribution testing.
 **What is implemented in `0.3.0a1`?** Error responses are not cached, opt-in `TypedJsonCoder`
 for Pydantic v2, `clear()` key/namespace semantics, and the legacy compatibility matrix.
-**What is still missing?** Non-JSON bypass, `_spec_type` collision handling and explicit
-re-`init()` are targeted for later `0.3.0` pre-releases. The auth/privacy, InMemory,
-`Cache-Control` and ETag fixes are implemented on `stable` (unreleased; target `0.3.0a2`).
+**What is still missing?** Explicit re-`init()` is targeted for a later `0.3.0` pre-release.
+The auth/privacy, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
+implemented on `stable` (unreleased; target `0.3.0a2`).
 **Is Pydantic v1 supported?** Migration compatibility only. Pydantic v1 is end-of-life
 (1.10.27 is the final release) and receives no new security fixes. Typed restoration requires
 Pydantic v2.
@@ -339,9 +367,9 @@ advisory for vulnerabilities.
 ## Known limitations in 0.3.x
 
 - No tags, stale-while-revalidate, stampede protection or POST caching.
-- Non-JSON bypass, `_spec_type` and second-`init` fixes are not in `0.3.0a1`; they are
-  targeted for later `0.3.0` pre-releases. The auth/privacy, InMemory, `Cache-Control` and
-  ETag fixes are implemented on `stable` (unreleased; target `0.3.0a2`).
+- The second-`init` fix is not in `0.3.0a1`; it is targeted for a later `0.3.0` pre-release.
+  The auth/privacy, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
+  implemented on `stable` (unreleased; target `0.3.0a2`).
 - Redis standalone is verified with Redis 7 and redis-py 4.6.0; redis-py 5/6 are not
   supported by the current dependency constraint and are untested.
 - No full backend parity.
@@ -371,8 +399,10 @@ advisory for vulnerabilities.
 - [x] ETag is stable across worker processes (implemented on `stable`, unreleased).
 - [x] `Cache-Control`/`max-age` behavior is correct (implemented on `stable`, unreleased).
 - [ ] InMemory `expire=None` and instance isolation behave as documented.
-- [ ] Non-JSON responses (streaming/file/redirect) are bypassed.
-- [ ] `_spec_type` user payloads are preserved.
+- [x] Non-JSON responses and metadata-bearing `JSONResponse` are bypassed; responses with
+  `Set-Cookie`, `Cache-Control: no-store/private`, or a background task are never cached
+  (implemented on `stable`, unreleased).
+- [x] `_spec_type` user payloads are preserved (implemented on `stable`, unreleased).
 - [ ] A second `init()` is explicit.
 
 ## See also

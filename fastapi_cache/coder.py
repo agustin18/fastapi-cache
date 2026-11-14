@@ -8,8 +8,11 @@ from typing import (
     ClassVar,
     Dict,
     Optional,
+    Tuple,
+    Type,
     TypeVar,
     Union,
+    cast,
     get_args,
     overload,
 )
@@ -17,24 +20,30 @@ from typing import (
 import pendulum
 import pydantic
 from fastapi.encoders import jsonable_encoder
-from starlette.responses import JSONResponse
+from starlette.responses import (
+    FileResponse,
+    JSONResponse,
+    Response,
+    StreamingResponse,
+)
 from starlette.templating import (
     _TemplateResponse as TemplateResponse,  # pyright: ignore[reportPrivateUsage]
 )
 
 TypeAdapter = getattr(pydantic, "TypeAdapter", None)
 
-_TYPE_ADAPTER_ERRORS = tuple(
-    error
+_TYPE_ADAPTER_ERRORS: Tuple[Type[BaseException], ...] = tuple(
+    cast(Type[BaseException], error)
     for error in (
-        getattr(pydantic, "PydanticSchemaGenerationError", None),
-        getattr(pydantic, "PydanticUserError", None),
+        getattr(pydantic, "PydanticSchemaGenerationError", TypeError),
+        getattr(pydantic, "PydanticUserError", TypeError),
         TypeError,
     )
-    if error is not None
+    if isinstance(error, type)
 )
 
 _T = TypeVar("_T", bound=type)
+_SPEC_TYPE_KEY = "__fastapi_cache_spec_type__"
 
 
 CONVERTERS: Dict[str, Callable[[str], Any]] = {
@@ -60,27 +69,33 @@ def _contains_pydantic_v1_model(type_: Any) -> bool:
 class JsonEncoder(json.JSONEncoder):
     def default(self, o: Any) -> Any:
         if isinstance(o, datetime.datetime):
-            return {"val": str(o), "_spec_type": "datetime"}
+            return {"val": str(o), _SPEC_TYPE_KEY: "datetime"}
         elif isinstance(o, datetime.date):
-            return {"val": str(o), "_spec_type": "date"}
+            return {"val": str(o), _SPEC_TYPE_KEY: "date"}
         elif isinstance(o, Decimal):
-            return {"val": str(o), "_spec_type": "decimal"}
+            return {"val": str(o), _SPEC_TYPE_KEY: "decimal"}
         else:
             return jsonable_encoder(o)
 
 
 def object_hook(obj: Any) -> Any:
-    _spec_type = obj.get("_spec_type")
+    if set(obj) != {_SPEC_TYPE_KEY, "val"}:
+        return obj
+
+    _spec_type = obj.get(_SPEC_TYPE_KEY)
     if not _spec_type:
         return obj
 
     if _spec_type in CONVERTERS:
         return CONVERTERS[_spec_type](obj["val"])
-    else:
-        raise TypeError(f"Unknown {_spec_type}")
+    raise TypeError(f"Unknown {_spec_type}")
 
 
 class Coder:
+    @classmethod
+    def can_encode(cls, value: Any) -> bool:
+        return True
+
     @classmethod
     def encode(cls, value: Any) -> bytes:
         raise NotImplementedError
@@ -111,6 +126,26 @@ class Coder:
 
 
 class JsonCoder(Coder):
+    @classmethod
+    def can_encode(cls, value: Any) -> bool:
+        if not isinstance(value, Response):
+            return True
+        if type(value) is not JSONResponse:
+            return False
+        if value.status_code != 200:
+            return False
+        if value.background is not None:
+            return False
+        if value.media_type != "application/json":
+            return False
+        for name, header_value in value.headers.items():
+            lower_name = name.lower()
+            if lower_name not in {"content-type", "content-length"}:
+                return False
+            if lower_name == "content-type" and header_value.lower() != "application/json":
+                return False
+        return True
+
     @classmethod
     def encode(cls, value: Any) -> bytes:
         if isinstance(value, JSONResponse):
@@ -151,6 +186,10 @@ class TypedJsonCoder(JsonCoder):
 
 
 class PickleCoder(Coder):
+    @classmethod
+    def can_encode(cls, value: Any) -> bool:
+        return not isinstance(value, (StreamingResponse, FileResponse, TemplateResponse))
+
     @classmethod
     def encode(cls, value: Any) -> bytes:
         if isinstance(value, TemplateResponse):

@@ -8,9 +8,10 @@
 
 > **Implemented in this alpha:** error responses are not cached, opt-in `TypedJsonCoder` for
 > Pydantic v2, and the `clear()` fixes. The auth/privacy bypass, the InMemory
-> `expire=None`/instance-isolation fixes, the `Cache-Control` fix and the stable ETag are
-> implemented on `stable` and are targeted for `0.3.0a2`; non-JSON bypass and `_spec_type`
-> fixes remain targeted for later `0.3.0` pre-releases; see [MIGRATION.md](MIGRATION.md).
+> `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
+> `_spec_type` namespacing and the non-JSON response bypass are implemented on `stable` and
+> are targeted for `0.3.0a2`; the second-`init` fix remains targeted for a later `0.3.0`
+> pre-release; see [MIGRATION.md](MIGRATION.md).
 
 > **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
 > upstream project and is not a second development branch.
@@ -33,9 +34,9 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
   quoted weak validators.
 
 > **Alpha caveat:** `0.3.0a1` does not include the auth/privacy bypass, the InMemory
-> `expire=None`/instance-isolation fixes, the `Cache-Control` fix, or the stable ETag. They
-> are implemented on `stable` (unreleased; target `0.3.0a2`). See
-> [COMPATIBILITY.md](COMPATIBILITY.md).
+> `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
+> `_spec_type` namespacing, or the non-JSON response bypass. They are implemented on `stable`
+> (unreleased; target `0.3.0a2`). See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Requirements
 
@@ -180,6 +181,24 @@ cannot be represented by a Pydantic v2 schema keep the legacy decoded behavior.
 
 For broader type support, use `fastapi_cache.coder.PickleCoder` or implement a custom coder
 (see below).
+
+### Response handling
+
+`JsonCoder` caches only simple `JSONResponse` objects: status `200`, media type
+`application/json`, no custom headers, and no background task. Other `Response` subclasses
+are returned directly and are not cached: `StreamingResponse`, `FileResponse`,
+`RedirectResponse`, plain `Response`, template responses, and `JSONResponse` objects with
+metadata that would be lost on a cache hit. Custom coders can override
+`Coder.can_encode()` to opt in; `PickleCoder` caches response objects it can reproduce
+faithfully (`JSONResponse`, plain `Response`, `RedirectResponse`) and bypasses streaming,
+file, and template responses. Responses with `Set-Cookie`, `Cache-Control: no-store` or
+`Cache-Control: private`, or a background task are never cached, regardless of the coder.
+If the endpoint or a dependency sets `Set-Cookie`, `Cache-Control: no-store`/`private`, a
+background task, a non-`200` status, or any header other than the automatic `content-length`
+on the injected `response` object, the call is not cached. This covers dict/list returns whose
+final HTTP metadata comes from that object.
+User payloads that contain `_spec_type` are preserved as normal data; the internal marker is
+namespaced as `__fastapi_cache_spec_type__`.
 
 ### Custom coder
 
