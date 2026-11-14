@@ -95,10 +95,14 @@ def test_json_coder_primitives() -> None:
 
 def test_inmemory_roundtrip() -> None:
     backend = InMemoryBackend()
-    asyncio.run(backend.set("compat:roundtrip", b"v", 60))
-    assert asyncio.run(backend.get("compat:roundtrip")) == b"v"
-    assert asyncio.run(backend.clear(key="compat:roundtrip")) == 1
-    assert asyncio.run(backend.get("compat:roundtrip")) is None
+
+    async def run() -> None:
+        await backend.set("compat:roundtrip", b"v", 60)
+        assert await backend.get("compat:roundtrip") == b"v"
+        assert await backend.clear(key="compat:roundtrip") == 1
+        assert await backend.get("compat:roundtrip") is None
+
+    asyncio.run(run())
 
 
 def test_decorator_success_path() -> None:

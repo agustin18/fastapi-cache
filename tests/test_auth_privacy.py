@@ -1,7 +1,6 @@
 import asyncio
 import hashlib
 import logging
-import time
 from typing import Any, Callable, Dict, Generator, Optional, Tuple
 
 import pytest
@@ -20,29 +19,25 @@ from fastapi_cache.backends.inmemory import InMemoryBackend, Value
 from fastapi_cache.decorator import cache
 
 
-def _clear_store() -> None:
-    InMemoryBackend._store.clear()  # pyright: ignore[reportPrivateUsage]
-
-
 @pytest.fixture(autouse=True)
 def _reset_cache() -> Generator[None, None, None]:  # pyright: ignore[reportUnusedFunction]
     FastAPICache.reset()
-    _clear_store()
     yield
     FastAPICache.reset()
-    _clear_store()
 
 
 def init_cache(
     cache_authenticated: bool = False,
     key_builder: KeyBuilder = default_key_builder,
-) -> None:
+) -> InMemoryBackend:
+    backend = InMemoryBackend()
     FastAPICache.init(
-        InMemoryBackend(),
+        backend,
         prefix="auth-test",
         cache_authenticated=cache_authenticated,
         key_builder=key_builder,
     )
+    return backend
 
 
 def auth_key_builder(
@@ -115,6 +110,7 @@ def build_put_app(
 
 class SpyBackend(InMemoryBackend):
     def __init__(self) -> None:
+        super().__init__()
         self.get_with_ttl_calls = 0
         self.set_calls = 0
 
@@ -659,15 +655,15 @@ def test_no_request_context_keeps_caching() -> None:
 
 
 def test_legacy_entry_survives_until_namespace_invalidated() -> None:
-    init_cache()
+    backend = init_cache()
     app, calls, endpoint = build_app()
     legacy_key = default_key_builder(endpoint, "auth-test:", args=(), kwargs={})
     legacy_value = JsonCoder.encode(
         {"authorization": "Bearer alice", "cookie": None, "n": 1}
     )
-    InMemoryBackend._store[legacy_key] = Value(  # pyright: ignore[reportPrivateUsage]
+    backend._store[legacy_key] = Value(  # pyright: ignore[reportPrivateUsage]
         legacy_value,
-        int(time.time()) + 60,
+        None,
     )
 
     with TestClient(app) as client:
@@ -675,7 +671,7 @@ def test_legacy_entry_survives_until_namespace_invalidated() -> None:
         assert public.json()["authorization"] == "Bearer alice"
         assert calls["n"] == 0
 
-        _clear_store()
+        backend._store.clear()  # pyright: ignore[reportPrivateUsage]
         after_clear = client.get("/me")
 
     assert after_clear.json()["authorization"] is None
