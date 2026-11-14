@@ -165,6 +165,8 @@ Infrastructure-only pull requests can use the `skip-changelog` label.
 - The tag must match the version in `pyproject.toml`.
 - TestPyPI publishing uses the manual `publish-testpypi.yml` workflow and the `testpypi`
   environment. It never runs on `release: published`.
+- PyPI publishing is manual-only via `workflow_dispatch`; it never runs on
+  `release: published`.
 - PyPI publishing uses Trusted Publishing and the protected `pypi` environment.
 - Do not publish without an explicit maintainer decision.
 
