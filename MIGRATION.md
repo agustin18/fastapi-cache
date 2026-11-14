@@ -294,8 +294,9 @@ file, and template responses. Responses with `Set-Cookie`, `Cache-Control: no-st
 `Cache-Control: private`, or a background task are never cached, regardless of the coder.
 A plain `Response` with a JSON media type is bypassed unless it is a `JSONResponse` or a
 custom coder supports it. The injected `response` object is checked before a cache read and
-before a write; `Set-Cookie`, `Cache-Control: no-store`/`private`, a background task, or a
-non-`200` status bypasses the cache for dict/list returns.
+before a write; `Set-Cookie`, `Cache-Control: no-store`/`private`, a background task, a
+non-`200` status, or any header other than the automatic `content-length` bypasses the cache
+for dict/list returns.
 
 **Action required:** if you were affected by cached error responses or by `clear(key=...)`,
 flush the cache namespace after upgrading. If you relied on `clear(key=...)` clearing the whole

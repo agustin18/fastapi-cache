@@ -136,7 +136,9 @@ def _injected_response_cache_bypass(response: Optional[Response]) -> bool:
     status_code = getattr(response, "status_code", None)
     if status_code is not None and status_code != 200:
         return True
-    return _response_cache_bypass(response)
+    if any(name.lower() != "content-length" for name, _ in response.headers.items()):
+        return True
+    return response.background is not None
 
 
 def _etag_for(data: bytes) -> str:

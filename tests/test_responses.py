@@ -19,7 +19,10 @@ from starlette.testclient import TestClient
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.coder import PickleCoder
-from fastapi_cache.decorator import cache
+from fastapi_cache.decorator import (  # pyright: ignore[reportPrivateUsage]
+    _injected_response_cache_bypass,  # pyright: ignore[reportPrivateUsage]
+    cache,
+)
 
 app = FastAPI()
 counters = {
@@ -45,7 +48,9 @@ counters = {
     "injected_private": 0,
     "injected_status": 0,
     "injected_public": 0,
+    "injected_header": 0,
     "injected_dependency": 0,
+    "injected_dependency_header": 0,
     "background_runs": 0,
     "user_spec": 0,
 }
@@ -240,6 +245,14 @@ async def injected_public(response: Response) -> Dict[str, int]:
     return {"n": counters["injected_public"]}
 
 
+@app.get("/injected-header")
+@cache(namespace="test", expire=60)
+async def injected_header(response: Response) -> Dict[str, int]:
+    counters["injected_header"] += 1
+    response.headers["X-Request-ID"] = f"request-{counters['injected_header']}"
+    return {"n": counters["injected_header"]}
+
+
 async def _private_dependency(request: Request, response: Response) -> None:
     if request.headers.get("X-Private") == "1":
         response.headers["Cache-Control"] = "private"
@@ -253,6 +266,22 @@ async def injected_dependency(
 ) -> Dict[str, int]:
     counters["injected_dependency"] += 1
     return {"n": counters["injected_dependency"]}
+
+
+async def _request_id_dependency(request: Request, response: Response) -> None:
+    request_id = request.headers.get("X-Request-ID")
+    if request_id:
+        response.headers["X-Request-ID"] = request_id
+
+
+@app.get("/injected-dependency-header")
+@cache(namespace="test", expire=60)
+async def injected_dependency_header(
+    response: Response,
+    _: None = Depends(_request_id_dependency),
+) -> Dict[str, int]:
+    counters["injected_dependency_header"] += 1
+    return {"n": counters["injected_dependency_header"]}
 
 
 @pytest.fixture(autouse=True)
@@ -532,3 +561,36 @@ def test_injected_response_dependency_metadata_bypasses_cache() -> None:
     assert second.headers["Cache-Control"] == "private"
     assert third.json() == {"n": 1}
     assert counters["injected_dependency"] == 2
+
+
+def test_injected_response_custom_header_is_not_cached() -> None:
+    with TestClient(app) as client:
+        first = client.get("/injected-header")
+        second = client.get("/injected-header")
+
+    assert first.json() == {"n": 1}
+    assert second.json() == {"n": 2}
+    assert first.headers["X-Request-ID"] == "request-1"
+    assert second.headers["X-Request-ID"] == "request-2"
+    assert counters["injected_header"] == 2
+
+
+def test_injected_response_dependency_custom_header_bypasses_cache() -> None:
+    with TestClient(app) as client:
+        first = client.get("/injected-dependency-header")
+        second = client.get(
+            "/injected-dependency-header", headers={"X-Request-ID": "req-2"}
+        )
+        third = client.get("/injected-dependency-header")
+
+    assert first.json() == {"n": 1}
+    assert second.json() == {"n": 2}
+    assert second.headers["X-Request-ID"] == "req-2"
+    assert third.json() == {"n": 1}
+    assert counters["injected_dependency_header"] == 2
+
+
+def test_injected_response_bypass_ignores_content_length() -> None:
+    response = Response()
+    response.headers["content-length"] = "0"
+    assert _injected_response_cache_bypass(response) is False  # pyright: ignore[reportPrivateUsage]

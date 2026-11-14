@@ -194,8 +194,9 @@ faithfully (`JSONResponse`, plain `Response`, `RedirectResponse`) and bypasses s
 file, and template responses. Responses with `Set-Cookie`, `Cache-Control: no-store` or
 `Cache-Control: private`, or a background task are never cached, regardless of the coder.
 If the endpoint or a dependency sets `Set-Cookie`, `Cache-Control: no-store`/`private`, a
-background task, or a non-`200` status on the injected `response` object, the call is not
-cached. This covers dict/list returns whose final HTTP metadata comes from that object.
+background task, a non-`200` status, or any header other than the automatic `content-length`
+on the injected `response` object, the call is not cached. This covers dict/list returns whose
+final HTTP metadata comes from that object.
 User payloads that contain `_spec_type` are preserved as normal data; the internal marker is
 namespaced as `__fastapi_cache_spec_type__`.
 
