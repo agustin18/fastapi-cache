@@ -49,13 +49,16 @@ class InMemoryBackend(Backend):
 
     async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
         count = 0
-        if namespace:
-            keys = list(self._store.keys())
-            for key in keys:
-                if key.startswith(namespace):
+        async with self._lock:
+            if namespace:
+                boundary = namespace + ":"
+                keys = list(self._store.keys())
+                for cache_key in keys:
+                    if cache_key.startswith(boundary):
+                        del self._store[cache_key]
+                        count += 1
+            elif key:
+                if key in self._store:
                     del self._store[key]
                     count += 1
-        elif key:
-            del self._store[key]
-            count += 1
         return count

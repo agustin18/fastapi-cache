@@ -100,5 +100,11 @@ class FastAPICache:
         assert (  # noqa: S101
             cls._backend and cls._prefix is not None
         ), "You must call init first!"
-        namespace = cls._prefix + (":" + namespace if namespace else "")
-        return await cls._backend.clear(namespace, key)
+        if namespace is not None or key is None:
+            effective_namespace = cls._prefix + (
+                ":" + namespace if namespace else ""
+            )
+            if not effective_namespace:
+                return 0
+            return await cls._backend.clear(namespace=effective_namespace)
+        return await cls._backend.clear(key=key)

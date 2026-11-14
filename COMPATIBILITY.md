@@ -143,12 +143,25 @@ Status definitions:
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
 | `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
-| Redis standalone | Targeted | redis-py 5/6; no real Redis integration test yet |
-| Redis Cluster | Unsupported | `clear` limitations documented; no complete namespace clearing |
-| InMemory | Verified for basic operations | Unit tests; instance isolation is targeted for 0.3.0; the current implementation shares state between instances; no size cap yet |
-| Memcached | Experimental | No full `clear`/TTL parity |
-| DynamoDB | Experimental | `clear` is not implemented; the client cleanup issue remains open and is targeted for a future fix |
+| Redis standalone | Verified for clear semantics | Redis 7 service in CI; key-only clear and namespace boundary tested |
+| Redis Cluster | Unsupported for namespace clear | Key-only clear is supported; namespace clear raises `NotImplementedError`; no complete namespace clearing |
+| InMemory | Verified for basic operations and clear semantics | Unit tests; instance isolation is targeted for 0.3.0; the current implementation shares state between instances; no size cap yet |
+| Memcached | Experimental | No full `clear`/TTL parity; `clear` raises `NotImplementedError` |
+| DynamoDB | Experimental | `clear` raises `NotImplementedError`; the client cleanup issue remains open and is targeted for a future fix |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
+
+### Clear semantics
+
+- `clear(key=...)` deletes exactly that key. Pass the full key as stored by the backend.
+- `clear(namespace=...)` requires the `:` namespace boundary and includes nested namespaces.
+- `clear()` clears the configured prefix; with an empty prefix it is a no-op.
+- If both `namespace` and `key` are provided, `namespace` wins.
+- Namespace clear is best-effort, not atomic. Keys added during a Redis `SCAN` may survive.
+- Redis standalone uses `SCAN` + `UNLINK`; Redis Cluster namespace clear raises
+  `NotImplementedError`; use key-only clear or flush the database out of band.
+- Memcached and DynamoDB do not implement `clear`.
+- `clear()` is an administrative invalidation operation. Do not accept arbitrary keys or
+  namespaces from untrusted users.
 
 ## Intentional behavior changes
 
@@ -162,8 +175,9 @@ documented in [`MIGRATION.md`](MIGRATION.md) and covered by a regression test wh
 | 0.3.0 | Opt-in `TypedJsonCoder` decodes cached JSON into the annotated return type on Pydantic v2 | Default `JsonCoder` and Pydantic v1 keep the legacy decoded behavior; `TypedJsonCoder` propagates validation errors | Implemented on `stable` |
 | 0.3.0 | Authenticated requests bypass the cache by default | Prevent cross-user response reuse | Targeted |
 | 0.3.0 | ETag is stable across processes and correctly quoted | `hash()` is randomized per process and the old header was invalid | Targeted |
-| 0.3.0 | `clear(key=...)` deletes only that key | It used to delete the whole prefix namespace | Targeted |
-| 0.3.0 | `clear("app:user")` does not delete `app:users` | Namespace matching requires the `:` boundary | Targeted |
+| 0.3.0 | `clear(key=...)` deletes only that key | It used to delete the whole prefix namespace | Implemented on `stable` |
+| 0.3.0 | `clear("app:user")` does not delete `app:users` | Namespace matching requires the `:` boundary | Implemented on `stable` |
+| 0.3.0 | Redis Cluster namespace clear raises `NotImplementedError` | Partial/unsafe clearing was not reliable | Implemented on `stable` |
 | 0.3.0 | `expire=None` means no expiration in `InMemoryBackend` | It used to expire almost immediately | Targeted |
 | 0.3.0 | `Cache-Control` never emits `max-age=None` or `max-age=-1` | Invalid headers | Targeted |
 | 0.3.0 | User payloads with a `_spec_type` key are not interpreted as internal metadata | The marker collided with user data | Targeted |
