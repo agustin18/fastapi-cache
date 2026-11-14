@@ -10,10 +10,6 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 ## [0.3.0a1](https://github.com/agustin18/fastapi-cache/tree/v0.3.0a1) - 2026-11-14
 
-### Features
-
-- Use `importlib.metadata` to include project version string as `fastapi_cache.__version__`. [#172](https://github.com/agustin18/fastapi-cache/issues/172)
-
 ### Bugfixes
 
 - Avoid caching explicitly returned `Response` objects with status codes >= 400. Adapted from upstream PR #575 by RitiGrover. [#2](https://github.com/agustin18/fastapi-cache/issues/2)

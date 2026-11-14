@@ -140,25 +140,36 @@ prefix used if those names would clash anyway.
 
 ### Supported data types
 
-When using the (default) `JsonCoder`, the cache can store any data type that FastAPI can convert to JSON, including Pydantic models and dataclasses,
-_provided_ that your endpoint has a correct return type annotation. An
-annotation is not needed if the return type is a standard JSON-supported Python
-type such as a dictionary or a list.
+The default `JsonCoder` stores any data type that FastAPI can convert to JSON, including
+Pydantic models and dataclasses. On a cache hit it returns the decoded JSON value (plain
+dicts/lists), not the annotated model; this is the legacy `fastapi-cache2` behavior.
 
-E.g. for an endpoint that returns a Pydantic model named `SomeModel`, the return annotation is used to ensure that the cached result is converted back to the correct class:
+Pydantic v2 users can opt into typed restoration with `TypedJsonCoder`:
+
+```python
+from fastapi_cache import FastAPICache
+from fastapi_cache.coder import TypedJsonCoder
+
+FastAPICache.init(backend, coder=TypedJsonCoder)
+```
+
+or per endpoint:
 
 ```python
 from .models import SomeModel, create_some_model
 
 @app.get("/foo")
-@cache(expire=60)
+@cache(expire=60, coder=TypedJsonCoder)
 async def foo() -> SomeModel:
     return create_some_model()
 ```
 
-It is not sufficient to configure a response model in the route decorator; the cache needs to know what the method itself returns. If no return type decorator is given, the primitive JSON type is returned instead.
+`TypedJsonCoder` uses the endpoint return annotation to restore the annotated type and
+propagates validation errors. It requires Pydantic v2; Pydantic v1 and annotations that
+cannot be represented by a Pydantic v2 schema keep the legacy decoded behavior.
 
-For broader type support, use the `fastapi_cache.coder.PickleCoder` or implement a custom coder (see below).
+For broader type support, use `fastapi_cache.coder.PickleCoder` or implement a custom coder
+(see below).
 
 ### Custom coder
 

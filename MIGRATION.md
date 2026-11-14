@@ -80,18 +80,24 @@ python -c "from fastapi_cache import FastAPICache; print('ok')"
 
 ### Alpha installation from TestPyPI
 
-`0.3.0a1` is published to TestPyPI first. TestPyPI is a separate index and may not have all
-dependencies; use the extra index for PyPI:
+`0.3.0a1` will be published to TestPyPI first; it is not published yet. TestPyPI is a
+separate index and may not have all dependencies. To verify the exact artifact uploaded to
+TestPyPI, download it from that index and install the local wheel:
 
 ```sh
-pip install \
+python -m pip download --no-deps --only-binary=:all: \
   --index-url https://test.pypi.org/simple/ \
-  --extra-index-url https://pypi.org/simple \
+  -d testpypi-dist \
   "fastapi-cache-stable==0.3.0a1"
+
+python -m pip install testpypi-dist/*.whl
+python -m pip check
+python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 ```
 
-TestPyPI is for validating the distribution, not for production. The same version can be
-published to PyPI later.
+Dependencies are resolved from PyPI by the normal install of the wheel. TestPyPI is for
+validating the distribution, not for production. The same version can be published to PyPI
+later.
 
 ## Compatibility matrix
 
