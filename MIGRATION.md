@@ -265,9 +265,12 @@ If you relied on class-level sharing between instances, use a shared backend ins
 ETags are quoted weak validators derived from a stable SHA-256 digest of the cached
 representation: `W/"<hex>"`. The value is stable across worker processes. `If-None-Match`
 uses weak comparison, so `W/"<digest>"` and `"<digest>"` both match; comma-separated lists
-and `*` are supported. A matching conditional GET returns `304 Not Modified` with the ETag
-and cache-status headers and no body. The ETag value changes once when upgrading from
-`0.3.0a1`/0.2.2 because the format changed; clients revalidate and receive the new value.
+and `*` are supported. Conditional requests are evaluated against the generated
+representation on both cache hits and misses, including after `Cache-Control: no-cache`.
+Malformed entity-tags are ignored. A matching conditional GET returns `304 Not Modified`
+with the ETag and cache-status headers and no body. The ETag value changes once when
+upgrading from `0.3.0a1`/0.2.2 because the format changed; clients revalidate and receive
+the new value.
 
 **Action required:** if you were affected by cached error responses or by `clear(key=...)`,
 flush the cache namespace after upgrading. If you relied on `clear(key=...)` clearing the whole

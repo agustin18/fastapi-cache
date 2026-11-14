@@ -26,6 +26,11 @@ async def other(response: Response) -> Dict[str, str]:
     return {"value": "other"}
 
 
+@app.get("/clear")
+async def clear() -> int:
+    return await FastAPICache.clear(namespace="test")
+
+
 @pytest.fixture(autouse=True)
 def _init_cache() -> Generator[None, None, None]:  # pyright: ignore[reportUnusedFunction]
     FastAPICache.init(InMemoryBackend())
@@ -77,9 +82,62 @@ def test_if_none_match_list_and_star() -> None:
     assert starred.status_code == 304
 
 
-def test_if_none_match_on_miss_returns_200() -> None:
+def test_if_none_match_star_on_miss_returns_304() -> None:
     with TestClient(app) as client:
         response = client.get("/fixed", headers={"If-None-Match": "*"})
 
+    assert response.status_code == 304
+    assert response.headers["X-FastAPI-Cache"] == "MISS"
+    assert response.headers["ETag"].startswith('W/"')
+    assert response.content == b""
+
+
+def test_if_none_match_known_etag_on_miss_returns_304() -> None:
+    with TestClient(app) as client:
+        first = client.get("/fixed")
+        etag = first.headers["ETag"]
+        client.get("/clear")
+        conditional = client.get("/fixed", headers={"If-None-Match": etag})
+
+    assert conditional.status_code == 304
+    assert conditional.headers["X-FastAPI-Cache"] == "MISS"
+
+
+def test_if_none_match_no_cache_recompute_returns_304() -> None:
+    with TestClient(app) as client:
+        first = client.get("/fixed")
+        etag = first.headers["ETag"]
+        conditional = client.get(
+            "/fixed",
+            headers={"If-None-Match": etag, "Cache-Control": "no-cache"},
+        )
+
+    assert conditional.status_code == 304
+    assert conditional.headers["X-FastAPI-Cache"] == "MISS"
+
+
+def test_if_none_match_non_matching_on_miss_returns_200() -> None:
+    with TestClient(app) as client:
+        response = client.get("/fixed", headers={"If-None-Match": 'W/"other"'})
+
     assert response.status_code == 200
     assert response.headers["X-FastAPI-Cache"] == "MISS"
+
+
+def test_if_none_match_rejects_malformed_etags() -> None:
+    with TestClient(app) as client:
+        first = client.get("/fixed")
+        etag = first.headers["ETag"]
+        digest = etag[3:-1]
+        malformed = [
+            digest,
+            f'w/"{digest}"',
+            f'W/ "{digest}"',
+            f'W/"{digest}',
+            f"*, {etag}",
+            f"{etag}, {digest}",
+        ]
+        for header in malformed:
+            response = client.get("/fixed", headers={"If-None-Match": header})
+            assert response.status_code == 200, header
+            assert response.headers["X-FastAPI-Cache"] == "HIT", header

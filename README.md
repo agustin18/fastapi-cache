@@ -138,8 +138,9 @@ objects, so that it can add cache control headers to the outgoing response, and
 return a 304 Not Modified response when the incoming request has a matching
 `If-None-Match` header. The ETag is a quoted weak validator derived from a stable SHA-256
 digest of the cached representation; `If-None-Match` supports weak comparison,
-comma-separated lists and `*`. This only happens if the decorated endpoint doesn't already
-list these dependencies already.
+comma-separated lists and `*`. Conditional requests are evaluated on both hits and misses,
+and malformed entity-tags are ignored. This only happens if the decorated endpoint doesn't
+already list these dependencies already.
 
 The keyword arguments for these extra dependencies are named
 `__fastapi_cache_request` and `__fastapi_cache_response` to minimize collisions.

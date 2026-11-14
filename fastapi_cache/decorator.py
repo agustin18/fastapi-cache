@@ -110,25 +110,62 @@ def _etag_for(data: bytes) -> str:
     return f'W/"{hashlib.sha256(data).hexdigest()}"'
 
 
-def _normalize_etag(value: str) -> str:
-    """Normalize an entity-tag for weak comparison."""
+def _parse_etag(value: str) -> Optional[str]:
+    """Return the opaque tag for a valid entity-tag, or None for malformed input."""
     value = value.strip()
-    if value[:2].upper() == "W/":
-        value = value[2:].strip()
-    if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
-        value = value[1:-1]
-    return value
+    if value.startswith("W/"):
+        value = value[2:]
+    if len(value) < 2 or value[0] != '"' or value[-1] != '"':
+        return None
+    opaque = value[1:-1]
+    for char in opaque:
+        code = ord(char)
+        if code == 0x21 or 0x23 <= code <= 0x7E or 0x80 <= code <= 0xFF:
+            continue
+        return None
+    return opaque
+
+
+def _split_etag_list(value: str) -> Optional[List[str]]:
+    """Split a comma-separated entity-tag list, respecting quoted strings."""
+    result: List[str] = []
+    current: List[str] = []
+    in_quotes = False
+    for char in value:
+        if char == '"':
+            in_quotes = not in_quotes
+            current.append(char)
+        elif char == "," and not in_quotes:
+            result.append("".join(current).strip())
+            current = []
+        else:
+            current.append(char)
+    if in_quotes:
+        return None
+    result.append("".join(current).strip())
+    return [item for item in result if item]
 
 
 def _etag_matches(if_none_match: Optional[str], etag: str) -> bool:
     """Return true when If-None-Match matches the current weak ETag."""
     if not if_none_match:
         return False
-    candidates = [value.strip() for value in if_none_match.split(",")]
-    if "*" in candidates:
+    value = if_none_match.strip()
+    if value == "*":
         return True
-    expected = _normalize_etag(etag)
-    return any(_normalize_etag(candidate) == expected for candidate in candidates)
+    candidates = _split_etag_list(value)
+    if candidates is None or any(candidate == "*" for candidate in candidates):
+        return False
+    expected = _parse_etag(etag)
+    if expected is None:
+        return False
+    parsed_candidates: List[str] = []
+    for candidate in candidates:
+        parsed = _parse_etag(candidate)
+        if parsed is None:
+            return False
+        parsed_candidates.append(parsed)
+    return expected in parsed_candidates
 
 
 def cache(
@@ -227,6 +264,11 @@ def cache(
                 )
             backend = FastAPICache.get_backend()
             cache_status_header = FastAPICache.get_cache_status_header()
+            if_none_match = (
+                request.headers.get("if-none-match")
+                if request is not None
+                else None
+            )
 
             cache_key = effective_key_builder(
                 func,
@@ -282,6 +324,10 @@ def cache(
                         headers["Cache-Control"] = cache_control
                     response.headers.update(headers)
 
+                    if _etag_matches(if_none_match, etag):
+                        response.status_code = HTTP_304_NOT_MODIFIED
+                        return response
+
             else:  # cache hit
                 if response:
                     etag = _etag_for(cached)
@@ -294,11 +340,6 @@ def cache(
                         headers["Cache-Control"] = cache_control
                     response.headers.update(headers)
 
-                    if_none_match = (
-                        request.headers.get("if-none-match")
-                        if request is not None
-                        else None
-                    )
                     if _etag_matches(if_none_match, etag):
                         response.status_code = HTTP_304_NOT_MODIFIED
                         return response

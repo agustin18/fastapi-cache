@@ -176,7 +176,8 @@ Opting in with the default key builder raises `ValueError` for authenticated req
 decorator emits `Cache-Control: max-age` only for valid, non-negative expiry values; it
 omits `max-age` for `expire=None` and no-expiration hits. `expire=0` keeps the legacy
 fallback to the global `expire` value. ETags are quoted weak validators derived from a
-stable SHA-256 digest; `If-None-Match` uses weak comparison and supports lists and `*`.
+stable SHA-256 digest; `If-None-Match` uses weak comparison, supports lists and `*`, is
+evaluated on hits and misses, and ignores malformed entity-tags.
 
 Targeted for later pre-releases: non-JSON bypass, `_spec_type` collision handling, explicit
 re-`init()`, and the Redis client/server matrix.
