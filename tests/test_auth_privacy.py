@@ -129,10 +129,10 @@ class SpyBackend(InMemoryBackend):
 
 class FailingBackend(InMemoryBackend):
     async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
-        raise RuntimeError("get failed")
+        raise RuntimeError(f"get failed for key {key}")
 
     async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
-        raise RuntimeError("set failed")
+        raise RuntimeError(f"set failed for key {key}")
 
 
 def test_backend_errors_do_not_log_cache_key(
@@ -162,8 +162,8 @@ def test_backend_errors_do_not_log_cache_key(
     assert response.status_code == 200
     assert calls["n"] == 1
     assert identity_key not in caplog.text
-    assert "Error retrieving cache key" in caplog.text
-    assert "Error setting cache key" in caplog.text
+    assert "Error retrieving cache entry" in caplog.text
+    assert "Error setting cache entry" in caplog.text
 
 
 def test_authorization_bypasses_by_default() -> None:
@@ -521,6 +521,102 @@ def test_cookie_and_authorization_together() -> None:
     assert bob_again.headers["X-FastAPI-Cache"] == "HIT"
     assert alice_again.json() == alice.json()
     assert bob_again.json() == bob.json()
+    assert calls["n"] == 2
+
+
+def test_opt_in_isolates_same_authorization_different_cookie() -> None:
+    init_cache()
+    app, calls, _ = build_app(
+        cache_authenticated=True,
+        key_builder=auth_key_builder,
+    )
+
+    with TestClient(app) as client:
+        alice = client.get(
+            "/me",
+            headers={
+                "Authorization": "Bearer shared",
+                "Cookie": "session=alice",
+            },
+        )
+        bob = client.get(
+            "/me",
+            headers={
+                "Authorization": "Bearer shared",
+                "Cookie": "session=bob",
+            },
+        )
+        alice_again = client.get(
+            "/me",
+            headers={
+                "Authorization": "Bearer shared",
+                "Cookie": "session=alice",
+            },
+        )
+        bob_again = client.get(
+            "/me",
+            headers={
+                "Authorization": "Bearer shared",
+                "Cookie": "session=bob",
+            },
+        )
+
+    assert alice.headers["X-FastAPI-Cache"] == "MISS"
+    assert bob.headers["X-FastAPI-Cache"] == "MISS"
+    assert alice_again.headers["X-FastAPI-Cache"] == "HIT"
+    assert bob_again.headers["X-FastAPI-Cache"] == "HIT"
+    assert alice_again.json() == alice.json()
+    assert bob_again.json() == bob.json()
+    assert alice.json()["cookie"] == "session=alice"
+    assert bob.json()["cookie"] == "session=bob"
+    assert calls["n"] == 2
+
+
+def test_opt_in_isolates_same_cookie_different_authorization() -> None:
+    init_cache()
+    app, calls, _ = build_app(
+        cache_authenticated=True,
+        key_builder=auth_key_builder,
+    )
+
+    with TestClient(app) as client:
+        alice = client.get(
+            "/me",
+            headers={
+                "Authorization": "Bearer alice",
+                "Cookie": "session=shared",
+            },
+        )
+        bob = client.get(
+            "/me",
+            headers={
+                "Authorization": "Bearer bob",
+                "Cookie": "session=shared",
+            },
+        )
+        alice_again = client.get(
+            "/me",
+            headers={
+                "Authorization": "Bearer alice",
+                "Cookie": "session=shared",
+            },
+        )
+        bob_again = client.get(
+            "/me",
+            headers={
+                "Authorization": "Bearer bob",
+                "Cookie": "session=shared",
+            },
+        )
+
+    assert alice.headers["X-FastAPI-Cache"] == "MISS"
+    assert bob.headers["X-FastAPI-Cache"] == "MISS"
+    assert alice_again.headers["X-FastAPI-Cache"] == "HIT"
+    assert bob_again.headers["X-FastAPI-Cache"] == "HIT"
+    assert alice_again.json() == alice.json()
+    assert bob_again.json() == bob.json()
+    assert alice.json()["authorization"] == "Bearer alice"
+    assert bob.json()["authorization"] == "Bearer bob"
     assert calls["n"] == 2
 
 

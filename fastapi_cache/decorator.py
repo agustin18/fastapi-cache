@@ -208,13 +208,14 @@ def cache(
 
             try:
                 ttl, cached = await backend.get_with_ttl(cache_key)
-            except Exception:
+            except Exception as exc:
                 logger.warning(
-                    "Error retrieving cache key for %s.%s in namespace %r from backend:",
+                    "Error retrieving cache entry for %s.%s in namespace %r "
+                    "(backend error: %s)",
                     func.__module__,
                     func.__name__,
                     namespace,
-                    exc_info=True,
+                    type(exc).__name__,
                 )
                 ttl, cached = 0, None
 
@@ -226,13 +227,14 @@ def cache(
 
                 try:
                     await backend.set(cache_key, to_cache, expire)
-                except Exception:
+                except Exception as exc:
                     logger.warning(
-                        "Error setting cache key for %s.%s in namespace %r in backend:",
+                        "Error setting cache entry for %s.%s in namespace %r "
+                        "(backend error: %s)",
                         func.__module__,
                         func.__name__,
                         namespace,
-                        exc_info=True,
+                        type(exc).__name__,
                     )
 
                 if response:
