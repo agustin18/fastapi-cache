@@ -111,8 +111,9 @@ you.
 | Typed JSON decode | Cache hits returned plain dicts/lists | Opt-in `TypedJsonCoder` on Pydantic v2; default `JsonCoder`, Pydantic v1 and unsupported annotations keep the legacy decoded behavior; validation errors propagate |
 | Authenticated requests | Two users could share a cache key | Requests with `Authorization`/`Cookie`/session bypass the cache by default; opt-in with a safe `key_builder` |
 | ETag | `hash()` changes per process; header unquoted | Stable digest, quoted weak ETag, correct `If-None-Match` |
-| `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key |
+| `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key; pass the full key |
 | Namespace boundary | `clear("app:user")` also deleted `app:users` | Requires the `:` boundary |
+| Redis Cluster namespace clear | Partial/unsafe clearing | Raises `NotImplementedError`; use key-only clear or flush out of band |
 | `expire=None` in InMemory | Expired almost immediately | Means no expiration |
 | `Cache-Control` | Could emit `max-age=None` or `max-age=-1` | Only valid values |
 | `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced; user data is preserved |
@@ -123,7 +124,12 @@ The error-response and typed-decode fixes are implemented on `stable`. The remai
 targeted for later `0.3.0` pre-releases.
 
 **Action required:** if you were affected by cached error responses or by `clear(key=...)`,
-flush the cache namespace after upgrading. If the ETag changes, clients may revalidate once.
+flush the cache namespace after upgrading. If you relied on `clear(key=...)` clearing the whole
+prefix, switch to `clear()` or `clear(namespace=...)`. If you relied on `clear("app:user")`
+deleting `app:users`, use the exact namespace. Redis Cluster users must use key-only clear or
+flush the database out of band. Namespace clear is best-effort and not atomic. `clear()` is an
+administrative operation; do not expose it to untrusted input. If the ETag changes, clients may
+revalidate once.
 
 ## Step by step
 

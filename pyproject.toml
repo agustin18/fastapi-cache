@@ -118,6 +118,9 @@ pythonVersion = "3.10"
 
 [tool.pytest.ini_options]
 addopts = "-p no:warnings"
+markers = [
+    "redis: integration tests that require a Redis server",
+]
 testpaths = ["tests"]
 
 [tool.coverage.run]

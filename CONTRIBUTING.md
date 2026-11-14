@@ -29,6 +29,7 @@ Run the local checks:
 ```sh
 ruff check .
 pytest -q
+REDIS_URL=redis://localhost:6379/0 REQUIRE_REDIS=1 pytest -q tests/test_redis_clear.py
 python -m build
 twine check dist/*
 ```
@@ -42,6 +43,7 @@ Blocking for every pull request:
 - `legacy-compat` on Python 3.8/3.9 with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2, plus
   Python 3.10/3.11 with Pydantic 1.10.27
 - `legacy-smoke`: wheel install on Python 3.8 with Pydantic 1.10.27
+- `redis-clear`: Redis 7 integration tests (CI service)
 - changed-line coverage with `diff-cover` for runtime changes
 - `python -m build` and `twine check`
 - clean-install smoke test for wheel and sdist
