@@ -8,6 +8,8 @@ from typing import (
     ClassVar,
     Dict,
     Optional,
+    Tuple,
+    Type,
     TypeVar,
     Union,
     get_args,
@@ -17,24 +19,25 @@ from typing import (
 import pendulum
 import pydantic
 from fastapi.encoders import jsonable_encoder
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 from starlette.templating import (
     _TemplateResponse as TemplateResponse,  # pyright: ignore[reportPrivateUsage]
 )
 
 TypeAdapter = getattr(pydantic, "TypeAdapter", None)
 
-_TYPE_ADAPTER_ERRORS = tuple(
+_TYPE_ADAPTER_ERRORS: Tuple[Type[BaseException], ...] = tuple(
     error
     for error in (
-        getattr(pydantic, "PydanticSchemaGenerationError", None),
-        getattr(pydantic, "PydanticUserError", None),
+        getattr(pydantic, "PydanticSchemaGenerationError", TypeError),
+        getattr(pydantic, "PydanticUserError", TypeError),
         TypeError,
     )
-    if error is not None
+    if isinstance(error, type) and issubclass(error, BaseException)
 )
 
 _T = TypeVar("_T", bound=type)
+_SPEC_TYPE_KEY = "__fastapi_cache_spec_type__"
 
 
 CONVERTERS: Dict[str, Callable[[str], Any]] = {
@@ -60,27 +63,33 @@ def _contains_pydantic_v1_model(type_: Any) -> bool:
 class JsonEncoder(json.JSONEncoder):
     def default(self, o: Any) -> Any:
         if isinstance(o, datetime.datetime):
-            return {"val": str(o), "_spec_type": "datetime"}
+            return {"val": str(o), _SPEC_TYPE_KEY: "datetime"}
         elif isinstance(o, datetime.date):
-            return {"val": str(o), "_spec_type": "date"}
+            return {"val": str(o), _SPEC_TYPE_KEY: "date"}
         elif isinstance(o, Decimal):
-            return {"val": str(o), "_spec_type": "decimal"}
+            return {"val": str(o), _SPEC_TYPE_KEY: "decimal"}
         else:
             return jsonable_encoder(o)
 
 
 def object_hook(obj: Any) -> Any:
-    _spec_type = obj.get("_spec_type")
+    if set(obj) != {_SPEC_TYPE_KEY, "val"}:
+        return obj
+
+    _spec_type = obj.get(_SPEC_TYPE_KEY)
     if not _spec_type:
         return obj
 
     if _spec_type in CONVERTERS:
         return CONVERTERS[_spec_type](obj["val"])
-    else:
-        raise TypeError(f"Unknown {_spec_type}")
+    raise TypeError(f"Unknown {_spec_type}")
 
 
 class Coder:
+    @classmethod
+    def can_encode(cls, value: Any) -> bool:
+        return True
+
     @classmethod
     def encode(cls, value: Any) -> bytes:
         raise NotImplementedError
@@ -111,6 +120,12 @@ class Coder:
 
 
 class JsonCoder(Coder):
+    @classmethod
+    def can_encode(cls, value: Any) -> bool:
+        if isinstance(value, Response):
+            return isinstance(value, JSONResponse)
+        return True
+
     @classmethod
     def encode(cls, value: Any) -> bytes:
         if isinstance(value, JSONResponse):

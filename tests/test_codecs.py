@@ -1,10 +1,12 @@
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
+import pendulum
 import pydantic
 import pytest
 from pydantic import BaseModel, ValidationError
-from starlette.responses import JSONResponse, Response
+from starlette.responses import JSONResponse, Response, StreamingResponse
 
 from fastapi_cache.coder import Coder, JsonCoder, PickleCoder, TypedJsonCoder
 
@@ -13,8 +15,8 @@ if PYDANTIC_V2:
     from pydantic import field_validator
     from pydantic.v1 import BaseModel as V1BaseModel
 else:
-    field_validator = None
-    V1BaseModel = BaseModel
+    field_validator = None  # type: ignore[assignment]
+    V1BaseModel = BaseModel  # type: ignore[misc,assignment]
 
 
 @dataclass
@@ -178,3 +180,66 @@ def test_coder_base_methods_raise() -> None:
         Coder.encode(1)
     with pytest.raises(NotImplementedError):
         Coder.decode(b"1")
+
+
+def test_coder_can_encode_default() -> None:
+    assert Coder.can_encode({"a": 1}) is True
+
+
+def test_json_coder_can_encode_responses() -> None:
+    assert JsonCoder.can_encode({"a": 1}) is True
+    assert JsonCoder.can_encode(JSONResponse({"a": 1})) is True
+    assert JsonCoder.can_encode(Response("ok")) is False
+    assert JsonCoder.can_encode(StreamingResponse(iter([b"ok"]))) is False
+
+
+def test_json_coder_preserves_user_spec_type() -> None:
+    value = {"_spec_type": "datetime", "val": "2020-01-01"}
+    encoded = JsonCoder.encode(value)
+    assert JsonCoder.decode(encoded) == value
+
+
+def test_json_coder_preserves_namespaced_marker_with_extra_keys() -> None:
+    value = {
+        "__fastapi_cache_spec_type__": "datetime",
+        "val": "2020-01-01",
+        "other": 1,
+    }
+    encoded = JsonCoder.encode(value)
+    assert JsonCoder.decode(encoded) == value
+
+
+def test_json_coder_old_spec_type_marker_is_user_data() -> None:
+    encoded = b'{"_spec_type": "datetime", "val": "2020-01-01"}'
+    assert JsonCoder.decode(encoded) == {"_spec_type": "datetime", "val": "2020-01-01"}
+
+
+def test_json_coder_empty_namespaced_marker_is_user_data() -> None:
+    encoded = b'{"__fastapi_cache_spec_type__": "", "val": "x"}'
+    assert JsonCoder.decode(encoded) == {"__fastapi_cache_spec_type__": "", "val": "x"}
+
+
+def test_json_coder_unknown_namespaced_marker_raises() -> None:
+    encoded = b'{"__fastapi_cache_spec_type__": "unknown", "val": "x"}'
+    with pytest.raises(TypeError, match="Unknown unknown"):
+        JsonCoder.decode(encoded)
+
+
+def test_json_coder_internal_datetime_roundtrip() -> None:
+    value = pendulum.datetime(2020, 1, 1, 12, 0, 0)
+    encoded = JsonCoder.encode(value)
+    assert b"__fastapi_cache_spec_type__" in encoded
+    assert b'"_spec_type"' not in encoded
+    assert JsonCoder.decode(encoded) == value
+
+
+def test_json_coder_internal_date_roundtrip() -> None:
+    value = pendulum.date(2020, 1, 1)
+    encoded = JsonCoder.encode(value)
+    assert JsonCoder.decode(encoded) == value
+
+
+def test_json_coder_decimal_roundtrip() -> None:
+    value = Decimal("1.5")
+    encoded = JsonCoder.encode(value)
+    assert JsonCoder.decode(encoded) == value

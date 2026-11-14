@@ -298,6 +298,8 @@ def cache(
                 result = await ensure_async_func(*args, **kwargs)
                 if isinstance(result, Response) and result.status_code >= 400:
                     return result
+                if not coder.can_encode(result):
+                    return result
                 to_cache = coder.encode(result)
 
                 try:
