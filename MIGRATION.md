@@ -61,11 +61,13 @@ for Pydantic v1 models and annotations that cannot be represented by a Pydantic 
 
 ## Install
 
+`0.3.0a1` is a pre-release. Install the exact version:
+
 ```sh
 pip uninstall -y fastapi-cache2
-pip install fastapi-cache-stable
+pip install "fastapi-cache-stable==0.3.0a1"
 # with extras:
-pip install "fastapi-cache-stable[redis]"
+pip install "fastapi-cache-stable[redis]==0.3.0a1"
 ```
 
 Do **not** install both distributions in the same environment: they provide the same
@@ -80,9 +82,9 @@ python -c "from fastapi_cache import FastAPICache; print('ok')"
 
 ### Alpha installation from TestPyPI
 
-`0.3.0a1` will be published to TestPyPI first; it is not published yet. TestPyPI is a
-separate index and may not have all dependencies. To verify the exact artifact uploaded to
-TestPyPI, download it from that index and install the local wheel:
+`0.3.0a1` is published to TestPyPI and PyPI. TestPyPI is a separate index and may not have
+all dependencies. To verify the exact artifact uploaded to TestPyPI, download it from that
+index and install the local wheel:
 
 ```sh
 python -m pip download --no-deps --only-binary=:all: \
@@ -96,8 +98,7 @@ python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 ```
 
 Dependencies are resolved from PyPI by the normal install of the wheel. TestPyPI is for
-validating the distribution, not for production. The same version can be published to PyPI
-later.
+validating the distribution, not for production. The same version is also published to PyPI.
 
 ## Compatibility matrix
 
