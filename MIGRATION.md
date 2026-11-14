@@ -152,7 +152,7 @@ you.
 | Namespace boundary | `clear("app:user")` also deleted `app:users` | Requires the `:` boundary | Implemented in 0.3.0a1 |
 | Redis Cluster namespace clear | Partial/unsafe clearing | Raises `NotImplementedError`; use key-only clear or flush out of band | Implemented in 0.3.0a1 |
 | `expire=None` in InMemory | Expired almost immediately | Means no expiration; `get_with_ttl` returns `-1` | Implemented on stable (unreleased; target 0.3.0a2) |
-| `Cache-Control` | Could emit `max-age=None` or `max-age=-1` | Only valid values | Targeted |
+| `Cache-Control` | Could emit `max-age=None` or `max-age=-1` | Only valid values; `max-age` is omitted when no valid expiry exists | Implemented on stable (unreleased; target 0.3.0a2) |
 | `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced; user data is preserved | Targeted |
 | Non-JSON responses | Streaming/file/redirect could be cached incorrectly | Bypassed unless the coder supports them | Targeted |
 | Second `init` | Silent no-op | Reconfiguration is explicit and documented | Targeted |
@@ -244,13 +244,16 @@ all `InMemoryBackend` instances. On `stable` (unreleased; target `0.3.0a2`):
 
 - `expire=None` means no expiration; `get_with_ttl` returns `-1`, matching Redis/DynamoDB.
 - Each backend instance owns its store and lock. A new backend after `FastAPICache.reset()`
-  starts empty.
-- `expire=0` is unchanged and remains P0-08.
+  starts empty. Do not share one instance across event loops or threads; use one instance per
+  loop/thread. Subclasses that override `__init__()` must call `super().__init__()`.
+- `expire=0` keeps the legacy `or` fallback: it uses the global `expire` value. It is not
+  a new "no expiration" or "expire immediately" switch.
 - `FastAPICache.reset()` resets configuration, not cache data.
 - InMemory remains process-local; use Redis/Memcached for cross-process sharing.
 
-The decorator currently emits `Cache-Control: max-age=-1` on HIT for no-expiration entries.
-That header behavior remains P0-08 and is not changed here.
+The decorator now omits `max-age` when the effective expiry is unknown (`expire=None`) or
+negative, including no-expiration InMemory hits (`ttl=-1`). `ETag` and the cache-status
+header are still emitted. This is implemented on stable (unreleased; target `0.3.0a2`).
 
 No data-format migration is needed: InMemory data is process-local and is lost on restart.
 If you relied on class-level sharing between instances, use a shared backend instead.
@@ -351,7 +354,7 @@ advisory for vulnerabilities.
 
 - [ ] Two users with different credentials do not share a response.
 - [ ] ETag is stable across worker processes.
-- [ ] `Cache-Control`/`max-age` behavior is correct.
+- [x] `Cache-Control`/`max-age` behavior is correct (implemented on `stable`, unreleased).
 - [ ] InMemory `expire=None` and instance isolation behave as documented.
 - [ ] Non-JSON responses (streaming/file/redirect) are bypassed.
 - [ ] `_spec_type` user payloads are preserved.

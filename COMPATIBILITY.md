@@ -172,10 +172,13 @@ Redis Cluster namespace `NotImplementedError`, and the legacy compatibility matr
 Implemented on `stable` (unreleased; target `0.3.0a2`): authenticated requests bypass the
 cache by default; opt-in with `cache_authenticated=True` and an identity-aware `key_builder`.
 Opting in with the default key builder raises `ValueError` for authenticated requests.
-`InMemoryBackend` instances are isolated, and `expire=None` means no expiration.
+`InMemoryBackend` instances are isolated, and `expire=None` means no expiration. The
+decorator emits `Cache-Control: max-age` only for valid, non-negative expiry values; it
+omits `max-age` for `expire=None` and no-expiration hits. `expire=0` keeps the legacy
+fallback to the global `expire` value.
 
-Targeted for later pre-releases: stable ETag, `Cache-Control`/`max-age`, non-JSON bypass,
-`_spec_type` collision handling, explicit re-`init()`, and the Redis client/server matrix.
+Targeted for later pre-releases: stable ETag, non-JSON bypass, `_spec_type` collision
+handling, explicit re-`init()`, and the Redis client/server matrix.
 
 ### Clear semantics
 
@@ -209,7 +212,7 @@ regression test when implemented.
 | 0.3.0 | Redis Cluster namespace clear raises `NotImplementedError` | Partial/unsafe clearing was not reliable | Implemented on `stable` |
 | 0.3.0 | `expire=None` means no expiration in `InMemoryBackend` | It used to expire almost immediately | Implemented on `stable` (unreleased; target 0.3.0a2) |
 | 0.3.0 | `InMemoryBackend` instances do not share state | The class-level store leaked entries between instances | Implemented on `stable` (unreleased; target 0.3.0a2) |
-| 0.3.0 | `Cache-Control` never emits `max-age=None` or `max-age=-1` | Invalid headers | Targeted |
+| 0.3.0 | `Cache-Control` never emits `max-age=None` or `max-age=-1` | Invalid headers | Implemented on `stable` (unreleased; target 0.3.0a2) |
 | 0.3.0 | User payloads with a `_spec_type` key are not interpreted as internal metadata | The marker collided with user data | Targeted |
 | 0.3.0 | Non-JSON responses (streaming, file, redirect) are not cached blindly | Status/headers/body were lost or corrupted | Targeted |
 | 0.3.0 | A second `FastAPICache.init(...)` is not a silent no-op | Configuration was impossible to change | Targeted |

@@ -29,11 +29,13 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 - Supports `redis`, `memcache`, `dynamodb`, and `in-memory` backends.
 - Easy integration with [FastAPI](https://fastapi.tiangolo.com/).
 - Inherited `ETag` and `Cache-Control` support, including conditional `If-None-Match`
-  requests. Correctness fixes for these headers are targeted for later `0.3.0` pre-releases.
+  requests. `Cache-Control` now emits only valid `max-age` values; stable `ETag` is
+  targeted for a later `0.3.0` pre-release.
 
-> **Alpha caveat:** `ETag`/`Cache-Control` correctness is not fixed in `0.3.0a1`. The
-> auth/privacy bypass and the InMemory `expire=None`/instance-isolation fixes are implemented
-> on `stable` (unreleased; target `0.3.0a2`). See [COMPATIBILITY.md](COMPATIBILITY.md).
+> **Alpha caveat:** `ETag` correctness is not fixed in `0.3.0a1`. The auth/privacy bypass,
+> the InMemory `expire=None`/instance-isolation fixes, and the `Cache-Control` `max-age` fix
+> are implemented on `stable` (unreleased; target `0.3.0a2`). See
+> [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Requirements
 
@@ -332,10 +334,12 @@ expired key is accessed. This means that if you don't access a function after
 data has been cached, the data will not be removed automatically.
 
 `expire=None` means no expiration. Each backend instance owns its store and lock, so a new
-instance does not see entries from another instance. InMemory is process-local; use Redis or
-Memcached for cross-process sharing. `expire=0` remains part of the pending expiry/header
-work. `get_with_ttl` returns `-1` for no-expiration entries; the response header behavior for
-that case is also part of the pending `Cache-Control` fix.
+instance does not see entries from another instance. Do not share one instance across event
+loops or threads; use one instance per loop/thread. Subclasses that override `__init__()`
+must call `super().__init__()`. InMemory is process-local; use Redis or Memcached for
+cross-process sharing. `expire=0` keeps the legacy fallback to the global `expire` value.
+`get_with_ttl` returns `-1` for no-expiration entries; the decorator omits `max-age` for
+those entries and for `expire=None`.
 
 ### RedisBackend
 
