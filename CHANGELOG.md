@@ -8,6 +8,48 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.3.0a2](https://github.com/agustin18/fastapi-cache/tree/v0.3.0a2) - 2026-11-14
+
+### Bugfixes
+
+- Bypass the cache for requests with a non-empty `Authorization` or `Cookie` header by
+  default. Add `cache_authenticated=True` to opt in with an identity-aware `key_builder`;
+  opting in with the default key builder raises `ValueError` for authenticated requests.
+  Backend error logs now report only the endpoint, namespace, and exception type; they no
+  longer include the cache key, exception message, or traceback.
+  Clear or rotate the cache namespace when upgrading from versions that cached authenticated
+  responses. [#12](https://github.com/agustin18/fastapi-cache/issues/12)
+- InMemory backend: `expire=None` now means no expiration instead of immediate expiry, and each
+  backend instance has its own store and lock. Existing process-local entries are not shared
+  between instances; use a shared backend for cross-process caching. [#13](https://github.com/agustin18/fastapi-cache/issues/13)
+- Emit `Cache-Control: max-age` only when the effective expiry is valid and non-negative.
+  `expire=None` and no-expiration InMemory hits no longer produce `max-age=None` or
+  `max-age=-1`; `ETag` and the cache-status header are still emitted. `expire=0` keeps the
+  legacy fallback to the global `expire` value. [#14](https://github.com/agustin18/fastapi-cache/issues/14)
+- Use a stable SHA-256 digest for the ETag and emit it as a quoted weak validator
+  (`W/"<digest>"`). `If-None-Match` now uses weak comparison, supports comma-separated lists
+  and `*`, and is evaluated on both cache hits and misses, including after
+  `Cache-Control: no-cache`. Malformed entity-tags are ignored. The ETag value changes once
+  when upgrading; clients revalidate and receive the new value. [#15](https://github.com/agustin18/fastapi-cache/issues/15)
+- Namespace the internal `_spec_type` marker as `__fastapi_cache_spec_type__` so user payloads
+  with `_spec_type` are preserved. `JsonCoder` now caches only simple `JSONResponse` objects
+  (status `200`, `application/json`, no custom headers, no background task) and bypasses other
+  non-JSON responses (`StreamingResponse`, `FileResponse`, `RedirectResponse`, plain `Response`,
+  templates). Responses with `Set-Cookie`, `Cache-Control: no-store`/`private`, or a background
+  task are never cached, regardless of the coder. The injected `response` object is also
+  checked before a cache read and before writing; cookies, `Cache-Control: no-store`/`private`,
+  background tasks, non-`200` statuses, and custom headers bypass the cache. `PickleCoder` caches serializable response
+  objects it can reproduce faithfully and bypasses streaming, file, and template responses. Old
+  cache entries written with `_spec_type` are treated as user data; flush the namespace if you
+  cache `datetime`/`date`/`Decimal` values. [#16](https://github.com/agustin18/fastapi-cache/issues/16)
+
+### Improved Documentation
+
+- Document the published `0.3.0a1` release and pin the alpha install commands. [#11](https://github.com/agustin18/fastapi-cache/issues/11)
+- Document the `0.3.0a2` release status, pin the alpha install commands, and record the tested
+  Redis/redis-py compatibility. The auth/privacy, InMemory, `Cache-Control`, ETag,
+  `_spec_type`, and response-bypass fixes are now available in `0.3.0a2`. [#17](https://github.com/agustin18/fastapi-cache/issues/17)
+
 ## [0.3.0a1](https://github.com/agustin18/fastapi-cache/tree/v0.3.0a1) - 2026-11-14
 
 ### Bugfixes
