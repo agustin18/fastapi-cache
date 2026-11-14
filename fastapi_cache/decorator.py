@@ -97,6 +97,13 @@ def _has_auth_headers(request: Optional[Request]) -> bool:
     )
 
 
+def _cache_control_header(seconds: Optional[int]) -> Optional[str]:
+    """Return a valid Cache-Control header value, or None when it cannot be expressed."""
+    if seconds is None or seconds < 0:
+        return None
+    return f"max-age={seconds}"
+
+
 def cache(
     expire: Optional[int] = None,
     coder: Optional[Type[Coder]] = None,
@@ -238,24 +245,26 @@ def cache(
                     )
 
                 if response:
-                    response.headers.update(
-                        {
-                            "Cache-Control": f"max-age={expire}",
-                            "ETag": f"W/{hash(to_cache)}",
-                            cache_status_header: "MISS",
-                        }
-                    )
+                    headers = {
+                        "ETag": f"W/{hash(to_cache)}",
+                        cache_status_header: "MISS",
+                    }
+                    cache_control = _cache_control_header(expire)
+                    if cache_control is not None:
+                        headers["Cache-Control"] = cache_control
+                    response.headers.update(headers)
 
             else:  # cache hit
                 if response:
                     etag = f"W/{hash(cached)}"
-                    response.headers.update(
-                        {
-                            "Cache-Control": f"max-age={ttl}",
-                            "ETag": etag,
-                            cache_status_header: "HIT",
-                        }
-                    )
+                    headers = {
+                        "ETag": etag,
+                        cache_status_header: "HIT",
+                    }
+                    cache_control = _cache_control_header(ttl)
+                    if cache_control is not None:
+                        headers["Cache-Control"] = cache_control
+                    response.headers.update(headers)
 
                     if_none_match = request and request.headers.get("if-none-match")
                     if if_none_match == etag:
