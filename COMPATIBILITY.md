@@ -175,10 +175,11 @@ Opting in with the default key builder raises `ValueError` for authenticated req
 `InMemoryBackend` instances are isolated, and `expire=None` means no expiration. The
 decorator emits `Cache-Control: max-age` only for valid, non-negative expiry values; it
 omits `max-age` for `expire=None` and no-expiration hits. `expire=0` keeps the legacy
-fallback to the global `expire` value.
+fallback to the global `expire` value. ETags are quoted weak validators derived from a
+stable SHA-256 digest; `If-None-Match` uses weak comparison and supports lists and `*`.
 
-Targeted for later pre-releases: stable ETag, non-JSON bypass, `_spec_type` collision
-handling, explicit re-`init()`, and the Redis client/server matrix.
+Targeted for later pre-releases: non-JSON bypass, `_spec_type` collision handling, explicit
+re-`init()`, and the Redis client/server matrix.
 
 ### Clear semantics
 
@@ -206,7 +207,7 @@ regression test when implemented.
 | 0.3.0 | Error `Response` objects (status >= 400) are not cached | A cached 404 could be returned as 200 | Implemented on `stable` |
 | 0.3.0 | Opt-in `TypedJsonCoder` decodes cached JSON into the annotated return type on Pydantic v2 | Default `JsonCoder` and Pydantic v1 keep the legacy decoded behavior; `TypedJsonCoder` propagates validation errors | Implemented on `stable` |
 | 0.3.0 | Authenticated requests bypass the cache by default | Prevent cross-user response reuse | Implemented on `stable` (unreleased; target 0.3.0a2) |
-| 0.3.0 | ETag is stable across processes and correctly quoted | `hash()` is randomized per process and the old header was invalid | Targeted |
+| 0.3.0 | ETag is stable across processes and correctly quoted | `hash()` is randomized per process and the old header was invalid | Implemented on `stable` (unreleased; target 0.3.0a2) |
 | 0.3.0 | `clear(key=...)` deletes only that key | It used to delete the whole prefix namespace | Implemented on `stable` |
 | 0.3.0 | `clear("app:user")` does not delete `app:users` | Namespace matching requires the `:` boundary | Implemented on `stable` |
 | 0.3.0 | Redis Cluster namespace clear raises `NotImplementedError` | Partial/unsafe clearing was not reliable | Implemented on `stable` |
@@ -219,7 +220,8 @@ regression test when implemented.
 
 ## Cache data compatibility
 
-- **ETag:** the value changes once. Clients may revalidate after upgrading.
+- **ETag:** the value changes once. The new value is a stable SHA-256 digest; clients may
+  revalidate after upgrading.
 - **Key format:** if a release changes the default key format, old entries become
   unreachable. Flush the cache namespace after upgrading.
 - **Error responses:** old cached error entries may remain until their TTL expires. Flush

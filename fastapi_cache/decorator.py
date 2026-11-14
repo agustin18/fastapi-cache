@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import sys
 from functools import wraps
@@ -102,6 +103,32 @@ def _cache_control_header(seconds: Optional[int]) -> Optional[str]:
     if seconds is None or seconds < 0:
         return None
     return f"max-age={seconds}"
+
+
+def _etag_for(data: bytes) -> str:
+    """Return a stable, quoted weak ETag for the cached representation."""
+    return f'W/"{hashlib.sha256(data).hexdigest()}"'
+
+
+def _normalize_etag(value: str) -> str:
+    """Normalize an entity-tag for weak comparison."""
+    value = value.strip()
+    if value[:2].upper() == "W/":
+        value = value[2:].strip()
+    if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
+        value = value[1:-1]
+    return value
+
+
+def _etag_matches(if_none_match: Optional[str], etag: str) -> bool:
+    """Return true when If-None-Match matches the current weak ETag."""
+    if not if_none_match:
+        return False
+    candidates = [value.strip() for value in if_none_match.split(",")]
+    if "*" in candidates:
+        return True
+    expected = _normalize_etag(etag)
+    return any(_normalize_etag(candidate) == expected for candidate in candidates)
 
 
 def cache(
@@ -245,8 +272,9 @@ def cache(
                     )
 
                 if response:
+                    etag = _etag_for(to_cache)
                     headers = {
-                        "ETag": f"W/{hash(to_cache)}",
+                        "ETag": etag,
                         cache_status_header: "MISS",
                     }
                     cache_control = _cache_control_header(expire)
@@ -256,7 +284,7 @@ def cache(
 
             else:  # cache hit
                 if response:
-                    etag = f"W/{hash(cached)}"
+                    etag = _etag_for(cached)
                     headers = {
                         "ETag": etag,
                         cache_status_header: "HIT",
@@ -266,8 +294,12 @@ def cache(
                         headers["Cache-Control"] = cache_control
                     response.headers.update(headers)
 
-                    if_none_match = request and request.headers.get("if-none-match")
-                    if if_none_match == etag:
+                    if_none_match = (
+                        request.headers.get("if-none-match")
+                        if request is not None
+                        else None
+                    )
+                    if _etag_matches(if_none_match, etag):
                         response.status_code = HTTP_304_NOT_MODIFIED
                         return response
 

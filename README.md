@@ -7,10 +7,10 @@
 > [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
 
 > **Implemented in this alpha:** error responses are not cached, opt-in `TypedJsonCoder` for
-> Pydantic v2, and the `clear()` fixes. The auth/privacy bypass and the InMemory
-> `expire=None`/instance-isolation fixes are implemented on `stable` and are targeted for
-> `0.3.0a2`; ETag, non-JSON bypass and `_spec_type` fixes remain targeted for later `0.3.0`
-> pre-releases; see [MIGRATION.md](MIGRATION.md).
+> Pydantic v2, and the `clear()` fixes. The auth/privacy bypass, the InMemory
+> `expire=None`/instance-isolation fixes, the `Cache-Control` fix and the stable ETag are
+> implemented on `stable` and are targeted for `0.3.0a2`; non-JSON bypass and `_spec_type`
+> fixes remain targeted for later `0.3.0` pre-releases; see [MIGRATION.md](MIGRATION.md).
 
 > **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
 > upstream project and is not a second development branch.
@@ -29,11 +29,11 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 - Supports `redis`, `memcache`, `dynamodb`, and `in-memory` backends.
 - Easy integration with [FastAPI](https://fastapi.tiangolo.com/).
 - Inherited `ETag` and `Cache-Control` support, including conditional `If-None-Match`
-  requests. `Cache-Control` now emits only valid `max-age` values; stable `ETag` is
-  targeted for a later `0.3.0` pre-release.
+  requests. `Cache-Control` emits only valid `max-age` values, and ETags are stable,
+  quoted weak validators.
 
-> **Alpha caveat:** `ETag` correctness is not fixed in `0.3.0a1`. The auth/privacy bypass,
-> the InMemory `expire=None`/instance-isolation fixes, and the `Cache-Control` `max-age` fix
+> **Alpha caveat:** `0.3.0a1` does not include the auth/privacy bypass, the InMemory
+> `expire=None`/instance-isolation fixes, the `Cache-Control` fix, or the stable ETag. They
 > are implemented on `stable` (unreleased; target `0.3.0a2`). See
 > [COMPATIBILITY.md](COMPATIBILITY.md).
 
@@ -136,7 +136,9 @@ You can also use the `@cache` decorator on regular functions to cache their resu
 The `cache` decorator injects dependencies for the `Request` and `Response`
 objects, so that it can add cache control headers to the outgoing response, and
 return a 304 Not Modified response when the incoming request has a matching
-`If-Non-Match` header. This only happens if the decorated endpoint doesn't already
+`If-None-Match` header. The ETag is a quoted weak validator derived from a stable SHA-256
+digest of the cached representation; `If-None-Match` supports weak comparison,
+comma-separated lists and `*`. This only happens if the decorated endpoint doesn't already
 list these dependencies already.
 
 The keyword arguments for these extra dependencies are named
