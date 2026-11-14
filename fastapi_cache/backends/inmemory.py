@@ -9,12 +9,13 @@ from fastapi_cache.types import Backend
 @dataclass
 class Value:
     data: bytes
-    ttl_ts: int
+    ttl_ts: Optional[int]
 
 
 class InMemoryBackend(Backend):
-    _store: Dict[str, Value] = {}
-    _lock = Lock()
+    def __init__(self) -> None:
+        self._store: Dict[str, Value] = {}
+        self._lock = Lock()
 
     @property
     def _now(self) -> int:
@@ -23,7 +24,7 @@ class InMemoryBackend(Backend):
     def _get(self, key: str) -> Optional[Value]:
         v = self._store.get(key)
         if v:
-            if v.ttl_ts < self._now:
+            if v.ttl_ts is not None and v.ttl_ts < self._now:
                 del self._store[key]
             else:
                 return v
@@ -33,6 +34,8 @@ class InMemoryBackend(Backend):
         async with self._lock:
             v = self._get(key)
             if v:
+                if v.ttl_ts is None:
+                    return -1, v.data
                 return v.ttl_ts - self._now, v.data
             return 0, None
 
@@ -45,7 +48,8 @@ class InMemoryBackend(Backend):
 
     async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
         async with self._lock:
-            self._store[key] = Value(value, self._now + (expire or 0))
+            ttl_ts = None if expire is None else self._now + expire
+            self._store[key] = Value(value, ttl_ts)
 
     async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
         count = 0

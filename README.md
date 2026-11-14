@@ -7,10 +7,10 @@
 > [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
 
 > **Implemented in this alpha:** error responses are not cached, opt-in `TypedJsonCoder` for
-> Pydantic v2, and the `clear()` fixes. The auth/privacy bypass is implemented on `stable`
-> and is targeted for `0.3.0a2`; ETag, InMemory expiry/isolation, non-JSON bypass and
-> `_spec_type` fixes remain targeted for later `0.3.0` pre-releases; see
-> [MIGRATION.md](MIGRATION.md).
+> Pydantic v2, and the `clear()` fixes. The auth/privacy bypass and the InMemory
+> `expire=None`/instance-isolation fixes are implemented on `stable` and are targeted for
+> `0.3.0a2`; ETag, non-JSON bypass and `_spec_type` fixes remain targeted for later `0.3.0`
+> pre-releases; see [MIGRATION.md](MIGRATION.md).
 
 > **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
 > upstream project and is not a second development branch.
@@ -31,9 +31,9 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 - Inherited `ETag` and `Cache-Control` support, including conditional `If-None-Match`
   requests. Correctness fixes for these headers are targeted for later `0.3.0` pre-releases.
 
-> **Alpha caveat:** `ETag`/`Cache-Control` correctness and InMemory expiration/isolation are
-> not fixed in `0.3.0a1`. The auth/privacy bypass is implemented on `stable` (unreleased;
-> target `0.3.0a2`). See [COMPATIBILITY.md](COMPATIBILITY.md).
+> **Alpha caveat:** `ETag`/`Cache-Control` correctness is not fixed in `0.3.0a1`. The
+> auth/privacy bypass and the InMemory `expire=None`/instance-isolation fixes are implemented
+> on `stable` (unreleased; target `0.3.0a2`). See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Requirements
 
@@ -330,6 +330,12 @@ all instances/workers and persistent Redis caches. The bypass is not retroactive
 The `InMemoryBackend` stores cache data in memory and only deletes when an
 expired key is accessed. This means that if you don't access a function after
 data has been cached, the data will not be removed automatically.
+
+`expire=None` means no expiration. Each backend instance owns its store and lock, so a new
+instance does not see entries from another instance. InMemory is process-local; use Redis or
+Memcached for cross-process sharing. `expire=0` remains part of the pending expiry/header
+work. `get_with_ttl` returns `-1` for no-expiration entries; the response header behavior for
+that case is also part of the pending `Cache-Control` fix.
 
 ### RedisBackend
 

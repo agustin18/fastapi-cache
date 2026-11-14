@@ -9,12 +9,10 @@ from fastapi_cache.decorator import cache
 
 
 @pytest.fixture(autouse=True)
-def _reset_cache() -> Generator[None, None, None]:
+def _reset_cache() -> Generator[None, None, None]:  # pyright: ignore[reportUnusedFunction]
     FastAPICache.reset()
-    InMemoryBackend._store.clear()
     yield
     FastAPICache.reset()
-    InMemoryBackend._store.clear()
 
 
 @pytest.mark.parametrize(
@@ -224,6 +222,6 @@ def test_clear_concurrent_with_set_does_not_raise() -> None:
 
         cleared, _ = await asyncio.gather(clear(), populate())
         assert cleared >= 50
-        assert isinstance(InMemoryBackend._store, dict)
+        assert isinstance(backend._store, dict)  # pyright: ignore[reportPrivateUsage]
 
     asyncio.run(run())

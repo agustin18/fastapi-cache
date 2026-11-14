@@ -15,6 +15,9 @@
 - Authenticated requests bypass the cache by default. This is an intentional privacy behavior
   change; authenticated endpoints must opt in with `cache_authenticated=True` and an
   identity-aware `key_builder` to keep caching.
+- `InMemoryBackend` instances are isolated: each owns its store and lock. `expire=None` means
+  no expiration. InMemory remains process-local; use a shared backend for cross-process
+  caching.
 - Existing custom backends, coders and key builders that implement the documented protocols
   keep working.
 - Migration from `fastapi-cache2` does not require application code changes for valid legacy
@@ -151,7 +154,7 @@ Status definitions:
 | `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
 | Redis standalone | Verified for clear semantics | Redis 7 service in CI with redis-py 4.6.0; key-only clear and namespace boundary tested. redis-py 5/6 are not supported by the current `^4.2.0rc1` constraint and are untested |
 | Redis Cluster | Unsupported for namespace clear | Key-only clear is supported; namespace clear raises `NotImplementedError`; no complete namespace clearing |
-| InMemory | Verified for basic operations and clear semantics | Unit tests; instance isolation is targeted for 0.3.0; the current implementation shares state between instances; no size cap yet |
+| InMemory | Verified for basic operations, clear semantics, `expire=None` and instance isolation | Unit tests; each instance owns its store and lock; no size cap yet |
 | Memcached | Experimental | No full `clear`/TTL parity; `clear` raises `NotImplementedError` |
 | DynamoDB | Experimental | `clear` raises `NotImplementedError`; the client cleanup issue remains open and is targeted for a future fix |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
@@ -169,10 +172,10 @@ Redis Cluster namespace `NotImplementedError`, and the legacy compatibility matr
 Implemented on `stable` (unreleased; target `0.3.0a2`): authenticated requests bypass the
 cache by default; opt-in with `cache_authenticated=True` and an identity-aware `key_builder`.
 Opting in with the default key builder raises `ValueError` for authenticated requests.
+`InMemoryBackend` instances are isolated, and `expire=None` means no expiration.
 
-Targeted for later pre-releases: stable ETag, InMemory expiry and instance isolation,
-`Cache-Control`/`max-age`, non-JSON bypass, `_spec_type` collision handling, explicit
-re-`init()`, and the Redis client/server matrix.
+Targeted for later pre-releases: stable ETag, `Cache-Control`/`max-age`, non-JSON bypass,
+`_spec_type` collision handling, explicit re-`init()`, and the Redis client/server matrix.
 
 ### Clear semantics
 
@@ -204,7 +207,8 @@ regression test when implemented.
 | 0.3.0 | `clear(key=...)` deletes only that key | It used to delete the whole prefix namespace | Implemented on `stable` |
 | 0.3.0 | `clear("app:user")` does not delete `app:users` | Namespace matching requires the `:` boundary | Implemented on `stable` |
 | 0.3.0 | Redis Cluster namespace clear raises `NotImplementedError` | Partial/unsafe clearing was not reliable | Implemented on `stable` |
-| 0.3.0 | `expire=None` means no expiration in `InMemoryBackend` | It used to expire almost immediately | Targeted |
+| 0.3.0 | `expire=None` means no expiration in `InMemoryBackend` | It used to expire almost immediately | Implemented on `stable` (unreleased; target 0.3.0a2) |
+| 0.3.0 | `InMemoryBackend` instances do not share state | The class-level store leaked entries between instances | Implemented on `stable` (unreleased; target 0.3.0a2) |
 | 0.3.0 | `Cache-Control` never emits `max-age=None` or `max-age=-1` | Invalid headers | Targeted |
 | 0.3.0 | User payloads with a `_spec_type` key are not interpreted as internal metadata | The marker collided with user data | Targeted |
 | 0.3.0 | Non-JSON responses (streaming, file, redirect) are not cached blindly | Status/headers/body were lost or corrupted | Targeted |
@@ -221,6 +225,8 @@ regression test when implemented.
   under the default key may remain. Clear or rotate the cache namespace before deploying the
   bypass, including all instances/workers and persistent Redis caches. The bypass is not
   retroactive.
+- **InMemory:** data is process-local and is lost on restart. Instances no longer share a
+  store; a new backend after `FastAPICache.reset()` starts empty. No data-format migration.
 - **Pydantic/dataclass values:** old entries encoded as plain JSON still decode; the
   annotated type is restored on read. No flush required for this fix alone.
 
@@ -230,6 +236,8 @@ regression test when implemented.
 - Characterization tests for the normal GET success path.
 - Auth/privacy tests for default bypass, opt-in isolation, backend non-access, and legacy
   cache-entry invalidation.
+- InMemory tests for `expire=None`, instance isolation, clear isolation, and decorator
+  default-expire behavior.
 - Regression tests for every behavior change.
 - CI tests Python 3.10–3.13 with resolver-selected FastAPI and Pydantic versions.
 - A `legacy-compat` job tests Python 3.8/3.9 with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2,
