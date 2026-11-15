@@ -1,17 +1,16 @@
 # fastapi-cache-stable
 
 > **Community-maintained stable fork of fastapi-cache2.**
-> This is an alpha (`0.3.0a1`) based on `v0.2.2`. It is experimental and not recommended for
+> This is an alpha (`0.3.0a2`) based on `v0.2.2`. It is experimental and not recommended for
 > production. The `fastapi_cache` import and public API are unchanged.
 > See [COMPATIBILITY.md](COMPATIBILITY.md), [MIGRATION.md](MIGRATION.md), [SUPPORT.md](SUPPORT.md),
 > [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
 
 > **Implemented in this alpha:** error responses are not cached, opt-in `TypedJsonCoder` for
-> Pydantic v2, and the `clear()` fixes. The auth/privacy bypass, the InMemory
+> Pydantic v2, the `clear()` fixes, the auth/privacy bypass, the InMemory
 > `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
-> `_spec_type` namespacing and the non-JSON response bypass are implemented on `stable` and
-> are targeted for `0.3.0a2`; the second-`init` fix remains targeted for a later `0.3.0`
-> pre-release; see [MIGRATION.md](MIGRATION.md).
+> `_spec_type` namespacing and the non-JSON response bypass. The second-`init` fix remains
+> targeted for a later `0.3.0` pre-release; see [MIGRATION.md](MIGRATION.md).
 
 > **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
 > upstream project and is not a second development branch.
@@ -33,10 +32,10 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
   requests. `Cache-Control` emits only valid `max-age` values, and ETags are stable,
   quoted weak validators.
 
-> **Alpha caveat:** `0.3.0a1` does not include the auth/privacy bypass, the InMemory
+> **Alpha caveat:** `0.3.0a2` includes the auth/privacy bypass, the InMemory
 > `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
-> `_spec_type` namespacing, or the non-JSON response bypass. They are implemented on `stable`
-> (unreleased; target `0.3.0a2`). See [COMPATIBILITY.md](COMPATIBILITY.md).
+> `_spec_type` namespacing, and the non-JSON response bypass. The second-`init` fix remains
+> targeted for a later `0.3.0` pre-release. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Requirements
 
@@ -47,28 +46,28 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 ## Install
 
-`0.3.0a1` is a pre-release. Install the exact version:
+`0.3.0a2` is a pre-release. Install the exact version:
 
 ```shell
-> pip install "fastapi-cache-stable==0.3.0a1"
+> pip install "fastapi-cache-stable==0.3.0a2"
 ```
 
 or
 
 ```shell
-> pip install "fastapi-cache-stable[redis]==0.3.0a1"
+> pip install "fastapi-cache-stable[redis]==0.3.0a2"
 ```
 
 or
 
 ```shell
-> pip install "fastapi-cache-stable[memcache]==0.3.0a1"
+> pip install "fastapi-cache-stable[memcache]==0.3.0a2"
 ```
 
 or
 
 ```shell
-> pip install "fastapi-cache-stable[dynamodb]==0.3.0a1"
+> pip install "fastapi-cache-stable[dynamodb]==0.3.0a2"
 ```
 
 ## Usage
@@ -366,6 +365,10 @@ those entries and for `expire=None`.
 ### RedisBackend
 
 When using the Redis backend, please make sure you pass in a redis client that does [_not_ decode responses][redis-decode] (`decode_responses` **must** be `False`, which is the default). Cached data is stored as `bytes` (binary), decoding these in the Redis client would break caching.
+
+`RedisBackend` is tested with Redis 7 and redis-py 4.6.0. The `redis` extra pins
+`redis = "^4.2.0rc1"`, which does not include redis-py 5/6; those clients are untested.
+Broader Redis client/server support is targeted for a later release.
 
 [redis-decode]: https://redis-py.readthedocs.io/en/latest/examples/connection_examples.html#by-default-Redis-return-binary-responses,-to-decode-them-use-decode_responses=True
 
