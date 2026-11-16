@@ -1,0 +1,94 @@
+alert_number,ghsa_id,cve_id,severity,package,lock_versions,lock_python_versions,lock_optional,manifest,scope,relationship,vulnerable_version_range,first_patched_version,triage_status
+1,GHSA-h4gh-qq45-vh27,,medium,cryptography,43.0.0 (optional=false),>=3.7,False,poetry.lock,development,transitive,">= 37.0.0, < 43.0.1",43.0.1,Manual applicability/exploitability review pending
+2,GHSA-f96h-pmfr-66vw,CVE-2024-47874,high,starlette,0.37.2 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 0.40.0,0.40.0,Manual applicability/exploitability review pending
+3,GHSA-8495-4g3g-x7pr,CVE-2024-52304,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.10.10,3.10.11,Manual applicability/exploitability review pending
+4,GHSA-59g5-xgcq-4qw3,CVE-2024-53981,high,python-multipart,0.0.9 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 0.0.18,0.0.18,Manual applicability/exploitability review pending
+5,GHSA-q2x7-8rv6-6q7h,CVE-2024-56326,medium,jinja2,3.1.4 (optional=false),>=3.7,False,poetry.lock,runtime,direct,<= 3.1.4,3.1.5,Manual applicability/exploitability review pending
+6,GHSA-gmj6-6f8f-6699,CVE-2024-56201,medium,jinja2,3.1.4 (optional=false),>=3.7,False,poetry.lock,runtime,direct,">= 3.0.0, <= 3.1.4",3.1.5,Manual applicability/exploitability review pending
+8,GHSA-79v4-65xg-pq4g,CVE-2024-12797,low,cryptography,43.0.0 (optional=false),>=3.7,False,poetry.lock,development,transitive,">= 42.0.0, < 44.0.1",44.0.1,Manual applicability/exploitability review pending
+9,GHSA-cpwx-vrp4-4pq7,CVE-2025-27516,medium,Jinja2,3.1.4 (optional=false),>=3.7,False,poetry.lock,runtime,direct,<= 3.1.5,3.1.6,Manual applicability/exploitability review pending
+10,GHSA-vqfr-h8mv-ghfj,CVE-2025-43859,critical,h11,0.14.0 (optional=false),>=3.7,False,poetry.lock,runtime,transitive,< 0.16.0,0.16.0,Manual applicability/exploitability review pending
+11,GHSA-9hjg-9r4m-mvj7,CVE-2024-47081,medium,requests,2.32.3 (optional=false),>=3.8,False,poetry.lock,development,direct,< 2.32.4,2.32.4,Manual applicability/exploitability review pending
+12,GHSA-pq67-6m6q-mj2v,CVE-2025-50181,medium,urllib3,1.26.19 (optional=false); 2.2.2 (optional=false),"!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7; >=3.8",False,poetry.lock,runtime,transitive,< 2.5.0,2.5.0,Manual applicability/exploitability review pending
+13,GHSA-9548-qrrj-x5pj,CVE-2025-53643,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,< 3.12.14,3.12.14,Manual applicability/exploitability review pending
+14,GHSA-2c2j-9gv5-cj73,CVE-2025-54121,medium,starlette,0.37.2 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 0.47.2,0.47.2,Manual applicability/exploitability review pending
+15,GHSA-gm62-xv2j-4w53,CVE-2025-66418,high,urllib3,1.26.19 (optional=false); 2.2.2 (optional=false),"!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7; >=3.8",False,poetry.lock,runtime,transitive,">= 1.24, < 2.6.0",2.6.0,Manual applicability/exploitability review pending
+16,GHSA-2xpw-w6gg-jr37,CVE-2025-66471,high,urllib3,1.26.19 (optional=false); 2.2.2 (optional=false),"!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7; >=3.8",False,poetry.lock,runtime,transitive,">= 1.0, < 2.6.0",2.6.0,Manual applicability/exploitability review pending
+18,GHSA-6mq8-rvhq-8wgg,CVE-2025-69223,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.2,3.13.3,Manual applicability/exploitability review pending
+19,GHSA-69f9-5gxw-wvc2,CVE-2025-69224,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.2,3.13.3,Manual applicability/exploitability review pending
+20,GHSA-mqqc-3gqh-h2x8,CVE-2025-69225,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.2,3.13.3,Manual applicability/exploitability review pending
+21,GHSA-54jq-c3m8-4m76,CVE-2025-69226,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.2,3.13.3,Manual applicability/exploitability review pending
+22,GHSA-jj3x-wxrx-4x23,CVE-2025-69227,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.2,3.13.3,Manual applicability/exploitability review pending
+23,GHSA-6jhg-hg63-jvvf,CVE-2025-69228,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.2,3.13.3,Manual applicability/exploitability review pending
+24,GHSA-g84x-mcqj-x9qq,CVE-2025-69229,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.2,3.13.3,Manual applicability/exploitability review pending
+25,GHSA-fh55-r93g-j68g,CVE-2025-69230,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.2,3.13.3,Manual applicability/exploitability review pending
+26,GHSA-38jv-5279-wg99,CVE-2026-21441,high,urllib3,1.26.19 (optional=false); 2.2.2 (optional=false),"!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7; >=3.8",False,poetry.lock,runtime,transitive,">= 1.22, < 2.6.3",2.6.3,Manual applicability/exploitability review pending
+29,GHSA-wp53-j4wj-2cfg,CVE-2026-24486,high,python-multipart,0.0.9 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 0.0.22,0.0.22,Manual applicability/exploitability review pending
+30,GHSA-r6ph-v2qm-q3c2,CVE-2026-26007,high,cryptography,43.0.0 (optional=false),>=3.7,False,poetry.lock,development,transitive,<= 46.0.4,46.0.5,Manual applicability/exploitability review pending
+31,GHSA-gc5v-m9x4-r6x2,CVE-2026-25645,medium,requests,2.32.3 (optional=false),>=3.8,False,poetry.lock,development,direct,< 2.33.0,2.33.0,Manual applicability/exploitability review pending
+32,GHSA-m959-cc7f-wv43,CVE-2026-34073,low,cryptography,43.0.0 (optional=false),>=3.7,False,poetry.lock,development,transitive,< 46.0.6,46.0.6,Manual applicability/exploitability review pending
+33,GHSA-5239-wwwm-4pmq,CVE-2026-4539,low,Pygments,2.18.0 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 2.20.0,2.20.0,Manual applicability/exploitability review pending
+34,GHSA-w2fm-2cpv-w7v5,CVE-2026-22815,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.3,3.13.4,Manual applicability/exploitability review pending
+35,GHSA-hcc4-c3v8-rx92,CVE-2026-34513,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.3,3.13.4,Manual applicability/exploitability review pending
+36,GHSA-2vrm-gr82-f7m5,CVE-2026-34514,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.3,3.13.4,Manual applicability/exploitability review pending
+37,GHSA-p998-jp59-783m,CVE-2026-34515,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.3,3.13.4,Manual applicability/exploitability review pending
+38,GHSA-m5qp-6w8w-w647,CVE-2026-34516,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.3,3.13.4,Manual applicability/exploitability review pending
+39,GHSA-3wq7-rqq7-wx6j,CVE-2026-34517,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.3,3.13.4,Manual applicability/exploitability review pending
+40,GHSA-966j-vmvw-g2g9,CVE-2026-34518,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.3,3.13.4,Manual applicability/exploitability review pending
+41,GHSA-mwh4-6h8g-pg8w,CVE-2026-34519,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.3,3.13.4,Manual applicability/exploitability review pending
+42,GHSA-63hf-3vf5-4wqf,CVE-2026-34520,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.3,3.13.4,Manual applicability/exploitability review pending
+43,GHSA-c427-h43c-vf67,CVE-2026-34525,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.3,3.13.4,Manual applicability/exploitability review pending
+44,GHSA-6w46-j5rx-g56g,CVE-2025-71176,medium,pytest,8.3.1 (optional=false),>=3.8,False,poetry.lock,development,direct,< 9.0.3,9.0.3,Manual applicability/exploitability review pending
+45,GHSA-mj87-hwqh-73pj,CVE-2026-40347,medium,python-multipart,0.0.9 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 0.0.26,0.0.26,Manual applicability/exploitability review pending
+46,GHSA-mf9w-mj56-hr94,CVE-2026-28684,medium,python-dotenv,1.0.1 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 1.2.2,1.2.2,Manual applicability/exploitability review pending
+47,GHSA-pp6c-gr5w-3c5g,CVE-2026-42561,high,python-multipart,0.0.9 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 0.0.27,0.0.27,Manual applicability/exploitability review pending
+48,GHSA-qccp-gfcp-xxvc,CVE-2026-44431,high,urllib3,1.26.19 (optional=false); 2.2.2 (optional=false),"!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7; >=3.8",False,poetry.lock,runtime,transitive,">= 1.23, < 2.7.0",2.7.0,Manual applicability/exploitability review pending
+49,GHSA-65pc-fj4g-8rjx,CVE-2026-45409,medium,idna,3.7 (optional=false),>=3.5,False,poetry.lock,runtime,transitive,< 3.15,3.15,Manual applicability/exploitability review pending
+50,GHSA-jg22-mg44-37j8,CVE-2026-34993,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,< 3.14.0,3.14.0,Manual applicability/exploitability review pending
+51,GHSA-hg6j-4rv6-33pg,CVE-2026-47265,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,< 3.14.0,3.14.0,Manual applicability/exploitability review pending
+52,GHSA-86qp-5c8j-p5mr,CVE-2026-48710,medium,starlette,0.37.2 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,<= 1.0.0,1.0.1,Manual applicability/exploitability review pending
+53,GHSA-m6qw-4cw2-hm4m,CVE-2026-50269,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.13.5,3.14.0,Manual applicability/exploitability review pending
+54,GHSA-2fqr-mr3j-6wp8,CVE-2026-54279,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.0,3.14.1,Manual applicability/exploitability review pending
+55,GHSA-hpj7-wq8m-9hgp,CVE-2026-54276,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.0,3.14.1,Manual applicability/exploitability review pending
+56,GHSA-63hw-fmq6-xxg2,CVE-2026-54277,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.0,3.14.1,Manual applicability/exploitability review pending
+57,GHSA-g3cq-j2xw-wf74,CVE-2026-54278,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.0,3.14.1,Manual applicability/exploitability review pending
+58,GHSA-4fvr-rgm6-gqmc,CVE-2026-54273,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.0,3.14.1,Manual applicability/exploitability review pending
+59,GHSA-9x8q-7h8h-wcw9,CVE-2026-54280,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.0,3.14.1,Manual applicability/exploitability review pending
+60,GHSA-4m7w-qmgq-4wj5,CVE-2026-54275,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.0,3.14.1,Manual applicability/exploitability review pending
+61,GHSA-xcgm-r5h9-7989,CVE-2026-54274,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.0,3.14.1,Manual applicability/exploitability review pending
+62,GHSA-537c-gmf6-5ccf,,high,cryptography,43.0.0 (optional=false),>=3.7,False,poetry.lock,development,transitive,">= 0.5.0, < 48.0.1",48.0.1,Manual applicability/exploitability review pending
+63,GHSA-x746-7m8f-x49c,CVE-2026-48817,medium,starlette,0.37.2 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 1.1.0,1.1.0,Manual applicability/exploitability review pending
+64,GHSA-wqp7-x3pw-xc5r,CVE-2026-48818,high,starlette,0.37.2 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 1.1.0,1.1.0,Manual applicability/exploitability review pending
+65,GHSA-vffw-93wf-4j4q,CVE-2026-53537,low,python-multipart,0.0.9 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 0.0.30,0.0.30,Manual applicability/exploitability review pending
+66,GHSA-6jv3-5f52-599m,CVE-2026-53538,low,python-multipart,0.0.9 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 0.0.30,0.0.30,Manual applicability/exploitability review pending
+67,GHSA-v9pg-7xvm-68hf,CVE-2026-53540,low,python-multipart,0.0.9 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 0.0.31,0.0.31,Manual applicability/exploitability review pending
+68,GHSA-5rvq-cxj2-64vf,CVE-2026-53539,high,python-multipart,0.0.9 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 0.0.30,0.0.30,Manual applicability/exploitability review pending
+69,GHSA-jp82-jpqv-5vv3,CVE-2026-54282,low,Starlette,0.37.2 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 1.3.0,1.3.0,Manual applicability/exploitability review pending
+70,GHSA-82w8-qh3p-5jfq,CVE-2026-54283,high,starlette,0.37.2 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,">= 0.4.1, < 1.3.1",1.3.1,Manual applicability/exploitability review pending
+71,GHSA-mq44-7p77-q5h7,CVE-2026-59881,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.1,3.14.2,Manual applicability/exploitability review pending
+72,GHSA-mfx4-hv73-q22v,CVE-2026-69243,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.1,3.14.2,Manual applicability/exploitability review pending
+73,GHSA-cq5v-8q36-5273,CVE-2026-69244,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.2,3.14.3,Manual applicability/exploitability review pending
+74,GHSA-5p39-cfhj-2xmp,CVE-2026-64847,medium,anyio,4.4.0 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 4.14.2,4.14.2,Manual applicability/exploitability review pending
+75,GHSA-82r6-8w77-94w6,CVE-2026-63374,critical,anyio,4.4.0 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 4.14.2,4.14.2,Manual applicability/exploitability review pending
+76,GHSA-jwv3-5hgf-82ww,CVE-2026-69249,high,cryptography,43.0.0 (optional=false),>=3.7,False,poetry.lock,development,transitive,">= 42.0.0, < 49.0.0",49.0.0,Manual applicability/exploitability review pending
+77,GHSA-8988-9cw3-xx77,CVE-2026-97687,high,urllib3,1.26.19 (optional=false); 2.2.2 (optional=false),"!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7; >=3.8",False,poetry.lock,runtime,transitive,">= 1.26.0, < 2.8.0",2.8.0,Manual applicability/exploitability review pending
+78,GHSA-vxq7-64xx-v4gw,CVE-2026-97689,high,urllib3,1.26.19 (optional=false); 2.2.2 (optional=false),"!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7; >=3.8",False,poetry.lock,runtime,transitive,">= 1.10.3, < 2.8.0",2.8.0,Manual applicability/exploitability review pending
+83,GHSA-2g87-pp6c-29x5,CVE-2026-123817,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+84,GHSA-494j-54xm-rwp3,CVE-2026-111063,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+85,GHSA-5wr8-gcqf-gqf3,CVE-2026-111064,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+86,GHSA-9xw5-w5jj-pvcg,CVE-2026-111066,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,">= 2.0.0, < 3.14.4",3.14.4,Manual applicability/exploitability review pending
+87,GHSA-pqxq-w44r-73xw,CVE-2026-111750,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+88,GHSA-6cjc-53gc-5rqm,CVE-2026-111065,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+89,GHSA-gx76-c99x-2c96,CVE-2026-111749,low,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+90,GHSA-f9xw-jh8m-3mwq,CVE-2026-111748,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+106,GHSA-45c3-73f7-pv4m,CVE-2026-114605,high,dnspython,2.6.1 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 2.9.0,2.9.0,Manual applicability/exploitability review pending
+109,GHSA-vvf4-9x63-8xvv,CVE-2026-128089,high,dnspython,2.6.1 (optional=false),>=3.8,False,poetry.lock,runtime,transitive,< 2.9.2,2.9.2,Manual applicability/exploitability review pending
+110,GHSA-5rmc-48h2-hvcm,CVE-2026-128132,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+111,GHSA-h4cc-hm5h-fmm9,CVE-2026-128131,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+112,GHSA-28qf-cpwq-vmc2,CVE-2026-128130,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+113,GHSA-pw86-h8fm-j323,CVE-2026-128129,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+114,GHSA-3rp8-rxj8-mvjw,CVE-2026-128128,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+115,GHSA-24c4-3p7v-29cm,CVE-2026-128127,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+116,GHSA-xgw8-8ccx-rmqh,CVE-2026-128126,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+117,GHSA-5pv8-vvhc-h7jv,CVE-2026-128125,medium,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
+118,GHSA-jm3w-gw2p-xjfj,CVE-2026-128124,high,aiohttp,3.9.5 (optional=true),>=3.8,True,poetry.lock,runtime,transitive,<= 3.14.3,3.14.4,Manual applicability/exploitability review pending
