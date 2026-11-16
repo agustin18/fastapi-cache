@@ -186,7 +186,9 @@ or a background task are never cached. The injected `response` object is checked
 cache read and before a write; those directives, a non-`200` status, or any header other than
 the automatic `content-length` bypass the cache for dict/list returns.
 
-Targeted for later pre-releases: explicit re-`init()` and the Redis client/server matrix.
+Merged on `stable`, ships in `0.3.0b1`: a second `FastAPICache.init()` call raises
+`RuntimeError` unless you pass `force=True`. In the published `0.3.0a2` it is still a silent
+no-op. Still targeted for later pre-releases: the Redis client/server matrix.
 
 ### Clear semantics
 
@@ -206,7 +208,7 @@ Targeted for later pre-releases: explicit re-`init()` and the Redis client/serve
 These are bug fixes targeted for `0.3.0`. The error-response, typed-decode and
 clear-semantics fixes are implemented in `0.3.0a1`; the auth/privacy, InMemory,
 `Cache-Control`, ETag, `_spec_type` and response-caching fixes are implemented in `0.3.0a2`;
-the second-`init` row is targeted for later pre-releases. Each one is documented in [`MIGRATION.md`](MIGRATION.md) and covered by a
+the second-`init` row is merged on `stable` and ships in `0.3.0b1`. Each one is documented in [`MIGRATION.md`](MIGRATION.md) and covered by a
 regression test when implemented.
 
 | Version | Change | Why | Status |
@@ -225,7 +227,7 @@ regression test when implemented.
 | 0.3.0 | Only simple `JSONResponse` objects are cached by `JsonCoder`; other responses bypass | Status/headers/body were lost or corrupted | Implemented in `0.3.0a2` |
 | 0.3.0 | Responses with `Set-Cookie`, `Cache-Control: no-store/private`, or a background task are never cached | Cookies and private data could be replayed to other clients | Implemented in `0.3.0a2` |
 | 0.3.0 | Injected `response` metadata is checked before cache reads and writes | Dict/list responses could cache cookies, private data, custom statuses, or custom headers | Implemented in `0.3.0a2` |
-| 0.3.0 | A second `FastAPICache.init(...)` is not a silent no-op | Configuration was impossible to change | Targeted |
+| 0.3.0 | A second `FastAPICache.init(...)` is not a silent no-op | Configuration was impossible to change | Merged on `stable`; ships in `0.3.0b1` |
 
 ## Cache data compatibility
 

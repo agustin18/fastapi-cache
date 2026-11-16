@@ -9,8 +9,9 @@
 > **Implemented in this alpha:** error responses are not cached, opt-in `TypedJsonCoder` for
 > Pydantic v2, the `clear()` fixes, the auth/privacy bypass, the InMemory
 > `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
-> `_spec_type` namespacing and the non-JSON response bypass. The second-`init` fix remains
-> targeted for a later `0.3.0` pre-release; see [MIGRATION.md](MIGRATION.md).
+> `_spec_type` namespacing and the non-JSON response bypass. In `0.3.0a2` a second
+> `FastAPICache.init()` call is still a silent no-op; the `RuntimeError`/`force=True`
+> behavior is merged on `stable` and ships in `0.3.0b1`. See [MIGRATION.md](MIGRATION.md).
 
 > **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
 > upstream project and is not a second development branch.
@@ -34,8 +35,10 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 > **Alpha caveat:** `0.3.0a2` includes the auth/privacy bypass, the InMemory
 > `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
-> `_spec_type` namespacing, and the non-JSON response bypass. The second-`init` fix remains
-> targeted for a later `0.3.0` pre-release. See [COMPATIBILITY.md](COMPATIBILITY.md).
+> `_spec_type` namespacing, and the non-JSON response bypass. In `0.3.0a2` a second
+> `FastAPICache.init()` call is still a silent no-op. The `RuntimeError`/`force=True`
+> behavior is merged on `stable` and will ship in the next pre-release (`0.3.0b1`); it is
+> not in any published distribution yet. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Requirements
 
@@ -92,7 +95,7 @@ from redis import asyncio as aioredis
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     redis = aioredis.from_url("redis://localhost")
-    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache", force=True)
     yield
 
 
@@ -112,7 +115,12 @@ async def index():
 
 ### Initialization
 
-First you must call `FastAPICache.init` during startup FastAPI startup; this is where you set global configuration.
+First you must call `FastAPICache.init` during FastAPI startup; this is where you set global configuration.
+
+`init()` runs once per process. A second call raises `RuntimeError` instead of silently
+keeping the first configuration: call `FastAPICache.reset()` before re-initializing, or pass
+`force=True` to replace it explicitly. Lifespan handlers run on every startup, so pass
+`force=True` there if the handler may run more than once in the same process.
 
 ### Use the `@cache` decorator
 

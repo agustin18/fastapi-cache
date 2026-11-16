@@ -23,7 +23,7 @@ from starlette.responses import JSONResponse, Response
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     pool = ConnectionPool.from_url(url="redis://redis")
     r = redis.Redis(connection_pool=pool)
-    FastAPICache.init(RedisBackend(r), prefix="fastapi-cache")
+    FastAPICache.init(RedisBackend(r), prefix="fastapi-cache", force=True)
     yield
 
 
