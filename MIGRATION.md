@@ -14,14 +14,13 @@ normal success-path behavior. Bug fixes that change edge-case behavior are liste
 are covered by regression tests. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full
 contract.
 
-> **Status:** this guide describes `0.3.0a2` and the target `0.3.0` behavior. `0.3.0a2`
-> implements the error-response fix, the opt-in `TypedJsonCoder`, the `clear()` fixes, the
-> legacy compatibility matrix, the auth/privacy bypass, the InMemory
-> `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
-> `_spec_type` namespacing and the non-JSON response bypass. In `0.3.0a2` a second
-> `FastAPICache.init()` call is still a silent no-op; the `RuntimeError`/`force=True`
-> behavior is merged on `stable` and ships in `0.3.0b1`. Check the installed version before
-> relying on a behavior listed here.
+> **Status:** this guide describes `0.3.0b1` and the target `0.3.0` behavior. `0.3.0b1`
+> keeps every behavior from `0.3.0a2` and adds an explicit second-`init()` contract: a second
+> `FastAPICache.init()` call raises `RuntimeError` unless you pass `force=True`. Call it once
+> at application startup (for example in the FastAPI `lifespan`), or call
+> `FastAPICache.reset()` before reconfiguring. See
+> [Second `init()` call](#second-init-call). Check the installed version before relying on a
+> behavior listed here.
 
 ## Who should migrate
 
@@ -62,13 +61,13 @@ for Pydantic v1 models and annotations that cannot be represented by a Pydantic 
 
 ## Install
 
-`0.3.0a2` is a pre-release. Install the exact version:
+`0.3.0b1` is a pre-release. Install the exact version:
 
 ```sh
 pip uninstall -y fastapi-cache2
-pip install "fastapi-cache-stable==0.3.0a2"
+pip install "fastapi-cache-stable==0.3.0b1"
 # with extras:
-pip install "fastapi-cache-stable[redis]==0.3.0a2"
+pip install "fastapi-cache-stable[redis]==0.3.0b1"
 ```
 
 Do **not** install both distributions in the same environment: they provide the same
@@ -81,18 +80,17 @@ python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 python -c "from fastapi_cache import FastAPICache; print('ok')"
 ```
 
-### Alpha installation from TestPyPI
+### Pre-release installation from TestPyPI
 
-`0.3.0a2` is the next pre-release; it will be published to TestPyPI and PyPI. The previous
-`0.3.0a1` is already published. TestPyPI is a separate index and may not have all
-dependencies. To verify the exact artifact uploaded to TestPyPI, download it from that index
-and install the local wheel:
+Pre-releases are published to TestPyPI and PyPI. TestPyPI is a separate index and may not
+have all dependencies. To verify the exact artifact uploaded to TestPyPI, download it from
+that index and install the local wheel:
 
 ```sh
 python -m pip download --no-deps --only-binary=:all: \
   --index-url https://test.pypi.org/simple/ \
   -d testpypi-dist \
-  "fastapi-cache-stable==0.3.0a2"
+  "fastapi-cache-stable==0.3.0b1"
 
 python -m pip install testpypi-dist/*.whl
 python -m pip check
@@ -100,7 +98,8 @@ python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 ```
 
 Dependencies are resolved from PyPI by the normal install of the wheel. TestPyPI is for
-validating the distribution, not for production. The same version is also published to PyPI.
+validating the distribution, not for production. After that verification, the same version is
+published separately to PyPI.
 
 ## Compatibility matrix
 
@@ -127,15 +126,15 @@ validating the distribution, not for production. The same version is also publis
 
 > The Redis integration job installs the resolver-selected `redis` version from the project
 > constraint (`^4.2.0rc1`), currently 4.6.0, and runs against a Redis 7 service. Other client
-> or server versions are not verified in `0.3.0a2`.
+> or server versions are not verified in `0.3.0b1`.
 
 ## Behavior changes in 0.3.0
 
 These are intentional bug fixes targeted for `0.3.0`. `0.3.0a1` implements the error-response,
 typed-decode and clear-semantics fixes; `0.3.0a2` implements the auth/privacy bypass, the
-InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes. The remaining changes are
-targeted for later pre-releases. Each one has a regression test and is listed here so you can
-decide whether it affects you.
+InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes; `0.3.0b1` implements the
+explicit second-`init()` contract. Each one has a regression test and is listed here so you
+can decide whether it affects you.
 
 | Change | Before (0.2.2) | After (0.3.0) | Status |
 |---|---|---|---|
@@ -150,12 +149,12 @@ decide whether it affects you.
 | `Cache-Control` | Could emit `max-age=None` or `max-age=-1` | Only valid values; `max-age` is omitted when no valid expiry exists | Implemented in 0.3.0a2 |
 | `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced as `__fastapi_cache_spec_type__`; user data is preserved | Implemented in 0.3.0a2 |
 | Response caching | Streaming/file/redirect and metadata-bearing `JSONResponse` could be cached incorrectly | `JsonCoder` caches only simple `200`/`application/json` `JSONResponse`; other responses bypass; `PickleCoder` bypasses streaming/file/template; `Set-Cookie`, `Cache-Control: no-store/private` and background tasks never cache | Implemented in 0.3.0a2 |
-| Second `init` | Silent no-op | Reconfiguration is explicit: `reset()` or `force=True` | Merged on `stable`; ships in `0.3.0b1` |
+| Second `init` | Silent no-op | Reconfiguration is explicit: `reset()` or `force=True` | Implemented in 0.3.0b1 |
 
 The error-response, typed-decode and clear-semantics fixes are implemented in `0.3.0a1`.
 The auth/privacy bypass, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
-implemented in `0.3.0a2`. The second-`init` fix is merged on `stable` and ships in
-`0.3.0b1`; no published distribution contains it yet.
+implemented in `0.3.0a2`. The second-`init` fix is implemented in `0.3.0b1`; no alpha
+contains it.
 
 ### Authenticated requests
 
@@ -373,15 +372,15 @@ restore cache entries written with the new format; they are regenerated.
 **Can I install both packages?** No, not in the same environment.
 **What happens to my cached data?** If the key format or ETag changed, entries are
 regenerated. Flush the namespace if you were affected by an error-response or clear bug.
-**Is `0.3.0a2` production-ready?** No. It is an alpha for migration and distribution testing.
-**What is implemented in `0.3.0a2`?** Error responses are not cached, opt-in `TypedJsonCoder`
-for Pydantic v2, `clear()` key/namespace semantics, the legacy compatibility matrix, the
-auth/privacy bypass, the InMemory fixes, `Cache-Control`, the stable ETag, `_spec_type`
-preservation, and the non-JSON response bypass.
-**What is still missing?** The CI/release and packaging/docs P0 items (P0-11, P0-12) are
-still open. Explicit re-`init()` is merged on `stable` and ships in `0.3.0b1`. The
-auth/privacy, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
-implemented in `0.3.0a2`.
+**Is `0.3.0b1` production-ready?** No. It is a beta for migration and distribution testing.
+Test it against your own application before relying on it.
+**What is implemented in `0.3.0b1`?** Everything from `0.3.0a2`: error responses are not
+cached, opt-in `TypedJsonCoder` for Pydantic v2, `clear()` key/namespace semantics, the
+legacy compatibility matrix, the auth/privacy bypass, the InMemory fixes, `Cache-Control`,
+the stable ETag, `_spec_type` preservation, and the non-JSON response bypass. It also adds
+the explicit second-`init()` contract.
+**What is still missing?** `0.3.0` final is not released. Memcached and DynamoDB remain
+experimental with unit-level coverage only, and DynamoDB `clear` is still not implemented.
 **Is Pydantic v1 supported?** Migration compatibility only. Pydantic v1 is end-of-life
 (1.10.27 is the final release) and receives no new security fixes. Typed restoration requires
 Pydantic v2.
@@ -400,9 +399,9 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 ## Known limitations in 0.3.x
 
 - No tags, stale-while-revalidate, stampede protection or POST caching.
-- A second `FastAPICache.init()` call raises `RuntimeError` on `stable`; pass `force=True`
-  or call `FastAPICache.reset()` first. This ships in `0.3.0b1`, not in `0.3.0a2`. The
-  auth/privacy, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
+- A second `FastAPICache.init()` call raises `RuntimeError`; pass `force=True` or call
+  `FastAPICache.reset()` first. This is implemented in `0.3.0b1` and is not in the alphas.
+  The auth/privacy, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
   implemented in `0.3.0a2`.
 - Redis standalone is verified with Redis 7 and redis-py 4.6.0; redis-py 5/6 are not
   supported by the current dependency constraint and are untested.

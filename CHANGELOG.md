@@ -8,6 +8,46 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.3.0b1](https://github.com/agustin18/fastapi-cache/tree/v0.3.0b1) - 2026-11-16
+
+### Bugfixes
+
+- `FastAPICache.init()` now raises `RuntimeError` when called a second time instead of
+  silently keeping the first configuration. Call `FastAPICache.reset()` before
+  re-initializing, or pass the keyword-only `force=True` to replace the current configuration
+  explicitly. Applications that call `init()` from a lifespan handler must pass `force=True`
+  or reset first, because the handler runs on every startup. The bundled examples do this.
+
+  The decorator now resolves the coder and expiry per request instead of overwriting the
+  values captured at decoration time, so a re-initialization also applies to endpoints that
+  were already called. Reusing the same backend and namespace across coders can leave
+  entries in an incompatible format; flush or rotate the namespace when the coder changes. [#18](https://github.com/agustin18/fastapi-cache/issues/18)
+
+### Improved Documentation
+
+- Add GitHub issue forms for bug reports and feature requests, with a template chooser that
+  links to the support policy, migration guide, compatibility contract and private
+  vulnerability reporting. Blank issues are disabled so reports arrive with the information
+  needed to triage them.
+
+  Enable GitHub Issues for the repository and point every bug-reporting reference at a real
+  channel instead of "when issues are enabled". Security reports continue to use private
+  vulnerability reporting, never a public issue. The security response targets are now stated
+  as best-effort targets rather than contractual guarantees. [#20](https://github.com/agustin18/fastapi-cache/issues/20)
+
+### Misc
+
+- Remove the unused `tox.ini` and the `tox` development dependency. CI already runs the
+  supported matrix through GitHub Actions, and `CONTRIBUTING.md` documents `pip`, `pytest`,
+  Ruff and pre-commit instead of tox, so the tox file only declared a stale Python 3.7-3.11
+  matrix that no longer matched reality.
+
+  Add unit tests for the Memcached and DynamoDB backends using fake clients, and run them in a
+  new `optional-backends` CI job. They cover key encoding, get/set, TTL handling and the
+  unimplemented `clear`. Both backends remain Experimental: there are no integration tests
+  against a real service, and `MemcachedBackend.get_with_ttl()` still returns a fixed `3600`
+  instead of the real remaining time. [#19](https://github.com/agustin18/fastapi-cache/issues/19)
+
 ## [0.3.0a2](https://github.com/agustin18/fastapi-cache/tree/v0.3.0a2) - 2026-11-14
 
 ### Bugfixes
