@@ -393,8 +393,9 @@ clearing is not promised.
 DynamoDB `clear` is not implemented and the client cleanup issue remains open.
 **Is this an official successor?** No. It is an independent fork, not endorsed by the
 original author.
-**How do I report a bug?** Use the fork's issues (when enabled) or a private security
-advisory for vulnerabilities.
+**How do I report a bug?** Open an issue on the fork and pick the bug report form. For a
+vulnerability, use [private vulnerability reporting](https://github.com/agustin18/fastapi-cache/security/advisories/new)
+instead of a public issue; see [SECURITY.md](SECURITY.md).
 
 ## Known limitations in 0.3.x
 

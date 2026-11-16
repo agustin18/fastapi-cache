@@ -273,7 +273,7 @@ regression test when implemented.
 
 We treat a compatibility break as a bug:
 
-1. Open an issue (when issues are enabled) or a private security advisory for a
+1. Open an issue with the bug report form, or use private vulnerability reporting for a
    vulnerability.
 2. Document the break and the rollback path in `MIGRATION.md`.
 3. Publish a patch release with a regression test.

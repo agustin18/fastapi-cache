@@ -1,0 +1,80 @@
+name: Feature request
+description: Propose a change or a new capability
+title: "[feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project is a drop-in stable fork of `fastapi-cache2`. Compatibility and small,
+        reviewable changes matter more than feature volume, so proposals are prioritized by
+        impact and maintenance cost.
+
+        **A feature request is a proposal, not a commitment.** There is no promised timeline,
+        and some requests will be declined to keep the fork close to upstream.
+
+        For security issues, do **not** open a public issue. Use
+        [private vulnerability reporting](https://github.com/agustin18/fastapi-cache/security/advisories/new).
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: This is not a security vulnerability (those go to private reporting).
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem are you trying to solve? Describe the situation, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: A concrete example of how you would use this, ideally with a small snippet.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like to see? An API sketch is welcome but not required.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you tried, or other approaches you considered.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: compatibility
+    attributes:
+      label: Compatibility impact
+      description: Would this change existing behavior or the public API?
+      options:
+        - No behavior change (additive or internal)
+        - Changes behavior behind an opt-in flag
+        - Changes existing behavior by default
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Related issues, upstream discussions, or references.
+    validations:
+      required: false

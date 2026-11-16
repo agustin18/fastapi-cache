@@ -1,0 +1,118 @@
+name: Bug report
+description: Report a reproducible defect in fastapi-cache-stable
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please keep it reproducible and minimal.
+
+        **Do not include passwords, tokens, cookies, private data, or AWS credentials.**
+        Redact secrets from logs and configuration before pasting them.
+
+        For security vulnerabilities, do **not** open a public issue. Use
+        [private vulnerability reporting](https://github.com/agustin18/fastapi-cache/security/advisories/new)
+        instead; see [SECURITY.md](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md).
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: This is not a security vulnerability (those go to private reporting).
+          required: true
+        - label: I removed secrets, tokens, cookies, and private data from this report.
+          required: true
+
+  - type: input
+    id: package-version
+    attributes:
+      label: fastapi-cache-stable version
+      description: Output of `python -c "import fastapi_cache; print(fastapi_cache.__version__)"`.
+      placeholder: "0.3.0a2"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      placeholder: "3.12.3"
+    validations:
+      required: true
+
+  - type: input
+    id: fastapi-version
+    attributes:
+      label: FastAPI version
+      placeholder: "0.111.1"
+    validations:
+      required: true
+
+  - type: input
+    id: pydantic-version
+    attributes:
+      label: Pydantic version
+      placeholder: "2.8.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Backend
+      options:
+        - InMemoryBackend
+        - RedisBackend
+        - MemcachedBackend
+        - DynamoBackend
+        - Custom backend
+    validations:
+      required: true
+
+  - type: input
+    id: redis-version
+    attributes:
+      label: Redis server and client version (if applicable)
+      description: Only needed for RedisBackend.
+      placeholder: "Redis 7, redis-py 4.6.0"
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead? Include the error message or traceback.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: |
+        The smallest code that reproduces the problem. A self-contained script or a link to a
+        minimal repository is ideal.
+      render: python
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Anything else that helps, such as related issues or workarounds.
+    validations:
+      required: false
