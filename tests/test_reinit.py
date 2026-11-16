@@ -1,3 +1,4 @@
+import inspect
 from typing import Dict, Generator
 
 import pytest
@@ -23,6 +24,20 @@ def _build_app() -> FastAPI:
 
     @app.get("/value")
     @cache(namespace="reinit", expire=60)
+    async def value() -> Dict[str, int]:
+        counters["n"] += 1
+        return {"n": counters["n"]}
+
+    return app
+
+
+def _build_global_config_app() -> FastAPI:
+    """Endpoints that inherit coder and expire from the global configuration."""
+    app = FastAPI()
+    counters = {"n": 0}
+
+    @app.get("/value")
+    @cache(namespace="reinit")
     async def value() -> Dict[str, int]:
         counters["n"] += 1
         return {"n": counters["n"]}
@@ -162,3 +177,128 @@ def test_init_after_reset_does_not_require_force() -> None:
     FastAPICache.init(InMemoryBackend())
     FastAPICache.reset()
     FastAPICache.init(InMemoryBackend())
+
+
+def test_force_reinit_applies_new_expire_to_already_called_endpoint() -> None:
+    app = _build_global_config_app()
+    backend = InMemoryBackend()
+
+    FastAPICache.init(backend, expire=10)
+    with TestClient(app) as client:
+        first = client.get("/value")
+        assert first.headers["Cache-Control"] == "max-age=10", dict(
+            first.headers
+        )
+
+        FastAPICache.init(InMemoryBackend(), expire=60, force=True)
+
+        second = client.get("/value")
+        assert second.headers["Cache-Control"] == "max-age=60", dict(
+            second.headers
+        )
+
+
+def test_force_reinit_applies_new_coder_to_already_called_endpoint() -> None:
+    app = _build_global_config_app()
+    pickle_backend = InMemoryBackend()
+
+    FastAPICache.init(pickle_backend, coder=PickleCoder)
+    with TestClient(app) as client:
+        assert client.get("/value").headers["X-FastAPI-Cache"] == "MISS"
+
+    json_backend = InMemoryBackend()
+    FastAPICache.init(json_backend, force=True)
+
+    with TestClient(app) as client:
+        assert client.get("/value").headers["X-FastAPI-Cache"] == "MISS"
+        assert client.get("/value").headers["X-FastAPI-Cache"] == "HIT"
+
+    stored = next(iter(json_backend._store.values()))  # pyright: ignore[reportPrivateUsage]
+    assert stored.data.startswith(b"{"), stored.data[:20]
+
+
+def test_reusing_a_namespace_across_coders_needs_a_flush() -> None:
+    """Documented risk: pickle entries are unreadable by JsonCoder."""
+    app = _build_global_config_app()
+    backend = InMemoryBackend()
+
+    FastAPICache.init(backend, coder=PickleCoder)
+    with TestClient(app) as client:
+        assert client.get("/value").headers["X-FastAPI-Cache"] == "MISS"
+
+    FastAPICache.init(backend, force=True)
+
+    with TestClient(app) as client:
+        with pytest.raises(UnicodeDecodeError):
+            client.get("/value")
+
+
+def test_reset_then_init_applies_new_expire_to_already_called_endpoint() -> (
+    None
+):
+    app = _build_global_config_app()
+
+    FastAPICache.init(InMemoryBackend(), expire=10)
+    with TestClient(app) as client:
+        first = client.get("/value")
+        assert first.headers["Cache-Control"] == "max-age=10", dict(
+            first.headers
+        )
+
+        FastAPICache.reset()
+        FastAPICache.init(InMemoryBackend(), expire=45)
+
+        second = client.get("/value")
+        assert second.headers["Cache-Control"] == "max-age=45", dict(
+            second.headers
+        )
+
+
+def test_reset_then_init_applies_new_coder_to_already_called_endpoint() -> None:
+    app = _build_global_config_app()
+    pickle_backend = InMemoryBackend()
+
+    FastAPICache.init(pickle_backend, coder=PickleCoder)
+    with TestClient(app) as client:
+        assert client.get("/value").headers["X-FastAPI-Cache"] == "MISS"
+
+    json_backend = InMemoryBackend()
+    FastAPICache.reset()
+    FastAPICache.init(json_backend)
+
+    with TestClient(app) as client:
+        assert client.get("/value").headers["X-FastAPI-Cache"] == "MISS"
+        assert client.get("/value").headers["X-FastAPI-Cache"] == "HIT"
+
+    stored = next(iter(json_backend._store.values()))  # pyright: ignore[reportPrivateUsage]
+    assert stored.data.startswith(b"{"), stored.data[:20]
+
+
+def test_endpoint_level_expire_still_wins_after_force_reinit() -> None:
+    app = FastAPI()
+    counters = {"n": 0}
+
+    @app.get("/pinned")
+    @cache(namespace="reinit", expire=7)
+    async def pinned() -> Dict[str, int]:
+        counters["n"] += 1
+        return {"n": counters["n"]}
+
+    FastAPICache.init(InMemoryBackend(), expire=10)
+    with TestClient(app) as client:
+        first = client.get("/pinned")
+        assert first.headers["Cache-Control"] == "max-age=7", dict(
+            first.headers
+        )
+
+        FastAPICache.init(InMemoryBackend(), expire=60, force=True)
+
+        second = client.get("/pinned")
+        assert second.headers["Cache-Control"] == "max-age=7", dict(
+            second.headers
+        )
+
+
+def test_force_is_keyword_only() -> None:
+    param = inspect.signature(FastAPICache.init).parameters["force"]
+    assert param.kind is inspect.Parameter.KEYWORD_ONLY

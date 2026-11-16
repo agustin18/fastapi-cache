@@ -55,6 +55,7 @@ def test_init_signature() -> None:
     assert params["enable"].default is True
     assert params["cache_authenticated"].default is False
     assert params["force"].default is False
+    assert params["force"].kind is inspect.Parameter.KEYWORD_ONLY
 
 
 def test_cache_signature() -> None:

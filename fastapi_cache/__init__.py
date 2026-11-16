@@ -39,6 +39,7 @@ class FastAPICache:
         cache_status_header: str = "X-FastAPI-Cache",
         enable: bool = True,
         cache_authenticated: bool = False,
+        *,
         force: bool = False,
     ) -> None:
         if cls._init and not force:

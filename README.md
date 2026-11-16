@@ -9,8 +9,9 @@
 > **Implemented in this alpha:** error responses are not cached, opt-in `TypedJsonCoder` for
 > Pydantic v2, the `clear()` fixes, the auth/privacy bypass, the InMemory
 > `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
-> `_spec_type` namespacing and the non-JSON response bypass. A second `FastAPICache.init()`
-> call now raises `RuntimeError` unless you pass `force=True`; see [MIGRATION.md](MIGRATION.md).
+> `_spec_type` namespacing and the non-JSON response bypass. In `0.3.0a2` a second
+> `FastAPICache.init()` call is still a silent no-op; the `RuntimeError`/`force=True`
+> behavior is merged on `stable` and ships in `0.3.0b1`. See [MIGRATION.md](MIGRATION.md).
 
 > **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
 > upstream project and is not a second development branch.
@@ -34,9 +35,10 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 > **Alpha caveat:** `0.3.0a2` includes the auth/privacy bypass, the InMemory
 > `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
-> `_spec_type` namespacing, and the non-JSON response bypass. A second
-> `FastAPICache.init()` call raises `RuntimeError` unless you pass `force=True`. See
-> [COMPATIBILITY.md](COMPATIBILITY.md).
+> `_spec_type` namespacing, and the non-JSON response bypass. In `0.3.0a2` a second
+> `FastAPICache.init()` call is still a silent no-op. The `RuntimeError`/`force=True`
+> behavior is merged on `stable` and will ship in the next pre-release (`0.3.0b1`); it is
+> not in any published distribution yet. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Requirements
 

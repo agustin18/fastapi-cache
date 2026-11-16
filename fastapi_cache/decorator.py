@@ -247,9 +247,6 @@ def cache(
 
         @wraps(func)
         async def inner(*args: P.args, **kwargs: P.kwargs) -> Union[R, Response]:
-            nonlocal coder
-            nonlocal expire
-
             async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
                 """Run cached sync functions in thread pool just like FastAPI."""
                 # if the wrapped function does NOT have request or response in
@@ -286,8 +283,8 @@ def cache(
             if has_auth_headers and not cache_authenticated_enabled:
                 return await ensure_async_func(*args, **kwargs)
 
-            coder = coder or FastAPICache.get_coder()
-            expire = expire or FastAPICache.get_expire()
+            effective_coder = coder or FastAPICache.get_coder()
+            effective_expire = expire or FastAPICache.get_expire()
             effective_key_builder = key_builder or FastAPICache.get_key_builder()
             if (
                 has_auth_headers
@@ -338,12 +335,12 @@ def cache(
                     return result
                 if _injected_response_cache_bypass(response):
                     return result
-                if not coder.can_encode(result):
+                if not effective_coder.can_encode(result):
                     return result
-                to_cache = coder.encode(result)
+                to_cache = effective_coder.encode(result)
 
                 try:
-                    await backend.set(cache_key, to_cache, expire)
+                    await backend.set(cache_key, to_cache, effective_expire)
                 except Exception as exc:
                     logger.warning(
                         "Error setting cache entry for %s.%s in namespace %r "
@@ -360,7 +357,7 @@ def cache(
                         "ETag": etag,
                         cache_status_header: "MISS",
                     }
-                    cache_control = _cache_control_header(expire)
+                    cache_control = _cache_control_header(effective_expire)
                     if cache_control is not None:
                         headers["Cache-Control"] = cache_control
                     response.headers.update(headers)
@@ -385,7 +382,9 @@ def cache(
                         response.status_code = HTTP_304_NOT_MODIFIED
                         return response
 
-                result = cast(R, coder.decode_as_type(cached, type_=return_type))
+                result = cast(
+                    R, effective_coder.decode_as_type(cached, type_=return_type)
+                )
 
             return result
 
