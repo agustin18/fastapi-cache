@@ -45,6 +45,7 @@ def test_init_signature() -> None:
         "cache_status_header",
         "enable",
         "cache_authenticated",
+        "force",
     ]
     assert params["prefix"].default == ""
     assert params["expire"].default is None
@@ -53,6 +54,7 @@ def test_init_signature() -> None:
     assert params["cache_status_header"].default == "X-FastAPI-Cache"
     assert params["enable"].default is True
     assert params["cache_authenticated"].default is False
+    assert params["force"].default is False
 
 
 def test_cache_signature() -> None:

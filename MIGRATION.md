@@ -18,9 +18,9 @@ contract.
 > implements the error-response fix, the opt-in `TypedJsonCoder`, the `clear()` fixes, the
 > legacy compatibility matrix, the auth/privacy bypass, the InMemory
 > `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
-> `_spec_type` namespacing and the non-JSON response bypass. The second-`init` fix is targeted
-> for a later `0.3.0` pre-release. Check the installed version before relying on a behavior
-> listed here.
+> `_spec_type` namespacing and the non-JSON response bypass. A second `FastAPICache.init()`
+> call raises `RuntimeError` unless you pass `force=True`. Check the installed version before
+> relying on a behavior listed here.
 
 ## Who should migrate
 
@@ -52,7 +52,6 @@ for Pydantic v1 models and annotations that cannot be represented by a Pydantic 
 ## Who should not migrate yet
 
 - You need full Memcached or DynamoDB parity. They are experimental in `0.3.x`.
-- You need the second-`init` fix; it is targeted for a later `0.3.0` pre-release.
 - You use Redis Cluster and need complete namespace clearing.
 - You need typed restoration on Pydantic v1; the legacy decoded behavior is preserved instead.
   Pydantic v1 is end-of-life; plan an upgrade to Pydantic v2 for typed restoration and
@@ -150,11 +149,11 @@ decide whether it affects you.
 | `Cache-Control` | Could emit `max-age=None` or `max-age=-1` | Only valid values; `max-age` is omitted when no valid expiry exists | Implemented in 0.3.0a2 |
 | `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced as `__fastapi_cache_spec_type__`; user data is preserved | Implemented in 0.3.0a2 |
 | Response caching | Streaming/file/redirect and metadata-bearing `JSONResponse` could be cached incorrectly | `JsonCoder` caches only simple `200`/`application/json` `JSONResponse`; other responses bypass; `PickleCoder` bypasses streaming/file/template; `Set-Cookie`, `Cache-Control: no-store/private` and background tasks never cache | Implemented in 0.3.0a2 |
-| Second `init` | Silent no-op | Reconfiguration is explicit and documented | Targeted |
+| Second `init` | Silent no-op | Reconfiguration is explicit: `reset()` or `force=True` | Implemented in `0.3.0b1` |
 
 The error-response, typed-decode and clear-semantics fixes are implemented in `0.3.0a1`.
 The auth/privacy bypass, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
-implemented in `0.3.0a2`. The second-`init` row is targeted for a later `0.3.0` pre-release.
+implemented in `0.3.0a2`; the second-`init` fix is implemented in `0.3.0b1`.
 
 ### Authenticated requests
 
@@ -299,6 +298,32 @@ administrative operation; do not expose it to untrusted input. If the ETag chang
 revalidate once. If you previously cached responses with cookies or private data, flush the
 namespace as well.
 
+### Second `init()` call
+
+In `0.3.0a1` and `0.3.0a2`, a second `FastAPICache.init()` was a silent no-op: the first
+configuration stayed active and the new arguments were ignored. In `0.3.0b1` a second call
+raises `RuntimeError`.
+
+```python
+FastAPICache.init(InMemoryBackend(), prefix="first")
+
+# Raises RuntimeError: init() was already called
+FastAPICache.init(InMemoryBackend(), prefix="second")
+
+# Explicit replacement
+FastAPICache.init(InMemoryBackend(), prefix="second", force=True)
+
+# Or reset first
+FastAPICache.reset()
+FastAPICache.init(InMemoryBackend(), prefix="second")
+```
+
+**Action required:** if you call `init()` from a lifespan handler, pass `force=True`, because
+the handler runs on every startup in the same process (for example under `TestClient` or a
+reloader). If you relied on the silent no-op to keep the first configuration, remove the
+second call or guard it with your own flag. `reset()` clears configuration only; it does not
+delete cached data.
+
 ## Step by step
 
 1. **Inventory.** Note your `fastapi-cache2` version, backend, return types, `clear` usage,
@@ -312,8 +337,8 @@ namespace as well.
 5. **Run tests.** Expect changes in error responses and `clear()` in `0.3.0a1`; in `0.3.0a2`,
    authenticated requests bypass the cache, InMemory expiry/isolation changes apply, the ETag
    format changes once, `_spec_type` user payloads are preserved, and non-JSON responses
-   bypass the cache. The second-`init` change remains targeted. Update asserts with the
-   documented behavior.
+   bypass the cache. A second `init()` now raises `RuntimeError` unless you pass `force=True`.
+   Update asserts with the documented behavior.
 6. **Flush if needed.** If the key format or ETag changed, clear the old namespace. For the
    auth bypass, clearing or rotating the namespace is required, not optional.
 7. **Observe.** Compare HIT/MISS, latency, errors and memory with your baseline.
@@ -341,9 +366,9 @@ regenerated. Flush the namespace if you were affected by an error-response or cl
 for Pydantic v2, `clear()` key/namespace semantics, the legacy compatibility matrix, the
 auth/privacy bypass, the InMemory fixes, `Cache-Control`, the stable ETag, `_spec_type`
 preservation, and the non-JSON response bypass.
-**What is still missing?** Explicit re-`init()` is targeted for a later `0.3.0` pre-release.
-The auth/privacy, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
-implemented in `0.3.0a2`.
+**What is still missing?** Nothing from the documented `0.3.0` P0 list; explicit re-`init()`
+landed in `0.3.0b1`. The auth/privacy, InMemory, `Cache-Control`, ETag, `_spec_type` and
+non-JSON fixes are implemented in `0.3.0a2`.
 **Is Pydantic v1 supported?** Migration compatibility only. Pydantic v1 is end-of-life
 (1.10.27 is the final release) and receives no new security fixes. Typed restoration requires
 Pydantic v2.
@@ -361,9 +386,9 @@ advisory for vulnerabilities.
 ## Known limitations in 0.3.x
 
 - No tags, stale-while-revalidate, stampede protection or POST caching.
-- The second-`init` fix is not in `0.3.0a2`; it is targeted for a later `0.3.0` pre-release.
-  The auth/privacy, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
-  implemented in `0.3.0a2`.
+- A second `FastAPICache.init()` call raises `RuntimeError`; pass `force=True` or call
+  `FastAPICache.reset()` first. The auth/privacy, InMemory, `Cache-Control`, ETag,
+  `_spec_type` and non-JSON fixes are implemented in `0.3.0a2`.
 - Redis standalone is verified with Redis 7 and redis-py 4.6.0; redis-py 5/6 are not
   supported by the current dependency constraint and are untested.
 - No full backend parity.
@@ -397,7 +422,7 @@ advisory for vulnerabilities.
   `Set-Cookie`, `Cache-Control: no-store/private`, or a background task are never cached
   (implemented in `0.3.0a2`).
 - [x] `_spec_type` user payloads are preserved (implemented in `0.3.0a2`).
-- [ ] A second `init()` is explicit.
+- [x] A second `init()` is explicit (implemented in `0.3.0b1`).
 
 ## See also
 

@@ -39,9 +39,14 @@ class FastAPICache:
         cache_status_header: str = "X-FastAPI-Cache",
         enable: bool = True,
         cache_authenticated: bool = False,
+        force: bool = False,
     ) -> None:
-        if cls._init:
-            return
+        if cls._init and not force:
+            raise RuntimeError(
+                "FastAPICache.init() was already called. Call FastAPICache.reset() "
+                "before re-initializing, or pass force=True to replace the current "
+                "configuration explicitly."
+            )
         cls._init = True
         cls._backend = backend
         cls._prefix = prefix
