@@ -30,9 +30,16 @@ Run the local checks:
 ruff check .
 pytest -q
 REDIS_URL=redis://localhost:6379/0 REQUIRE_REDIS=1 pytest -q tests/test_redis_clear.py
-pytest -q tests/test_memcached_backend.py tests/test_dynamodb_backend.py
 python -m build
 twine check dist/*
+```
+
+The optional backend tests need their extras installed first. Without them the tests skip
+instead of failing, so a plain `pytest -q` stays green but does not exercise those backends:
+
+```sh
+pip install -e ".[memcache,dynamodb]"
+pytest -q tests/test_memcached_backend.py tests/test_dynamodb_backend.py
 ```
 
 ## Quality gates
@@ -172,7 +179,21 @@ Infrastructure-only pull requests can use the `skip-changelog` label.
 - PyPI publishing uses Trusted Publishing and the protected `pypi` environment.
 - Do not publish without an explicit maintainer decision.
 
+## Reporting bugs and feature requests
+
+Open an issue on the repository. Two forms are available:
+
+- **Bug report** for a reproducible defect. Include the package, Python, FastAPI and Pydantic
+  versions, the backend, and a minimal reproduction.
+- **Feature request** for a proposal. This project is a drop-in fork of `fastapi-cache2`, so
+  compatibility and small changes are prioritized; a request is a proposal, not a commitment.
+
+Do not paste passwords, tokens, cookies, private data, or AWS credentials into an issue.
+Redact secrets from logs and configuration first. Blank issues are disabled so that reports
+arrive with the information needed to triage them.
+
 ## Reporting security issues
 
-Do not open a public issue for a vulnerability. Use GitHub private vulnerability reporting
-once it is enabled for the repository. See `SECURITY.md`.
+Do not open a public issue for a vulnerability. Use
+[GitHub private vulnerability reporting](https://github.com/agustin18/fastapi-cache/security/advisories/new).
+See `SECURITY.md`.
