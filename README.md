@@ -1,17 +1,17 @@
 # fastapi-cache-stable
 
 > **Community-maintained stable fork of fastapi-cache2.**
-> This is an alpha (`0.3.0a2`) based on `v0.2.2`. It is experimental and not recommended for
-> production. The `fastapi_cache` import and public API are unchanged.
+> This is a beta (`0.3.0b1`) based on `v0.2.2`. It is experimental and still not recommended
+> for production. The `fastapi_cache` import and public API are unchanged.
 > See [COMPATIBILITY.md](COMPATIBILITY.md), [MIGRATION.md](MIGRATION.md), [SUPPORT.md](SUPPORT.md),
 > [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
 
-> **Implemented in this alpha:** error responses are not cached, opt-in `TypedJsonCoder` for
+> **Implemented in this beta:** error responses are not cached, opt-in `TypedJsonCoder` for
 > Pydantic v2, the `clear()` fixes, the auth/privacy bypass, the InMemory
 > `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
-> `_spec_type` namespacing and the non-JSON response bypass. In `0.3.0a2` a second
-> `FastAPICache.init()` call is still a silent no-op; the `RuntimeError`/`force=True`
-> behavior is merged on `stable` and ships in `0.3.0b1`. See [MIGRATION.md](MIGRATION.md).
+> `_spec_type` namespacing, the non-JSON response bypass, and an explicit second
+> `FastAPICache.init()` call that raises unless you pass `force=True`. See
+> [MIGRATION.md](MIGRATION.md).
 
 > **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
 > upstream project and is not a second development branch.
@@ -33,12 +33,11 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
   requests. `Cache-Control` emits only valid `max-age` values, and ETags are stable,
   quoted weak validators.
 
-> **Alpha caveat:** `0.3.0a2` includes the auth/privacy bypass, the InMemory
+> **Beta caveat:** `0.3.0b1` includes the auth/privacy bypass, the InMemory
 > `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
-> `_spec_type` namespacing, and the non-JSON response bypass. In `0.3.0a2` a second
-> `FastAPICache.init()` call is still a silent no-op. The `RuntimeError`/`force=True`
-> behavior is merged on `stable` and will ship in the next pre-release (`0.3.0b1`); it is
-> not in any published distribution yet. See [COMPATIBILITY.md](COMPATIBILITY.md).
+> `_spec_type` namespacing, the non-JSON response bypass, and explicit re-configuration
+> through `FastAPICache.reset()` or `force=True`. Memcached and DynamoDB remain
+> experimental. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Requirements
 
@@ -49,28 +48,28 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 ## Install
 
-`0.3.0a2` is a pre-release. Install the exact version:
+`0.3.0b1` is a pre-release. Install the exact version:
 
 ```shell
-> pip install "fastapi-cache-stable==0.3.0a2"
+> pip install "fastapi-cache-stable==0.3.0b1"
 ```
 
 or
 
 ```shell
-> pip install "fastapi-cache-stable[redis]==0.3.0a2"
+> pip install "fastapi-cache-stable[redis]==0.3.0b1"
 ```
 
 or
 
 ```shell
-> pip install "fastapi-cache-stable[memcache]==0.3.0a2"
+> pip install "fastapi-cache-stable[memcache]==0.3.0b1"
 ```
 
 or
 
 ```shell
-> pip install "fastapi-cache-stable[dynamodb]==0.3.0a2"
+> pip install "fastapi-cache-stable[dynamodb]==0.3.0b1"
 ```
 
 ## Usage
