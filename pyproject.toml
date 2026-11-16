@@ -64,7 +64,6 @@ pytest = "*"
 requests = "*"
 coverage = ">=6.5,<8.0"
 httpx = "*"
-tox = "^4.5.1"
 towncrier = { version = ">=26,<27", python = ">=3.9" }
 
 [tool.poetry.group.distributing]
