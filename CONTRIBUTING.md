@@ -30,6 +30,7 @@ Run the local checks:
 ruff check .
 pytest -q
 REDIS_URL=redis://localhost:6379/0 REQUIRE_REDIS=1 pytest -q tests/test_redis_clear.py
+pytest -q tests/test_memcached_backend.py tests/test_dynamodb_backend.py
 python -m build
 twine check dist/*
 ```
@@ -44,6 +45,7 @@ Blocking for every pull request:
   Python 3.10/3.11 with Pydantic 1.10.27
 - `legacy-smoke`: wheel install on Python 3.8 with Pydantic 1.10.27
 - `redis-clear`: Redis 7 integration tests (CI service)
+- `optional-backends`: Memcached and DynamoDB unit tests with fake clients
 - changed-line coverage with `diff-cover` for runtime changes
 - `python -m build` and `twine check`
 - clean-install smoke test for wheel and sdist

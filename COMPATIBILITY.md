@@ -156,8 +156,8 @@ Status definitions:
 | Redis standalone | Verified for clear semantics | Redis 7 service in CI with redis-py 4.6.0; key-only clear and namespace boundary tested. redis-py 5/6 are not supported by the current `^4.2.0rc1` constraint and are untested |
 | Redis Cluster | Unsupported for namespace clear | Key-only clear is supported; namespace clear raises `NotImplementedError`; no complete namespace clearing |
 | InMemory | Verified for basic operations, clear semantics, `expire=None` and instance isolation | Unit tests; each instance owns its store and lock; no size cap yet |
-| Memcached | Experimental | No full `clear`/TTL parity; `clear` raises `NotImplementedError` |
-| DynamoDB | Experimental | `clear` raises `NotImplementedError`; the client cleanup issue remains open and is targeted for a future fix |
+| Memcached | Experimental | Unit tests with a fake client; `get_with_ttl` returns a fixed `3600` instead of the real remaining time; `clear` raises `NotImplementedError` |
+| DynamoDB | Experimental | Unit tests with a fake client covering get/set, TTL and the expired-entry path; `clear` raises `NotImplementedError`; the client cleanup issue remains open and is targeted for a future fix |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
 
 > Redis results in `0.3.0a2` cover Redis 7 with redis-py 4.6.0. Other client or server
@@ -263,8 +263,10 @@ regression test when implemented.
   plus Python 3.10/3.11 with Pydantic 1.10.27.
 - A `legacy-smoke` job builds the wheel and installs it on Python 3.8 with Pydantic 1.10.27.
 - Wheel and sdist smoke tests in a clean virtual environment.
-- Redis 7 integration tests run in CI; Memcached and DynamoDB backend integration tests are
-  planned.
+- Redis 7 integration tests run in CI.
+- Memcached and DynamoDB have unit tests with fake clients in CI (`optional-backends` job).
+  They cover key encoding, get/set, TTL handling and the unimplemented `clear`. They do not
+  use a real service, so both backends stay Experimental.
 - Migration tests that install the package and run a small app.
 
 ## If we break something
