@@ -259,8 +259,8 @@ row-by-row triage register is a separate follow-up deliverable and remains incom
 1. Complete the 93-row triage register under the stage policy above; the CSV is a historical
    snapshot, and unlisted findings remain pending.
 2. Verify mitigation or exclude affected legacy DynamoDB configurations before RC.
-3. Request `Cache-Control` token parsing and regression tests are implemented in PR #26; require
-   green CI and merge before RC.
+3. Request `Cache-Control` token parsing and regression tests were implemented, audited and merged
+   in PR #26; the CI gate for that change is complete.
 4. Triage the lock-installed AnyIO 4.4.0 profile separately; the modern runtime scans do not
    cover it, and the legacy-only acceptance does not apply to it.
 5. The package-level Redis migration E2E is complete (evidence below). Before RC, still validate
@@ -281,13 +281,14 @@ the published `0.3.0b1` artifact is unchanged.
 ## Package-level Redis migration E2E evidence
 
 The manual harness in `tests/migration_redis_e2e.py` passed on 2026-11-17 using an isolated
-Redis 7 container and a unique prefix; it did not flush the database. The wheel was built from
-the merged candidate source tree plus the E2E documentation/checklist commit, then installed by
-path in a fresh environment; the published PyPI artifact was not used or changed.
+Redis 7 container and a unique prefix; it did not flush the database. The harness required the
+operator isolation confirmation, rejected unsafe prefixes and existing keys, and preserved an
+unrelated namespace witness during targeted cleanup. The candidate wheel was installed by path in
+a fresh environment; the published PyPI artifact was not used or changed.
 
 | Artifact/runtime | Evidence |
 |---|---|
-| Candidate source commit used for wheel | `28e90d9581685413307306a8cf119960b6e3c60f` |
+| Candidate source commit used for wheel | `38f9b4bb1856cff26a0c34de04940c63723dce97` |
 | Candidate wheel | `fastapi-cache-stable 0.3.0b1`, SHA-256 `c614a2368444098dbf0c57de27df70f8639fce509246efa7b15c1f6e5002e880` |
 | Legacy writer/rollback | `fastapi-cache2 0.2.2` |
 | Python and dependencies | Python 3.11.15, FastAPI 0.111.1, Pydantic 2.8.2, redis-py 4.6.0, HTTPX 0.27.0 |
@@ -296,7 +297,10 @@ path in a fresh environment; the published PyPI artifact was not used or changed
 The legacy process wrote ordinary JSON, a synthetic authenticated response, and a special-type
 entry; the harness confirmed the legacy Alice/Bob shared-key behavior and the `_spec_type` marker.
 The candidate process read the ordinary entry as a HIT with positive TTL, cleared only the private
-and special-type namespaces, bypassed caching for an authenticated Bob request, recomputed and
-refreshed `no-cache`, and served an anonymous MISS rather than the old Alice response. A separate
-legacy rollback process read the compatible ordinary entry written by the candidate. All three
-harness modes passed. These synthetic package-level results do not replace owner-application tests.
+and special-type namespaces, preserved the unrelated witness key and TTL, bypassed caching for an
+authenticated Bob request, recomputed and refreshed `no-cache`, and served an anonymous MISS
+rather than the old Alice response. A separate legacy rollback process read the compatible
+ordinary entry written by the candidate. All three harness modes passed. Missing isolation
+confirmation and an unsafe prefix were rejected; a pre-existing sentinel key under the prefix
+caused `seed` to stop without deleting it. These synthetic package-level results do not replace
+owner-application tests.
