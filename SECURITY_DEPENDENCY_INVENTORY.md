@@ -126,6 +126,9 @@ accepted.
 | [GHSA-h4cc-hm5h-fmm9](https://github.com/advisories/GHSA-h4cc-hm5h-fmm9) (aiohttp concatenated-stream decompression) | `NOT_APPLICABLE` to the default DynamoDB transport | The advisory requires aiohttp to decompress response content. aiobotocore 2.13.1 constructs `ClientSession(auto_decompress=False)`, sends `Accept-Encoding: identity`, and exposes raw response bytes through `AioAWSResponse`; the inspected `get_item`/`put_item` path performs no later decompression. This does not cover applications using aiohttp independently or custom transport/event overrides. |
 | [GHSA-8988-9cw3-xx77](https://github.com/advisories/GHSA-8988-9cw3-xx77) (urllib3 HTTPS proxy TLS) | `NOT_APPLICABLE` to the package's DynamoDB transport | aiobotocore's async endpoint sends requests through aiohttp, not urllib3's proxy connection manager. This does not assess independent urllib3 use by a consuming application. |
 | [GHSA-vxq7-64xx-v4gw](https://github.com/advisories/GHSA-vxq7-64xx-v4gw) (urllib3 chunked response streaming) | `NOT_APPLICABLE` to the package's DynamoDB transport | The async endpoint wraps aiohttp responses and does not use urllib3 `HTTPResponse.stream()` / `read_chunked()`. This does not assess independent urllib3 use by a consuming application. |
+| [GHSA-5239-wwwm-4pmq](https://github.com/advisories/GHSA-5239-wwwm-4pmq) (Pygments `AdlLexer` ReDoS, low) | `APPLICATION_CONDITIONAL` | The trigger is local use of `AdlLexer` with crafted source. No Pygments import or lexer use exists in `fastapi_cache/`; Pygments is absent from the default wheel and enters the FastAPI CLI/standard-extra or development profiles. The Python 3.8 lock has 2.18.0 (fixed in 2.20.0); modern FastAPI-standard profiles resolved 2.21.0. A consumer invoking the lexer on untrusted local input must assess its own exposure. |
+| [GHSA-mf9w-mj56-hr94](https://github.com/advisories/GHSA-mf9w-mj56-hr94) (python-dotenv symlink write, moderate) | `APPLICATION_CONDITIONAL` | The trigger requires `set_key()` / `unset_key()` on an attacker-controlled symlink and a cross-device rename fallback. No dotenv mutation calls exist in this repository. The Python 3.8 lock has 1.0.1 (fixed in 1.2.2); modern FastAPI-standard profiles resolve 1.2.4. Consumer deployment scripts that mutate `.env` files need separate review. |
+| [GHSA-65pc-fj4g-8rjx](https://github.com/advisories/GHSA-65pc-fj4g-8rjx) (IDNA long-input CPU DoS, moderate) | `APPLICATION_CONDITIONAL` | The trigger is a very long attacker-controlled hostname passed to `idna.encode()`; fixed in 3.15. No direct IDNA use or request-derived hostname path was found in `fastapi_cache/`. `DynamoBackend` accepts a configured region and uses botocore's default endpoint, not a request-supplied hostname. The Python 3.8 lock has idna 3.7, while the clean wheel profile resolved 3.15; applications using IDNA on untrusted hostnames or custom endpoints need independent bounds/review. |
 
 These dispositions should be reviewed by the external auditor. They do not waive a GHSA,
 replace the remaining 93-entry triage, or authorize release.
@@ -173,17 +176,18 @@ changes the dependency metadata and lock by interpreter instead:
   historical 93-alert Dependabot snapshot.
 - `poetry check --lock` passes. The all-extras exporter still has the urllib3 marker conflict;
   use the direct locked install plus `pip-audit --path` procedure unless the exporter is fixed.
-- The external 2026-11-17 audit reports individual advisory-title/impact checks for all 33
-  critical/high snapshot entries; its remaining 60 medium/low entries were not independently
-  checked against full official advisory/source content, and 3 scope dispositions remain
-  `PENDING`. Its classifications are provisional and do not constitute closure or risk
-  acceptance. That report verified the earlier diff SHA
-  `35e1711d9f781d5329a2bee7ed6f5057e89a75886cdab974e4e83139a0eefdb7`, not the current
-  main-only dependency correction and subsequent documentation/example updates; a delta review
-  is still required.
-- The updated dependency metadata, lock and documentation are local/uncommitted. The previous
-  23/23 GitHub result applies only to remote PR head `36978ec`; CI has not run on this updated
-  candidate.
+- The first 2026-11-17 audit reported title/impact review of 33 critical/high entries, 60
+  medium/low entries without full official/source review, and 3 `PENDING` scope rows. The later
+  delta audit reviewed diff SHA `dccc12cae4b188a69ac391331bc94b1a111b0876f76bddf62c9b7cbc1aa7a6fe`
+  and gave CONDITIONAL GO to update the PR draft, not to merge or release. The three former
+  pending IDs now have preliminary source-based dispositions in the table above; the original
+  CSV remains unchanged and the remaining medium/low rows still require review. No residual risk
+  is accepted by the auditor on behalf of the maintainer.
+- PR #25 is now OPEN/DRAFT at commit `1666afaf0e52811354abeb82f61e5c45d6a95ee2` with
+  `mergeStateStatus: CLEAN`. GitHub run `44094584172` passed all 23 checks, including packaging,
+  CodeQL, legacy matrices and Python 3.11–3.13 security audits. The auditor did not independently
+  download the local wheel or run the suite; the GitHub build/inspect job and tests above provide
+  separate project-run evidence. No merge or stable artifact was published.
 
 ## Direct-dependency scope notes
 
@@ -206,4 +210,4 @@ changes the dependency metadata and lock by interpreter instead:
 7. Reassess GHSA-h4cc-hm5h-fmm9 for the default DynamoDB transport using its `auto_decompress=False` configuration; keep independent aiohttp use/custom transport overrides separate.
 8. Uvicorn remains used by examples; Jinja2 stays direct while the core imports Starlette's private `_TemplateResponse` type.
 
-The original 2026-11-16 snapshot changed no package versions. PR #25 restores legacy marker resolution and includes the targeted h11 0.16.0/httpcore 1.0.9 lock remediation. The latest local candidate also resolves Pendulum per Python version and records time-machine only for the Python 3.8 CPython path. It does not upgrade the full test-tool/dependency set. Re-run CI against the exact final candidate and complete advisory review before stable. The published `0.3.0b1` artifact is unchanged and is not production-ready; stable remains NO-GO.
+The original 2026-11-16 snapshot changed no package versions. PR #25 restores legacy marker resolution, includes the targeted h11 0.16.0/httpcore 1.0.9 remediation, and resolves Pendulum per Python version with time-machine only for the Python 3.8 CPython path. It does not upgrade the full test-tool/dependency set. The committed candidate has green CI, but the full 93-GHSA register, AnyIO/DynamoDB risk acceptance, independent integrations and published-wheel migration E2E remain open. The published `0.3.0b1` artifact is unchanged and is not production-ready; RC/stable remain NO-GO.
