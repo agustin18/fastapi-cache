@@ -152,7 +152,7 @@ can decide whether it affects you.
 |---|---|---|---|
 | Error responses | A cached 404 could be returned as 200 | Responses with status >= 400 are not cached | Implemented in 0.3.0a1 |
 | Typed JSON decode | Cache hits returned plain dicts/lists | Opt-in `TypedJsonCoder` on Pydantic v2; default `JsonCoder`, Pydantic v1 and unsupported annotations keep the legacy decoded behavior; validation errors propagate | Implemented in 0.3.0a1 |
-| Authenticated requests | Two users could share a cache key | Requests with `Authorization`/`Cookie`/session bypass the cache by default; opt-in with `cache_authenticated=True` and a safe `key_builder` | Implemented in 0.3.0a2 |
+| Authenticated requests | Two users could share a cache key | Requests with a non-empty `Authorization` or `Cookie` header bypass the cache by default; other authentication/session mechanisms are not detected automatically. Opt in with `cache_authenticated=True` and a safe `key_builder` | Implemented in 0.3.0a2 |
 | ETag | `hash()` changes per process; header unquoted | Stable SHA-256 digest, quoted weak ETag, weak `If-None-Match` comparison including lists and `*` | Implemented in 0.3.0a2 |
 | `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key; pass the full key | Implemented in 0.3.0a1 |
 | Namespace boundary | `clear("app:user")` also deleted `app:users` | Requires the `:` boundary | Implemented in 0.3.0a1 |
@@ -383,11 +383,14 @@ coder; the library does not delete data automatically.
 ```sh
 pip uninstall -y fastapi-cache-stable
 pip install "fastapi-cache2==0.2.2"
-# clear the cache namespace if the key format changed
+# clear or rotate only data that is incompatible or must be invalidated
 ```
 
 Keep the previous version pinned and a backup of your configuration. Rollback does not
-restore cache entries written with the new format; they are regenerated.
+restore cache entries written with an incompatible coder or marker format; those entries are
+regenerated. The default key formula is unchanged, so changing distributions alone does not
+require clearing the namespace. Clear or rotate it for old authenticated responses or any
+specific incompatible data identified during migration.
 
 ## FAQ
 
@@ -449,7 +452,10 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 
 ## Verification checklist
 
-### `0.3.0a2`
+### Legacy alpha migration checklist (not current stable-release evidence)
+
+The unchecked items below are a retained migration checklist. They are not a record of tests
+run against the current PR candidate; use the current release gates below for that status.
 
 - [ ] `pip uninstall fastapi-cache2` and `pip install fastapi-cache-stable==0.3.0a2` in a clean venv.
 - [ ] `import fastapi_cache` and `__version__` are correct.
@@ -458,17 +464,33 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 - [ ] `clear(namespace)` and `clear(key)` verified.
 - [ ] Rollback tested in staging.
 
-### Before `0.3.0` stable
+### Previously implemented `0.3.0` fixes
 
 - [x] Two users with different credentials do not share a response (implemented in `0.3.0a2`).
 - [x] ETag is stable across worker processes (implemented in `0.3.0a2`).
-- [x] `Cache-Control`/`max-age` behavior is correct (implemented in `0.3.0a2`).
+- [x] Response `Cache-Control`/`max-age` output omits invalid expiry values (implemented in `0.3.0a2`).
 - [x] InMemory `expire=None` and instance isolation behave as documented (implemented in `0.3.0a2`).
 - [x] Non-JSON responses and metadata-bearing `JSONResponse` are bypassed; responses with
   `Set-Cookie`, `Cache-Control: no-store/private`, or a background task are never cached
   (implemented in `0.3.0a2`).
 - [x] `_spec_type` user payloads are preserved (implemented in `0.3.0a2`).
 - [x] A second `init()` is explicit (merged on `stable`; ships in `0.3.0b1`).
+
+### Remaining `0.3.0` release gates
+
+These checks are not implied by the historical items above. Release policy and security gates
+are tracked in [`SECURITY_DEPENDENCY_INVENTORY.md`](SECURITY_DEPENDENCY_INVENTORY.md).
+
+- [ ] Parse request `Cache-Control` directives correctly; verify `no-store` prevents cache read
+  and write for combined, whitespace, and case-varied directives. (`no-cache` alone must follow
+  the documented revalidation behavior.)
+- [ ] Run a wheel-based E2E that writes ordinary, authenticated, and special-type entries with
+  `fastapi-cache2 0.2.2`, then reads or invalidates them with a wheel built from the candidate.
+- [ ] Validate the candidate in one owner-maintained Redis application and one separate
+  InMemory application or integration fixture; record sanitized outputs and dependency versions.
+- [ ] Reconcile all 93 historical GHSA rows in the separate triage register before stable.
+- [ ] Build and verify a uniquely versioned RC artifact; repeat the critical migration checks
+  against that exact published artifact before stable.
 
 ## See also
 

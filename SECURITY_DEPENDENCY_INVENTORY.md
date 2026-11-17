@@ -113,7 +113,7 @@ accepted.
 
 | GHSA | Preliminary state | Evidence and boundary |
 |---|---|---|
-| [GHSA-82r6-8w77-94w6](https://github.com/advisories/GHSA-82r6-8w77-94w6) (AnyIO TLS, critical) | `APPLICATION_CONDITIONAL` | The trigger is AnyIO `connect_tcp()` / `TLSStream.wrap()` with non-ASCII hostnames and a redirected connection. No such call is present in this package; consumers may call these APIs through their own application/dependency code. The fix, AnyIO 4.14.2, is unavailable on Python 3.8/3.9. Maintainer risk acceptance remains pending. |
+| [GHSA-82r6-8w77-94w6](https://github.com/advisories/GHSA-82r6-8w77-94w6) (AnyIO TLS, critical) | `APPLICATION_CONDITIONAL` | The trigger is AnyIO `connect_tcp()` / `TLSStream.wrap()` with non-ASCII hostnames and a redirected connection. No such call is present in this package; consumers may call these APIs through their own application/dependency code. The fix, AnyIO 4.14.2, is unavailable on Python 3.8/3.9. The maintainer has accepted only this bounded legacy residual as recorded below; this is not a security claim about consumer applications. |
 | [GHSA-5p39-cfhj-2xmp](https://github.com/advisories/GHSA-5p39-cfhj-2xmp) (AnyIO process stderr) | `APPLICATION_CONDITIONAL` | Requires an AnyIO process-pool worker to write enough data to stderr. No process-pool API use was found in the package. Consumer use remains possible. |
 | [GHSA-f96h-pmfr-66vw](https://github.com/advisories/GHSA-f96h-pmfr-66vw) (Starlette multipart fields) | `APPLICATION_CONDITIONAL` | Requires an application to parse attacker-controlled multipart form data. No `request.form()` call was found in `fastapi_cache/`. |
 | [GHSA-2c2j-9gv5-cj73](https://github.com/advisories/GHSA-2c2j-9gv5-cj73) (Starlette multipart large files) | `APPLICATION_CONDITIONAL` | The vulnerable route is multipart parsing of large uploads; the cache package does not parse forms. |
@@ -208,15 +208,62 @@ dependency metadata and lock by interpreter instead:
 | Jinja2 | Core imports Starlette's private `_TemplateResponse` in `fastapi_cache/coder.py` to exclude template responses from `PickleCoder`; Starlette 1.3.1 raises an import error from `starlette.templating` when Jinja2 is absent. Template rendering itself remains in examples. | Keep the direct dependency while this private Starlette import remains. The Jinja advisories require untrusted template content and do not indicate a template-execution path in `fastapi-cache` itself. |
 | Redis, aiomcache, aiobotocore | Optional project extras | Keep their separate support/experimental status in the remediation decision |
 
-## Decisions required before RC
+## Approved release gates and maintainer decisions
 
-1. The maintainer confirmed separate contracts: stable metadata `>=3.8,<3.14`, functional legacy tests on 3.8–3.10, and security support on 3.11–3.13. Python 3.14 remains excluded pending full CI.
-2. PR #25 updates locked h11 to 0.16.0 and httpcore to 1.0.9 to remediate the request-smuggling parser finding and satisfy the HTTPX transport constraint; verify the linked GitHub checks against the exact head under review. Fresh PyPI installs already resolve patched h11 0.16.0 on Python 3.8+.
-3. The table above contains preliminary source-based dispositions for selected AnyIO/Starlette advisories. The package has no direct calls to the listed TLS, form, static-file or `HTTPEndpoint` paths, but consumer applications may use them. The remaining alert snapshot is not fully reviewed; EOL status alone is not an applicability disposition.
-4. Selected optional DynamoDB/aiohttp/urllib3 paths are assessed above, including the bounded `NOT_APPLICABLE` conclusion for `GHSA-h4cc-hm5h-fmm9` on the default DynamoDB transport. Other alert rows and consumer-provided transports still require review; do not treat lock alerts as runtime vulnerabilities or dismiss them without evidence.
-5. The Pendulum/Poetry `--only main` mismatch is corrected in PR #25 by interpreter-specific Pendulum constraints and a CPython<3.9 time-machine marker. Candidate metadata and CI are covered by the current head checks; the full-extras exporter still has the urllib3 marker conflict.
-6. Review the current lock findings beyond the Pendulum correction. The Python 3.8/3.12 lock scans still report 147/85 and 149/86 records/IDs respectively after excluding the unpinned Python 3.8 `pip` tool. These differ in scope from the 93 Dependabot alerts and the supported-runtime wheel audit.
-7. Keep the `GHSA-h4cc-hm5h-fmm9` assessment bounded to the default DynamoDB transport using `auto_decompress=False`; independent aiohttp use and custom transport/event overrides remain outside that conclusion.
-8. Uvicorn remains used by examples; Jinja2 stays direct while the core imports Starlette's private `_TemplateResponse` type.
+The maintainer approved the following staged policy on 2026-11-17. It applies to release
+readiness decisions; it does not mark unreviewed GHSA rows as closed.
 
-The original 2026-11-16 snapshot changed no package versions. PR #25 restores legacy marker resolution, includes the targeted h11 0.16.0/httpcore 1.0.9 remediation, and resolves Pendulum per Python version with time-machine only for the Python 3.8 CPython path. It does not upgrade the full test-tool/dependency set. Before RC or stable, verify green CI on the exact final head; the 93-alert snapshot still lacks full advisory-by-advisory disposition, AnyIO/DynamoDB residuals need maintainer decisions, and owner-run consumer-application validation plus a wheel-based migration E2E using persisted legacy Redis data remain open. These are technical validation tasks, not claims of third-party adoption; they can use a local wheel built from the exact candidate head without publishing a release. The published `0.3.0b1` artifact is unchanged; RC/stable remain NO-GO.
+| Stage | Required security disposition |
+|---|---|
+| Draft continuation | Keep the historical findings, selected preliminary assessments, and known gaps visible. |
+| Merge | Resolve material risks introduced by the PR, including any applicable critical/high issue on changed dependency paths. Document pre-existing residuals; do not treat EOL as mitigation. |
+| RC | Individually classify all 33 historical critical/high entries by profile, trigger and reachability; screen the 60 medium/low entries for direct serious exposure; resolve material applicable risks or record explicit acceptance. |
+| Stable | Reconcile all 93 historical rows in a traceable register using proportionate evidence. Mitigate or explicitly accept material residuals, repeat the runtime scan, and verify the exact RC artifact. A row may be closed by proof that the vulnerable package/profile/path is absent; 93 full upstream source-code audits are not required. |
+
+A newly discovered medium/low advisory can still block a stage if it directly affects a
+sensitive package-controlled path. `APPLICATION_CONDITIONAL`, `EXPERIMENTAL_EXTRA`, `NOT_REACHABLE`
+and `ACCEPTED_RISK` are distinct states. The historical CSV remains unchanged; the full
+row-by-row triage register is a separate follow-up deliverable and remains incomplete.
+
+### Explicit maintainer decisions
+
+- **AnyIO `GHSA-82r6-8w77-94w6`: accepted with bounded scope.** The maintainer retains Python
+  3.8/3.9 functional compatibility and accepts the conditional residual only for those legacy
+  profiles, based on the source review finding no direct call from this package to the affected
+  TLS APIs. This does not assert that consumer applications or their other dependencies are
+  protected. Keep `APPLICATION_CONDITIONAL` as the applicability classification and record the
+  acceptance separately; do not relabel it `NOT_APPLICABLE`.
+- **DynamoDB/aiohttp parser `GHSA-cq5v-8q36-5273`: not accepted by default.** DynamoDB remains
+  experimental. Before an RC, either verify a compatible mitigation for affected Python 3.8/3.9
+  configurations or exclude those configurations from the support claim using consistent
+  metadata, tests and documentation. Modern resolved profiles must continue to use a patched
+  aiohttp. Do not add a universal pin without verifying resolver compatibility.
+- **Memcached and DynamoDB remain experimental** until real-service integration and supported
+  operation boundaries are documented. Missing `clear()` parity is not promised functionality.
+- **Consumer validation is owner-run technical evidence, not an adoption claim.** Before RC,
+  test one real owner-maintained Redis application, one separate InMemory application or
+  integration fixture, and a wheel-based E2E that reads persisted data written by
+  `fastapi-cache2 0.2.2`. Third-party adoption is not required.
+- **RC and publication require separate explicit authorization.** A local wheel may be used for
+  pre-RC testing; stable must be validated against the exact, uniquely versioned published RC
+  artifact. The current published `0.3.0b1` remains unchanged.
+
+### Remaining release work
+
+1. Complete the 93-row triage register under the stage policy above; the CSV is a historical
+   snapshot, and unlisted findings remain pending.
+2. Verify mitigation or exclude affected legacy DynamoDB configurations before RC.
+3. Fix request `Cache-Control` token handling with regression tests in a separate PR before RC.
+4. Complete the owner-application and persisted-data migration E2E checks listed in
+   [`MIGRATION.md`](MIGRATION.md).
+5. Keep the `GHSA-h4cc-hm5h-fmm9` conclusion bounded to the default DynamoDB transport using
+   `auto_decompress=False`; independent aiohttp use and custom transport/event overrides remain
+   outside that conclusion.
+6. The Poetry all-extras exporter still has the urllib3 marker conflict; use the documented
+   direct locked-install scan unless that exporter is fixed.
+
+The original 2026-11-16 snapshot changed no package versions. PR #25 restores legacy marker
+resolution, includes the targeted h11 0.16.0/httpcore 1.0.9 remediation, and resolves Pendulum
+per Python version with time-machine only for the Python 3.8 CPython path. It does not upgrade
+the full test-tool/dependency set. Stable remains NO-GO until the release work above is complete;
+the published `0.3.0b1` artifact is unchanged.

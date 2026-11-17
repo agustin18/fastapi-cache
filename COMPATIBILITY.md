@@ -11,7 +11,10 @@
 - The normal success path for a GET endpoint keeps the same observable behavior: cache
   miss calls the endpoint, cache hit returns the cached value, and the cache status header
   reports `MISS`/`HIT`.
-- Existing `@cache(...)` and `FastAPICache.init(...)` calls keep working without code changes.
+- Existing `@cache(...)` and `FastAPICache.init(...)` signatures remain available for
+  documented valid use cases. Intentional behavior changes, including the default
+  authentication bypass and explicit repeated-initialization contract, are listed in
+  [`MIGRATION.md`](MIGRATION.md).
 - `FastAPICache` holds one process-global configuration. Initialize once per worker; `force=True`
   replaces it but does not close the previous backend or isolate multiple applications.
 - Authenticated requests bypass the cache by default. This is an intentional privacy behavior
@@ -23,7 +26,7 @@
 - Existing custom backends, coders and key builders that implement the documented protocols
   keep working.
 - Migration from `fastapi-cache2` does not require application code changes for valid legacy
-  use cases.
+  use cases, subject to the behavior changes documented in [`MIGRATION.md`](MIGRATION.md).
 - Pydantic v2 users can opt into `TypedJsonCoder` for typed restoration; the default
   `JsonCoder` keeps the legacy decoded behavior. Pydantic v1 and unsupported annotations
   keep the legacy behavior.
@@ -252,8 +255,10 @@ regression test when implemented.
   retroactive.
 - **InMemory:** data is process-local and is lost on restart. Instances no longer share a
   store; a new backend after `FastAPICache.reset()` starts empty. No data-format migration.
-- **Pydantic/dataclass values:** old entries encoded as plain JSON still decode; the
-  annotated type is restored on read. No flush required for this fix alone.
+- **Pydantic/dataclass values:** the default `JsonCoder` decodes cached JSON using its legacy
+  behavior; it does not promise to reconstruct the annotated type. Typed restoration is opt-in
+  through `TypedJsonCoder` and applies only to its documented supported types. Review coder
+  compatibility before reusing entries written with a different coder.
 - **Timezone-aware JSON datetimes:** `JsonCoder` round-trips the instant and encoded UTC
   offset, but does not retain the original IANA timezone identifier. Store the zone name
   separately or use a custom coder if later DST-aware arithmetic needs it.
