@@ -159,6 +159,7 @@ can decide whether it affects you.
 | Redis Cluster namespace clear | Partial/unsafe clearing | Raises `NotImplementedError`; use key-only clear or flush out of band | Implemented in 0.3.0a1 |
 | `expire=None` in InMemory | Expired almost immediately | Means no expiration; `get_with_ttl` returns `-1` | Implemented in 0.3.0a2 |
 | `Cache-Control` | Could emit `max-age=None` or `max-age=-1` | Only valid values; `max-age` is omitted when no valid expiry exists | Implemented in 0.3.0a2 |
+| Request `Cache-Control` directives | Combined or case-varied `no-cache`/`no-store` directives could be ignored | Directive names are parsed case-insensitively across comma-separated and repeated fields; `no-cache` recomputes and refreshes the entry, while `no-store` bypasses this decorator cache for the request | Implemented in PR #26 |
 | `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced as `__fastapi_cache_spec_type__`; user data is preserved | Implemented in 0.3.0a2 |
 | Response caching | Streaming/file/redirect and metadata-bearing `JSONResponse` could be cached incorrectly | `JsonCoder` caches only simple `200`/`application/json` `JSONResponse`; other responses bypass; `PickleCoder` bypasses streaming/file/template; `Set-Cookie`, `Cache-Control: no-store/private` and background tasks never cache | Implemented in 0.3.0a2 |
 | Second `init` | Silent no-op | Reconfiguration is explicit: `reset()` or `force=True` | Implemented in 0.3.0b1 |
@@ -167,6 +168,11 @@ The error-response, typed-decode and clear-semantics fixes are implemented in `0
 The auth/privacy bypass, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
 implemented in `0.3.0a2`. The second-`init` fix is implemented in `0.3.0b1`; no alpha
 contains it.
+
+For decorated endpoints, a request `Cache-Control: no-store` bypasses both cache lookup and
+storage for that request. A request with `no-cache` runs the wrapped endpoint and refreshes its
+cached result; the decorator does not validate a stored response with a separate upstream
+origin.
 
 ### Authenticated requests
 
@@ -487,9 +493,9 @@ run against the current PR candidate; use the current release gates below for th
 These checks are not implied by the historical items above. Release policy and security gates
 are tracked in [`SECURITY_DEPENDENCY_INVENTORY.md`](SECURITY_DEPENDENCY_INVENTORY.md).
 
-- [ ] Parse request `Cache-Control` directives correctly; verify `no-store` prevents cache read
-  and write for combined, whitespace, and case-varied directives. (`no-cache` alone must follow
-  the documented revalidation behavior.)
+- [x] Parse request `Cache-Control` directive names case-insensitively across combined, whitespace,
+  and repeated header fields; verify `no-store` bypasses lookup/storage and `no-cache` recomputes
+  and refreshes the result (implemented in PR #26).
 - [ ] Run a wheel-based E2E that writes ordinary, authenticated, and special-type entries with
   `fastapi-cache2 0.2.2`, then reads or invalidates them with a wheel built from the candidate.
 - [ ] Validate the candidate in one owner-maintained Redis application and one separate

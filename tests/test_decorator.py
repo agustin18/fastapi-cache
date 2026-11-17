@@ -1,12 +1,15 @@
 import time
-from typing import Any, Generator
+from typing import Any, Dict, Generator, List, Tuple
 
 import pendulum
 import pytest
+from fastapi import FastAPI
 from starlette.testclient import TestClient
 
 from examples.in_memory.main import app
 from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.decorator import cache
 
 
 @pytest.fixture(autouse=True)
@@ -144,25 +147,138 @@ def test_alternate_injected_namespace() -> None:
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
         assert response.json() == {"__fastapi_cache_request": 42, "__fastapi_cache_response": 17}
 
+
+def _make_request_cache_control_app() -> Tuple[FastAPI, List[int]]:
+    calls = [0]
+    test_app = FastAPI()
+
+    @test_app.get("/cached")
+    @cache(namespace="request-cache-control", expire=60)
+    async def cached() -> Dict[str, int]:
+        calls[0] += 1
+        return {"value": calls[0]}
+
+    FastAPICache.init(InMemoryBackend())
+    return test_app, calls
+
+
 def test_cache_control() -> None:
-    with TestClient(app) as client:
-        response = client.get("/cached_put")
+    test_app, calls = _make_request_cache_control_app()
+    with TestClient(test_app) as client:
+        response = client.get("/cached")
         assert response.json() == {"value": 1}
 
         # HIT
-        response = client.get("/cached_put")
+        response = client.get("/cached")
         assert response.json() == {"value": 1}
 
         # no-cache
-        response = client.get("/cached_put", headers={"Cache-Control": "no-cache"})
+        response = client.get("/cached", headers={"Cache-Control": "no-cache"})
         assert response.json() == {"value": 2}
 
-        response = client.get("/cached_put")
+        response = client.get("/cached")
         assert response.json() == {"value": 2}
 
         # no-store
-        response = client.get("/cached_put", headers={"Cache-Control": "no-store"})
+        response = client.get("/cached", headers={"Cache-Control": "no-store"})
         assert response.json() == {"value": 3}
 
-        response = client.get("/cached_put")
+        response = client.get("/cached")
         assert response.json() == {"value": 2}
+        assert calls == [3]
+
+
+@pytest.mark.parametrize(
+    "cache_control",
+    ["No-Store", "private, NO-STORE", "no-cache, no-store"],
+)
+def test_request_no_store_directive_bypasses_read_and_write(
+    cache_control: str,
+) -> None:
+    test_app, calls = _make_request_cache_control_app()
+    with TestClient(test_app) as client:
+        initial = client.get("/cached")
+        cached_value = initial.json()["value"]
+
+        uncached = client.get(
+            "/cached", headers={"Cache-Control": cache_control}
+        )
+
+        assert uncached.json()["value"] == cached_value + 1
+        assert "X-FastAPI-Cache" not in uncached.headers
+
+        following = client.get("/cached")
+        assert following.headers["X-FastAPI-Cache"] == "HIT"
+        assert following.json()["value"] == cached_value
+        assert calls == [cached_value + 1]
+
+
+@pytest.mark.parametrize(
+    "cache_control",
+    ["No-Cache", "max-age=0, NO-CACHE", "  no-cache  "],
+)
+def test_request_no_cache_directive_recomputes_and_refreshes(
+    cache_control: str,
+) -> None:
+    test_app, calls = _make_request_cache_control_app()
+    with TestClient(test_app) as client:
+        initial = client.get("/cached")
+        cached_value = initial.json()["value"]
+
+        refreshed = client.get(
+            "/cached", headers={"Cache-Control": cache_control}
+        )
+
+        assert refreshed.json()["value"] == cached_value + 1
+        assert refreshed.headers["X-FastAPI-Cache"] == "MISS"
+
+        following = client.get("/cached")
+        assert following.headers["X-FastAPI-Cache"] == "HIT"
+        assert following.json()["value"] == cached_value + 1
+        assert calls == [cached_value + 1]
+
+
+def test_request_no_cache_directive_is_recognized_across_header_fields() -> (
+    None
+):
+    test_app, calls = _make_request_cache_control_app()
+    with TestClient(test_app) as client:
+        initial = client.get("/cached")
+        cached_value = initial.json()["value"]
+
+        refreshed = client.get(
+            "/cached",
+            headers=[
+                ("Cache-Control", "max-age=0"),
+                ("Cache-Control", "No-Cache"),
+            ],
+        )
+
+        assert refreshed.json()["value"] == cached_value + 1
+        assert refreshed.headers["X-FastAPI-Cache"] == "MISS"
+        assert calls == [cached_value + 1]
+
+
+@pytest.mark.parametrize(
+    "cache_control",
+    [
+        'extension="no-cache, no-store"',
+        'extension="escaped \\", no-cache, no-store"',
+    ],
+)
+def test_directive_names_inside_quoted_extensions_are_ignored(
+    cache_control: str,
+) -> None:
+    test_app, calls = _make_request_cache_control_app()
+    with TestClient(test_app) as client:
+        initial = client.get("/cached")
+        cached_value = initial.json()["value"]
+
+        response = client.get(
+            "/cached",
+            headers={"Cache-Control": cache_control},
+        )
+
+    assert response.json()["value"] == cached_value
+    assert response.headers["X-FastAPI-Cache"] == "HIT"
+    assert calls == [cached_value]

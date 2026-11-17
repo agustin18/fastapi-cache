@@ -259,7 +259,8 @@ row-by-row triage register is a separate follow-up deliverable and remains incom
 1. Complete the 93-row triage register under the stage policy above; the CSV is a historical
    snapshot, and unlisted findings remain pending.
 2. Verify mitigation or exclude affected legacy DynamoDB configurations before RC.
-3. Fix request `Cache-Control` token handling with regression tests in a separate PR before RC.
+3. Request `Cache-Control` token parsing and regression tests are implemented in PR #26; require
+   green CI and merge before RC.
 4. Triage the lock-installed AnyIO 4.4.0 profile separately; the modern runtime scans do not
    cover it, and the legacy-only acceptance does not apply to it.
 5. Complete the owner-application and persisted-data migration E2E checks listed in
