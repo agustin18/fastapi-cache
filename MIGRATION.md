@@ -14,7 +14,9 @@ normal success-path behavior. Bug fixes that change edge-case behavior are liste
 are covered by regression tests. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full
 contract.
 
-> **Status:** this guide describes `0.3.0b1` and the target `0.3.0` behavior. `0.3.0b1`
+> **Status:** this guide describes the published `0.3.0b1` artifact and the target `0.3.0`
+> stable behavior. Stable `0.3.0` requires Python `>=3.11,<3.14`; the published `0.3.0b1`
+> retains its original Python metadata for historical migration use. `0.3.0b1`
 > keeps every behavior from `0.3.0a2` and adds an explicit second-`init()` contract: a second
 > `FastAPICache.init()` call raises `RuntimeError` unless you pass `force=True`. Call it once
 > at application startup (for example in the FastAPI `lifespan`), or call
@@ -24,14 +26,16 @@ contract.
 
 ## Who should migrate
 
-- You use `fastapi-cache2` 0.2.2 on Python 3.8–3.13.
+- You use `fastapi-cache2` 0.2.2 and run the stable `0.3.0` release on Python 3.11–3.13.
+- If you must test migration on Python 3.8–3.10, use only the already-published `0.3.0b1`
+  artifact; those interpreters are excluded from stable `0.3.0`.
 - You use `InMemoryBackend` or `RedisBackend` (standalone Redis).
 - Your endpoints are GET and return JSON, Pydantic models, dataclasses or standard types.
 - You need a maintained package without changing the `fastapi_cache` import.
 
-Python 3.8/3.9/3.10 and Pydantic v1 are end-of-life upstream. They remain supported for
-migration so existing applications can move without code changes; they are not a security
-recommendation for new deployments.
+Python 3.8/3.9/3.10 and Pydantic v1 are end-of-life upstream. The already-published
+`0.3.0b1` artifact can be used for migration testing on those combinations, but they are not
+supported by stable `0.3.0` and receive no stable security-support promise.
 
 The default `JsonCoder` keeps the legacy decoded behavior. Pydantic v2 users can opt into
 typed restoration with `TypedJsonCoder`; Pydantic v1 users keep the legacy behavior, so
@@ -110,9 +114,9 @@ published separately to PyPI.
 
 | Component | Status | Notes |
 |---|---|---|
-| Python 3.10–3.13 | Verified | CI matrix runs the suite; Python 3.10 is EOL and kept for migration |
-| Python 3.8/3.9 | Verified for migration | Legacy CI job with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2; EOL, not recommended for new production |
-| Python 3.14 | Targeted | Evaluated after the first stable release |
+| Python 3.11–3.13 | Supported for stable `0.3.0` | Full CI/release matrix |
+| Python 3.8–3.10 | Historical migration only | Use the already-published `0.3.0b1`; excluded from stable `0.3.0` |
+| Python 3.14 | Unsupported for stable `0.3.0` | Add and pass a full matrix before announcing support |
 | FastAPI | Verified with 0.111.1 and current 0.x | Older 0.100.x validation is a beta gate; no upper pin yet (`fastapi = "*"`) |
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
@@ -384,8 +388,9 @@ experimental with unit-level coverage only, and DynamoDB `clear` is still not im
 **Is Pydantic v1 supported?** Migration compatibility only. Pydantic v1 is end-of-life
 (1.10.27 is the final release) and receives no new security fixes. Typed restoration requires
 Pydantic v2.
-**Is Python 3.8/3.9 supported?** Migration compatibility is tested. Python 3.8/3.9/3.10 are
-end-of-life and are not recommended for new production deployments.
+**Does stable `0.3.0` support Python 3.8–3.10?** No. It requires Python `>=3.11,<3.14`.
+The already-published `0.3.0b1` artifact remains available for historical migration testing on
+Python 3.8–3.10; that does not provide a security-support commitment for those interpreters.
 **Is Redis Cluster supported?** Only with the documented limitations; complete namespace
 clearing is not promised.
 **Are Memcached and DynamoDB supported?** Experimental until they have parity tests.
@@ -410,8 +415,8 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 - No memory cap in `InMemoryBackend`.
 - Typed restoration is opt-in via `TypedJsonCoder` and requires Pydantic v2. Pydantic v1
   and unsupported annotations keep the legacy decoded behavior.
-- Python 3.8/3.9/3.10 migration compatibility is tested, but those versions are end-of-life
-  and are not recommended for new production deployments.
+- Stable `0.3.0` supports Python 3.11–3.13 only. Python 3.8–3.10 remain migration-only for
+  the already-published `0.3.0b1` artifact and are excluded from stable security support.
 - The 24-month `1.x` support window in `SUPPORT.md` is conditional on the `1.x` release and
   a co-maintainer being in place; no multi-year promise is active today.
 

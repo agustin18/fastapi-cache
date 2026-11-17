@@ -2,7 +2,9 @@
 
 ## Supported versions
 
-- `0.3.x`: security fixes.
+- `0.3.x`: security fixes for the stable support matrix, Python `>=3.11,<3.14`.
+- The already-published `0.3.0b1` artifact remains available for migration testing on Python
+  3.8–3.10, but those interpreters are not in the stable security-support scope.
 - `1.x`: security fixes (planned).
 
 ## Reporting a vulnerability

@@ -5,6 +5,9 @@
 > for production. The `fastapi_cache` import and public API are unchanged.
 > See [COMPATIBILITY.md](COMPATIBILITY.md), [MIGRATION.md](MIGRATION.md), [SUPPORT.md](SUPPORT.md),
 > [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
+> The already-published `0.3.0b1` artifact remains available for legacy migration. The upcoming
+> stable `0.3.0` release will require Python `>=3.11,<3.14`; Python 3.8–3.10 will not be part of
+> that stable support contract.
 
 > **Implemented in this beta:** error responses are not cached, opt-in `TypedJsonCoder` for
 > Pydantic v2, the `clear()` fixes, the auth/privacy bypass, the InMemory

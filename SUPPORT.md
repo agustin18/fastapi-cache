@@ -7,7 +7,9 @@ fastapi-cache2.
 
 - `0.3.x`: security and critical correctness fixes for 12 months after the first stable
   `0.3.0` release, on a best-effort basis and subject to maintainer capacity. The window is
-  a target, not a guarantee.
+  a target, not a guarantee. Stable `0.3.0` supports Python `>=3.11,<3.14` only.
+- The already-published `0.3.0b1` retains its original metadata for historical migration on
+  Python 3.8–3.10; those interpreters are outside the stable security-support scope.
 - `1.x` (planned): if and when `1.0.0` is released with a co-maintainer in place, security
   and critical correctness fixes for 24 months after that release. This is a conditional
   plan, not an active commitment.

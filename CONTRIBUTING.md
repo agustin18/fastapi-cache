@@ -20,7 +20,7 @@ volume.
 ```sh
 python -m venv .venv
 . .venv/bin/activate
-pip install -e . pytest httpx coverage diff-cover ruff==0.17.5 pre-commit
+pip install -e . pytest httpx httpx2 coverage diff-cover ruff==0.17.5 pre-commit
 pre-commit install
 ```
 
@@ -47,10 +47,8 @@ pytest -q tests/test_memcached_backend.py tests/test_dynamodb_backend.py
 Blocking for every pull request:
 
 - `ruff check .`
-- `pytest` on Python 3.10–3.13
-- `legacy-compat` on Python 3.8/3.9 with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2, plus
-  Python 3.10/3.11 with Pydantic 1.10.27
-- `legacy-smoke`: wheel install on Python 3.8 with Pydantic 1.10.27
+- `pytest` on Python 3.11–3.13 (the stable support matrix)
+- Pydantic v1 migration compatibility on Python 3.11 with FastAPI 0.111.1 and Pydantic 1.10.27
 - `redis-clear`: Redis 7 integration tests (CI service)
 - `optional-backends`: Memcached and DynamoDB unit tests with fake clients
 - changed-line coverage with `diff-cover` for runtime changes
@@ -71,9 +69,9 @@ Tool versions:
 
 - Ruff is pinned to the `0.17.x` series in `pyproject.toml` and `poetry.lock`; CI uses
   `0.17.5`.
-- Mypy and Pyright target Python 3.10; the package metadata keeps 3.8/3.9 for legacy
-  migration. The minimum Python will be revisited only after the compatibility matrix and an
-  explicit floor decision.
+- Mypy and Pyright target Python 3.11; stable package metadata requires Python `>=3.11,<3.14`.
+- The already-published `0.3.0b1` artifact retains its older range for migration testing; that
+  does not extend the stable support or security policy to Python 3.8–3.10.
 - `stable` requires a pull request and the CI checks; force pushes and branch deletion are
   blocked.
 - The `pypi` environment only allows `stable` and `v*` tags and has a 5-minute wait timer.
