@@ -5,6 +5,10 @@
 > for production. The `fastapi_cache` import and public API are unchanged.
 > See [COMPATIBILITY.md](COMPATIBILITY.md), [MIGRATION.md](MIGRATION.md), [SUPPORT.md](SUPPORT.md),
 > [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
+> The upcoming stable `0.3.0` release will install on Python `>=3.8,<3.14`. Python 3.8–3.10
+> remain legacy functional-compatibility targets only; security support is limited to Python
+> 3.11–3.13. Python 3.14 remains untested and outside this release's metadata range. The
+> already-published `0.3.0b1` artifact and its metadata remain unchanged.
 
 > **Implemented in this beta:** error responses are not cached, opt-in `TypedJsonCoder` for
 > Pydantic v2, the `clear()` fixes, the auth/privacy bypass, the InMemory
@@ -187,6 +191,10 @@ cannot be represented by a Pydantic v2 schema keep the legacy decoded behavior.
 
 For broader type support, use `fastapi_cache.coder.PickleCoder` or implement a custom coder
 (see below).
+
+`PickleCoder` deserializes with Python's `pickle` and must only be used with a cache backend
+whose contents are trusted and integrity-protected. An attacker who can alter cached bytes
+may be able to execute code when those values are read. `JsonCoder` is the default.
 
 ### Response handling
 

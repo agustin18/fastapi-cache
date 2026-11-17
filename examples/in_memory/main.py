@@ -15,8 +15,11 @@ from starlette.responses import JSONResponse, Response
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    FastAPICache.init(InMemoryBackend(), force=True)
-    yield
+    FastAPICache.init(InMemoryBackend())
+    try:
+        yield
+    finally:
+        FastAPICache.reset()
 
 
 app = FastAPI(lifespan=lifespan)

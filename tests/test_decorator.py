@@ -7,13 +7,11 @@ from starlette.testclient import TestClient
 
 from examples.in_memory.main import app
 from fastapi_cache import FastAPICache
-from fastapi_cache.backends.inmemory import InMemoryBackend
 
 
 @pytest.fixture(autouse=True)
-def _init_cache() -> Generator[Any, Any, None]:  # pyright: ignore[reportUnusedFunction]
+def _reset_cache() -> Generator[Any, Any, None]:  # pyright: ignore[reportUnusedFunction]
     FastAPICache.reset()
-    FastAPICache.init(InMemoryBackend())
     yield
     FastAPICache.reset()
 
@@ -59,6 +57,16 @@ def test_date() -> None:
         assert "X-FastAPI-Cache" not in response.headers
         assert pendulum.parse(response.json()) == pendulum.today()
         FastAPICache._enable = True # pyright: ignore[reportPrivateUsage]
+
+
+def test_inmemory_lifespan_resets_cache_for_repeated_testclient() -> None:
+    for _ in range(2):
+        with TestClient(app) as client:
+            response = client.get("/date")
+            assert response.headers["X-FastAPI-Cache"] == "MISS"
+
+        with pytest.raises(AssertionError, match="You must call init first!"):
+            FastAPICache.get_backend()
 
 
 def test_sync() -> None:

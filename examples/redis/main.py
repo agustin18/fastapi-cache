@@ -23,12 +23,23 @@ from starlette.responses import JSONResponse, Response
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     pool = ConnectionPool.from_url(url="redis://redis")
     r = redis.Redis(connection_pool=pool)
-    FastAPICache.init(RedisBackend(r), prefix="fastapi-cache", force=True)
-    yield
+    initialized = False
+    try:
+        FastAPICache.init(RedisBackend(r), prefix="fastapi-cache")
+        initialized = True
+        yield
+    finally:
+        try:
+            await r.close(close_connection_pool=True)
+        finally:
+            if initialized:
+                FastAPICache.reset()
 
 
 app = FastAPI(lifespan=lifespan)
 
+# On Windows, verify Starlette includes the GHSA-wqp7-x3pw-xc5r fix before using StaticFiles.
+# Otherwise do not run this example with outbound SMB access.
 app.mount(
     path="/static",
     app=StaticFiles(directory="./"),

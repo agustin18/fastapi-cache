@@ -14,7 +14,9 @@ normal success-path behavior. Bug fixes that change edge-case behavior are liste
 are covered by regression tests. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full
 contract.
 
-> **Status:** this guide describes `0.3.0b1` and the target `0.3.0` behavior. `0.3.0b1`
+> **Status:** this guide describes the published `0.3.0b1` artifact and the target `0.3.0`
+> stable behavior. Stable `0.3.0` installs on Python `>=3.8,<3.14`; functional compatibility
+> for Python 3.8–3.10 is legacy-only, while security support is Python 3.11–3.13. `0.3.0b1`
 > keeps every behavior from `0.3.0a2` and adds an explicit second-`init()` contract: a second
 > `FastAPICache.init()` call raises `RuntimeError` unless you pass `force=True`. Call it once
 > at application startup (for example in the FastAPI `lifespan`), or call
@@ -24,14 +26,20 @@ contract.
 
 ## Who should migrate
 
-- You use `fastapi-cache2` 0.2.2 on Python 3.8–3.13.
+- You use `fastapi-cache2` 0.2.2 and run stable `0.3.0` on Python 3.8–3.13.
+- Python 3.8–3.10 remain legacy functional-compatibility targets. They are EOL and do not
+  receive a stable security-support commitment; Python 3.11–3.13 form the security-supported
+  matrix.
 - You use `InMemoryBackend` or `RedisBackend` (standalone Redis).
 - Your endpoints are GET and return JSON, Pydantic models, dataclasses or standard types.
 - You need a maintained package without changing the `fastapi_cache` import.
 
-Python 3.8/3.9/3.10 and Pydantic v1 are end-of-life upstream. They remain supported for
-migration so existing applications can move without code changes; they are not a security
-recommendation for new deployments.
+Python 3.8/3.9/3.10 and Pydantic v1 are end-of-life upstream. Stable `0.3.0` preserves tested
+functional compatibility for the documented Python 3.8–3.10 combinations, but those EOL
+profiles receive no security-support promise. Any critical advisory still requires an
+applicability assessment; EOL status alone does not close it. A critical advisory applicable to
+package-controlled behavior must be mitigated; application-selected paths require a documented
+trigger, residual risk and explicit maintainer acceptance.
 
 The default `JsonCoder` keeps the legacy decoded behavior. Pydantic v2 users can opt into
 typed restoration with `TypedJsonCoder`; Pydantic v1 users keep the legacy behavior, so
@@ -71,7 +79,10 @@ pip install "fastapi-cache-stable[redis]==0.3.0b1"
 ```
 
 Do **not** install both distributions in the same environment: they provide the same
-`fastapi_cache` package and the version metadata becomes ambiguous.
+`fastapi_cache` files. `pip check` may still pass because their distribution names and declared
+dependencies do not conflict; uninstalling `fastapi-cache2` after installing the fork can remove
+the shared import files. Always uninstall the old distribution first, then install and verify the
+fork in the same environment.
 
 Verify:
 
@@ -110,9 +121,10 @@ published separately to PyPI.
 
 | Component | Status | Notes |
 |---|---|---|
-| Python 3.10–3.13 | Verified | CI matrix runs the suite; Python 3.10 is EOL and kept for migration |
-| Python 3.8/3.9 | Verified for migration | Legacy CI job with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2; EOL, not recommended for new production |
-| Python 3.14 | Targeted | Evaluated after the first stable release |
+| Python 3.11–3.13 | Verified, security-supported | Main functional matrix and separate runtime security-audit profile |
+| Python 3.10 | Verified legacy compatibility | Main functional tests and Pydantic v1 migration job; EOL, no security-support commitment |
+| Python 3.8/3.9 | Verified legacy compatibility | Pinned FastAPI 0.111.1/Pydantic 1.10.27/2.8.2 matrix and wheel smoke; EOL, no security-support commitment |
+| Python 3.14 | Unsupported for stable `0.3.0` | Add and pass a full matrix before announcing support |
 | FastAPI | Verified with 0.111.1 and current 0.x | Older 0.100.x validation is a beta gate; no upper pin yet (`fastapi = "*"`) |
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
@@ -140,7 +152,7 @@ can decide whether it affects you.
 |---|---|---|---|
 | Error responses | A cached 404 could be returned as 200 | Responses with status >= 400 are not cached | Implemented in 0.3.0a1 |
 | Typed JSON decode | Cache hits returned plain dicts/lists | Opt-in `TypedJsonCoder` on Pydantic v2; default `JsonCoder`, Pydantic v1 and unsupported annotations keep the legacy decoded behavior; validation errors propagate | Implemented in 0.3.0a1 |
-| Authenticated requests | Two users could share a cache key | Requests with `Authorization`/`Cookie`/session bypass the cache by default; opt-in with `cache_authenticated=True` and a safe `key_builder` | Implemented in 0.3.0a2 |
+| Authenticated requests | Two users could share a cache key | Requests with a non-empty `Authorization` or `Cookie` header bypass the cache by default; other authentication/session mechanisms are not detected automatically. Opt in with `cache_authenticated=True` and a safe `key_builder` | Implemented in 0.3.0a2 |
 | ETag | `hash()` changes per process; header unquoted | Stable SHA-256 digest, quoted weak ETag, weak `If-None-Match` comparison including lists and `*` | Implemented in 0.3.0a2 |
 | `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key; pass the full key | Implemented in 0.3.0a1 |
 | Namespace boundary | `clear("app:user")` also deleted `app:users` | Requires the `:` boundary | Implemented in 0.3.0a1 |
@@ -222,6 +234,9 @@ the explicit flag is required.
 The automatic bypass only detects `Authorization` and `Cookie`. Applications that use
 `X-API-Key`, proxy-injected headers, `request.state`, or internal dependencies must review
 their cache strategy. `cache_authenticated=True` does not make an unsafe key builder safe.
+Every non-empty cookie bypasses caching by default, including anonymous analytics, consent or
+preference cookies. This is intentionally conservative and can reduce cache hits on public pages.
+Do not ignore a cookie in a custom key builder unless it cannot affect the response.
 
 This fix protects the application cache. It does not configure CDN, reverse-proxy, or browser
 caching.
@@ -264,6 +279,10 @@ Malformed entity-tags are ignored. A matching conditional GET returns `304 Not M
 with the ETag and cache-status headers and no body. The ETag value changes once when
 upgrading from `0.3.0a1`/0.2.2 because the format changed; clients revalidate and receive
 the new value.
+
+The default key-builder implementation and its argument shape are unchanged from
+`fastapi-cache2 0.2.2`; matching prefix, namespace, function and arguments continue to address
+the same ordinary entries. The ETag format change does not require flushing backend data.
 
 ### `_spec_type` and user payloads
 
@@ -319,16 +338,17 @@ FastAPICache.reset()
 FastAPICache.init(InMemoryBackend(), prefix="second")
 ```
 
-**Action required:** if you call `init()` from a lifespan handler, pass `force=True`, because
-the handler runs on every startup in the same process (for example under `TestClient` or a
-reloader). If you relied on the silent no-op to keep the first configuration, remove the
-second call or guard it with your own flag. `reset()` clears configuration only; it does not
-delete cached data.
+**Action required:** `FastAPICache` stores one process-global configuration. A normal ASGI worker
+should call `init()` once during startup; do not pass `force=True` as a routine lifespan setting.
+Tests that enter the same application's lifespan more than once in one process must close any
+backend resources they own and call `FastAPICache.reset()` during shutdown/fixture cleanup before
+the next startup. If you deliberately replace a live configuration, close the previous backend
+first and then use `force=True`. `reset()` clears configuration only; it neither closes backend
+resources nor deletes cached data.
 
 `force=True` replaces the global configuration; it does not release resources owned by the
-previous backend (for example a Redis connection pool). Close those yourself on shutdown.
-It also does not isolate two FastAPI applications running in the same process: the
-configuration stays global.
+previous backend (for example a Redis connection pool). It also does not isolate two FastAPI
+applications running in the same process: the configuration stays global.
 
 Changing the coder while reusing the same backend and namespace can leave entries in an
 incompatible format. For example, `PickleCoder` bytes cannot be decoded by `JsonCoder`, and
@@ -350,8 +370,11 @@ coder; the library does not delete data automatically.
    format changes once, `_spec_type` user payloads are preserved, and non-JSON responses
    bypass the cache. A second `init()` now raises `RuntimeError` unless you pass `force=True`.
    Update asserts with the documented behavior.
-6. **Flush if needed.** If the key format or ETag changed, clear the old namespace. For the
-   auth bypass, clearing or rotating the namespace is required, not optional.
+6. **Flush only affected data.** The default key formula is unchanged, and the ETag change only
+   makes clients revalidate; neither requires a full namespace flush by itself. Clear or rotate
+   namespaces that contain old authenticated entries before enabling the default auth bypass.
+   Flush entries with old `_spec_type` date/datetime/Decimal markers if the restored type matters,
+   and clear data written with an incompatible custom coder.
 7. **Observe.** Compare HIT/MISS, latency, errors and memory with your baseline.
 8. **Roll back if needed.** See below.
 
@@ -360,18 +383,30 @@ coder; the library does not delete data automatically.
 ```sh
 pip uninstall -y fastapi-cache-stable
 pip install "fastapi-cache2==0.2.2"
-# clear the cache namespace if the key format changed
+# clear or rotate only data that is incompatible or must be invalidated
 ```
 
 Keep the previous version pinned and a backup of your configuration. Rollback does not
-restore cache entries written with the new format; they are regenerated.
+restore cache entries written with an incompatible coder or marker format; those entries are
+regenerated. The default key formula is unchanged, so changing distributions alone does not
+require clearing the namespace. Clear or rotate it for old authenticated responses or any
+specific incompatible data identified during migration.
+
+**Security warning:** `fastapi-cache2 0.2.2` does not include this fork's default
+`Authorization`/`Cookie` bypass. If rollback will serve user-specific endpoints through the
+cache, disable caching on those endpoints or configure an identity-aware `key_builder` before
+traffic resumes. Clearing Redis removes existing entries but does not prevent the old version
+from writing new shared keys.
 
 ## FAQ
 
 **Does the import change?** No: `fastapi_cache`.
 **Can I install both packages?** No, not in the same environment.
-**What happens to my cached data?** If the key format or ETag changed, entries are
-regenerated. Flush the namespace if you were affected by an error-response or clear bug.
+**What happens to my cached data?** The default key formula is unchanged from `fastapi-cache2`
+0.2.2, so normal entries remain addressable. ETags are recalculated from the cached response
+and clients revalidate. Clear or rotate namespaces containing old authenticated responses before
+deploying the new bypass; flush old special-type entries if you depend on date/datetime/Decimal
+conversion, or entries affected by the documented error-response/clear bugs.
 **Is `0.3.0b1` production-ready?** No. It is a beta for migration and distribution testing.
 Test it against your own application before relying on it.
 **What is implemented in `0.3.0b1`?** Everything from `0.3.0a2`: error responses are not
@@ -384,8 +419,9 @@ experimental with unit-level coverage only, and DynamoDB `clear` is still not im
 **Is Pydantic v1 supported?** Migration compatibility only. Pydantic v1 is end-of-life
 (1.10.27 is the final release) and receives no new security fixes. Typed restoration requires
 Pydantic v2.
-**Is Python 3.8/3.9 supported?** Migration compatibility is tested. Python 3.8/3.9/3.10 are
-end-of-life and are not recommended for new production deployments.
+**Does stable `0.3.0` support Python 3.8–3.10?** Yes, for the documented legacy functional
+matrix and installation range `>=3.8,<3.14`. Those EOL interpreters are outside the
+security-support matrix; Python 3.11–3.13 are security-supported.
 **Is Redis Cluster supported?** Only with the documented limitations; complete namespace
 clearing is not promised.
 **Are Memcached and DynamoDB supported?** Experimental until they have parity tests.
@@ -399,8 +435,12 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 ## Known limitations in 0.3.x
 
 - No tags, stale-while-revalidate, stampede protection or POST caching.
-- A second `FastAPICache.init()` call raises `RuntimeError`; pass `force=True` or call
-  `FastAPICache.reset()` first. This is implemented in `0.3.0b1` and is not in the alphas.
+- A second `FastAPICache.init()` call raises `RuntimeError`; initialize once per worker.
+  For a deliberate live replacement, close resources owned by the old backend before using
+  `force=True`. Tests that re-enter one application's lifespan in the same process should close
+  owned resources and call `FastAPICache.reset()` before the next startup. `reset()` does not
+  close resources or delete cached data. This behavior shipped in `0.3.0b1`; see
+  [Second `init()` call](#second-init-call).
   The auth/privacy, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
   implemented in `0.3.0a2`.
 - Redis standalone is verified with Redis 7 and redis-py 4.6.0; redis-py 5/6 are not
@@ -410,14 +450,18 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 - No memory cap in `InMemoryBackend`.
 - Typed restoration is opt-in via `TypedJsonCoder` and requires Pydantic v2. Pydantic v1
   and unsupported annotations keep the legacy decoded behavior.
-- Python 3.8/3.9/3.10 migration compatibility is tested, but those versions are end-of-life
-  and are not recommended for new production deployments.
+- Stable `0.3.0` installs on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy functional
+  compatibility only and are excluded from stable security support. Python 3.11–3.13 are the
+  security-supported matrix. Python 3.14 awaits a full CI matrix.
 - The 24-month `1.x` support window in `SUPPORT.md` is conditional on the `1.x` release and
   a co-maintainer being in place; no multi-year promise is active today.
 
 ## Verification checklist
 
-### `0.3.0a2`
+### Legacy alpha migration checklist (not current stable-release evidence)
+
+The unchecked items below are a retained migration checklist. They are not a record of tests
+run against the current PR candidate; use the current release gates below for that status.
 
 - [ ] `pip uninstall fastapi-cache2` and `pip install fastapi-cache-stable==0.3.0a2` in a clean venv.
 - [ ] `import fastapi_cache` and `__version__` are correct.
@@ -426,17 +470,33 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 - [ ] `clear(namespace)` and `clear(key)` verified.
 - [ ] Rollback tested in staging.
 
-### Before `0.3.0` stable
+### Previously implemented `0.3.0` fixes
 
 - [x] Two users with different credentials do not share a response (implemented in `0.3.0a2`).
 - [x] ETag is stable across worker processes (implemented in `0.3.0a2`).
-- [x] `Cache-Control`/`max-age` behavior is correct (implemented in `0.3.0a2`).
+- [x] Response `Cache-Control`/`max-age` output omits invalid expiry values (implemented in `0.3.0a2`).
 - [x] InMemory `expire=None` and instance isolation behave as documented (implemented in `0.3.0a2`).
 - [x] Non-JSON responses and metadata-bearing `JSONResponse` are bypassed; responses with
   `Set-Cookie`, `Cache-Control: no-store/private`, or a background task are never cached
   (implemented in `0.3.0a2`).
 - [x] `_spec_type` user payloads are preserved (implemented in `0.3.0a2`).
 - [x] A second `init()` is explicit (merged on `stable`; ships in `0.3.0b1`).
+
+### Remaining `0.3.0` release gates
+
+These checks are not implied by the historical items above. Release policy and security gates
+are tracked in [`SECURITY_DEPENDENCY_INVENTORY.md`](SECURITY_DEPENDENCY_INVENTORY.md).
+
+- [ ] Parse request `Cache-Control` directives correctly; verify `no-store` prevents cache read
+  and write for combined, whitespace, and case-varied directives. (`no-cache` alone must follow
+  the documented revalidation behavior.)
+- [ ] Run a wheel-based E2E that writes ordinary, authenticated, and special-type entries with
+  `fastapi-cache2 0.2.2`, then reads or invalidates them with a wheel built from the candidate.
+- [ ] Validate the candidate in one owner-maintained Redis application and one separate
+  InMemory application or integration fixture; record sanitized outputs and dependency versions.
+- [ ] Reconcile all 93 historical GHSA rows in the separate triage register before stable.
+- [ ] Build and verify a uniquely versioned RC artifact; repeat the critical migration checks
+  against that exact published artifact before stable.
 
 ## See also
 

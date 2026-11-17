@@ -21,6 +21,8 @@ volume.
 python -m venv .venv
 . .venv/bin/activate
 pip install -e . pytest httpx coverage diff-cover ruff==0.17.5 pre-commit
+# Python >=3.10 modern Starlette TestClient profile; omit for Python 3.8/3.9 legacy tests.
+if python -c "import sys; raise SystemExit(sys.version_info < (3, 10))"; then pip install httpx2; fi
 pre-commit install
 ```
 
@@ -47,12 +49,14 @@ pytest -q tests/test_memcached_backend.py tests/test_dynamodb_backend.py
 Blocking for every pull request:
 
 - `ruff check .`
-- `pytest` on Python 3.10–3.13
+- Functional `pytest` on Python 3.10–3.13
 - `legacy-compat` on Python 3.8/3.9 with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2, plus
   Python 3.10/3.11 with Pydantic 1.10.27
-- `legacy-smoke`: wheel install on Python 3.8 with Pydantic 1.10.27
+- `legacy-smoke`: wheel install and MISS/HIT on Python 3.8
 - `redis-clear`: Redis 7 integration tests (CI service)
 - `optional-backends`: Memcached and DynamoDB unit tests with fake clients
+- `security-audit`: fresh runtime+extras profile with FastAPI standard runtime extras on
+  Python 3.11–3.13; development-only packages are excluded
 - changed-line coverage with `diff-cover` for runtime changes
 - `python -m build` and `twine check`
 - clean-install smoke test for wheel and sdist
@@ -60,20 +64,30 @@ Blocking for every pull request:
 - Conventional Commits PR title
 - no secrets, no private files, no auto-merge
 
+Legacy security review before stable:
+
+- Review a fresh dependency-audit report for each legacy Python profile and classify each
+  critical/high advisory by package path, trigger and residual risk. EOL status alone does not
+  close an applicable issue. A critical advisory in a package-controlled path blocks release.
+- Application-only surfaces such as form parsing are described separately from code paths used
+  by this package; optional experimental backends receive their own review.
+
 Baseline gates (ratchet, do not regress):
 
 - `mypy` on changed Python files (blocking); full-repo `mypy`/`pyright` is a follow-up
 - overall coverage
-- `pip-audit`
 - Markdown link checks
 
 Tool versions:
 
 - Ruff is pinned to the `0.17.x` series in `pyproject.toml` and `poetry.lock`; CI uses
   `0.17.5`.
-- Mypy and Pyright target Python 3.10; the package metadata keeps 3.8/3.9 for legacy
-  migration. The minimum Python will be revisited only after the compatibility matrix and an
-  explicit floor decision.
+- Stable package metadata is `>=3.8,<3.14`. Mypy/Pyright target Python 3.11.
+- Python 3.8–3.10 are legacy functional-compatibility targets with no security-support
+  commitment; Python 3.11–3.13 are the security-supported matrix. Python 3.14 is excluded
+  until its full functional matrix passes.
+- `httpx2` is a test-only dependency for the modern Starlette TestClient profile; do not add it
+  to runtime dependencies. The legacy 3.8/3.9 jobs use pinned `httpx` and FastAPI instead.
 - `stable` requires a pull request and the CI checks; force pushes and branch deletion are
   blocked.
 - The `pypi` environment only allows `stable` and `v*` tags and has a 5-minute wait timer.
