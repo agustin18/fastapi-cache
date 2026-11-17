@@ -496,13 +496,52 @@ are tracked in [`SECURITY_DEPENDENCY_INVENTORY.md`](SECURITY_DEPENDENCY_INVENTOR
 - [x] Parse request `Cache-Control` directive names case-insensitively across combined, whitespace,
   and repeated header fields; verify `no-store` bypasses lookup/storage and `no-cache` recomputes
   and refreshes the result (implemented in PR #26).
-- [ ] Run a wheel-based E2E that writes ordinary, authenticated, and special-type entries with
-  `fastapi-cache2 0.2.2`, then reads or invalidates them with a wheel built from the candidate.
-- [ ] Validate the candidate in one owner-maintained Redis application and one separate
-  InMemory application or integration fixture; record sanitized outputs and dependency versions.
+- [ ] Complete the package-level E2E below and validate one owner-maintained Redis application
+  plus one separate InMemory application or integration fixture before RC; retain sanitized
+  outputs and dependency versions.
+- [ ] Repeat the critical migration E2E against the exact published RC artifact before stable.
 - [ ] Reconcile all 93 historical GHSA rows in the separate triage register before stable.
 - [ ] Build and verify a uniquely versioned RC artifact; repeat the critical migration checks
   against that exact published artifact before stable.
+
+## Reproducing the Redis migration E2E
+
+The manual harness in [`tests/migration_redis_e2e.py`](tests/migration_redis_e2e.py) runs a legacy
+writer, a candidate reader and a legacy rollback reader in separate Python processes. It covers
+ordinary persisted entries and TTL, an authenticated entry that requires targeted invalidation,
+the legacy `_spec_type` marker, the new auth bypass, `no-cache` refresh and rollback of compatible
+ordinary data.
+
+Use a dedicated Redis 7 database, a unique `MIGRATION_E2E_PREFIX` and synthetic auth values. The
+harness refuses to seed a prefix that already contains keys and never flushes the Redis database.
+Build a wheel from the exact candidate source and install it by path in a clean candidate venv.
+Use separate clean Python 3.11 venvs with FastAPI 0.111.1, Pydantic 2.8.2, Redis 4.6.0 and HTTPX
+0.27.0; install `fastapi-cache2[redis]==0.2.2` in the legacy venv. Run from outside the source
+checkout so imports resolve to the installed distributions. Set `REPO`, `REDIS_URL`,
+`UNIQUE_PREFIX`, `LEGACY_PYTHON`, `CANDIDATE_PYTHON`, `CANDIDATE_WHEEL` and the version read from
+that wheel as `CANDIDATE_VERSION`:
+
+```sh
+E2E_SCRIPT="$REPO/tests/migration_redis_e2e.py"
+"$LEGACY_PYTHON" -m pip install \
+  fastapi==0.111.1 pydantic==2.8.2 redis==4.6.0 httpx==0.27.0 \
+  "fastapi-cache2[redis]==0.2.2"
+"$CANDIDATE_PYTHON" -m pip install \
+  fastapi==0.111.1 pydantic==2.8.2 redis==4.6.0 httpx==0.27.0 \
+  "$CANDIDATE_WHEEL"
+REDIS_URL="$REDIS_URL" MIGRATION_E2E_PREFIX="$UNIQUE_PREFIX" \
+  "$LEGACY_PYTHON" -I "$E2E_SCRIPT" seed
+REDIS_URL="$REDIS_URL" MIGRATION_E2E_PREFIX="$UNIQUE_PREFIX" \
+MIGRATION_E2E_GENERATION=candidate \
+MIGRATION_E2E_CANDIDATE_VERSION="$CANDIDATE_VERSION" \
+  "$CANDIDATE_PYTHON" -I "$E2E_SCRIPT" candidate
+REDIS_URL="$REDIS_URL" MIGRATION_E2E_PREFIX="$UNIQUE_PREFIX" \
+MIGRATION_E2E_GENERATION=rollback "$LEGACY_PYTHON" -I "$E2E_SCRIPT" rollback
+```
+
+Record the source commit, wheel SHA-256, Python/dependency versions, Redis version and all three
+mode results. This package-level E2E complements, but does not replace, the required owner-app
+Redis and InMemory validations.
 
 ## See also
 
