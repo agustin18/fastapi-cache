@@ -12,6 +12,8 @@
   miss calls the endpoint, cache hit returns the cached value, and the cache status header
   reports `MISS`/`HIT`.
 - Existing `@cache(...)` and `FastAPICache.init(...)` calls keep working without code changes.
+- `FastAPICache` holds one process-global configuration. Initialize once per worker; `force=True`
+  replaces it but does not close the previous backend or isolate multiple applications.
 - Authenticated requests bypass the cache by default. This is an intentional privacy behavior
   change; authenticated endpoints must opt in with `cache_authenticated=True` and an
   identity-aware `key_builder` to keep caching.
@@ -238,8 +240,10 @@ regression test when implemented.
 
 - **ETag:** the value changes once. The new value is a stable SHA-256 digest; clients may
   revalidate after upgrading.
-- **Key format:** if a release changes the default key format, old entries become
-  unreachable. Flush the cache namespace after upgrading.
+- **Default key format:** the builder implementation and its arguments are unchanged from
+  `fastapi-cache2 0.2.2`; matching prefix, namespace, function, arguments and keyword arguments
+  continue to address the same ordinary entries. A namespace rotation is not required solely
+  because the distribution changes.
 - **Error responses:** old cached error entries may remain until their TTL expires. Flush
   the cache namespace if you were affected.
 - **Authenticated responses:** entries written by versions that cached authenticated requests

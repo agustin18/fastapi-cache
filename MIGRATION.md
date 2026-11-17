@@ -79,7 +79,10 @@ pip install "fastapi-cache-stable[redis]==0.3.0b1"
 ```
 
 Do **not** install both distributions in the same environment: they provide the same
-`fastapi_cache` package and the version metadata becomes ambiguous.
+`fastapi_cache` files. `pip check` may still pass because their distribution names and declared
+dependencies do not conflict; uninstalling `fastapi-cache2` after installing the fork can remove
+the shared import files. Always uninstall the old distribution first, then install and verify the
+fork in the same environment.
 
 Verify:
 
@@ -231,6 +234,9 @@ the explicit flag is required.
 The automatic bypass only detects `Authorization` and `Cookie`. Applications that use
 `X-API-Key`, proxy-injected headers, `request.state`, or internal dependencies must review
 their cache strategy. `cache_authenticated=True` does not make an unsafe key builder safe.
+Every non-empty cookie bypasses caching by default, including anonymous analytics, consent or
+preference cookies. This is intentionally conservative and can reduce cache hits on public pages.
+Do not ignore a cookie in a custom key builder unless it cannot affect the response.
 
 This fix protects the application cache. It does not configure CDN, reverse-proxy, or browser
 caching.
@@ -273,6 +279,10 @@ Malformed entity-tags are ignored. A matching conditional GET returns `304 Not M
 with the ETag and cache-status headers and no body. The ETag value changes once when
 upgrading from `0.3.0a1`/0.2.2 because the format changed; clients revalidate and receive
 the new value.
+
+The default key-builder implementation and its argument shape are unchanged from
+`fastapi-cache2 0.2.2`; matching prefix, namespace, function and arguments continue to address
+the same ordinary entries. The ETag format change does not require flushing backend data.
 
 ### `_spec_type` and user payloads
 
@@ -328,16 +338,17 @@ FastAPICache.reset()
 FastAPICache.init(InMemoryBackend(), prefix="second")
 ```
 
-**Action required:** if you call `init()` from a lifespan handler, pass `force=True`, because
-the handler runs on every startup in the same process (for example under `TestClient` or a
-reloader). If you relied on the silent no-op to keep the first configuration, remove the
-second call or guard it with your own flag. `reset()` clears configuration only; it does not
-delete cached data.
+**Action required:** `FastAPICache` stores one process-global configuration. A normal ASGI worker
+should call `init()` once during startup; do not pass `force=True` as a routine lifespan setting.
+Tests that enter the same application's lifespan more than once in one process must close any
+backend resources they own and call `FastAPICache.reset()` during shutdown/fixture cleanup before
+the next startup. If you deliberately replace a live configuration, close the previous backend
+first and then use `force=True`. `reset()` clears configuration only; it neither closes backend
+resources nor deletes cached data.
 
 `force=True` replaces the global configuration; it does not release resources owned by the
-previous backend (for example a Redis connection pool). Close those yourself on shutdown.
-It also does not isolate two FastAPI applications running in the same process: the
-configuration stays global.
+previous backend (for example a Redis connection pool). It also does not isolate two FastAPI
+applications running in the same process: the configuration stays global.
 
 Changing the coder while reusing the same backend and namespace can leave entries in an
 incompatible format. For example, `PickleCoder` bytes cannot be decoded by `JsonCoder`, and
@@ -359,8 +370,11 @@ coder; the library does not delete data automatically.
    format changes once, `_spec_type` user payloads are preserved, and non-JSON responses
    bypass the cache. A second `init()` now raises `RuntimeError` unless you pass `force=True`.
    Update asserts with the documented behavior.
-6. **Flush if needed.** If the key format or ETag changed, clear the old namespace. For the
-   auth bypass, clearing or rotating the namespace is required, not optional.
+6. **Flush only affected data.** The default key formula is unchanged, and the ETag change only
+   makes clients revalidate; neither requires a full namespace flush by itself. Clear or rotate
+   namespaces that contain old authenticated entries before enabling the default auth bypass.
+   Flush entries with old `_spec_type` date/datetime/Decimal markers if the restored type matters,
+   and clear data written with an incompatible custom coder.
 7. **Observe.** Compare HIT/MISS, latency, errors and memory with your baseline.
 8. **Roll back if needed.** See below.
 
@@ -379,8 +393,11 @@ restore cache entries written with the new format; they are regenerated.
 
 **Does the import change?** No: `fastapi_cache`.
 **Can I install both packages?** No, not in the same environment.
-**What happens to my cached data?** If the key format or ETag changed, entries are
-regenerated. Flush the namespace if you were affected by an error-response or clear bug.
+**What happens to my cached data?** The default key formula is unchanged from `fastapi-cache2`
+0.2.2, so normal entries remain addressable. ETags are recalculated from the cached response
+and clients revalidate. Clear or rotate namespaces containing old authenticated responses before
+deploying the new bypass; flush old special-type entries if you depend on date/datetime/Decimal
+conversion, or entries affected by the documented error-response/clear bugs.
 **Is `0.3.0b1` production-ready?** No. It is a beta for migration and distribution testing.
 Test it against your own application before relying on it.
 **What is implemented in `0.3.0b1`?** Everything from `0.3.0a2`: error responses are not
