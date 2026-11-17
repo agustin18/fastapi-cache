@@ -263,8 +263,9 @@ row-by-row triage register is a separate follow-up deliverable and remains incom
    green CI and merge before RC.
 4. Triage the lock-installed AnyIO 4.4.0 profile separately; the modern runtime scans do not
    cover it, and the legacy-only acceptance does not apply to it.
-5. Complete the owner-application and persisted-data migration E2E checks listed in
-   [`MIGRATION.md`](MIGRATION.md).
+5. The package-level Redis migration E2E is complete (evidence below). Before RC, still validate
+   one owner-maintained Redis application and a separate InMemory application or fixture as
+   listed in [`MIGRATION.md`](MIGRATION.md).
 6. Keep the `GHSA-h4cc-hm5h-fmm9` conclusion bounded to the default DynamoDB transport using
    `auto_decompress=False`; independent aiohttp use and custom transport/event overrides remain
    outside that conclusion.
@@ -276,3 +277,24 @@ resolution, includes the targeted h11 0.16.0/httpcore 1.0.9 remediation, and res
 per Python version with time-machine only for the Python 3.8 CPython path. It does not upgrade
 the full test-tool/dependency set. Stable remains NO-GO until the release work above is complete;
 the published `0.3.0b1` artifact is unchanged.
+
+## Package-level Redis migration E2E evidence
+
+The manual harness in `tests/migration_redis_e2e.py` passed on 2026-11-17 using an isolated
+Redis 7 container and a unique prefix; it did not flush the database.
+
+| Artifact/runtime | Evidence |
+|---|---|
+| Candidate source commit | `995427539b62e6917217def2bc4bd6a649f97689` |
+| Candidate wheel | `fastapi-cache-stable 0.3.0b1`, SHA-256 `c614a2368444098dbf0c57de27df70f8639fce509246efa7b15c1f6e5002e880` |
+| Legacy writer/rollback | `fastapi-cache2 0.2.2` |
+| Python and dependencies | Python 3.11.15, FastAPI 0.111.1, Pydantic 2.8.2, redis-py 4.6.0, HTTPX 0.27.0 |
+| Redis server | `redis:7-alpine` |
+
+The legacy process wrote ordinary JSON, a synthetic authenticated response, and a special-type
+entry; the harness confirmed the legacy Alice/Bob shared-key behavior and the `_spec_type` marker.
+The candidate process read the ordinary entry as a HIT with positive TTL, cleared only the private
+and special-type namespaces, bypassed caching for an authenticated Bob request, recomputed and
+refreshed `no-cache`, and served an anonymous MISS rather than the old Alice response. A separate
+legacy rollback process read the compatible ordinary entry written by the candidate. All three
+harness modes passed. These synthetic package-level results do not replace owner-application tests.

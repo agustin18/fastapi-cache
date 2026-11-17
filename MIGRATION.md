@@ -496,9 +496,10 @@ are tracked in [`SECURITY_DEPENDENCY_INVENTORY.md`](SECURITY_DEPENDENCY_INVENTOR
 - [x] Parse request `Cache-Control` directive names case-insensitively across combined, whitespace,
   and repeated header fields; verify `no-store` bypasses lookup/storage and `no-cache` recomputes
   and refreshes the result (implemented in PR #26).
-- [ ] Complete the package-level E2E below and validate one owner-maintained Redis application
-  plus one separate InMemory application or integration fixture before RC; retain sanitized
-  outputs and dependency versions.
+- [x] Run the package-level Redis migration E2E below against a local candidate wheel; see the
+  exact run provenance in `SECURITY_DEPENDENCY_INVENTORY.md`.
+- [ ] Validate one owner-maintained Redis application and one separate InMemory application or
+  integration fixture before RC; retain sanitized outputs and dependency versions.
 - [ ] Repeat the critical migration E2E against the exact published RC artifact before stable.
 - [ ] Reconcile all 93 historical GHSA rows in the separate triage register before stable.
 - [ ] Build and verify a uniquely versioned RC artifact; repeat the critical migration checks
