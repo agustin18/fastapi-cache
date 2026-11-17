@@ -253,20 +253,23 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-      - name: Install runtime security profile
+      - name: Build profile wheel
         run: |
-          python -m venv /tmp/security-runtime
-          /tmp/security-runtime/bin/python -m pip install --upgrade pip
-          /tmp/security-runtime/bin/python -m pip install -e ".[all]" "fastapi[standard-no-fastapi-cloud-cli]"
+          python -m pip install --upgrade pip build
+          python -m build --wheel --outdir /tmp/security-dist
+      - name: Install runtime profile into isolated target
+        run: |
+          wheel=$(python -c "from glob import glob; print(glob('/tmp/security-dist/*.whl')[0])")
+          python -m pip install --target /tmp/security-runtime --ignore-installed \
+            "fastapi-cache-stable[all] @ file://$wheel" \
+            "fastapi[standard-no-fastapi-cloud-cli]"
       - name: Install isolated auditor
         run: |
           python -m venv /tmp/security-auditor
           /tmp/security-auditor/bin/python -m pip install --upgrade pip
           /tmp/security-auditor/bin/python -m pip install pip-audit==2.10.1
       - name: Audit supported runtime profile
-        run: |
-          site_packages=$(/tmp/security-runtime/bin/python -c "import site; print(site.getsitepackages()[0])")
-          /tmp/security-auditor/bin/pip-audit --path "$site_packages" --aliases off
+        run: /tmp/security-auditor/bin/pip-audit --path /tmp/security-runtime --aliases off
 
   build:
     name: Build and inspect distributions

@@ -59,11 +59,12 @@ Each profile was installed from the published PyPI wheel in a clean `uv` virtual
 
 The 3.8/3.9 results confirm the policy distinction: those versions remain in the legacy functional matrix, but current compatible dependency resolution is not free of known advisories. AnyIO 4.14.2 cannot be selected there because it requires Python >=3.10. The optional DynamoDB extra also pulls an older urllib3 line on those interpreters. Python 3.10+ results reflect a fresh resolution as of this snapshot; they do not repair the locked development environment.
 
-PR #25 adds a separate CI security-audit profile for Python 3.11–3.13. It scans a fresh install
-of the package's `all` extras plus `fastapi[standard-no-fastapi-cloud-cli]`, with the audit tool
-isolated from the scanned runtime environment. The legacy rows above remain subject to manual
-per-advisory applicability review; no critical finding is waived solely because its interpreter
-is EOL.
+PR #25 adds a separate CI security-audit profile for Python 3.11–3.13. It builds the wheel,
+installs the package's `all` extras plus `fastapi[standard-no-fastapi-cloud-cli]` into an isolated
+target directory, then scans that directory with a separate `pip-audit` environment. This keeps
+runner/build-tool packages out of the runtime report. The legacy rows above remain subject to
+manual per-advisory applicability review; no critical finding is waived solely because its
+interpreter is EOL.
 
 The already-published `0.3.0b1` metadata is `>=3.8,<4.0`, so pip accepts Python 3.14 even though CI stops at 3.13. A Python 3.14.7 base install passed `pip check` and a small MISS/HIT smoke test, but no full suite or optional-extra audit was run there. Stable `0.3.0` is planned with `>=3.8,<3.14`; Python 3.14 remains outside the release matrix until full CI passes.
 
