@@ -136,12 +136,12 @@ replace the remaining 93-entry triage, or authorize release.
 ## Candidate recheck after Poetry main-only correction (2026-11-17)
 
 The dependency-resolution, local-suite and wheel checks in this section were run against
-candidate commit `1666afaf0e52811354abeb82f61e5c45d6a95ee2`, before the later inventory and
-lifespan/documentation commits. Those later commits did not change `pyproject.toml` or
-`poetry.lock`, but `a631c1e` added a regression test and changed documentation included in the
-distribution. The current PR head is `a631c1ecaaa3b74e3a3ff9e29c4aa3457608afe7`; no artifact
-built from that exact head has been published. Do not treat the local wheel hash below as the
-wheel for the current head.
+candidate commit `1666afaf0e52811354abeb82f61e5c45d6a95ee2`, before the later inventory,
+lifespan and audit-brief documentation commits. Those later commits did not change
+`pyproject.toml` or `poetry.lock`, but the lifespan follow-up added a regression test and changed
+documentation included in the distribution. No artifact built from the current PR head has been
+published. The current head and its CI status are available from [PR #25](https://github.com/agustin18/fastapi-cache/pull/25);
+do not treat the local wheel hash below as the wheel for the current head.
 
 The initial dev-only `time-machine` correction above did not make a `--only main` install
 consistent. That was reproduced on Python 3.8 and 3.12: both installed Pendulum 3.0.0 without
@@ -191,13 +191,12 @@ dependency metadata and lock by interpreter instead:
   pending IDs now have preliminary source-based dispositions in the table above; the original
   CSV remains unchanged and the remaining medium/low rows still require review. No residual risk
   is accepted by the auditor on behalf of the maintainer.
-- PR #25 is OPEN/DRAFT at head `a631c1ecaaa3b74e3a3ff9e29c4aa3457608afe7` with
-  `mergeStateStatus: CLEAN`. All 23 GitHub checks pass on that exact head, including packaging,
-  CodeQL, legacy matrices and Python 3.11–3.13 security audits; see the
-  [current PR checks](https://github.com/agustin18/fastapi-cache/pull/25/checks). The local
-  suite and wheel checks above were on the earlier `1666afa` candidate, not this exact head.
-  The `a631c1e` regression test is covered by current GitHub CI. No merge or stable artifact was
-  published.
+- At the time of the previous CI snapshot, all 23 checks passed on head `a631c1e`, including
+  packaging, CodeQL, legacy matrices and Python 3.11–3.13 security audits. The subsequent PR
+  updates are documentation-only; the `a631c1e` regression test remains in the current source.
+  Check the [live PR checks](https://github.com/agustin18/fastapi-cache/pull/25/checks) for
+  status on the exact head under review. The local suite and wheel checks above were on the
+  earlier `1666afa` candidate. No merge or stable artifact was published.
 
 ## Direct-dependency scope notes
 
@@ -212,7 +211,7 @@ dependency metadata and lock by interpreter instead:
 ## Decisions required before RC
 
 1. The maintainer confirmed separate contracts: stable metadata `>=3.8,<3.14`, functional legacy tests on 3.8–3.10, and security support on 3.11–3.13. Python 3.14 remains excluded pending full CI.
-2. PR #25 updates locked h11 to 0.16.0 and httpcore to 1.0.9 to remediate the request-smuggling parser finding and satisfy the HTTPX transport constraint; the current GitHub CI passes on head `a631c1e`. Fresh PyPI installs already resolve patched h11 0.16.0 on Python 3.8+.
+2. PR #25 updates locked h11 to 0.16.0 and httpcore to 1.0.9 to remediate the request-smuggling parser finding and satisfy the HTTPX transport constraint; verify the linked GitHub checks against the exact head under review. Fresh PyPI installs already resolve patched h11 0.16.0 on Python 3.8+.
 3. The table above contains preliminary source-based dispositions for selected AnyIO/Starlette advisories. The package has no direct calls to the listed TLS, form, static-file or `HTTPEndpoint` paths, but consumer applications may use them. The remaining alert snapshot is not fully reviewed; EOL status alone is not an applicability disposition.
 4. Selected optional DynamoDB/aiohttp/urllib3 paths are assessed above, including the bounded `NOT_APPLICABLE` conclusion for `GHSA-h4cc-hm5h-fmm9` on the default DynamoDB transport. Other alert rows and consumer-provided transports still require review; do not treat lock alerts as runtime vulnerabilities or dismiss them without evidence.
 5. The Pendulum/Poetry `--only main` mismatch is corrected in PR #25 by interpreter-specific Pendulum constraints and a CPython<3.9 time-machine marker. Candidate metadata and CI are covered by the current head checks; the full-extras exporter still has the urllib3 marker conflict.
@@ -220,4 +219,4 @@ dependency metadata and lock by interpreter instead:
 7. Keep the `GHSA-h4cc-hm5h-fmm9` assessment bounded to the default DynamoDB transport using `auto_decompress=False`; independent aiohttp use and custom transport/event overrides remain outside that conclusion.
 8. Uvicorn remains used by examples; Jinja2 stays direct while the core imports Starlette's private `_TemplateResponse` type.
 
-The original 2026-11-16 snapshot changed no package versions. PR #25 restores legacy marker resolution, includes the targeted h11 0.16.0/httpcore 1.0.9 remediation, and resolves Pendulum per Python version with time-machine only for the Python 3.8 CPython path. It does not upgrade the full test-tool/dependency set. The current head has green CI, but the 93-alert snapshot still lacks full advisory-by-advisory disposition, AnyIO/DynamoDB residuals need maintainer decisions, and owner-run consumer-application validation plus a wheel-based migration E2E using persisted legacy Redis data remain open. These are technical validation tasks, not claims of third-party adoption; they can use a local wheel built from the exact candidate head without publishing a release. The published `0.3.0b1` artifact is unchanged; RC/stable remain NO-GO.
+The original 2026-11-16 snapshot changed no package versions. PR #25 restores legacy marker resolution, includes the targeted h11 0.16.0/httpcore 1.0.9 remediation, and resolves Pendulum per Python version with time-machine only for the Python 3.8 CPython path. It does not upgrade the full test-tool/dependency set. Before RC or stable, verify green CI on the exact final head; the 93-alert snapshot still lacks full advisory-by-advisory disposition, AnyIO/DynamoDB residuals need maintainer decisions, and owner-run consumer-application validation plus a wheel-based migration E2E using persisted legacy Redis data remain open. These are technical validation tasks, not claims of third-party adoption; they can use a local wheel built from the exact candidate head without publishing a release. The published `0.3.0b1` artifact is unchanged; RC/stable remain NO-GO.
