@@ -6,8 +6,10 @@ from inspect import Parameter, Signature, isawaitable, iscoroutinefunction
 from typing import (
     Awaitable,
     Callable,
+    Iterable,
     List,
     Optional,
+    Set,
     Type,
     TypeVar,
     Union,
@@ -68,13 +70,43 @@ def _locate_param(
     return param
 
 
-def _uncacheable(request: Optional[Request]) -> bool:
+def _cache_control_directives(values: Iterable[str]) -> Set[str]:
+    """Parse Cache-Control directive names, respecting quoted-string values."""
+    directives: Set[str] = set()
+    for value in values:
+        start = 0
+        in_quotes = False
+        escaped = False
+        for index, char in enumerate(value):
+            if escaped:
+                escaped = False
+                continue
+            if in_quotes and char == "\\":
+                escaped = True
+                continue
+            if char == '"':
+                in_quotes = not in_quotes
+            elif char == "," and not in_quotes:
+                name = value[start:index].split("=", 1)[0].strip().lower()
+                if name:
+                    directives.add(name)
+                start = index + 1
+
+        name = value[start:].split("=", 1)[0].strip().lower()
+        if name:
+            directives.add(name)
+    return directives
+
+
+def _uncacheable(
+    request: Optional[Request], request_cache_control: Set[str]
+) -> bool:
     """Determine if this request should not be cached
 
     Returns true if:
     - Caching has been disabled globally
     - This is not a GET request
-    - The request has a Cache-Control header with a value of "no-store"
+    - The request has a Cache-Control `no-store` directive
 
     Authentication bypass is handled separately because it depends on the
     effective cache_authenticated setting.
@@ -86,7 +118,7 @@ def _uncacheable(request: Optional[Request]) -> bool:
         return False
     if request.method != "GET":
         return True
-    return request.headers.get("Cache-Control") == "no-store"
+    return "no-store" in request_cache_control
 
 
 def _has_auth_headers(request: Optional[Request]) -> bool:
@@ -269,8 +301,15 @@ def cache(
             copy_kwargs = kwargs.copy()
             request: Optional[Request] = copy_kwargs.pop(request_param.name, None)  # type: ignore[assignment]
             response: Optional[Response] = copy_kwargs.pop(response_param.name, None)  # type: ignore[assignment]
+            request_cache_control: Set[str] = set()
+            if request is not None:
+                request_cache_control = _cache_control_directives(
+                    request.headers.getlist("Cache-Control")
+                )
 
-            if _uncacheable(request) or _injected_response_cache_bypass(response):
+            if _uncacheable(
+                request, request_cache_control
+            ) or _injected_response_cache_bypass(response):
                 return await ensure_async_func(*args, **kwargs)
 
             prefix = FastAPICache.get_prefix()
@@ -327,7 +366,9 @@ def cache(
                 )
                 ttl, cached = 0, None
 
-            if cached is None  or (request is not None and request.headers.get("Cache-Control") == "no-cache") :  # cache miss
+            if (
+                cached is None or "no-cache" in request_cache_control
+            ):  # miss or request revalidation
                 result = await ensure_async_func(*args, **kwargs)
                 if isinstance(result, Response) and result.status_code >= 400:
                     return result
