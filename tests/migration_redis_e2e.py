@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import importlib.metadata
 import os
+import re
 import sys
 from contextlib import asynccontextmanager
 from datetime import date
@@ -23,8 +24,8 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
-REDIS_URL = os.environ["REDIS_URL"]
-PREFIX = os.environ["MIGRATION_E2E_PREFIX"]
+REDIS_URL = os.environ.get("REDIS_URL", "")
+PREFIX = os.environ.get("MIGRATION_E2E_PREFIX", "")
 GENERATION = os.environ.get("MIGRATION_E2E_GENERATION", "legacy")
 TTL_SECONDS = 120
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -32,6 +33,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 ordinary_calls = 0
 private_calls = 0
 special_calls = 0
+unrelated_calls = 0
 
 
 @asynccontextmanager
@@ -77,6 +79,14 @@ async def special(response: Response) -> date:
     global special_calls
     special_calls += 1
     return date(2026, 11, 17)
+
+
+@app.get("/unrelated")
+@cache(namespace="unrelated", expire=TTL_SECONDS)
+async def unrelated(response: Response) -> dict[str, str]:
+    global unrelated_calls
+    unrelated_calls += 1
+    return {"kind": "unrelated", "value": "must-survive-targeted-clear"}
 
 
 @app.post("/migration/cleanup")
@@ -133,6 +143,27 @@ def _redis_keys(namespace: str) -> list[bytes]:
         client.close()
 
 
+def _prefix_keys() -> list[bytes]:
+    client = redis.Redis.from_url(REDIS_URL)
+    try:
+        return list(client.scan_iter(match=f"{PREFIX}*"))
+    finally:
+        client.close()
+
+
+def _namespace_snapshot(namespace: str) -> tuple[bytes, bytes, int]:
+    keys = _redis_keys(namespace)
+    assert len(keys) == 1
+    client = redis.Redis.from_url(REDIS_URL)
+    try:
+        value = client.get(keys[0])
+        ttl = client.ttl(keys[0])
+    finally:
+        client.close()
+    assert value is not None
+    return keys[0], value, ttl
+
+
 def _assert_ordinary_ttl() -> None:
     keys = _redis_keys("ordinary")
     assert len(keys) == 1
@@ -145,13 +176,9 @@ def _assert_ordinary_ttl() -> None:
 
 
 def seed_legacy_data() -> None:
-    if (
-        _redis_keys("ordinary")
-        or _redis_keys("private")
-        or _redis_keys("special")
-    ):
+    if _prefix_keys():
         raise AssertionError(
-            f"Redis prefix {PREFIX!r} is not empty; choose a unique test prefix"
+            f"Redis prefix {PREFIX!r} already has keys; choose a new test prefix"
         )
 
     with TestClient(app) as client:
@@ -182,6 +209,11 @@ def seed_legacy_data() -> None:
         assert client.get("/special").headers["X-FastAPI-Cache"] == "HIT"
         assert special_calls == 1
 
+        unrelated_response = client.get("/unrelated")
+        assert unrelated_response.headers["X-FastAPI-Cache"] == "MISS"
+        assert client.get("/unrelated").headers["X-FastAPI-Cache"] == "HIT"
+        assert unrelated_calls == 1
+
     _assert_ordinary_ttl()
     special_keys = _redis_keys("special")
     assert len(special_keys) == 1
@@ -198,6 +230,7 @@ def seed_legacy_data() -> None:
 
 
 def verify_candidate_migration() -> None:
+    unrelated_before = _namespace_snapshot("unrelated")
     with TestClient(app) as client:
         cleanup_response = client.post("/migration/cleanup")
         cleanup_counts = cleanup_response.json()
@@ -205,6 +238,10 @@ def verify_candidate_migration() -> None:
         assert cleanup_counts["special"] >= 1
         assert not _redis_keys("private")
         assert not _redis_keys("special")
+        unrelated_after = _namespace_snapshot("unrelated")
+        assert unrelated_after[0] == unrelated_before[0]
+        assert unrelated_after[1] == unrelated_before[1]
+        assert 0 < unrelated_after[2] <= unrelated_before[2]
 
         ordinary_response = client.get("/ordinary")
         assert ordinary_response.headers["X-FastAPI-Cache"] == "HIT"
@@ -268,6 +305,28 @@ def main() -> None:
         raise SystemExit(
             "Usage: migration_redis_e2e.py seed|candidate|rollback"
         )
+    if not REDIS_URL:
+        raise SystemExit(
+            "REDIS_URL must point to a dedicated Redis 7 test database"
+        )
+    if os.environ.get("MIGRATION_E2E_CONFIRM_ISOLATED_REDIS") != "YES":
+        raise SystemExit(
+            "Set MIGRATION_E2E_CONFIRM_ISOLATED_REDIS=YES only for a dedicated test database"
+        )
+    if not re.fullmatch(
+        r"fastapi-cache-migration-e2e-[A-Za-z0-9][A-Za-z0-9_-]{7,63}", PREFIX
+    ):
+        raise SystemExit(
+            "MIGRATION_E2E_PREFIX must start with fastapi-cache-migration-e2e- and use only "
+            "letters, digits, hyphens or underscores"
+        )
+    with redis.Redis.from_url(REDIS_URL) as redis_client:
+        redis_version = redis_client.info("server").get("redis_version", "")
+    if not redis_version.startswith("7."):
+        raise SystemExit(
+            f"Redis 7 is required; got {redis_version or 'unknown'}"
+        )
+
     mode = sys.argv[1]
     _check_installed_distribution(mode)
     if mode == "seed":

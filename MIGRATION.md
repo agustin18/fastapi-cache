@@ -500,9 +500,8 @@ are tracked in [`SECURITY_DEPENDENCY_INVENTORY.md`](SECURITY_DEPENDENCY_INVENTOR
   exact run provenance in `SECURITY_DEPENDENCY_INVENTORY.md`.
 - [ ] Validate one owner-maintained Redis application and one separate InMemory application or
   integration fixture before RC; retain sanitized outputs and dependency versions.
-- [ ] Repeat the critical migration E2E against the exact published RC artifact before stable.
 - [ ] Reconcile all 93 historical GHSA rows in the separate triage register before stable.
-- [ ] Build and verify a uniquely versioned RC artifact; repeat the critical migration checks
+- [ ] Build and verify a uniquely versioned RC artifact; repeat the critical migration E2E
   against that exact published artifact before stable.
 
 ## Reproducing the Redis migration E2E
@@ -510,11 +509,15 @@ are tracked in [`SECURITY_DEPENDENCY_INVENTORY.md`](SECURITY_DEPENDENCY_INVENTOR
 The manual harness in [`tests/migration_redis_e2e.py`](tests/migration_redis_e2e.py) runs a legacy
 writer, a candidate reader and a legacy rollback reader in separate Python processes. It covers
 ordinary persisted entries and TTL, an authenticated entry that requires targeted invalidation,
-the legacy `_spec_type` marker, the new auth bypass, `no-cache` refresh and rollback of compatible
-ordinary data.
+the legacy `_spec_type` marker, the new auth bypass, `no-cache` refresh, preservation of an
+unrelated namespace during targeted cleanup and rollback of compatible ordinary data.
 
-Use a dedicated Redis 7 database, a unique `MIGRATION_E2E_PREFIX` and synthetic auth values. The
-harness refuses to seed a prefix that already contains keys and never flushes the Redis database.
+Use a dedicated Redis 7 database, a unique prefix beginning `fastapi-cache-migration-e2e-`, and
+synthetic auth values. Set `MIGRATION_E2E_CONFIRM_ISOLATED_REDIS=YES` only after confirming that
+`REDIS_URL` targets a test-only Redis instance/database. The harness rejects prefixes with Redis
+glob metacharacters, checks for any existing key under the prefix before seeding, and never flushes
+the Redis database. Candidate namespace cleanup also verifies that an unrelated namespace witness
+survives.
 Build a wheel from the exact candidate source and install it by path in a clean candidate venv.
 Use separate clean Python 3.11 venvs with FastAPI 0.111.1, Pydantic 2.8.2, Redis 4.6.0 and HTTPX
 0.27.0; install `fastapi-cache2[redis]==0.2.2` in the legacy venv. Run from outside the source
@@ -531,12 +534,15 @@ E2E_SCRIPT="$REPO/tests/migration_redis_e2e.py"
   fastapi==0.111.1 pydantic==2.8.2 redis==4.6.0 httpx==0.27.0 \
   "$CANDIDATE_WHEEL"
 REDIS_URL="$REDIS_URL" MIGRATION_E2E_PREFIX="$UNIQUE_PREFIX" \
+MIGRATION_E2E_CONFIRM_ISOLATED_REDIS=YES \
   "$LEGACY_PYTHON" -I "$E2E_SCRIPT" seed
 REDIS_URL="$REDIS_URL" MIGRATION_E2E_PREFIX="$UNIQUE_PREFIX" \
+MIGRATION_E2E_CONFIRM_ISOLATED_REDIS=YES \
 MIGRATION_E2E_GENERATION=candidate \
 MIGRATION_E2E_CANDIDATE_VERSION="$CANDIDATE_VERSION" \
   "$CANDIDATE_PYTHON" -I "$E2E_SCRIPT" candidate
 REDIS_URL="$REDIS_URL" MIGRATION_E2E_PREFIX="$UNIQUE_PREFIX" \
+MIGRATION_E2E_CONFIRM_ISOLATED_REDIS=YES \
 MIGRATION_E2E_GENERATION=rollback "$LEGACY_PYTHON" -I "$E2E_SCRIPT" rollback
 ```
 
