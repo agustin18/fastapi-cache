@@ -250,6 +250,9 @@ regression test when implemented.
   store; a new backend after `FastAPICache.reset()` starts empty. No data-format migration.
 - **Pydantic/dataclass values:** old entries encoded as plain JSON still decode; the
   annotated type is restored on read. No flush required for this fix alone.
+- **Timezone-aware JSON datetimes:** `JsonCoder` round-trips the instant and encoded UTC
+  offset, but does not retain the original IANA timezone identifier. Store the zone name
+  separately or use a custom coder if later DST-aware arithmetic needs it.
 - **`_spec_type`:** the internal marker changed to `__fastapi_cache_spec_type__`. Old entries
   written with `_spec_type` are treated as user data; flush the namespace if you cache
   `datetime`/`date`/`Decimal` values.

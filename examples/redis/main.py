@@ -29,6 +29,8 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(lifespan=lifespan)
 
+# On Windows, verify Starlette includes the GHSA-wqp7-x3pw-xc5r fix before using StaticFiles.
+# Otherwise do not run this example with outbound SMB access.
 app.mount(
     path="/static",
     app=StaticFiles(directory="./"),

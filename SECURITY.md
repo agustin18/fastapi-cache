@@ -2,7 +2,9 @@
 
 ## Supported versions
 
-- `0.3.x`: security fixes for the supported security matrix, Python 3.11–3.13.
+- Security fixes for `0.3.x` on Python 3.11–3.13 are planned to begin with the first stable
+  `0.3.0` release and follow the best-effort window in `SUPPORT.md`. No stable `0.3.x` release
+  has shipped yet.
 - Stable `0.3.0` installs on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy
   functional-compatibility targets only and have no security-support commitment for EOL
   runtimes or dependencies. Python 3.14 is not included until its full matrix passes.

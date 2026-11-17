@@ -8,6 +8,8 @@ fastapi-cache2.
 - `0.3.x`: security and critical correctness fixes for 12 months after the first stable
   `0.3.0` release, on a best-effort basis and subject to maintainer capacity. The window is
   a target, not a guarantee. Security support applies to Python 3.11–3.13.
+- This support window has not started; stable `0.3.0` has not been released. The published
+  `0.3.0b1` remains a beta and is not recommended for production.
 - Stable `0.3.0` installs on Python `>=3.8,<3.14`. Python 3.8–3.10 have a tested legacy
   functional-compatibility lane, but receive no security-support commitment for EOL runtimes
   or dependency versions. A critical advisory applicable to package-controlled behavior must

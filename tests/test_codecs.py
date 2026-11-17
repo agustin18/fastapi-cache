@@ -286,6 +286,15 @@ def test_json_coder_internal_datetime_roundtrip() -> None:
     assert JsonCoder.decode(encoded) == value
 
 
+def test_json_coder_aware_datetime_roundtrip_preserves_offset() -> None:
+    """Preserve the instant and offset; JSON does not retain the IANA zone key."""
+    value = pendulum.datetime(2020, 7, 1, 12, 0, 0, tz="America/Los_Angeles")
+    decoded = JsonCoder.decode(JsonCoder.encode(value))
+
+    assert decoded == value
+    assert decoded.utcoffset() == value.utcoffset()
+
+
 def test_json_coder_internal_date_roundtrip() -> None:
     value = pendulum.date(2020, 1, 1)
     encoded = JsonCoder.encode(value)
