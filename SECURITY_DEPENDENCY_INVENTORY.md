@@ -233,6 +233,12 @@ row-by-row triage register is a separate follow-up deliverable and remains incom
   TLS APIs. This does not assert that consumer applications or their other dependencies are
   protected. Keep `APPLICATION_CONDITIONAL` as the applicability classification and record the
   acceptance separately; do not relabel it `NOT_APPLICABLE`.
+- **AnyIO profile boundary:** this acceptance covers only the Python 3.8/3.9 runtime profiles.
+  The Python 3.11–3.13 runtime-security workflows resolve AnyIO 4.16.0 and pass their scans.
+  `poetry.lock` still pins AnyIO 4.4.0; a lock-installed development environment is a separate
+  affected profile and is not covered by either runtime result or the legacy-only acceptance.
+  Disposition of that lock profile remains part of the pre-RC critical/high triage; no fix is
+  claimed here.
 - **DynamoDB/aiohttp parser `GHSA-cq5v-8q36-5273`: not accepted by default.** DynamoDB remains
   experimental. Before an RC, either verify a compatible mitigation for affected Python 3.8/3.9
   configurations or exclude those configurations from the support claim using consistent
@@ -254,12 +260,14 @@ row-by-row triage register is a separate follow-up deliverable and remains incom
    snapshot, and unlisted findings remain pending.
 2. Verify mitigation or exclude affected legacy DynamoDB configurations before RC.
 3. Fix request `Cache-Control` token handling with regression tests in a separate PR before RC.
-4. Complete the owner-application and persisted-data migration E2E checks listed in
+4. Triage the lock-installed AnyIO 4.4.0 profile separately; the modern runtime scans do not
+   cover it, and the legacy-only acceptance does not apply to it.
+5. Complete the owner-application and persisted-data migration E2E checks listed in
    [`MIGRATION.md`](MIGRATION.md).
-5. Keep the `GHSA-h4cc-hm5h-fmm9` conclusion bounded to the default DynamoDB transport using
+6. Keep the `GHSA-h4cc-hm5h-fmm9` conclusion bounded to the default DynamoDB transport using
    `auto_decompress=False`; independent aiohttp use and custom transport/event overrides remain
    outside that conclusion.
-6. The Poetry all-extras exporter still has the urllib3 marker conflict; use the documented
+7. The Poetry all-extras exporter still has the urllib3 marker conflict; use the documented
    direct locked-install scan unless that exporter is fixed.
 
 The original 2026-11-16 snapshot changed no package versions. PR #25 restores legacy marker

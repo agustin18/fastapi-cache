@@ -392,6 +392,12 @@ regenerated. The default key formula is unchanged, so changing distributions alo
 require clearing the namespace. Clear or rotate it for old authenticated responses or any
 specific incompatible data identified during migration.
 
+**Security warning:** `fastapi-cache2 0.2.2` does not include this fork's default
+`Authorization`/`Cookie` bypass. If rollback will serve user-specific endpoints through the
+cache, disable caching on those endpoints or configure an identity-aware `key_builder` before
+traffic resumes. Clearing Redis removes existing entries but does not prevent the old version
+from writing new shared keys.
+
 ## FAQ
 
 **Does the import change?** No: `fastapi_cache`.
