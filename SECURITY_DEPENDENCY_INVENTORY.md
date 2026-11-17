@@ -133,15 +133,15 @@ accepted.
 These dispositions should be reviewed by the external auditor. They do not waive a GHSA,
 replace the remaining 93-entry triage, or authorize release.
 
-## Candidate recheck after Poetry main-only correction (2026-11-17)
+## Historical candidate recheck after Poetry main-only correction (2026-11-17)
 
 The dependency-resolution, local-suite and wheel checks in this section were run against
-candidate commit `1666afaf0e52811354abeb82f61e5c45d6a95ee2`, before the later inventory,
-lifespan and audit-brief documentation commits. Those later commits did not change
-`pyproject.toml` or `poetry.lock`, but the lifespan follow-up added a regression test and changed
-documentation included in the distribution. No artifact built from the current PR head has been
-published. The current head and its CI status are available from [PR #25](https://github.com/agustin18/fastapi-cache/pull/25);
-do not treat the local wheel hash below as the wheel for the current head.
+candidate commit `1666afaf0e52811354abeb82f61e5c45d6a95ee2`, before the later security inventory,
+lifespan and migration-documentation follow-ups. Those later commits did not change
+`pyproject.toml` or `poetry.lock`; the lifespan follow-up added an example/test regression but no
+`fastapi_cache` runtime module change. The wheel hash below is historical evidence for the
+`1666afa` build, not the post-merge package-level E2E wheel recorded later in this file. PR #25
+was subsequently merged as `1ff810c`; no stable artifact has been published.
 
 The initial dev-only `time-machine` correction above did not make a `--only main` install
 consistent. That was reproduced on Python 3.8 and 3.12: both installed Pendulum 3.0.0 without
@@ -191,12 +191,12 @@ dependency metadata and lock by interpreter instead:
   pending IDs now have preliminary source-based dispositions in the table above; the original
   CSV remains unchanged and the remaining medium/low rows still require review. No residual risk
   is accepted by the auditor on behalf of the maintainer.
-- At the time of the previous CI snapshot, all 23 checks passed on head `a631c1e`, including
-  packaging, CodeQL, legacy matrices and Python 3.11–3.13 security audits. The subsequent PR
-  updates are documentation-only; the `a631c1e` regression test remains in the current source.
-  Check the [live PR checks](https://github.com/agustin18/fastapi-cache/pull/25/checks) for
-  status on the exact head under review. The local suite and wheel checks above were on the
-  earlier `1666afa` candidate. No merge or stable artifact was published.
+- At the later CI snapshot on head `a631c1e`, all 23 checks passed, including packaging, CodeQL,
+  legacy matrices and Python 3.11–3.13 security audits. The `a631c1e` lifespan regression was
+  covered by that run. Documentation follow-ups came later, and PR #25 eventually merged as
+  `1ff810c`. The local suite and wheel checks above remain scoped to the earlier `1666afa`
+  candidate; use the package-level E2E evidence below for the post-merge wheel run. No stable
+  artifact has been published.
 
 ## Direct-dependency scope notes
 
@@ -281,11 +281,13 @@ the published `0.3.0b1` artifact is unchanged.
 ## Package-level Redis migration E2E evidence
 
 The manual harness in `tests/migration_redis_e2e.py` passed on 2026-11-17 using an isolated
-Redis 7 container and a unique prefix; it did not flush the database.
+Redis 7 container and a unique prefix; it did not flush the database. The wheel was built from
+the merged candidate source tree plus the E2E documentation/checklist commit, then installed by
+path in a fresh environment; the published PyPI artifact was not used or changed.
 
 | Artifact/runtime | Evidence |
 |---|---|
-| Candidate source commit | `995427539b62e6917217def2bc4bd6a649f97689` |
+| Candidate source commit used for wheel | `28e90d9581685413307306a8cf119960b6e3c60f` |
 | Candidate wheel | `fastapi-cache-stable 0.3.0b1`, SHA-256 `c614a2368444098dbf0c57de27df70f8639fce509246efa7b15c1f6e5002e880` |
 | Legacy writer/rollback | `fastapi-cache2 0.2.2` |
 | Python and dependencies | Python 3.11.15, FastAPI 0.111.1, Pydantic 2.8.2, redis-py 4.6.0, HTTPX 0.27.0 |
