@@ -2,7 +2,7 @@
 
 **Snapshot:** 2026-11-16 · **Stable SHA:** `38e2dc5bde5f5ce442b5c0ef4949e54544ee05c1` · **Package:** `fastapi-cache-stable==0.3.0b1`
 
-This is an inventory for release planning, not a remediation or an exploitability verdict. No dependency versions or support claims are changed by this report. The alert-level snapshot is in [`DEPENDABOT_ALERTS_2026-11-16.csv`](DEPENDABOT_ALERTS_2026-11-16.csv).
+This is an inventory for release planning, not an exploitability verdict. It records the pre-remediation lock snapshot; PR #25's h11/httpcore remediation is described below. The alert-level snapshot is in [`DEPENDABOT_ALERTS_2026-11-16.csv`](DEPENDABOT_ALERTS_2026-11-16.csv).
 
 ## Dependabot snapshot: `poetry.lock`
 
@@ -19,7 +19,7 @@ The authenticated repository alert API returned 93 open alerts with 93 distinct 
 | `Jinja2` | 3.1.4 | Runtime, direct | 3 medium | Declared directly; no import from `fastapi_cache/` found in this review. |
 | `Pygments` | 2.18.0 | Runtime, transitive | 1 low | Via the FastAPI CLI dependency tree in the lock. |
 | `python-dotenv` | 1.0.1 | Runtime, transitive | 1 medium | Via `uvicorn[standard]` in the lock. |
-| `python-multipart` | 0.0.9 | Runtime, transitive | 8: 4 high, 1 medium, 3 low | Via FastAPI form support. |
+| `python-multipart` | 0.0.9 | Runtime, transitive | 8: 4 high, 1 medium, 3 low | Required for FastAPI form parsing; optional in current FastAPI standard extras, but present in the locked FastAPI 0.111.1 graph. |
 | `pytest` | 8.3.1 | Development, direct | 1 medium | Development-only. |
 | `requests` | 2.32.3 | Development, direct | 2 medium | Development-only. |
 | `starlette` | 0.37.2 | Runtime, transitive | 7: 3 high, 3 medium, 1 low | Via `fastapi -> starlette`. |
@@ -57,9 +57,15 @@ Each profile was installed from the published PyPI wheel in a clean `uv` virtual
 | 3.10.16 | Base / Redis / all extras | FastAPI 0.162.5, Starlette 1.7.0, AnyIO 4.16.0, h11 0.16.0; all extras include aiohttp 3.14.5, urllib3 2.8.0 | Pass | No findings |
 | 3.13.12 | Base / Redis / all extras | FastAPI 0.163.1, Starlette 1.10.0, AnyIO 4.16.0, h11 0.16.0; all extras include aiohttp 3.14.5, urllib3 2.8.0 | Pass | No findings |
 
-The 3.8/3.9 results confirm the policy distinction: those versions remain in the migration test matrix, but the current compatible dependency resolution is not free of known advisories. AnyIO 4.14.2 cannot be selected there because it requires Python >=3.10. The optional DynamoDB extra also pulls an older urllib3 line on those interpreters. The 3.10+ results reflect a fresh resolution as of this snapshot; they do not repair the locked development environment.
+The 3.8/3.9 results confirm the policy distinction: those versions remain in the legacy functional matrix, but current compatible dependency resolution is not free of known advisories. AnyIO 4.14.2 cannot be selected there because it requires Python >=3.10. The optional DynamoDB extra also pulls an older urllib3 line on those interpreters. Python 3.10+ results reflect a fresh resolution as of this snapshot; they do not repair the locked development environment.
 
-`Requires-Python` currently evaluates to `>=3.8,<4.0`, so pip accepts Python 3.14 even though CI stops at 3.13. A Python 3.14.7 base install passed `pip check` and a small MISS/HIT smoke test, but no full suite or optional-extra audit was run there. Decide whether to add Python 3.14 to CI or narrow the advertised upper bound before stable.
+PR #25 adds a separate CI security-audit profile for Python 3.11–3.13. It scans a fresh install
+of the package's `all` extras plus `fastapi[standard-no-fastapi-cloud-cli]`, with the audit tool
+isolated from the scanned runtime environment. The legacy rows above remain subject to manual
+per-advisory applicability review; no critical finding is waived solely because its interpreter
+is EOL.
+
+The already-published `0.3.0b1` metadata is `>=3.8,<4.0`, so pip accepts Python 3.14 even though CI stops at 3.13. A Python 3.14.7 base install passed `pip check` and a small MISS/HIT smoke test, but no full suite or optional-extra audit was run there. Stable `0.3.0` is planned with `>=3.8,<3.14`; Python 3.14 remains outside the release matrix until full CI passes.
 
 ## Poetry development lock
 
@@ -76,16 +82,16 @@ Using Poetry 1.8.3 with Python 3.12, `poetry install --with dev --all-extras --n
 | FastAPI | Imported by the core decorator/coder code | Core runtime dependency |
 | Pendulum | Imported by `fastapi_cache/coder.py` for date/datetime decoding | Core runtime use; lock version 3.0.0 also has the missing `time-machine` metadata issue above |
 | Uvicorn | `uvicorn.run()` appears in examples; no core import found | Candidate to move out of mandatory runtime dependencies; no change in this PR |
-| Jinja2 | No core import found; template use is in examples | Candidate to move out of mandatory runtime dependencies; no change in this PR |
+| Jinja2 | Core imports Starlette's private `_TemplateResponse` in `fastapi_cache/coder.py` to exclude template responses from `PickleCoder`; Starlette 1.3.1 raises an import error from `starlette.templating` when Jinja2 is absent. Template rendering itself remains in examples. | Keep the direct dependency while this private Starlette import remains. The Jinja advisories require untrusted template content and do not indicate a template-execution path in `fastapi-cache` itself. |
 | Redis, aiomcache, aiobotocore | Optional project extras | Keep their separate support/experimental status in the remediation decision |
 
 ## Decisions required before RC
 
-1. Confirm Python 3.8/3.9 are migration-only and not promised to receive security-clean dependency resolution; decide whether `Requires-Python` should continue admitting 3.14 without a CI matrix.
-2. Remediate or explicitly accept the lock-only h11 finding; distinguish it from PyPI's fresh resolution, which selected h11 0.16.0.
-3. Resolve the runtime AnyIO/Starlette findings on Python 3.8/3.9, or keep those interpreters explicitly outside the security-supported environment.
+1. The maintainer confirmed separate contracts: stable metadata `>=3.8,<3.14`, functional legacy tests on 3.8–3.10, and security support on 3.11–3.13. Python 3.14 remains excluded pending full CI.
+2. PR #25 updates locked h11 to 0.16.0 and httpcore to 1.0.9 to remediate the request-smuggling parser finding and satisfy the HTTPX transport constraint; verify this lock remediation in CI. Fresh PyPI installs already resolve patched h11 0.16.0 on Python 3.8+.
+3. Classify AnyIO/Starlette advisories by trigger. The library has no direct calls to AnyIO TLS APIs or Starlette form/static-file/HTTPEndpoint paths, but consumer applications may use them; EOL status alone is not an applicability disposition.
 4. Triage optional DynamoDB/aiohttp/urllib3 findings by extra and Python version; do not assume lock alerts equal vulnerabilities in a default pip install.
 5. Repair the Poetry lock's Pendulum `time-machine` mismatch and select a reproducible method for exporting all extras.
-6. Decide whether Uvicorn and Jinja2 are required runtime dependencies after checking examples and supported public behavior.
+6. Uvicorn remains used by examples; Jinja2 stays direct while the core imports Starlette's private `_TemplateResponse` type.
 
-No versions are changed in this inventory PR. Dependency upgrades and any support-floor changes belong in separate remediation decisions and PRs, followed by the full supported matrix and clean-wheel smoke.
+The original 2026-11-16 snapshot changed no package versions. PR #25 restores legacy marker resolution and includes only the targeted h11 0.16.0/httpcore 1.0.9 lock remediation; it does not upgrade the test-tool dependency set. The remediation must pass CI and the supported security matrix before stable.

@@ -25,8 +25,8 @@
 - Pydantic v2 users can opt into `TypedJsonCoder` for typed restoration; the default
   `JsonCoder` keeps the legacy decoded behavior. Pydantic v1 and unsupported annotations
   keep the legacy behavior.
-- Python 3.8/3.9 legacy compatibility was validated in CI for the published `0.3.0b1` artifact
-  with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2; it is not part of stable `0.3.0`.
+- Stable `0.3.0` keeps functional compatibility for Python 3.8–3.10 through a pinned legacy
+  CI matrix. These EOL runtimes are not part of the security-supported environment.
 
 ## Public surface
 
@@ -119,23 +119,27 @@ classmethod decode_as_type(value: bytes, *, type_) -> Any
 
 ## Support levels
 
-- **Migration compatibility:** the already-published `0.3.0b1` artifact can be used to test
-  legacy combinations when moving existing applications to this fork. This is not stable
-  support or a recommendation for new production deployments.
-- **Security-supported environment:** current Python, FastAPI and Pydantic releases that still
-  receive upstream security fixes. This project does not backport security fixes for
-  end-of-life upstreams.
+- **Legacy functional compatibility:** stable `0.3.0` installs on Python 3.8–3.10 and tests
+  the documented legacy combinations. Those runtimes and their EOL dependency lines do not
+  receive a security-support commitment.
+- **Security-supported environment:** Python 3.11–3.13 with the resolver-selected FastAPI and
+  Pydantic versions, plus the optional dependency profiles included in the security audit.
+  Security support means investigating and addressing applicable issues in this documented
+  scope; it does not certify every possible downstream dependency combination as vulnerability-free.
+- **Critical legacy findings:** EOL status alone is not an applicability verdict. Critical
+  advisories in legacy profiles must be assessed for package-controlled execution paths,
+  mitigations and residual risk before stable.
 
 Python 3.8, 3.9 and 3.10 are end-of-life, and Pydantic v1 is end-of-life with 1.10.27 as its
-final release. The already-published `0.3.0b1` artifact remains available for migration on its
-original metadata; the stable `0.3.0` release will require Python `>=3.11,<3.14`. Python
-3.8–3.10 and Pydantic v1 are not stable security-supported targets.
+final release. Stable `0.3.0` retains the package range `>=3.8,<3.14`; Python 3.8–3.10 are
+tested for legacy functional compatibility but are not security-supported. Pydantic v1 keeps
+its documented legacy decoded behavior, but receives no new upstream security fixes.
 
 ## Supported matrix for `0.3.x`
 
-> The upcoming stable `0.3.0` release requires `python = ">=3.11,<3.14"`. The already-published
-> `0.3.0b1` artifact retains its original `>=3.8,<4.0` metadata for migration testing; that does
-> not promise security updates for Python 3.8–3.10.
+> Stable `0.3.0` metadata is `python = ">=3.8,<3.14"`. Functional compatibility and security
+> support are separate: Python 3.8–3.10 are legacy-tested only; security support is Python
+> 3.11–3.13. Python 3.14 remains unsupported pending a full matrix.
 
 Status definitions:
 
@@ -146,8 +150,9 @@ Status definitions:
 
 | Component | Status | Notes |
 |---|---|---|
-| Python 3.11–3.13 | Supported for stable `0.3.0` | Full CI and release matrix |
-| Python 3.8–3.10 | Historical migration only | The already-published `0.3.0b1` remains installable; excluded from stable `0.3.0` and its security support |
+| Python 3.11–3.13 | Security-supported | Full functional and security-audit matrices |
+| Python 3.10 | Legacy functional compatibility | Main functional CI plus Pydantic v1 compatibility; EOL, no security-support commitment |
+| Python 3.8–3.9 | Legacy functional compatibility | Pinned FastAPI/Pydantic matrix and Python 3.8 wheel smoke; EOL, no security-support commitment |
 | Python 3.14 | Unsupported for `0.3.0` | Requires a full CI matrix before support is announced |
 | FastAPI | Verified with 0.111.1 and current 0.x | Older 0.100.x validation is a beta gate; no upper pin yet (`fastapi = "*"`) |
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
@@ -258,11 +263,14 @@ regression test when implemented.
 - InMemory tests for `expire=None`, instance isolation, clear isolation, and decorator
   default-expire behavior.
 - Regression tests for every behavior change.
-- Stable CI tests Python 3.11–3.13 with resolver-selected FastAPI and Pydantic versions.
+- Functional CI tests Python 3.10–3.13 with resolver-selected FastAPI and Pydantic versions.
+- A separate security-audit profile scans Python 3.11–3.13 with the project extras and
+  FastAPI's standard runtime extras; development-only tools are excluded.
 - A Pydantic v1 migration-compatibility job remains on Python 3.11 with FastAPI 0.111.1 and
-  Pydantic 1.10.27; this does not expand the stable security-support policy to Pydantic v1.
-- Python 3.8–3.10 compatibility checks describe the already-published `0.3.0b1` artifact only;
-  they are not stable-release gates.
+  Pydantic 1.10.27; this does not expand the security-support policy to Pydantic v1.
+- Legacy CI tests Python 3.8/3.9 with pinned FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2,
+  and smoke-installs the wheel on Python 3.8. Python 3.10 is exercised by the main functional
+  matrix and Pydantic v1 compatibility job; none of these EOL profiles is security-supported.
 - Wheel and sdist smoke tests in a clean virtual environment.
 - Redis 7 integration tests run in CI.
 - Memcached and DynamoDB have unit tests with fake clients in CI (`optional-backends` job).

@@ -2,7 +2,7 @@ from importlib.metadata import metadata
 
 
 def test_requires_python_matches_stable_support_policy() -> None:
-    assert metadata("fastapi-cache-stable")["Requires-Python"] == ">=3.11,<3.14"
+    assert metadata("fastapi-cache-stable")["Requires-Python"] == ">=3.8,<3.14"
 
 
 def test_python_classifiers_match_stable_support_policy() -> None:
@@ -14,6 +14,9 @@ def test_python_classifiers_match_stable_support_policy() -> None:
     }
 
     assert python_classifiers == {
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
