@@ -426,8 +426,12 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 ## Known limitations in 0.3.x
 
 - No tags, stale-while-revalidate, stampede protection or POST caching.
-- A second `FastAPICache.init()` call raises `RuntimeError`; pass `force=True` or call
-  `FastAPICache.reset()` first. This is implemented in `0.3.0b1` and is not in the alphas.
+- A second `FastAPICache.init()` call raises `RuntimeError`; initialize once per worker.
+  For a deliberate live replacement, close resources owned by the old backend before using
+  `force=True`. Tests that re-enter one application's lifespan in the same process should close
+  owned resources and call `FastAPICache.reset()` before the next startup. `reset()` does not
+  close resources or delete cached data. This behavior shipped in `0.3.0b1`; see
+  [Second `init()` call](#second-init-call).
   The auth/privacy, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
   implemented in `0.3.0a2`.
 - Redis standalone is verified with Redis 7 and redis-py 4.6.0; redis-py 5/6 are not
