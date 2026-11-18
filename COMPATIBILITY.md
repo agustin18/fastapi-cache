@@ -4,6 +4,9 @@
 [`fastapi-cache2`](https://pypi.org/project/fastapi-cache2/). This document defines what
 "drop-in" means for this project and what we promise to keep stable.
 
+This contract describes the target stable `0.3.0` release. The already-published `0.3.0b1`
+artifact and metadata remain unchanged.
+
 ## What "drop-in" means
 
 - The distribution is `fastapi-cache-stable`, but the Python import remains `fastapi_cache`.
@@ -167,7 +170,7 @@ Status definitions:
 | Redis Cluster | Unsupported for namespace clear | Key-only clear is supported; namespace clear raises `NotImplementedError`; no complete namespace clearing |
 | InMemory | Verified for basic operations, clear semantics, `expire=None` and instance isolation | Unit tests; each instance owns its store and lock; no size cap yet |
 | Memcached | Experimental | Unit tests with a fake client; `get_with_ttl` returns a fixed `3600` instead of the real remaining time; `clear` raises `NotImplementedError` |
-| DynamoDB | Experimental | Unit tests with a fake client covering get/set, TTL and the expired-entry path; `clear` raises `NotImplementedError`; the client cleanup issue remains open and is targeted for a future fix |
+| DynamoDB | Experimental; Python >=3.10 only for target `0.3.0` | `dynamodb` extra requires aiobotocore and aiohttp >=3.14.4; the extra omits those dependencies on Python 3.8/3.9. Unit tests use a fake client; `clear` raises `NotImplementedError`; no real-service integration |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
 
 > Redis results in `0.3.0a2` cover Redis 7 with redis-py 4.6.0. Other client or server

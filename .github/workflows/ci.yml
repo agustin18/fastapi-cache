@@ -150,10 +150,20 @@ jobs:
         run: |
           python -m venv /tmp/legacy-smoke
           /tmp/legacy-smoke/bin/pip install --upgrade pip
-          /tmp/legacy-smoke/bin/pip install dist/*.whl "fastapi==0.111.1" "pydantic==1.10.27" "httpx==0.27.0"
+          wheel=$(python -c "from glob import glob; print(glob('dist/*.whl')[0])")
+          /tmp/legacy-smoke/bin/pip install "${wheel}[all]" "fastapi==0.111.1" "pydantic==1.10.27" "httpx==0.27.0"
           cd /tmp
           /tmp/legacy-smoke/bin/python -c "import fastapi_cache, importlib.metadata; print(importlib.metadata.version('fastapi-cache-stable'))"
           /tmp/legacy-smoke/bin/pip check
+      - name: Confirm optional DynamoDB client is excluded on legacy Python
+        run: |
+          /tmp/legacy-smoke/bin/python - <<'PY'
+          import importlib.util
+
+          assert importlib.util.find_spec("aiobotocore") is None
+          assert importlib.util.find_spec("aiohttp") is None
+          print("DynamoDB extra intentionally unavailable on Python 3.8")
+          PY
       - name: Show installed versions
         run: |
           /tmp/legacy-smoke/bin/python -c "import fastapi, pydantic; print('fastapi', fastapi.__version__); print('pydantic', pydantic.VERSION)"
@@ -194,6 +204,53 @@ jobs:
           assert calls["n"] == 1
           print("legacy cache smoke OK")
           PY
+
+  locked-profiles:
+    name: Poetry lock profile Python ${{ matrix.python }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.8", "3.9", "3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry==1.8.3
+      - name: Validate and install locked profile
+        env:
+          POETRY_VIRTUALENVS_IN_PROJECT: "true"
+          POETRY_NO_INTERACTION: "1"
+        run: |
+          poetry check --lock
+          poetry install --with dev --all-extras --sync
+      - name: Check locked security profile
+        run: |
+          poetry run python -m pip check
+          poetry run python - <<'PY'
+          import importlib.metadata as metadata
+          import importlib.util
+          import sys
+          from packaging.version import Version
+
+          anyio = Version(metadata.version("anyio"))
+          print("python", sys.version.split()[0], "anyio", anyio)
+          if sys.version_info < (3, 10):
+              # These EOL runtimes retain only the documented legacy functional profile.
+              assert importlib.util.find_spec("aiobotocore") is None
+              assert importlib.util.find_spec("aiohttp") is None
+          else:
+              assert anyio >= Version("4.14.2")
+              assert Version(metadata.version("aiohttp")) >= Version("3.14.4")
+              assert importlib.util.find_spec("aiobotocore") is not None
+          PY
+      - name: Test dependency metadata and optional backend
+        run: poetry run python -m pytest -q -rs tests/test_distribution_metadata.py tests/test_dynamodb_backend.py
 
   redis-clear:
     name: Redis clear integration (Redis 7)

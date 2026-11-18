@@ -52,6 +52,8 @@ Blocking for every pull request:
 - Functional `pytest` on Python 3.10–3.13
 - `legacy-compat` on Python 3.8/3.9 with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2, plus
   Python 3.10/3.11 with Pydantic 1.10.27
+- Poetry lock profiles on Python 3.8/3.9/3.10/3.12: legacy installs omit the DynamoDB extra;
+  Python 3.10/3.12 lock profiles require fixed AnyIO/aiohttp versions.
 - `legacy-smoke`: wheel install and MISS/HIT on Python 3.8
 - `redis-clear`: Redis 7 integration tests (CI service)
 - `optional-backends`: Memcached and DynamoDB unit tests with fake clients
