@@ -1,14 +1,17 @@
 # fastapi-cache-stable
 
 > **Community-maintained stable fork of fastapi-cache2.**
-> This is a beta (`0.3.0b1`) based on `v0.2.2`. It is experimental and still not recommended
-> for production. The `fastapi_cache` import and public API are unchanged.
+> The latest published release is beta `0.3.0b1`, based on `v0.2.2`; this branch prepares an
+> unpublished `0.3.0rc1`. Neither is recommended for production before the release gates pass.
+> The `fastapi_cache` import and public API are unchanged.
 > See [COMPATIBILITY.md](COMPATIBILITY.md), [MIGRATION.md](MIGRATION.md), [SUPPORT.md](SUPPORT.md),
 > [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
 > The upcoming stable `0.3.0` release will install on Python `>=3.8,<3.14`. Python 3.8–3.10
-> remain legacy functional-compatibility targets only; security support is limited to Python
-> 3.11–3.13. Python 3.14 remains untested and outside this release's metadata range. The
-> already-published `0.3.0b1` artifact and its metadata remain unchanged.
+> remain legacy functional-compatibility targets only; security support is limited to server-side
+> CPython 3.11–3.13. Pyodide/browser/Node runtimes are not tested or covered by these guarantees;
+> this does not claim functional incompatibility. Python 3.14 remains untested and outside this
+> release's metadata range. The already-published `0.3.0b1` artifact and its metadata remain
+> unchanged.
 
 > **Implemented in this beta:** error responses are not cached, opt-in `TypedJsonCoder` for
 > Pydantic v2, the `clear()` fixes, the auth/privacy bypass, the InMemory

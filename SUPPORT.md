@@ -7,7 +7,10 @@ fastapi-cache2.
 
 - `0.3.x`: security and critical correctness fixes for 12 months after the first stable
   `0.3.0` release, on a best-effort basis and subject to maintainer capacity. The window is
-  a target, not a guarantee. Security support applies to Python 3.11–3.13.
+  a target, not a guarantee. Security support applies to server-side CPython 3.11–3.13.
+- Compatibility and security matrices are verified on server-side CPython. Pyodide, browser and
+  Node runtimes are not tested or covered; this does not claim functional incompatibility.
+  Applications using urllib3 in those runtimes must assess redirects themselves.
 - This support window has not started; stable `0.3.0` has not been released. The published
   `0.3.0b1` remains a beta and is not recommended for production.
 - Stable `0.3.0` installs on Python `>=3.8,<3.14`. Python 3.8–3.10 have a tested legacy

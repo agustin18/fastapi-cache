@@ -152,23 +152,22 @@ PRELIMINARY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
     },
     "GHSA-cq5v-8q36-5273": {
         "preliminary_disposition": "EXPERIMENTAL_EXTRA",
-        "maintainer_decision": (
-            "PENDING_DYNAMODB_TRANSPORT_SMOKE_AND_RC_ARTIFACT_EVIDENCE"
-        ),
+        "maintainer_decision": "PENDING_EXACT_RC_ARTIFACT_EVIDENCE",
         "profile_scope": (
             "The target stable DynamoDB extra is restricted to Python >=3.10 and aiohttp "
             ">=3.14.4; Python 3.8/3.9 omit aiobotocore/aiohttp. This exceeds the parser fix "
-            "version; focused external review confirmed the markers and lock resolutions. The "
-            "locked transport smoke and exact RC artifact evidence remain pending."
+            "version; focused external review confirmed the markers and lock resolutions, and "
+            "locked-profile CI passed the loopback transport smoke. Exact RC artifact evidence "
+            "remains pending."
         ),
         "evidence_reference": (
             "SECURITY_DEPENDENCY_INVENTORY.md#approved-release-gates-and-maintainer-decisions"
         ),
         "remaining_action": (
-            "Run the locked aiobotocore/aiohttp transport smoke and archive the uniquely "
-            "versioned RC wheel, metadata, installed-package inventory and complete pip-audit output."
+            "Archive the uniquely versioned RC wheel, metadata, installed-package inventory and "
+            "complete pip-audit output; compare it with the TestPyPI wheel before re-evaluating."
         ),
-        "release_gate": "RC: verify patched DynamoDB transport and artifact evidence",
+        "release_gate": "RC: verify exact DynamoDB profile artifact",
     },
     "GHSA-h4cc-hm5h-fmm9": {
         "preliminary_disposition": "NOT_APPLICABLE",
@@ -432,23 +431,22 @@ _AIOHTTP_MEDIUM_LOW_CLIENT_REVIEW_TRIGGERS = {
 for _ghsa_id, _trigger in _AIOHTTP_MEDIUM_LOW_CLIENT_REVIEW_TRIGGERS.items():
     PRELIMINARY_DISPOSITIONS[_ghsa_id] = {
         "preliminary_disposition": "EXPERIMENTAL_EXTRA",
-        "maintainer_decision": (
-            "PENDING_DYNAMODB_TRANSPORT_SMOKE_AND_RC_ARTIFACT_EVIDENCE"
-        ),
+        "maintainer_decision": "PENDING_EXACT_RC_ARTIFACT_EVIDENCE",
         "profile_scope": (
             f"Affected trigger: {_trigger}. The target stable DynamoDB extra is restricted "
             "to Python >=3.10 with aiohttp >=3.14.4, which includes the advisory fix; the "
             "client extra is absent on Python 3.8/3.9. Focused external review confirmed the "
-            "markers and lock floor; transport and exact RC artifact evidence remain pending."
+            "markers and lock floor; locked-profile CI passed the loopback transport smoke. "
+            "Exact RC artifact evidence remains pending."
         ),
         "evidence_reference": (
             "SECURITY_DEPENDENCY_INVENTORY.md#aiohttp-medium-low-client-paths"
         ),
         "remaining_action": (
-            "Run the locked transport smoke and archive the exact RC wheel, metadata, installed "
-            "package inventory and pip-audit output before re-evaluating this row."
+            "Archive the exact RC wheel, metadata, installed-package inventory and pip-audit "
+            "output; compare it with the TestPyPI wheel before re-evaluating this row."
         ),
-        "release_gate": "RC: verify patched DynamoDB transport and artifact evidence",
+        "release_gate": "RC: verify exact DynamoDB profile artifact",
     }
 
 PRELIMINARY_DISPOSITIONS["GHSA-hcc4-c3v8-rx92"] = {
@@ -606,20 +604,22 @@ FIXED_DISPOSITIONS = {
 CURRENT_ONLY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
     "GHSA-48p4-8xcf-vxj5": {
         "preliminary_disposition": "APPLICATION_CONDITIONAL",
+        "maintainer_decision": "PYODIDE_OUTSIDE_VERIFIED_SUPPORT_SCOPE",
         "profile_scope": (
             "The advisory affects urllib3 redirect handling in Pyodide browser/Node runtimes. "
-            "fastapi_cache source calls no urllib3 API; DynamoDB uses aiobotocore/aiohttp. "
-            "Consumer-owned Pyodide use and whether that runtime is in package support remain "
-            "outside this preliminary package-path classification."
+            "Compatibility and security guarantees cover the tested server-side CPython matrix; "
+            "Pyodide, browser and Node runtimes are not validated or covered. This is not evidence "
+            "of functional incompatibility. fastapi_cache calls no urllib3 API; DynamoDB uses "
+            "aiobotocore/aiohttp. Consumer-owned Pyodide use remains separate."
         ),
         "evidence_reference": (
             "https://github.com/advisories/GHSA-48p4-8xcf-vxj5"
         ),
         "remaining_action": (
-            "Review whether Pyodide/browser/Node is in the supported package scope; keep "
-            "consumer-owned urllib3 usage separate and leave final triage pending."
+            "Keep Pyodide/browser/Node outside the verified support matrix; consumer-owned urllib3 "
+            "use remains separate. Leave final triage pending."
         ),
-        "release_gate": "RC: screen current-only Pyodide advisory",
+        "release_gate": "Stable: final current-only GHSA triage",
     }
 }
 

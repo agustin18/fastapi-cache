@@ -369,6 +369,10 @@ jobs:
           /tmp/security-auditor/bin/pip-audit --path /tmp/security-runtime
           --aliases off --format json
           --output /tmp/security-evidence/pip-audit.json
+      - name: Validate audit completeness
+        run: >-
+          python scripts/validate_security_audit.py
+          /tmp/security-evidence/pip-audit.json
       - name: Upload security profile evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
