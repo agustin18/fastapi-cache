@@ -32,20 +32,26 @@ HISTORICAL_SNAPSHOT = REPOSITORY_ROOT / "DEPENDABOT_ALERTS_2026-11-16.csv"
 PRELIMINARY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
     "GHSA-82r6-8w77-94w6": {
         "preliminary_disposition": "APPLICATION_CONDITIONAL",
-        "maintainer_decision": "ACCEPTED_RISK_LEGACY_RUNTIME_LOCK_PROFILE_REVIEW_PENDING",
+        "maintainer_decision": (
+            "ACCEPTED_RISK_LEGACY_RUNTIME_AND_ISOLATED_TEST_LOCK_PROFILE"
+        ),
         "profile_scope": (
-            "Python 3.8/3.9 runtime residual accepted narrowly. The target Poetry lock selects "
-            "AnyIO 4.5.2 for these legacy profiles and 4.14.2 for Python >=3.10; whether the "
-            "legacy lock-installed test profile is covered by the runtime acceptance remains pending."
+            "Python 3.8/3.9 runtime and Poetry-installed test profiles use AnyIO 4.5.2. The "
+            "maintainer accepts the runtime residual as separately scoped and accepts the Poetry "
+            "test residual only in isolated test environments; tests use in-process ASGI clients "
+            "and local services and must not direct AnyIO TLS to attacker-controlled IDN hosts or "
+            "untrusted external endpoints. This is not a security claim for consumer applications "
+            "or arbitrary legacy deployments."
         ),
         "evidence_reference": (
             "SECURITY_DEPENDENCY_INVENTORY.md#approved-release-gates-and-maintainer-decisions"
         ),
         "remaining_action": (
-            "Obtain a specific disposition for AnyIO 4.5.2 in legacy Poetry lock installations; "
-            "verify modern lock profiles remain on AnyIO >=4.14.2."
+            "Keep legacy tests on in-process ASGI clients and local services; reassess this "
+            "acceptance if tests introduce untrusted external hosts or endpoints. Verify modern "
+            "lock profiles remain on AnyIO >=4.14.2."
         ),
-        "release_gate": "RC",
+        "release_gate": "RC: preserve isolated legacy test-profile boundary",
     },
     "GHSA-5p39-cfhj-2xmp": {
         "preliminary_disposition": "APPLICATION_CONDITIONAL",
@@ -146,20 +152,23 @@ PRELIMINARY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
     },
     "GHSA-cq5v-8q36-5273": {
         "preliminary_disposition": "EXPERIMENTAL_EXTRA",
-        "maintainer_decision": "PENDING_PATCHED_DYNAMODB_PROFILE_AUDIT",
+        "maintainer_decision": (
+            "PENDING_DYNAMODB_TRANSPORT_SMOKE_AND_RC_ARTIFACT_EVIDENCE"
+        ),
         "profile_scope": (
             "The target stable DynamoDB extra is restricted to Python >=3.10 and aiohttp "
             ">=3.14.4; Python 3.8/3.9 omit aiobotocore/aiohttp. This exceeds the parser fix "
-            "version; the candidate wheel/lock profile still needs independent verification."
+            "version; focused external review confirmed the markers and lock resolutions. The "
+            "locked transport smoke and exact RC artifact evidence remain pending."
         ),
         "evidence_reference": (
             "SECURITY_DEPENDENCY_INVENTORY.md#approved-release-gates-and-maintainer-decisions"
         ),
         "remaining_action": (
-            "Verify the built wheel and lock profiles enforce the Python marker and aiohttp "
-            "floor, run the package security profile, and obtain focused external review."
+            "Run the locked aiobotocore/aiohttp transport smoke and archive the uniquely "
+            "versioned RC wheel, metadata, installed-package inventory and complete pip-audit output."
         ),
-        "release_gate": "RC: verify patched DynamoDB dependency profile",
+        "release_gate": "RC: verify patched DynamoDB transport and artifact evidence",
     },
     "GHSA-h4cc-hm5h-fmm9": {
         "preliminary_disposition": "NOT_APPLICABLE",
@@ -423,21 +432,23 @@ _AIOHTTP_MEDIUM_LOW_CLIENT_REVIEW_TRIGGERS = {
 for _ghsa_id, _trigger in _AIOHTTP_MEDIUM_LOW_CLIENT_REVIEW_TRIGGERS.items():
     PRELIMINARY_DISPOSITIONS[_ghsa_id] = {
         "preliminary_disposition": "EXPERIMENTAL_EXTRA",
-        "maintainer_decision": "PENDING_PATCHED_AIOHTTP_PROFILE_AUDIT",
+        "maintainer_decision": (
+            "PENDING_DYNAMODB_TRANSPORT_SMOKE_AND_RC_ARTIFACT_EVIDENCE"
+        ),
         "profile_scope": (
             f"Affected trigger: {_trigger}. The target stable DynamoDB extra is restricted "
             "to Python >=3.10 with aiohttp >=3.14.4, which includes the advisory fix; the "
-            "client extra is absent on Python 3.8/3.9. Exact wheel/lock resolution remains "
-            "to be independently verified."
+            "client extra is absent on Python 3.8/3.9. Focused external review confirmed the "
+            "markers and lock floor; transport and exact RC artifact evidence remain pending."
         ),
         "evidence_reference": (
             "SECURITY_DEPENDENCY_INVENTORY.md#aiohttp-medium-low-client-paths"
         ),
         "remaining_action": (
-            "Verify the candidate wheel and Poetry lock resolve aiohttp >=3.14.4 on supported "
-            "DynamoDB profiles and omit the extra on Python 3.8/3.9; then close with focused review."
+            "Run the locked transport smoke and archive the exact RC wheel, metadata, installed "
+            "package inventory and pip-audit output before re-evaluating this row."
         ),
-        "release_gate": "RC: verify patched aiohttp profile",
+        "release_gate": "RC: verify patched DynamoDB transport and artifact evidence",
     }
 
 PRELIMINARY_DISPOSITIONS["GHSA-hcc4-c3v8-rx92"] = {
@@ -453,8 +464,9 @@ PRELIMINARY_DISPOSITIONS["GHSA-hcc4-c3v8-rx92"] = {
         "SECURITY_DEPENDENCY_INVENTORY.md#aiohttp-medium-low-client-paths"
     ),
     "remaining_action": (
-        "Verify the aiohttp floor and legacy extra exclusion in the candidate wheel and lock; "
-        "then close the stable-stage boundary with external review."
+        "Verify the aiohttp floor and legacy extra exclusion in the exact RC wheel; then close "
+        "the stable-stage boundary using the documented single-endpoint scope. Focused profile "
+        "review is complete."
     ),
     "release_gate": "Stable: verify optional DynamoDB DNS cache scope",
 }
@@ -997,9 +1009,13 @@ def main() -> None:
     parser.add_argument("--historical", type=Path, default=HISTORICAL_SNAPSHOT)
     parser.add_argument("--output-dir", type=Path, default=REPOSITORY_ROOT)
     parser.add_argument(
+        "--current-snapshot",
+        type=Path,
+        help="reconcile from an existing raw snapshot without contacting GitHub",
+    )
+    parser.add_argument(
         "--snapshot-date",
-        default=datetime.now(timezone.utc).date().isoformat(),
-        help="UTC snapshot date in YYYY-MM-DD form (default: today)",
+        help="UTC snapshot date in YYYY-MM-DD form (default: today for API captures)",
     )
     parser.add_argument(
         "--overwrite-current-snapshot",
@@ -1008,17 +1024,41 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    snapshot_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    current_alerts = _fetch_current_alerts(args.repository)
-    current_rows = build_current_snapshot(
-        current_alerts, args.snapshot_date, snapshot_id
-    )
-    current_path = args.output_dir / f"DEPENDABOT_ALERTS_{snapshot_id}.csv"
-    ensure_current_snapshot_target(
-        current_path, overwrite=args.overwrite_current_snapshot
-    )
-    # Preserve the raw capture even if reconciliation stops on a new, untriaged open GHSA.
-    _write_csv(current_path, CURRENT_SNAPSHOT_FIELDS, current_rows)
+    if args.current_snapshot is not None:
+        if args.snapshot_date is not None or args.overwrite_current_snapshot:
+            parser.error(
+                "--current-snapshot cannot be combined with --snapshot-date or "
+                "--overwrite-current-snapshot"
+            )
+        current_path = args.current_snapshot
+        current_rows = _read_csv(current_path)
+        if not current_rows:
+            raise ValueError("saved current snapshot is empty: " + str(current_path))
+        snapshot_date = current_rows[0].get("snapshot_date", "")
+        snapshot_id = current_rows[0].get("snapshot_id", "")
+        if not snapshot_date or not snapshot_id:
+            raise ValueError("saved current snapshot is missing its identity fields")
+        if any(
+            row.get("snapshot_date") != snapshot_date
+            or row.get("snapshot_id") != snapshot_id
+            for row in current_rows
+        ):
+            raise ValueError("saved current snapshot contains mixed identities")
+    else:
+        snapshot_date = (
+            args.snapshot_date or datetime.now(timezone.utc).date().isoformat()
+        )
+        snapshot_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        current_alerts = _fetch_current_alerts(args.repository)
+        current_rows = build_current_snapshot(
+            current_alerts, snapshot_date, snapshot_id
+        )
+        current_path = args.output_dir / f"DEPENDABOT_ALERTS_{snapshot_id}.csv"
+        ensure_current_snapshot_target(
+            current_path, overwrite=args.overwrite_current_snapshot
+        )
+        # Preserve the raw capture even if reconciliation stops on a new, untriaged open GHSA.
+        _write_csv(current_path, CURRENT_SNAPSHOT_FIELDS, current_rows)
 
     historical_rows = _read_csv(args.historical)
     triage_path = args.output_dir / "SECURITY_ADVISORY_TRIAGE.csv"
@@ -1026,7 +1066,7 @@ def main() -> None:
     triage_rows = reconcile_historical_alerts(
         historical_rows,
         current_rows,
-        args.snapshot_date,
+        snapshot_date,
         previous_triage,
         snapshot_id,
     )
@@ -1043,7 +1083,7 @@ def main() -> None:
     print(
         json.dumps(
             {
-                "snapshot_date": args.snapshot_date,
+                "snapshot_date": snapshot_date,
                 "snapshot_id": snapshot_id,
                 "current_records": len(current_rows),
                 "current_state_counts": dict(current_counts),

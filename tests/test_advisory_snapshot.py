@@ -198,8 +198,14 @@ def test_reconciliation_separates_current_state_from_triage_and_risk_decision() 
     assert anyio["preliminary_disposition"] == "APPLICATION_CONDITIONAL"
     assert (
         anyio["maintainer_decision"]
-        == "ACCEPTED_RISK_LEGACY_RUNTIME_LOCK_PROFILE_REVIEW_PENDING"
+        == "ACCEPTED_RISK_LEGACY_RUNTIME_AND_ISOLATED_TEST_LOCK_PROFILE"
     )
+    assert (
+        "test residual only in isolated test environments"
+        in anyio["profile_scope"]
+    )
+    assert "not a security claim for consumer applications" in anyio["profile_scope"]
+    assert anyio["release_gate"] == "RC: preserve isolated legacy test-profile boundary"
     assert anyio["triage_status"] == "PENDING"
     assert anyio["current_state"] == "open"
 
@@ -207,8 +213,10 @@ def test_reconciliation_separates_current_state_from_triage_and_risk_decision() 
     assert dynamo["preliminary_disposition"] == "EXPERIMENTAL_EXTRA"
     assert (
         dynamo["maintainer_decision"]
-        == "PENDING_PATCHED_DYNAMODB_PROFILE_AUDIT"
+        == "PENDING_DYNAMODB_TRANSPORT_SMOKE_AND_RC_ARTIFACT_EVIDENCE"
     )
+    assert "focused external review confirmed" in dynamo["profile_scope"]
+    assert "locked aiobotocore/aiohttp transport smoke" in dynamo["remaining_action"]
     assert dynamo["triage_status"] == "PENDING"
 
     missing = by_ghsa["GHSA-not-in-current-snapshot"]
@@ -740,8 +748,14 @@ def test_aiohttp_proxy_redirect_review_stays_open_for_rc() -> None:
 
     assert row["preliminary_disposition"] == "EXPERIMENTAL_EXTRA"
     assert row["triage_status"] == "PENDING"
-    assert row["maintainer_decision"] == "PENDING_PATCHED_AIOHTTP_PROFILE_AUDIT"
-    assert row["release_gate"] == "RC: verify patched aiohttp profile"
+    assert (
+        row["maintainer_decision"]
+        == "PENDING_DYNAMODB_TRANSPORT_SMOKE_AND_RC_ARTIFACT_EVIDENCE"
+    )
+    assert (
+        row["release_gate"]
+        == "RC: verify patched DynamoDB transport and artifact evidence"
+    )
 
 
 def test_fetch_current_alerts_flattens_all_paginated_cli_pages(
@@ -823,6 +837,70 @@ def test_new_open_alert_keeps_raw_capture_without_rewriting_triage(
     captured = list(csv.DictReader(snapshots[0].open(encoding="utf-8")))
     assert captured[0]["ghsa_id"] == "GHSA-new-open-identifier"
     assert triage_path.read_bytes() == previous_triage
+
+
+def test_saved_snapshot_can_regenerate_triage_without_github_api(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    historical_path = tmp_path / "historical.csv"
+    with historical_path.open("w", encoding="utf-8", newline="") as destination:
+        writer = csv.DictWriter(
+            destination, fieldnames=reconciler.HISTORICAL_FIELDS
+        )
+        writer.writeheader()
+        writer.writerow(
+            _historical_row(75, "GHSA-82r6-8w77-94w6", "critical", "anyio")
+        )
+
+    snapshot_path = tmp_path / "current.csv"
+    current_rows = build_current_snapshot(
+        [
+            _alert(
+                number=75,
+                ghsa_id="GHSA-82r6-8w77-94w6",
+                state="open",
+                package="anyio",
+                severity="critical",
+            )
+        ],
+        snapshot_date="2026-11-18",
+        snapshot_id="20261118T044213Z",
+    )
+    _write_csv(snapshot_path, reconciler.CURRENT_SNAPSHOT_FIELDS, current_rows)
+    original_snapshot = snapshot_path.read_bytes()
+    monkeypatch.setattr(
+        reconciler,
+        "_fetch_current_alerts",
+        lambda repository: pytest.fail("saved-snapshot mode must not call GitHub"),
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "reconcile_dependabot_alerts.py",
+            "--current-snapshot",
+            str(snapshot_path),
+            "--historical",
+            str(historical_path),
+            "--output-dir",
+            str(tmp_path),
+        ],
+    )
+
+    reconciler.main()
+
+    assert snapshot_path.read_bytes() == original_snapshot
+    triage_path = tmp_path / "SECURITY_ADVISORY_TRIAGE.csv"
+    row = next(
+        row
+        for row in csv.DictReader(triage_path.open(encoding="utf-8"))
+        if row["ghsa_id"] == "GHSA-82r6-8w77-94w6"
+    )
+    assert row["current_snapshot_id"] == "20261118T044213Z"
+    assert (
+        row["maintainer_decision"]
+        == "ACCEPTED_RISK_LEGACY_RUNTIME_AND_ISOLATED_TEST_LOCK_PROFILE"
+    )
 
 
 def test_adjudicated_transitive_boundaries_keep_distinct_classifications() -> (

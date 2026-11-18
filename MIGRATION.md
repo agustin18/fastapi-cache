@@ -465,8 +465,10 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
   remain the legacy backend options. The published `0.3.0b1` artifact remains unchanged.
 - The modern Poetry lock profile selects AnyIO `>=4.14.2` on Python `>=3.10`; the legacy
   Python 3.8/3.9 lock profile still resolves an older AnyIO because no fixed compatible release
-  is available there. That lock-installed legacy profile remains separately pending review and
-  is not covered by the runtime-only residual acceptance.
+  is available there. The existing runtime residual acceptance remains separately bounded. For
+  the Poetry-installed test profile, the maintainer accepts AnyIO 4.5.2 only in isolated project
+  tests using in-process clients and local services, with no requests to untrusted external hosts.
+  This does not extend the security-support claim to consumer applications.
 - The 24-month `1.x` support window in `SUPPORT.md` is conditional on the `1.x` release and
   a co-maintainer being in place; no multi-year promise is active today.
 
