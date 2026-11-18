@@ -32,20 +32,26 @@ HISTORICAL_SNAPSHOT = REPOSITORY_ROOT / "DEPENDABOT_ALERTS_2026-11-16.csv"
 PRELIMINARY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
     "GHSA-82r6-8w77-94w6": {
         "preliminary_disposition": "APPLICATION_CONDITIONAL",
-        "maintainer_decision": "ACCEPTED_RISK_LEGACY_RUNTIME_LOCK_PROFILE_REVIEW_PENDING",
+        "maintainer_decision": (
+            "ACCEPTED_RISK_LEGACY_RUNTIME_AND_ISOLATED_TEST_LOCK_PROFILE"
+        ),
         "profile_scope": (
-            "Python 3.8/3.9 runtime residual accepted narrowly. The target Poetry lock selects "
-            "AnyIO 4.5.2 for these legacy profiles and 4.14.2 for Python >=3.10; whether the "
-            "legacy lock-installed test profile is covered by the runtime acceptance remains pending."
+            "Python 3.8/3.9 runtime and Poetry-installed test profiles use AnyIO 4.5.2. The "
+            "maintainer accepts the runtime residual as separately scoped and accepts the Poetry "
+            "test residual only in isolated test environments; tests use in-process ASGI clients "
+            "and local services and must not direct AnyIO TLS to attacker-controlled IDN hosts or "
+            "untrusted external endpoints. This is not a security claim for consumer applications "
+            "or arbitrary legacy deployments."
         ),
         "evidence_reference": (
             "SECURITY_DEPENDENCY_INVENTORY.md#approved-release-gates-and-maintainer-decisions"
         ),
         "remaining_action": (
-            "Obtain a specific disposition for AnyIO 4.5.2 in legacy Poetry lock installations; "
-            "verify modern lock profiles remain on AnyIO >=4.14.2."
+            "Keep legacy tests on in-process ASGI clients and local services; reassess this "
+            "acceptance if tests introduce untrusted external hosts or endpoints. Verify modern "
+            "lock profiles remain on AnyIO >=4.14.2."
         ),
-        "release_gate": "RC",
+        "release_gate": "RC: preserve isolated legacy test-profile boundary",
     },
     "GHSA-5p39-cfhj-2xmp": {
         "preliminary_disposition": "APPLICATION_CONDITIONAL",
@@ -146,20 +152,23 @@ PRELIMINARY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
     },
     "GHSA-cq5v-8q36-5273": {
         "preliminary_disposition": "EXPERIMENTAL_EXTRA",
-        "maintainer_decision": "PENDING_PATCHED_DYNAMODB_PROFILE_AUDIT",
+        "maintainer_decision": (
+            "PENDING_DYNAMODB_TRANSPORT_SMOKE_AND_RC_ARTIFACT_EVIDENCE"
+        ),
         "profile_scope": (
             "The target stable DynamoDB extra is restricted to Python >=3.10 and aiohttp "
             ">=3.14.4; Python 3.8/3.9 omit aiobotocore/aiohttp. This exceeds the parser fix "
-            "version; the candidate wheel/lock profile still needs independent verification."
+            "version; focused external review confirmed the markers and lock resolutions. The "
+            "locked transport smoke and exact RC artifact evidence remain pending."
         ),
         "evidence_reference": (
             "SECURITY_DEPENDENCY_INVENTORY.md#approved-release-gates-and-maintainer-decisions"
         ),
         "remaining_action": (
-            "Verify the built wheel and lock profiles enforce the Python marker and aiohttp "
-            "floor, run the package security profile, and obtain focused external review."
+            "Run the locked aiobotocore/aiohttp transport smoke and archive the uniquely "
+            "versioned RC wheel, metadata, installed-package inventory and complete pip-audit output."
         ),
-        "release_gate": "RC: verify patched DynamoDB dependency profile",
+        "release_gate": "RC: verify patched DynamoDB transport and artifact evidence",
     },
     "GHSA-h4cc-hm5h-fmm9": {
         "preliminary_disposition": "NOT_APPLICABLE",
@@ -423,21 +432,23 @@ _AIOHTTP_MEDIUM_LOW_CLIENT_REVIEW_TRIGGERS = {
 for _ghsa_id, _trigger in _AIOHTTP_MEDIUM_LOW_CLIENT_REVIEW_TRIGGERS.items():
     PRELIMINARY_DISPOSITIONS[_ghsa_id] = {
         "preliminary_disposition": "EXPERIMENTAL_EXTRA",
-        "maintainer_decision": "PENDING_PATCHED_AIOHTTP_PROFILE_AUDIT",
+        "maintainer_decision": (
+            "PENDING_DYNAMODB_TRANSPORT_SMOKE_AND_RC_ARTIFACT_EVIDENCE"
+        ),
         "profile_scope": (
             f"Affected trigger: {_trigger}. The target stable DynamoDB extra is restricted "
             "to Python >=3.10 with aiohttp >=3.14.4, which includes the advisory fix; the "
-            "client extra is absent on Python 3.8/3.9. Exact wheel/lock resolution remains "
-            "to be independently verified."
+            "client extra is absent on Python 3.8/3.9. Focused external review confirmed the "
+            "markers and lock floor; transport and exact RC artifact evidence remain pending."
         ),
         "evidence_reference": (
             "SECURITY_DEPENDENCY_INVENTORY.md#aiohttp-medium-low-client-paths"
         ),
         "remaining_action": (
-            "Verify the candidate wheel and Poetry lock resolve aiohttp >=3.14.4 on supported "
-            "DynamoDB profiles and omit the extra on Python 3.8/3.9; then close with focused review."
+            "Run the locked transport smoke and archive the exact RC wheel, metadata, installed "
+            "package inventory and pip-audit output before re-evaluating this row."
         ),
-        "release_gate": "RC: verify patched aiohttp profile",
+        "release_gate": "RC: verify patched DynamoDB transport and artifact evidence",
     }
 
 PRELIMINARY_DISPOSITIONS["GHSA-hcc4-c3v8-rx92"] = {
@@ -453,8 +464,9 @@ PRELIMINARY_DISPOSITIONS["GHSA-hcc4-c3v8-rx92"] = {
         "SECURITY_DEPENDENCY_INVENTORY.md#aiohttp-medium-low-client-paths"
     ),
     "remaining_action": (
-        "Verify the aiohttp floor and legacy extra exclusion in the candidate wheel and lock; "
-        "then close the stable-stage boundary with external review."
+        "Verify the aiohttp floor and legacy extra exclusion in the exact RC wheel; then close "
+        "the stable-stage boundary using the documented single-endpoint scope. Focused profile "
+        "review is complete."
     ),
     "release_gate": "Stable: verify optional DynamoDB DNS cache scope",
 }
@@ -588,6 +600,26 @@ FIXED_DISPOSITIONS = {
         "evidence_reference": "poetry.lock; PR #25; current Dependabot state fixed",
         "remaining_action": "Keep the patched resolution in the lock and wheel profiles.",
         "release_gate": "Closed for this historical row",
+    }
+}
+
+CURRENT_ONLY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
+    "GHSA-48p4-8xcf-vxj5": {
+        "preliminary_disposition": "APPLICATION_CONDITIONAL",
+        "profile_scope": (
+            "The advisory affects urllib3 redirect handling in Pyodide browser/Node runtimes. "
+            "fastapi_cache source calls no urllib3 API; DynamoDB uses aiobotocore/aiohttp. "
+            "Consumer-owned Pyodide use and whether that runtime is in package support remain "
+            "outside this preliminary package-path classification."
+        ),
+        "evidence_reference": (
+            "https://github.com/advisories/GHSA-48p4-8xcf-vxj5"
+        ),
+        "remaining_action": (
+            "Review whether Pyodide/browser/Node is in the supported package scope; keep "
+            "consumer-owned urllib3 usage separate and leave final triage pending."
+        ),
+        "release_gate": "RC: screen current-only Pyodide advisory",
     }
 }
 
@@ -833,11 +865,13 @@ def reconcile_historical_alerts(
     untriaged_open_ids = sorted(
         ghsa_id
         for ghsa_id, current in current_by_ghsa.items()
-        if current.get("state") == "open" and ghsa_id not in seen_historical_ids
+        if current.get("state") == "open"
+        and ghsa_id not in seen_historical_ids
+        and ghsa_id not in CURRENT_ONLY_DISPOSITIONS
     )
     if untriaged_open_ids:
         raise ValueError(
-            "current open GHSA has no historical triage row: "
+            "current open GHSA has no historical row or current-only disposition: "
             + ", ".join(untriaged_open_ids)
         )
 
@@ -932,6 +966,75 @@ def reconcile_historical_alerts(
                 "GitHub no longer reports this alert as fixed; reverify the selected profile."
             )
         triage_rows.append(row)
+
+    current_only_ids = sorted(
+        (
+            ghsa_id
+            for ghsa_id in current_by_ghsa
+            if ghsa_id not in seen_historical_ids
+            and ghsa_id in CURRENT_ONLY_DISPOSITIONS
+        ),
+        key=lambda ghsa_id: int(current_by_ghsa[ghsa_id]["alert_number"]),
+    )
+    for ghsa_id in current_only_ids:
+        current = current_by_ghsa[ghsa_id]
+        disposition = dict(CURRENT_ONLY_DISPOSITIONS[ghsa_id])
+        if "triage_status" in disposition:
+            raise ValueError(
+                "CURRENT_ONLY_DISPOSITIONS must not set triage_status: "
+                + ghsa_id
+            )
+        row = {
+            "historical_alert_number": "",
+            "ghsa_id": ghsa_id,
+            "cve_id": str(current.get("cve_id", "")),
+            "historical_severity": "",
+            "historical_package": "",
+            "lock_versions": "",
+            "lock_python_versions": "",
+            "lock_optional": "",
+            "manifest": "",
+            "scope": "",
+            "relationship": "",
+            "vulnerable_version_range": "",
+            "historical_first_patched_version": "",
+            "historical_triage_status": "NOT_IN_HISTORICAL_SNAPSHOT",
+            "snapshot_date": snapshot_date,
+            "current_snapshot_id": snapshot_id or snapshot_date,
+            "current_alert_number": str(current.get("alert_number", "")),
+            "current_state": str(current.get("state", "")),
+            "current_severity": str(current.get("severity", "")),
+            "current_package": str(current.get("package", "")),
+            "current_manifest": str(current.get("manifest_path", "")),
+            "current_vulnerable_version_range": str(
+                current.get("vulnerable_version_range", "")
+            ),
+            "current_first_patched_version": str(
+                current.get("first_patched_version", "")
+            ),
+            "preliminary_disposition": "PENDING",
+            "triage_status": "PENDING",
+            "maintainer_decision": "",
+            "profile_scope": "",
+            "evidence_reference": "",
+            "remaining_action": "Complete current-only advisory review.",
+            "release_gate": "RC: disposition current-only advisory",
+        }
+        row.update(disposition)
+
+        prior = existing_by_ghsa.get(ghsa_id, {})
+        override_fields = _get_manual_override_fields(
+            prior, ghsa_id, row["current_state"]
+        )
+        for field in MANUAL_OVERRIDEABLE_FIELDS:
+            if field in override_fields:
+                row[field] = prior[field]
+        row["manual_override_fields"] = MANUAL_OVERRIDE_SEPARATOR.join(
+            field
+            for field in MANUAL_OVERRIDEABLE_FIELDS
+            if field in override_fields
+        )
+        triage_rows.append(row)
     return triage_rows
 
 
@@ -997,9 +1100,13 @@ def main() -> None:
     parser.add_argument("--historical", type=Path, default=HISTORICAL_SNAPSHOT)
     parser.add_argument("--output-dir", type=Path, default=REPOSITORY_ROOT)
     parser.add_argument(
+        "--current-snapshot",
+        type=Path,
+        help="reconcile from an existing raw snapshot without contacting GitHub",
+    )
+    parser.add_argument(
         "--snapshot-date",
-        default=datetime.now(timezone.utc).date().isoformat(),
-        help="UTC snapshot date in YYYY-MM-DD form (default: today)",
+        help="UTC snapshot date in YYYY-MM-DD form (default: today for API captures)",
     )
     parser.add_argument(
         "--overwrite-current-snapshot",
@@ -1008,17 +1115,41 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    snapshot_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    current_alerts = _fetch_current_alerts(args.repository)
-    current_rows = build_current_snapshot(
-        current_alerts, args.snapshot_date, snapshot_id
-    )
-    current_path = args.output_dir / f"DEPENDABOT_ALERTS_{snapshot_id}.csv"
-    ensure_current_snapshot_target(
-        current_path, overwrite=args.overwrite_current_snapshot
-    )
-    # Preserve the raw capture even if reconciliation stops on a new, untriaged open GHSA.
-    _write_csv(current_path, CURRENT_SNAPSHOT_FIELDS, current_rows)
+    if args.current_snapshot is not None:
+        if args.snapshot_date is not None or args.overwrite_current_snapshot:
+            parser.error(
+                "--current-snapshot cannot be combined with --snapshot-date or "
+                "--overwrite-current-snapshot"
+            )
+        current_path = args.current_snapshot
+        current_rows = _read_csv(current_path)
+        if not current_rows:
+            raise ValueError("saved current snapshot is empty: " + str(current_path))
+        snapshot_date = current_rows[0].get("snapshot_date", "")
+        snapshot_id = current_rows[0].get("snapshot_id", "")
+        if not snapshot_date or not snapshot_id:
+            raise ValueError("saved current snapshot is missing its identity fields")
+        if any(
+            row.get("snapshot_date") != snapshot_date
+            or row.get("snapshot_id") != snapshot_id
+            for row in current_rows
+        ):
+            raise ValueError("saved current snapshot contains mixed identities")
+    else:
+        snapshot_date = (
+            args.snapshot_date or datetime.now(timezone.utc).date().isoformat()
+        )
+        snapshot_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        current_alerts = _fetch_current_alerts(args.repository)
+        current_rows = build_current_snapshot(
+            current_alerts, snapshot_date, snapshot_id
+        )
+        current_path = args.output_dir / f"DEPENDABOT_ALERTS_{snapshot_id}.csv"
+        ensure_current_snapshot_target(
+            current_path, overwrite=args.overwrite_current_snapshot
+        )
+        # Preserve the raw capture even if reconciliation stops on a new, untriaged open GHSA.
+        _write_csv(current_path, CURRENT_SNAPSHOT_FIELDS, current_rows)
 
     historical_rows = _read_csv(args.historical)
     triage_path = args.output_dir / "SECURITY_ADVISORY_TRIAGE.csv"
@@ -1026,14 +1157,17 @@ def main() -> None:
     triage_rows = reconcile_historical_alerts(
         historical_rows,
         current_rows,
-        args.snapshot_date,
+        snapshot_date,
         previous_triage,
         snapshot_id,
     )
     _write_csv(triage_path, TRIAGE_FIELDS, triage_rows)
 
     current_counts = Counter(row["state"] for row in current_rows)
-    historic_ids = {row["ghsa_id"] for row in triage_rows}
+    historical_ids = {row["ghsa_id"] for row in historical_rows}
+    historical_triage_rows = [
+        row for row in triage_rows if row["historical_alert_number"]
+    ]
     current_open_ids = {
         row["ghsa_id"] for row in current_rows if row["state"] == "open"
     }
@@ -1043,26 +1177,30 @@ def main() -> None:
     print(
         json.dumps(
             {
-                "snapshot_date": args.snapshot_date,
+                "snapshot_date": snapshot_date,
                 "snapshot_id": snapshot_id,
                 "current_records": len(current_rows),
                 "current_state_counts": dict(current_counts),
-                "historical_rows": len(triage_rows),
+                "historical_rows": len(historical_rows),
+                "triage_rows": len(triage_rows),
+                "current_only_triage_rows": sum(
+                    not row["historical_alert_number"] for row in triage_rows
+                ),
                 "historical_current_open": sum(
-                    row["current_state"] == "open" for row in triage_rows
+                    row["current_state"] == "open" for row in historical_triage_rows
                 ),
                 "historical_current_fixed": sum(
-                    row["current_state"] == "fixed" for row in triage_rows
+                    row["current_state"] == "fixed" for row in historical_triage_rows
                 ),
                 "historical_not_in_current_snapshot": sum(
                     row["current_state"] == "not_in_current_snapshot"
-                    for row in triage_rows
+                    for row in historical_triage_rows
                 ),
                 "current_open_not_historical": len(
-                    current_open_ids - historic_ids
+                    current_open_ids - historical_ids
                 ),
                 "current_fixed_not_historical": len(
-                    current_fixed_ids - historic_ids
+                    current_fixed_ids - historical_ids
                 ),
                 "triage_state_counts": dict(
                     Counter(row["triage_status"] for row in triage_rows)

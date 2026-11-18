@@ -250,7 +250,9 @@ jobs:
               assert importlib.util.find_spec("aiobotocore") is not None
           PY
       - name: Test dependency metadata and optional backend
-        run: poetry run python -m pytest -q -rs tests/test_distribution_metadata.py tests/test_dynamodb_backend.py
+        run: >-
+          poetry run python -m pytest -q -rs tests/test_distribution_metadata.py
+          tests/test_dynamodb_backend.py tests/test_dynamodb_transport.py
 
   redis-clear:
     name: Redis clear integration (Redis 7)
@@ -295,7 +297,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[memcache,dynamodb]" pytest==8.3.5 httpx==0.27.0
       - name: Run optional backend tests
-        run: python -m pytest -q tests/test_memcached_backend.py tests/test_dynamodb_backend.py -rs
+        run: >-
+          python -m pytest -q tests/test_memcached_backend.py
+          tests/test_dynamodb_backend.py tests/test_dynamodb_transport.py -rs
 
   security-audit:
     name: Security audit on Python ${{ matrix.python }}
@@ -325,8 +329,54 @@ jobs:
           python -m venv /tmp/security-auditor
           /tmp/security-auditor/bin/python -m pip install --upgrade pip
           /tmp/security-auditor/bin/python -m pip install pip-audit==2.10.1
+      - name: Record wheel and runtime profile provenance
+        run: |
+          mkdir -p /tmp/security-evidence
+          wheel=$(python -c "from glob import glob; print(glob('/tmp/security-dist/*.whl')[0])")
+          cp "$wheel" /tmp/security-evidence/
+          python - <<'PY'
+          import hashlib
+          import pathlib
+          import sys
+          import zipfile
+
+          wheel_name = next(pathlib.Path("/tmp/security-dist").glob("*.whl")).name
+          wheel = pathlib.Path("/tmp/security-evidence") / wheel_name
+          digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
+          (wheel.parent / "wheel.sha256").write_text(
+              f"{digest}  {wheel.name}\n", encoding="utf-8"
+          )
+          with zipfile.ZipFile(wheel) as archive:
+              metadata_name = next(
+                  name
+                  for name in archive.namelist()
+                  if name.endswith(".dist-info/METADATA")
+              )
+              (wheel.parent / "wheel-METADATA.txt").write_bytes(
+                  archive.read(metadata_name)
+              )
+          (wheel.parent / "python-version.txt").write_text(
+              sys.version + "\n", encoding="utf-8"
+          )
+          PY
+          python -m pip freeze --path /tmp/security-runtime \
+            > /tmp/security-evidence/installed-packages.txt
+          python -m pip --version > /tmp/security-evidence/pip-version.txt
+          /tmp/security-auditor/bin/pip-audit --version \
+            > /tmp/security-evidence/pip-audit-version.txt
       - name: Audit supported runtime profile
-        run: /tmp/security-auditor/bin/pip-audit --path /tmp/security-runtime --aliases off
+        run: >-
+          /tmp/security-auditor/bin/pip-audit --path /tmp/security-runtime
+          --aliases off --format json
+          --output /tmp/security-evidence/pip-audit.json
+      - name: Upload security profile evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: security-profile-python-${{ matrix.python }}
+          path: /tmp/security-evidence/
+          if-no-files-found: warn
+          retention-days: 90
 
   build:
     name: Build and inspect distributions
