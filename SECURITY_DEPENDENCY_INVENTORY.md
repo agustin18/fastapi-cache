@@ -97,7 +97,10 @@ IDs. The historical CSV remains at 93 distinct GHSA IDs. Reconciliation by ident
 - One new current-only open alert, `GHSA-48p4-8xcf-vxj5` (urllib3, medium), is absent from the
   frozen history. Its preliminary classification is `APPLICATION_CONDITIONAL`: the advisory
   trigger is urllib3 redirect handling in Pyodide/browser/Node runtimes, and the package source
-  does not call urllib3 APIs. The row remains `PENDING` for supported-runtime scope review.
+  does not call urllib3 APIs. The verified compatibility/security matrix covers server-side
+  CPython; those runtimes are not validated or covered. This is not evidence of functional
+  incompatibility. The row remains `PENDING` for final triage, and consumer-owned urllib3 use
+  remains separate.
 - The triage register has 94 rows: 93 historical rows plus one current-only row; 1 is `FIXED` and
   93 remain `PENDING`. Preliminary classifications do not close a row or accept consumer risk.
 - The pre-merge `20261118T044213Z` snapshot had 92 open and 26 fixed records. The latest snapshot
@@ -193,6 +196,24 @@ selected AnyIO 4.16.0, aiohttp 3.14.5 and aiobotocore 2.26.0;
 runtime targets. The wheel's DynamoDB extra metadata excludes Python 3.8/3.9, and the legacy
 Poetry-lock tests confirmed aiobotocore/aiohttp are absent there. The published `0.3.0b1` remains
 unchanged; a uniquely versioned RC artifact must be built and checked separately.
+
+For PR #29 head `1d76cb268664ebe3ac4de6a5f2d3d56598d8c5ed`, the uploaded Python 3.11–3.13
+security-audit artifacts were independently checked: each contains the same `0.3.0b1` wheel
+(`eb19c7b814985f72f5e03ebdebf6469952ba58566ffe97499ad49fd2acc0db7c`), metadata, inventory and
+JSON audit for 73 packages with zero findings. This evidence is for the unpublished b1 working
+tree wheel, not the RC candidate.
+
+### Local `0.3.0rc1` preparation artifact (unpublished)
+
+The current uncommitted preparation branch built and checked a local `0.3.0rc1` wheel and sdist.
+The wheel SHA-256 is
+`8452828a764539ca4b943e5d9601c5c8049d8547b5002758025a1a02b7245d57`. On Python 3.12, wheel
+metadata tests, `pip check`, and an installed-wheel InMemory MISS/HIT smoke passed. `twine check`
+passed for both distributions. `pip-audit 2.10.1` reported zero findings among 72 third-party
+dependencies; its JSON records 73 distributions because it skips the unpublished first-party
+`fastapi-cache-stable==0.3.0rc1` package as unavailable from PyPI. The audit completeness validator
+allows only that expected skip. This is a local preparatory artifact, not a published RC; rebuild
+and compare the exact artifact from the committed release-prep revision before any TestPyPI run.
 
 The `security-audit` CI job is configured to archive a per-Python artifact with the exact wheel,
 SHA-256, wheel `METADATA`, installed-package inventory, Python/pip-audit versions and JSON scan
@@ -602,14 +623,19 @@ row-by-row triage register is a separate follow-up deliverable and remains incom
   under this explicit isolated-test acceptance. Modern Poetry profiles select AnyIO 4.14.2 on
   Python >=3.10; Python 3.11–3.13 runtime-security workflows resolve AnyIO 4.16.0 and pass their
   scans. The legacy acceptance is not a security-support commitment for downstream consumers.
+- **Pyodide/browser/Node support boundary:** compatibility and security guarantees apply to the
+  tested server-side CPython matrix. Pyodide/browser/Node are not tested or covered; this is not
+  evidence of functional incompatibility. The pre-RC screening for `GHSA-48p4-8xcf-vxj5` is
+  complete for package-owned paths; the row remains `APPLICATION_CONDITIONAL` / `PENDING` for
+  final triage, and consumer-owned urllib3 redirects remain separate.
 - **DynamoDB/aiohttp parser `GHSA-cq5v-8q36-5273`: profile reviewed; release evidence pending.**
   For target stable `0.3.0`, the `dynamodb` extra is excluded on Python
   3.8/3.9 and requires aiohttp >=3.14.4 on Python >=3.10. Poetry installs on Python 3.8/3.9
   confirm aiobotocore/aiohttp are absent; installs on Python 3.10/3.12 resolve aiohttp 3.14.5.
-  The focused external review confirmed these boundaries. The locked-profile CI exercises the
-  aiobotocore/aiohttp transport against a local DynamoDB-protocol endpoint; the exact RC wheel,
-  metadata, package inventory and audit output must still be retained before changing triage
-  dispositions.
+  The focused external review confirmed these boundaries. Locked-profile CI passed the
+  aiobotocore 2.13.1/aiohttp 3.14.5 transport smoke against a local DynamoDB-protocol endpoint;
+  the exact RC wheel, metadata, package inventory and audit output must still be retained before
+  changing triage dispositions.
 - **Memcached and DynamoDB remain experimental** until real-service integration and supported
   operation boundaries are documented. Missing `clear()` parity is not promised functionality.
 - **Consumer validation is owner-run technical evidence, not an adoption claim.** Before RC,
@@ -622,15 +648,15 @@ row-by-row triage register is a separate follow-up deliverable and remains incom
 
 ### Remaining release work
 
-1. Complete final evidence-based reconciliation of the 93-row register under the stage policy
-   above. Every historical ID now has a preliminary disposition; 92 rows remain `PENDING` and
-   require stage-appropriate final evidence.
-2. The lock profiles and local wheel exclude DynamoDB on Python 3.8/3.9 and resolve aiohttp
-   >=3.14.4 on supported profiles. Focused external profile review is complete, and fresh runtime
-   scans on Python 3.11–3.13 report no findings. The CI job is configured to archive the wheel,
-   checksum, metadata, installed inventory and JSON audit result. Before closing DDB triage rows,
-   verify artifacts from the exact RC run and retain evidence from the uniquely versioned RC
-   artifact.
+1. Complete final evidence-based reconciliation under the stage policy above. The register has
+   94 rows: 93 historical IDs plus one current-only ID; 93 rows remain `PENDING` and require
+   stage-appropriate final evidence.
+2. The lock profiles exclude DynamoDB on Python 3.8/3.9 and resolve aiohttp >=3.14.4 on supported
+   profiles. Focused external profile review and the locked loopback transport smoke are complete;
+   runtime scans on Python 3.11–3.13 report no findings. PR #29 artifacts verified the same
+   unpublished `0.3.0b1` wheel (SHA-256 `eb19c7b814985f72f5e03ebdebf6469952ba58566ffe97499ad49fd2acc0db7c`)
+   and zero findings across 73 packages in each modern profile. Before closing DDB triage rows,
+   retain evidence from the uniquely versioned RC artifact and compare it with the TestPyPI wheel.
 3. Request `Cache-Control` token parsing and regression tests were implemented, audited and merged
    in PR #26; the CI gate for that change is complete.
 4. **Decision recorded:** AnyIO 4.5.2 in Python 3.8/3.9 Poetry lock tests is accepted only for

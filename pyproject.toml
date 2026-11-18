@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-cache-stable"
-version = "0.3.0b1"
+version = "0.3.0rc1"
 description = "Community-maintained, drop-in stable fork of fastapi-cache2"
 authors = ["Agustin Saiz <agustinsaiz02@gmail.com>"]
 license = "Apache-2.0"

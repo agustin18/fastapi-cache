@@ -361,6 +361,24 @@ jobs:
           PY
           python -m pip freeze --path /tmp/security-runtime \
             > /tmp/security-evidence/installed-packages.txt
+          python - <<'PY'
+          import importlib.metadata as metadata
+          import json
+          from pathlib import Path
+
+          installed = [
+              {"name": dist.metadata["Name"], "version": dist.version}
+              for dist in metadata.distributions(path=["/tmp/security-runtime"])
+          ]
+          path = Path("/tmp/security-evidence/installed-packages.json")
+          path.write_text(
+              json.dumps(
+                  sorted(installed, key=lambda record: record["name"].lower()),
+                  indent=2,
+              ) + "\n",
+              encoding="utf-8",
+          )
+          PY
           python -m pip --version > /tmp/security-evidence/pip-version.txt
           /tmp/security-auditor/bin/pip-audit --version \
             > /tmp/security-evidence/pip-audit-version.txt
@@ -369,6 +387,12 @@ jobs:
           /tmp/security-auditor/bin/pip-audit --path /tmp/security-runtime
           --aliases off --format json
           --output /tmp/security-evidence/pip-audit.json
+      - name: Validate audit completeness
+        run: >-
+          python scripts/validate_security_audit.py
+          /tmp/security-evidence/pip-audit.json
+          --installed-packages /tmp/security-evidence/installed-packages.json
+          --wheel-metadata /tmp/security-evidence/wheel-METADATA.txt
       - name: Upload security profile evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

@@ -8,6 +8,34 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.3.0rc1](https://github.com/agustin18/fastapi-cache/tree/v0.3.0rc1) - 2026-11-18
+
+### Bugfixes
+
+- Request `Cache-Control` directives are parsed case-insensitively across comma-separated and
+  repeated header fields. `no-cache` recomputes and refreshes the wrapped endpoint result, while
+  `no-store` bypasses the decorator cache for that request. [#26](https://github.com/agustin18/fastapi-cache/issues/26)
+
+### Misc
+
+- Stable `0.3.0` preserves installation on Python `>=3.8,<3.14`. Python 3.8–3.10 remain legacy
+  functional-compatibility targets without a security-support commitment; the security-supported
+  matrix is Python 3.11–3.13. Critical advisories in legacy profiles still require applicability
+  triage before stable.
+
+  The dependency lock selects Pendulum by Python version and includes time-machine only for the
+  CPython 3.8 metadata requirement.
+
+  JsonCoder preserves the instant and UTC offset of timezone-aware datetimes; the JSON format does
+  not retain the original IANA timezone identifier. [#25](https://github.com/agustin18/fastapi-cache/issues/25)
+- Add a guarded Redis migration E2E harness for the legacy writer, candidate reader, targeted
+  namespace cleanup and rollback path. [#27](https://github.com/agustin18/fastapi-cache/issues/27)
+- Scope the target stable `0.3.0` DynamoDB extra to Python `>=3.10` and
+  `aiohttp>=3.14.4`; the extra is not installed on Python 3.8/3.9. Modern Poetry
+  development profiles lock AnyIO to `>=4.14.2`. AnyIO 4.5.2 remains only in isolated
+  Python 3.8/3.9 tests with no untrusted external endpoints; this does not extend the
+  security-support commitment to consumer applications. [#28](https://github.com/agustin18/fastapi-cache/issues/28)
+
 ## [0.3.0b1](https://github.com/agustin18/fastapi-cache/tree/v0.3.0b1) - 2026-11-16
 
 ### Bugfixes

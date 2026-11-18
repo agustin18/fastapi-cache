@@ -130,10 +130,14 @@ classmethod decode_as_type(value: bytes, *, type_) -> Any
 - **Legacy functional compatibility:** stable `0.3.0` installs on Python 3.8–3.10 and tests
   the documented legacy combinations. Those runtimes and their EOL dependency lines do not
   receive a security-support commitment.
-- **Security-supported environment:** Python 3.11–3.13 with the resolver-selected FastAPI and
-  Pydantic versions, plus the optional dependency profiles included in the security audit.
+- **Security-supported environment:** server-side CPython 3.11–3.13 with the resolver-selected
+  FastAPI and Pydantic versions, plus the optional dependency profiles included in the security audit.
   Security support means investigating and addressing applicable issues in this documented
   scope; it does not certify every possible downstream dependency combination as vulnerability-free.
+- The verified compatibility and security matrices target server-side CPython. Pyodide/browser/Node
+  runtimes are not tested or covered by these guarantees; this is a scope statement, not a claim
+  that the package is functionally incompatible there. Consumers using urllib3 in those runtimes
+  must assess their own redirect behavior.
 - **Critical legacy findings:** EOL status alone is not an applicability verdict. Critical
   advisories in legacy profiles must be assessed for package-controlled execution paths,
   mitigations and residual risk before stable.
@@ -147,7 +151,7 @@ its documented legacy decoded behavior, but receives no new upstream security fi
 
 > Stable `0.3.0` metadata is `python = ">=3.8,<3.14"`. Functional compatibility and security
 > support are separate: Python 3.8–3.10 are legacy-tested only; security support is Python
-> 3.11–3.13. Python 3.14 remains unsupported pending a full matrix.
+> server-side CPython 3.11–3.13. Python 3.14 remains unsupported pending a full matrix.
 
 Status definitions:
 
@@ -158,7 +162,7 @@ Status definitions:
 
 | Component | Status | Notes |
 |---|---|---|
-| Python 3.11–3.13 | Security-supported | Full functional and security-audit matrices |
+| CPython 3.11–3.13 | Security-supported | Full functional and security-audit matrices |
 | Python 3.10 | Legacy functional compatibility | Main functional CI plus Pydantic v1 compatibility; EOL, no security-support commitment |
 | Python 3.8–3.9 | Legacy functional compatibility | Pinned FastAPI/Pydantic matrix and Python 3.8 wheel smoke; EOL, no security-support commitment |
 | Python 3.14 | Unsupported for `0.3.0` | Requires a full CI matrix before support is announced |

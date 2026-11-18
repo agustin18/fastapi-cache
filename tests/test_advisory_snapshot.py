@@ -211,12 +211,9 @@ def test_reconciliation_separates_current_state_from_triage_and_risk_decision() 
 
     dynamo = by_ghsa["GHSA-cq5v-8q36-5273"]
     assert dynamo["preliminary_disposition"] == "EXPERIMENTAL_EXTRA"
-    assert (
-        dynamo["maintainer_decision"]
-        == "PENDING_DYNAMODB_TRANSPORT_SMOKE_AND_RC_ARTIFACT_EVIDENCE"
-    )
+    assert dynamo["maintainer_decision"] == "PENDING_EXACT_RC_ARTIFACT_EVIDENCE"
     assert "focused external review confirmed" in dynamo["profile_scope"]
-    assert "locked aiobotocore/aiohttp transport smoke" in dynamo["remaining_action"]
+    assert "uniquely versioned RC wheel" in dynamo["remaining_action"]
     assert dynamo["triage_status"] == "PENDING"
 
     missing = by_ghsa["GHSA-not-in-current-snapshot"]
@@ -321,7 +318,14 @@ def test_current_only_open_advisory_is_retained_as_pending_triage() -> None:
     assert new_row["historical_triage_status"] == "NOT_IN_HISTORICAL_SNAPSHOT"
     assert new_row["current_alert_number"] == "119"
     assert new_row["preliminary_disposition"] == "APPLICATION_CONDITIONAL"
-    assert "Pyodide" in new_row["profile_scope"]
+    assert (
+        new_row["maintainer_decision"]
+        == "PYODIDE_OUTSIDE_VERIFIED_SUPPORT_SCOPE"
+    )
+    assert (
+        "not evidence of functional incompatibility" in new_row["profile_scope"]
+    )
+    assert new_row["release_gate"] == "Stable: final current-only GHSA triage"
     assert new_row["triage_status"] == "PENDING"
 
 
@@ -792,11 +796,11 @@ def test_aiohttp_proxy_redirect_review_stays_open_for_rc() -> None:
     assert row["triage_status"] == "PENDING"
     assert (
         row["maintainer_decision"]
-        == "PENDING_DYNAMODB_TRANSPORT_SMOKE_AND_RC_ARTIFACT_EVIDENCE"
+        == "PENDING_EXACT_RC_ARTIFACT_EVIDENCE"
     )
     assert (
         row["release_gate"]
-        == "RC: verify patched DynamoDB transport and artifact evidence"
+        == "RC: verify exact DynamoDB profile artifact"
     )
 
 
