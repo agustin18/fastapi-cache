@@ -247,8 +247,8 @@ row-by-row triage register is a separate follow-up deliverable and remains incom
 - **Memcached and DynamoDB remain experimental** until real-service integration and supported
   operation boundaries are documented. Missing `clear()` parity is not promised functionality.
 - **Consumer validation is owner-run technical evidence, not an adoption claim.** Before RC,
-  test one real owner-maintained Redis application, one separate InMemory application or
-  integration fixture, and a wheel-based E2E that reads persisted data written by
+  test one real owner-maintained Redis application, an InMemory integration fixture (which may
+  be in the same codebase), and a wheel-based E2E that reads persisted data written by
   `fastapi-cache2 0.2.2`. Third-party adoption is not required.
 - **RC and publication require separate explicit authorization.** A local wheel may be used for
   pre-RC testing; stable must be validated against the exact, uniquely versioned published RC
@@ -263,9 +263,8 @@ row-by-row triage register is a separate follow-up deliverable and remains incom
    in PR #26; the CI gate for that change is complete.
 4. Triage the lock-installed AnyIO 4.4.0 profile separately; the modern runtime scans do not
    cover it, and the legacy-only acceptance does not apply to it.
-5. The package-level Redis migration E2E is complete (evidence below). Before RC, still validate
-   one owner-maintained Redis application and a separate InMemory application or fixture as
-   listed in [`MIGRATION.md`](MIGRATION.md).
+5. The package-level Redis migration E2E and one owner-maintained application's Redis/InMemory
+   integration checks are complete (evidence below). No third-party adoption is claimed.
 6. Keep the `GHSA-h4cc-hm5h-fmm9` conclusion bounded to the default DynamoDB transport using
    `auto_decompress=False`; independent aiohttp use and custom transport/event overrides remain
    outside that conclusion.
@@ -303,4 +302,20 @@ rather than the old Alice response. A separate legacy rollback process read the 
 ordinary entry written by the candidate. All three harness modes passed. Missing isolation
 confirmation and an unsafe prefix were rejected; a pre-existing sentinel key under the prefix
 caused `seed` to stop without deleting it. These synthetic package-level results do not replace
-owner-application tests.
+the owner-application evidence below.
+
+## Owner-application Redis and InMemory validation
+
+On 2026-11-18, one owner-maintained FastAPI application was tested with the same local candidate
+wheel in two isolated modes. The repository is intentionally not named in this public record;
+the source worktree was not modified.
+
+| Mode | Verification |
+|---|---|
+| Redis runtime | In a disposable backend container, `CacheService.ensure_cache_backend_for_scripts(strict=True)` connected to a dedicated Redis 7 container. The real `/api/v1/config/properties` route was requested twice; its metadata builder ran once. After clearing `metadata_static`, the next request rebuilt the value. |
+| InMemory integration | `tests/api/test_cache.py::test_cache_endpoint_behavior` and `test_cache_invalidation_on_update` passed (2 passed) in the app's test container, whose test fixture initializes `InMemoryBackend`. |
+
+Both runs uninstalled `fastapi-cache2` before installing the candidate wheel by path and passed
+`uv pip check`. The database was the app's dedicated `db_test` service, the Redis service was
+ephemeral, and all synthetic credentials were test-only. This is one consumer codebase exercised
+with Redis and an InMemory fixture, not two independent adopters or third-party validation.

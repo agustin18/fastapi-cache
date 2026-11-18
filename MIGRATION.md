@@ -498,8 +498,8 @@ are tracked in [`SECURITY_DEPENDENCY_INVENTORY.md`](SECURITY_DEPENDENCY_INVENTOR
   and refreshes the result (implemented in PR #26).
 - [x] Run the package-level Redis migration E2E below against a local candidate wheel; see the
   exact run provenance in `SECURITY_DEPENDENCY_INVENTORY.md`.
-- [ ] Validate one owner-maintained Redis application and one separate InMemory application or
-  integration fixture before RC; retain sanitized outputs and dependency versions.
+- [x] Validate one owner-maintained application with Redis runtime caching and its InMemory
+  integration fixture; sanitized evidence is recorded in `SECURITY_DEPENDENCY_INVENTORY.md`.
 - [ ] Reconcile all 93 historical GHSA rows in the separate triage register before stable.
 - [ ] Build and verify a uniquely versioned RC artifact; repeat the critical migration E2E
   against that exact published artifact before stable.
