@@ -14,15 +14,43 @@ normal success-path behavior. Bug fixes that change edge-case behavior are liste
 are covered by regression tests. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full
 contract.
 
-> **Status:** this guide describes the published `0.3.0b1` artifact and the target `0.3.0`
-> stable behavior. Stable `0.3.0` installs on Python `>=3.8,<3.14`; functional compatibility
-> for Python 3.8–3.10 is legacy-only, while security support is Python 3.11–3.13. `0.3.0b1`
-> keeps every behavior from `0.3.0a2` and adds an explicit second-`init()` contract: a second
-> `FastAPICache.init()` call raises `RuntimeError` unless you pass `force=True`. Call it once
-> at application startup (for example in the FastAPI `lifespan`), or call
-> `FastAPICache.reset()` before reconfiguring. See
-> [Second `init()` call](#second-init-call). Check the installed version before relying on a
-> behavior listed here.
+> **Release status:** `0.3.0b1` is published, while `0.3.0rc1`
+> is prepared on `stable` but is **not assumed to be published**. This guide
+> documents the target RC/stable behavior; check the installed artifact before
+> relying on a fix. The target range is Python `>=3.8,<3.14`; Python 3.8–3.10
+> are legacy functional-compatibility only, and security support is server-side
+> CPython 3.11–3.13.
+
+## Quick migration for GET, JSON and Redis/InMemory
+
+For ordinary GET/JSON endpoints with standalone Redis or InMemory and one
+startup initialization, keep the existing `fastapi_cache` imports, decorated
+functions and default key builder.
+
+1. **Inventory** your original version, backend, coder, custom key builder,
+   auth/session mechanism, namespace, `clear()` calls and repeated lifespan
+   initialization. Experimental backends have separate limits.
+2. **Replace the dependency** `fastapi-cache2` with `fastapi-cache-stable`
+   (including `[redis]` if used) and regenerate the **application's**
+   requirements/lockfile so a later install cannot restore the old package.
+3. **Install in a clean virtual environment**, only after your selected exact
+   version is available. The old and new distribution install the same
+   `fastapi_cache` module; never co-install them.
+4. **Invalidate sensitive legacy data before live traffic:** selectively
+   clear or rotate namespaces with old authenticated responses and old special
+   `_spec_type` entries where type restoration matters. Do not flush
+   unrelated Redis data. Ordinary entries can retain their keys and TTL.
+5. **Verify the real application** using the checklist below. At minimum,
+   anonymous MISS/HIT, authenticated bypass, headers/status, key-builder
+   behavior, cache invalidation and repeated startup must be checked.
+6. **Plan rollback:** returning to `fastapi-cache2==0.2.2` removes the new
+   default auth bypass. Do not reenable private endpoint caching on shared
+   keys; disable it or configure a safe identity-aware key builder.
+
+"Drop-in" means a tested common path, not universal zero-change compatibility.
+See [Behavior changes](#behavior-changes-in-030),
+[Application verification](#application-verification-before-traffic),
+and [Rollback](#rollback).
 
 ## Who should migrate
 
@@ -69,48 +97,59 @@ for Pydantic v1 models and annotations that cannot be represented by a Pydantic 
 
 ## Install
 
-`0.3.0b1` is a pre-release. Install the exact version:
+**Already published beta:** install `0.3.0b1` only if you explicitly want
+to test the historical beta:
 
 ```sh
-pip uninstall -y fastapi-cache2
-pip install "fastapi-cache-stable==0.3.0b1"
-# with extras:
-pip install "fastapi-cache-stable[redis]==0.3.0b1"
+python -m pip uninstall -y fastapi-cache2
+python -m pip install "fastapi-cache-stable[redis]==0.3.0b1"
 ```
 
-Do **not** install both distributions in the same environment: they provide the same
-`fastapi_cache` files. `pip check` may still pass because their distribution names and declared
-dependencies do not conflict; uninstalling `fastapi-cache2` after installing the fork can remove
-the shared import files. Always uninstall the old distribution first, then install and verify the
-fork in the same environment.
-
-Verify:
+**After the RC is actually published on PyPI**, use the exact candidate
+version in a **clean environment**, and update your application's dependency
+declaration and lockfile. Before publication this will correctly fail:
 
 ```sh
-python -c "import fastapi_cache; print(fastapi_cache.__version__)"
-python -c "from fastapi_cache import FastAPICache; print('ok')"
-```
-
-### Pre-release installation from TestPyPI
-
-Pre-releases are published to TestPyPI and PyPI. TestPyPI is a separate index and may not
-have all dependencies. To verify the exact artifact uploaded to TestPyPI, download it from
-that index and install the local wheel:
-
-```sh
-python -m pip download --no-deps --only-binary=:all: \
-  --index-url https://test.pypi.org/simple/ \
-  -d testpypi-dist \
-  "fastapi-cache-stable==0.3.0b1"
-
-python -m pip install testpypi-dist/*.whl
+python -m pip uninstall -y fastapi-cache2
+python -m pip install "fastapi-cache-stable[redis]==0.3.0rc1"
 python -m pip check
 python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 ```
 
-Dependencies are resolved from PyPI by the normal install of the wheel. TestPyPI is for
-validating the distribution, not for production. After that verification, the same version is
-published separately to PyPI.
+Omit `[redis]` for InMemory-only use. Never co-install `fastapi-cache2`
+and `fastapi-cache-stable`: both own `fastapi_cache`. Uninstall the old
+distribution **before** installing the fork. `pip check` alone does not
+detect that file ownership collision.
+
+### Verify the exact TestPyPI wheel after publication
+
+The commands below describe a **future verification step**; they do not
+claim the RC has been published on TestPyPI. Download **without dependencies**
+from TestPyPI, verify the SHA-256 against the release-approved wheel, then
+install the downloaded file in a clean environment:
+
+```sh
+python -m pip download --no-deps --only-binary=:all: \
+  --index-url https://test.pypi.org/simple/ \
+  -d testpypi-dist "fastapi-cache-stable==0.3.0rc1"
+
+python -m pip hash \
+  testpypi-dist/fastapi_cache_stable-0.3.0rc1-py3-none-any.whl
+# Compare the SHA-256 with the approved CI/release artifact.
+
+python -m pip uninstall -y fastapi-cache2
+python -m pip install \
+  testpypi-dist/fastapi_cache_stable-0.3.0rc1-py3-none-any.whl \
+  "redis==4.6.0"
+python -m pip check
+python -c "import fastapi_cache; print(fastapi_cache.__version__)"
+```
+
+The Redis client is pinned to the previously validated 4.6.0 profile for
+this demonstration; other dependencies resolve from normal PyPI.
+Avoid mixing index candidates with `--extra-index-url` when proving the
+identity of a TestPyPI artifact. Releasing the same version on PyPI
+requires separate validation and authorization.
 
 ## Compatibility matrix
 
@@ -384,6 +423,29 @@ coder; the library does not delete data automatically.
 7. **Observe.** Compare HIT/MISS, latency, errors and memory with your baseline.
 8. **Roll back if needed.** See below.
 
+## Application verification before traffic
+
+The synthetic Redis migration E2E and the one owner-maintained Redis/InMemory
+application are useful evidence, **not proof about all downstream projects**.
+Compare behavior using the exact published RC wheel once it is available.
+
+| Scenario | What to verify |
+|---|---|
+| Anonymous GET + JSON | First request MISS; repeated request HIT; correct body, status and headers. |
+| Different args/headers | Values that affect the response do not share a key. |
+| `Depends()` with per-request DB objects | Check that fresh session `repr()` values do not cause permanent cache misses; use a custom safe builder where necessary. |
+| Authorization / Cookie | Default bypass, no legacy private-entry reuse; review other auth mechanisms such as `X-API-Key`. |
+| Response/coder | Typed results, error/redirect/streaming responses, `Set-Cookie`, `no-store`, background tasks and custom coders. |
+| Invalidation | `clear(key=...)` deletes one full key; namespace operations respect boundaries. |
+| Startup/shutdown | One `init()` per process, close/reset backend before repeated lifespan entry. |
+| OpenAPI / pagination | Check the generated schema and any `fastapi-pagination` integration: upstream [#557](https://github.com/long2ice/fastapi-cache/issues/557) is **not** proven fixed. |
+
+The default key-builder algorithm is unchanged: it uses module/function
+identity and `repr()` of arguments. Never omit user/tenant/permission values
+from a cache key merely to increase hits. The upstream
+[`exclude_params` proposal #574](https://github.com/long2ice/fastapi-cache/pull/574)
+has **not** been implemented in `0.3.0rc1`.
+
 ## Rollback
 
 ```sh
@@ -510,7 +572,7 @@ are tracked in [`SECURITY_DEPENDENCY_INVENTORY.md`](SECURITY_DEPENDENCY_INVENTOR
   exact run provenance in `SECURITY_DEPENDENCY_INVENTORY.md`.
 - [x] Validate one owner-maintained application with Redis runtime caching and its InMemory
   integration fixture; sanitized evidence is recorded in `SECURITY_DEPENDENCY_INVENTORY.md`.
-- [ ] Reconcile all 93 historical GHSA rows in the separate triage register before stable.
+- [ ] Review the 94 GHSA register rows (93 historical and one current-only) to the appropriate release stage before stable; PENDING does not mean the GitHub alert remains open.
 - [ ] Build and verify a uniquely versioned RC artifact; repeat the critical migration E2E
   against that exact published artifact before stable.
 
