@@ -292,6 +292,10 @@ You can provide your own by passing a key builder in to `@cache()`, or to
 For example, if you wanted to use the request method, URL and query string as a cache key instead of the function identifier you could use:
 
 ```python
+from starlette.requests import Request
+from starlette.responses import Response
+
+
 def request_key_builder(
     func,
     namespace: str = "",
