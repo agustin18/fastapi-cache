@@ -14,7 +14,9 @@
 > Pydantic v2, the `clear()` fixes, the auth/privacy bypass, the InMemory
 > `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
 > `_spec_type` namespacing, the non-JSON response bypass, and an explicit second
-> `FastAPICache.init()` call that raises unless you pass `force=True`. See
+> `FastAPICache.init()` call that raises unless you pass `force=True`. Memcached and DynamoDB
+> remain experimental. For the target stable `0.3.0`, DynamoDB is supported only on Python
+> `>=3.10`; the already-published `0.3.0b1` artifact and metadata are unchanged. See
 > [MIGRATION.md](MIGRATION.md).
 
 > **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
@@ -48,7 +50,11 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 - FastAPI
 - `redis` when using `RedisBackend`.
 - `memcache` when using `MemcacheBackend`.
-- `aiobotocore` when using `DynamoBackend`.
+- For target stable `0.3.0`, `aiobotocore` and `aiohttp>=3.14.4` when using `DynamoBackend` on
+  Python `>=3.10`.
+- The target stable `0.3.0` does not install DynamoDB client dependencies on Python 3.8/3.9;
+  Redis and InMemory remain the legacy backend options. The published `0.3.0b1` metadata is
+  unchanged and is not recommended for production.
 
 ## Install
 

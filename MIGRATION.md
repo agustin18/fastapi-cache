@@ -459,6 +459,14 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 - Stable `0.3.0` installs on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy functional
   compatibility only and are excluded from stable security support. Python 3.11–3.13 are the
   security-supported matrix. Python 3.14 awaits a full CI matrix.
+- For the target stable `0.3.0`, the experimental DynamoDB extra is supported only on Python
+  `>=3.10` and requires the patched aiohttp line (`>=3.14.4`). On Python 3.8/3.9,
+  `fastapi-cache-stable[dynamodb]` does not install aiobotocore or aiohttp; Redis and InMemory
+  remain the legacy backend options. The published `0.3.0b1` artifact remains unchanged.
+- The modern Poetry lock profile selects AnyIO `>=4.14.2` on Python `>=3.10`; the legacy
+  Python 3.8/3.9 lock profile still resolves an older AnyIO because no fixed compatible release
+  is available there. That lock-installed legacy profile remains separately pending review and
+  is not covered by the runtime-only residual acceptance.
 - The 24-month `1.x` support window in `SUPPORT.md` is conditional on the `1.x` release and
   a co-maintainer being in place; no multi-year promise is active today.
 

@@ -16,6 +16,9 @@ fastapi-cache2.
   be mitigated before release. If it applies only to a specific application-enabled feature or
   optional backend, the trigger and residual risk must be documented and explicitly accepted;
   EOL status alone is not a disposition.
+- For the target stable `0.3.0`, DynamoDB is an experimental optional backend available only on
+  Python `>=3.10`; Python 3.8/3.9 legacy compatibility is limited to Redis/InMemory and the
+  documented core APIs.
 - Python 3.14 remains outside the `0.3.x` metadata range until the full functional matrix passes.
 - `1.x` (planned): if and when `1.0.0` is released with a co-maintainer in place, security
   and critical correctness fixes for 24 months after that release. This is a conditional
