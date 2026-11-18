@@ -133,15 +133,15 @@ accepted.
 These dispositions should be reviewed by the external auditor. They do not waive a GHSA,
 replace the remaining 93-entry triage, or authorize release.
 
-## Candidate recheck after Poetry main-only correction (2026-11-17)
+## Historical candidate recheck after Poetry main-only correction (2026-11-17)
 
 The dependency-resolution, local-suite and wheel checks in this section were run against
-candidate commit `1666afaf0e52811354abeb82f61e5c45d6a95ee2`, before the later inventory,
-lifespan and audit-brief documentation commits. Those later commits did not change
-`pyproject.toml` or `poetry.lock`, but the lifespan follow-up added a regression test and changed
-documentation included in the distribution. No artifact built from the current PR head has been
-published. The current head and its CI status are available from [PR #25](https://github.com/agustin18/fastapi-cache/pull/25);
-do not treat the local wheel hash below as the wheel for the current head.
+candidate commit `1666afaf0e52811354abeb82f61e5c45d6a95ee2`, before the later security inventory,
+lifespan and migration-documentation follow-ups. Those later commits did not change
+`pyproject.toml` or `poetry.lock`; the lifespan follow-up added an example/test regression but no
+`fastapi_cache` runtime module change. The wheel hash below is historical evidence for the
+`1666afa` build, not the post-merge package-level E2E wheel recorded later in this file. PR #25
+was subsequently merged as `1ff810c`; no stable artifact has been published.
 
 The initial dev-only `time-machine` correction above did not make a `--only main` install
 consistent. That was reproduced on Python 3.8 and 3.12: both installed Pendulum 3.0.0 without
@@ -191,12 +191,12 @@ dependency metadata and lock by interpreter instead:
   pending IDs now have preliminary source-based dispositions in the table above; the original
   CSV remains unchanged and the remaining medium/low rows still require review. No residual risk
   is accepted by the auditor on behalf of the maintainer.
-- At the time of the previous CI snapshot, all 23 checks passed on head `a631c1e`, including
-  packaging, CodeQL, legacy matrices and Python 3.11–3.13 security audits. The subsequent PR
-  updates are documentation-only; the `a631c1e` regression test remains in the current source.
-  Check the [live PR checks](https://github.com/agustin18/fastapi-cache/pull/25/checks) for
-  status on the exact head under review. The local suite and wheel checks above were on the
-  earlier `1666afa` candidate. No merge or stable artifact was published.
+- At the later CI snapshot on head `a631c1e`, all 23 checks passed, including packaging, CodeQL,
+  legacy matrices and Python 3.11–3.13 security audits. The `a631c1e` lifespan regression was
+  covered by that run. Documentation follow-ups came later, and PR #25 eventually merged as
+  `1ff810c`. The local suite and wheel checks above remain scoped to the earlier `1666afa`
+  candidate; use the package-level E2E evidence below for the post-merge wheel run. No stable
+  artifact has been published.
 
 ## Direct-dependency scope notes
 
@@ -247,8 +247,8 @@ row-by-row triage register is a separate follow-up deliverable and remains incom
 - **Memcached and DynamoDB remain experimental** until real-service integration and supported
   operation boundaries are documented. Missing `clear()` parity is not promised functionality.
 - **Consumer validation is owner-run technical evidence, not an adoption claim.** Before RC,
-  test one real owner-maintained Redis application, one separate InMemory application or
-  integration fixture, and a wheel-based E2E that reads persisted data written by
+  test one real owner-maintained Redis application, an InMemory integration fixture (which may
+  be in the same codebase), and a wheel-based E2E that reads persisted data written by
   `fastapi-cache2 0.2.2`. Third-party adoption is not required.
 - **RC and publication require separate explicit authorization.** A local wheel may be used for
   pre-RC testing; stable must be validated against the exact, uniquely versioned published RC
@@ -259,12 +259,12 @@ row-by-row triage register is a separate follow-up deliverable and remains incom
 1. Complete the 93-row triage register under the stage policy above; the CSV is a historical
    snapshot, and unlisted findings remain pending.
 2. Verify mitigation or exclude affected legacy DynamoDB configurations before RC.
-3. Request `Cache-Control` token parsing and regression tests are implemented in PR #26; require
-   green CI and merge before RC.
+3. Request `Cache-Control` token parsing and regression tests were implemented, audited and merged
+   in PR #26; the CI gate for that change is complete.
 4. Triage the lock-installed AnyIO 4.4.0 profile separately; the modern runtime scans do not
    cover it, and the legacy-only acceptance does not apply to it.
-5. Complete the owner-application and persisted-data migration E2E checks listed in
-   [`MIGRATION.md`](MIGRATION.md).
+5. The package-level Redis migration E2E and one owner-maintained application's Redis/InMemory
+   integration checks are complete (evidence below). No third-party adoption is claimed.
 6. Keep the `GHSA-h4cc-hm5h-fmm9` conclusion bounded to the default DynamoDB transport using
    `auto_decompress=False`; independent aiohttp use and custom transport/event overrides remain
    outside that conclusion.
@@ -276,3 +276,46 @@ resolution, includes the targeted h11 0.16.0/httpcore 1.0.9 remediation, and res
 per Python version with time-machine only for the Python 3.8 CPython path. It does not upgrade
 the full test-tool/dependency set. Stable remains NO-GO until the release work above is complete;
 the published `0.3.0b1` artifact is unchanged.
+
+## Package-level Redis migration E2E evidence
+
+The manual harness in `tests/migration_redis_e2e.py` passed on 2026-11-17 using an isolated
+Redis 7 container and a unique prefix; it did not flush the database. The harness required the
+operator isolation confirmation, rejected unsafe prefixes and existing keys, and preserved an
+unrelated namespace witness during targeted cleanup. The candidate wheel was installed by path in
+a fresh environment; the published PyPI artifact was not used or changed.
+
+| Artifact/runtime | Evidence |
+|---|---|
+| Candidate source commit used for wheel | `38f9b4bb1856cff26a0c34de04940c63723dce97` |
+| Candidate wheel | `fastapi-cache-stable 0.3.0b1`, SHA-256 `c614a2368444098dbf0c57de27df70f8639fce509246efa7b15c1f6e5002e880` |
+| Legacy writer/rollback | `fastapi-cache2 0.2.2` |
+| Python and dependencies | Python 3.11.15, FastAPI 0.111.1, Pydantic 2.8.2, redis-py 4.6.0, HTTPX 0.27.0 |
+| Redis server | `redis:7-alpine` |
+
+The legacy process wrote ordinary JSON, a synthetic authenticated response, and a special-type
+entry; the harness confirmed the legacy Alice/Bob shared-key behavior and the `_spec_type` marker.
+The candidate process read the ordinary entry as a HIT with positive TTL, cleared only the private
+and special-type namespaces, preserved the unrelated witness key and TTL, bypassed caching for an
+authenticated Bob request, recomputed and refreshed `no-cache`, and served an anonymous MISS
+rather than the old Alice response. A separate legacy rollback process read the compatible
+ordinary entry written by the candidate. All three harness modes passed. Missing isolation
+confirmation and an unsafe prefix were rejected; a pre-existing sentinel key under the prefix
+caused `seed` to stop without deleting it. These synthetic package-level results do not replace
+the owner-application evidence below.
+
+## Owner-application Redis and InMemory validation
+
+On 2026-11-18, one owner-maintained FastAPI application was tested with the same local candidate
+wheel in two isolated modes. The repository is intentionally not named in this public record;
+the source worktree was not modified.
+
+| Mode | Verification |
+|---|---|
+| Redis runtime | In a disposable backend container, `CacheService.ensure_cache_backend_for_scripts(strict=True)` connected to a dedicated Redis 7 container. The real `/api/v1/config/properties` route was requested twice; its metadata builder ran once. After clearing `metadata_static`, the next request rebuilt the value. |
+| InMemory integration | `tests/api/test_cache.py::test_cache_endpoint_behavior` and `test_cache_invalidation_on_update` passed (2 passed) in the app's test container, whose test fixture initializes `InMemoryBackend`. |
+
+Both runs uninstalled `fastapi-cache2` before installing the candidate wheel by path and passed
+`uv pip check`. The database was the app's dedicated `db_test` service, the Redis service was
+ephemeral, and all synthetic credentials were test-only. This is one consumer codebase exercised
+with Redis and an InMemory fixture, not two independent adopters or third-party validation.
