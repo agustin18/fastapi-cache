@@ -3,7 +3,8 @@
 > **Community-maintained stable fork of fastapi-cache2.**
 > The latest published release is beta `0.3.0b1`, based on `v0.2.2`; this branch prepares an
 > unpublished `0.3.0rc1`. Neither is recommended for production before the release gates pass.
-> The `fastapi_cache` import and public API are unchanged.
+> The `fastapi_cache` import and documented core API signatures are preserved;
+> intentional behavior changes are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
 > See [COMPATIBILITY.md](COMPATIBILITY.md), [MIGRATION.md](MIGRATION.md), [SUPPORT.md](SUPPORT.md),
 > [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
 > The upcoming stable `0.3.0` release will install on Python `>=3.8,<3.14`. Python 3.8–3.10
@@ -61,7 +62,9 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 ## Install
 
-`0.3.0b1` is a pre-release. Install the exact version:
+`0.3.0b1` is the latest published beta referenced here. The repository prepares an
+**unpublished** `0.3.0rc1`; do not assume it is available on TestPyPI/PyPI yet.
+These commands install the published beta:
 
 ```shell
 > pip install "fastapi-cache-stable==0.3.0b1"
@@ -85,54 +88,76 @@ or
 > pip install "fastapi-cache-stable[dynamodb]==0.3.0b1"
 ```
 
+## Migrating from fastapi-cache2
+
+The intended low-friction upgrade is **`fastapi-cache2==0.2.2` →
+`fastapi-cache-stable`**, keeping your existing `from fastapi_cache ...`
+imports and usual `@cache(...)` calls. For GET/JSON with standalone Redis
+or InMemory, the default key algorithm is unchanged. **Uninstall the old
+distribution first:** the two packages install the same Python module and
+must not coexist. Update the dependency in your application's lockfile.
+
+This is not a promise of identical behavior in every case: authenticated
+requests bypass cache by default, second `init()` calls now raise, and
+`clear(key=...)` is intentionally narrower. Old private/special Redis
+entries may require **targeted** invalidation. See the
+[quick migration checklist](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md#quick-migration-for-get-json-and-redisinmemory),
+verification scenarios and rollback instructions.
+
 ## Usage
 
 ### Quick Start
 
+Redis 7 / redis-py 4.x example. Initialize once per application lifespan,
+then close owned resources and reset the process-global cache configuration
+on teardown. Avoid routine use of `force=True`.
+
 ```python
-from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
 from fastapi import FastAPI
-from starlette.requests import Request
-from starlette.responses import Response
+from redis import asyncio as aioredis
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
-from redis import asyncio as aioredis
-
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    redis = aioredis.from_url("redis://localhost")
-    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache", force=True)
-    yield
+    redis_client = aioredis.from_url(
+        "redis://localhost:6379/0", decode_responses=False
+    )
+    FastAPICache.init(RedisBackend(redis_client), prefix="fastapi-cache")
+    try:
+        yield
+    finally:
+        FastAPICache.reset()
+        await redis_client.close()  # redis-py 4.x
 
 
 app = FastAPI(lifespan=lifespan)
 
 
-@cache()
-async def get_cache():
-    return 1
-
-
 @app.get("/")
 @cache(expire=60)
 async def index():
-    return dict(hello="world")
+    return {"hello": "world"}
 ```
+
+For a process-local test fixture, use
+`FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")`
+after importing `InMemoryBackend` from
+`fastapi_cache.backends.inmemory`. InMemory data is not shared across workers.
 
 ### Initialization
 
-First you must call `FastAPICache.init` during FastAPI startup; this is where you set global configuration.
-
-`init()` runs once per process. A second call raises `RuntimeError` instead of silently
-keeping the first configuration: call `FastAPICache.reset()` before re-initializing, or pass
-`force=True` to replace it explicitly. Lifespan handlers run on every startup, so pass
-`force=True` there if the handler may run more than once in the same process.
+Call `FastAPICache.init()` once per process at application startup. A
+second call raises `RuntimeError`; test fixtures that re-enter a lifespan
+must close owned backend resources and call `FastAPICache.reset()` during
+teardown. `force=True` permits **deliberate** replacement but does not
+close the old connection pool or isolate multiple FastAPI apps in one process.
 
 ### Use the `@cache` decorator
 
@@ -146,8 +171,10 @@ Parameter | type | default | description
 `coder` | `Coder` | `JsonCoder` | which coder to use, e.g. `JsonCoder`
 `key_builder` | `KeyBuilder` callable | `default_key_builder` | which key builder to use
 `injected_dependency_namespace` | `str` | `__fastapi_cache` | prefix for injected dependency keywords.
-`cache_status_header` | `str` | `X-FastAPI-Cache` | Name for the header on the response indicating if the request was served from cache; either `HIT` or `MISS`.
 `cache_authenticated` | `bool` | `None` | per-endpoint override for caching authenticated requests; global default is `False`; requires an identity-aware `key_builder`.
+
+The `cache_status_header` argument belongs to `FastAPICache.init()`, **not**
+`@cache()`. It controls the `HIT` / `MISS` response header.
 
 You can also use the `@cache` decorator on regular functions to cache their result.
 
@@ -265,15 +292,21 @@ You can provide your own by passing a key builder in to `@cache()`, or to
 For example, if you wanted to use the request method, URL and query string as a cache key instead of the function identifier you could use:
 
 ```python
+from starlette.requests import Request
+from starlette.responses import Response
+
+
 def request_key_builder(
     func,
     namespace: str = "",
     *,
     request: Request = None,
     response: Response = None,
-    *args,
-    **kwargs,
+    args=(),
+    kwargs=None,
 ):
+    if request is None:
+        raise ValueError("This builder requires an HTTP Request")
     return ":".join([
         namespace,
         request.method.lower(),
@@ -287,6 +320,12 @@ def request_key_builder(
 async def index():
     return dict(hello="world")
 ```
+
+This request-URL builder is appropriate for **public** data only. A custom
+builder must include *every* value that affects the response, particularly
+validated identity, tenant and permissions when authenticated caching is
+explicitly enabled. DB session objects with changing `repr()` values can
+otherwise produce perpetual misses; see the migration checklist.
 
 ### Authenticated requests
 

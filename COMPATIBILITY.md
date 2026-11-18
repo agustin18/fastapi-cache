@@ -4,8 +4,9 @@
 [`fastapi-cache2`](https://pypi.org/project/fastapi-cache2/). This document defines what
 "drop-in" means for this project and what we promise to keep stable.
 
-This contract describes the target stable `0.3.0` release. The already-published `0.3.0b1`
-artifact and metadata remain unchanged.
+This contract describes the target stable `0.3.0` and the prepared
+`0.3.0rc1` candidate; it does **not** claim the RC has been published.
+The existing `0.3.0b1` artifact and metadata remain unchanged.
 
 ## What "drop-in" means
 
@@ -306,6 +307,30 @@ We treat a compatibility break as a bug:
 2. Document the break and the rollback path in `MIGRATION.md`.
 3. Publish a patch release with a regression test.
 4. If the break is unavoidable, announce it before the release and provide a migration path.
+
+## Drop-in limits and inherited integration gaps
+
+For GET/JSON with standalone Redis or InMemory and the documented default
+key builder, normal imports and signatures remain. That is not universal
+byte-for-byte behavior compatibility:
+
+- Authenticated `Authorization`/`Cookie` requests now bypass the cache;
+  legacy private entries may need selective invalidation.
+- Repeated `init()` now raises; `clear(key=...)` no longer has legacy
+  broad namespace effects.
+- The original key builder still hashes `repr(args)`/`repr(kwargs)`.
+  Injected session objects whose representations change can prevent cache
+  hits. The upstream [`exclude_params` PR #574](https://github.com/long2ice/fastapi-cache/pull/574)
+  is not implemented. Do not remove identity-sensitive fields from keys.
+- `fastapi-pagination` integration remains unverified
+  ([upstream issue #557](https://github.com/long2ice/fastapi-cache/issues/557)).
+  Complete OpenAPI/`response_model` parity remains out of scope
+  ([upstream issue #384](https://github.com/long2ice/fastapi-cache/issues/384)).
+- redis-py 5/6, complete Redis Cluster namespace clear and production parity
+  for experimental Memcached/DynamoDB are not guaranteed.
+
+These are support boundaries, not assertions that every combination fails.
+See [application verification](MIGRATION.md#application-verification-before-traffic).
 
 ## Not covered by this contract
 
