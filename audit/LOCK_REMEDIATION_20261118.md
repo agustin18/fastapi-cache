@@ -20,7 +20,7 @@ constitute a maintainer disposition for any GHSA.
 
 ## Security comparison (snapshot, NOT a fresh Dependabot API count)
 
-The committed `DEPENDABOT_ALERTS_20261118T165114Z.csv` has 42 open
+The archived [`DEPENDABOT_ALERTS_20261118T165114Z.csv`](security/DEPENDABOT_ALERTS_20261118T165114Z.csv) has 42 open
 alerts in `poetry.lock`. The pre-update lock included older FastAPI,
 Starlette, urllib3, Jinja2 and tooling.
 
@@ -64,7 +64,7 @@ The final lock keeps a few older variants specifically for EOL Python.
 - [ ] Clean installed-wheel audits on Python 3.11–3.13, with complete
   dependency inventory and package identity.
 - [ ] Independent GHSA dispositions per release stage in
-  [`SECURITY_ADVISORY_TRIAGE.csv`](../SECURITY_ADVISORY_TRIAGE.csv).
+  [`SECURITY_ADVISORY_TRIAGE.csv`](security/SECURITY_ADVISORY_TRIAGE.csv).
   The decision to accept legacy residual vulnerabilities is distinct from
   marking Dependabot warnings fixed.
 - [ ] If code or package metadata change after `0.3.0rc1`, release and

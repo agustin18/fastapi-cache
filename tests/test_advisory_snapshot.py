@@ -741,7 +741,10 @@ def test_reconciliation_replaces_generated_placeholders_with_new_disposition() -
 
 def test_every_historical_advisory_has_a_preliminary_disposition() -> None:
     historical_path = (
-        Path(__file__).resolve().parents[1] / "DEPENDABOT_ALERTS_2026-11-16.csv"
+        Path(__file__).resolve().parents[1]
+        / "audit"
+        / "security"
+        / "DEPENDABOT_ALERTS_2026-11-16.csv"
     )
     with historical_path.open(encoding="utf-8-sig", newline="") as source:
         historical = list(csv.DictReader(source))

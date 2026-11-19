@@ -25,3 +25,11 @@ def test_release_checklist_retains_version_independent_provenance() -> None:
         ), f"missing verified {artifact} hash"
     assert "pypi.org/project/fastapi-cache-stable/" in contents
     assert "Before stable promotion" in contents
+
+
+def test_security_evidence_is_archived_outside_root() -> None:
+    evidence = ROOT / "audit" / "security"
+    assert (evidence / "SECURITY_ADVISORY_TRIAGE.csv").is_file()
+    assert (evidence / "SECURITY_DEPENDENCY_INVENTORY.md").is_file()
+    assert (evidence / "DEPENDABOT_ALERTS_2026-11-16.csv").is_file()
+    assert not list(ROOT.glob("DEPENDABOT_ALERTS_*.csv"))

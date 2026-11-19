@@ -27,7 +27,8 @@ from typing import (
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REPOSITORY = "agustin18/fastapi-cache"
-HISTORICAL_SNAPSHOT = REPOSITORY_ROOT / "DEPENDABOT_ALERTS_2026-11-16.csv"
+SECURITY_EVIDENCE_DIR = REPOSITORY_ROOT / "audit" / "security"
+HISTORICAL_SNAPSHOT = SECURITY_EVIDENCE_DIR / "DEPENDABOT_ALERTS_2026-11-16.csv"
 
 PRELIMINARY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
     "GHSA-82r6-8w77-94w6": {
@@ -1098,7 +1099,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository", default=DEFAULT_REPOSITORY)
     parser.add_argument("--historical", type=Path, default=HISTORICAL_SNAPSHOT)
-    parser.add_argument("--output-dir", type=Path, default=REPOSITORY_ROOT)
+    parser.add_argument("--output-dir", type=Path, default=SECURITY_EVIDENCE_DIR)
     parser.add_argument(
         "--current-snapshot",
         type=Path,
