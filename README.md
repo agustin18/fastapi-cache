@@ -2,11 +2,11 @@
 
 > Community-maintained fork of [fastapi-cache2](https://pypi.org/project/fastapi-cache2/).
 > The Python import stays `fastapi_cache`; intentional safety/behavior changes
-> are described in [MIGRATION.md](MIGRATION.md).
+> are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
 >
 > **Current releases:** [PyPI](https://pypi.org/project/fastapi-cache-stable/) ·
-> [CHANGELOG](CHANGELOG.md) · [Compatibility](COMPATIBILITY.md) ·
-> [Support](SUPPORT.md) · [Stable release gates](RELEASE_CHECKLIST.md).
+> [CHANGELOG](https://github.com/agustin18/fastapi-cache/blob/stable/CHANGELOG.md) · [Compatibility](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md) ·
+> [Support](https://github.com/agustin18/fastapi-cache/blob/stable/SUPPORT.md) · [Stable release gates](https://github.com/agustin18/fastapi-cache/blob/stable/RELEASE_CHECKLIST.md).
 > Evaluate pre-releases independently before production deployment.
 >
 > Installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has
@@ -38,7 +38,7 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 - FastAPI with a compatible Python version.
 - Redis standalone verified with Redis 7 and redis-py 4.6.0 (redis-py 4.x).
 - DynamoDB client extra requires Python 3.10+ and patched aiohttp.
-- See [COMPATIBILITY.md](COMPATIBILITY.md) before using optional backends.
+- See [COMPATIBILITY.md](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md) before using optional backends.
 
 ## Install
 
