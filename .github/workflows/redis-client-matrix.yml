@@ -25,8 +25,8 @@ jobs:
     name: redis-py ${{ matrix.client }} / Py ${{ matrix.python }} / Redis ${{ matrix.server }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    # Exploratory evidence cannot redefine the published 4.x release gate.
-    continue-on-error: ${{ matrix.experimental }}
+    # Even exploratory jobs fail visibly; a green run must mean tests passed.
+    # Their success is research evidence, not an expanded published contract.
     strategy:
       fail-fast: false
       matrix:
