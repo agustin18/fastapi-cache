@@ -33,3 +33,13 @@ def test_security_evidence_is_archived_outside_root() -> None:
     assert (evidence / "SECURITY_DEPENDENCY_INVENTORY.md").is_file()
     assert (evidence / "DEPENDABOT_ALERTS_2026-11-16.csv").is_file()
     assert not list(ROOT.glob("DEPENDABOT_ALERTS_*.csv"))
+
+
+def test_redis_example_does_not_expose_working_directory_as_static() -> None:
+    # The HTML template has no static assets. Serving "." could expose source
+    # and configuration files and activate legacy Starlette FileResponse paths.
+    example = (ROOT / "examples" / "redis" / "main.py").read_text(
+        encoding="utf-8"
+    )
+    assert "StaticFiles" not in example
+    assert "app.mount(" not in example

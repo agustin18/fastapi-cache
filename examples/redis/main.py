@@ -8,7 +8,6 @@ import redis.asyncio as redis
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
@@ -38,13 +37,6 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(lifespan=lifespan)
 
-# On Windows, verify Starlette includes the GHSA-wqp7-x3pw-xc5r fix before using StaticFiles.
-# Otherwise do not run this example with outbound SMB access.
-app.mount(
-    path="/static",
-    app=StaticFiles(directory="./"),
-    name="static",
-)
 templates = Jinja2Templates(directory="./")
 ret = 0
 

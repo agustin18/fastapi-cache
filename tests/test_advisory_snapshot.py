@@ -991,3 +991,14 @@ def test_adjudicated_transitive_boundaries_keep_distinct_classifications() -> (
     pool_manager = PRELIMINARY_DISPOSITIONS["GHSA-pq67-6m6q-mj2v"]
     assert pool_manager["preliminary_disposition"] == "NOT_APPLICABLE"
     assert "runtime/transitive" in pool_manager["profile_scope"]
+
+
+def test_range_header_starlette_ghsa_has_explicit_pending_scope() -> None:
+    # Do not silently classify a new, consumer-conditional advisory as fixed.
+    from scripts.reconcile_dependabot_alerts import CURRENT_ONLY_DISPOSITIONS
+
+    disposition = CURRENT_ONLY_DISPOSITIONS["GHSA-7f5h-v6xp-fcq8"]
+    assert disposition["preliminary_disposition"] == "APPLICATION_CONDITIONAL"
+    assert disposition["maintainer_decision"].startswith("PENDING_")
+    assert "0.44.0" in disposition["profile_scope"]
+    assert "triage_status" not in disposition
