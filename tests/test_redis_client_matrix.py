@@ -67,7 +67,7 @@ def test_binary_ttl_pipeline_errors(protocol: Optional[int]) -> None:
             await client.flushdb()
             backend = RedisBackend(client)
             key = "matrix:binary"
-            raw = b"\\x00\\xff\\x80payload"
+            raw = bytes((0, 255, 128)) + b"payload"
             await backend.set(key, raw, expire=60)
             ttl, data = await backend.get_with_ttl(key)
             assert isinstance(ttl, int) and 0 < ttl <= 60
