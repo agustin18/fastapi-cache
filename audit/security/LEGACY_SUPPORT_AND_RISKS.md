@@ -26,10 +26,11 @@ risk can exist regardless of which cache distribution it chooses.**
 
 It is **not correct** to claim that the two cache packages always install
 identical or equally vulnerable dependencies. Each has its own requirement
-ranges, extras and resolver result. For example, the upstream `redis` extra
-uses `redis ^5.0.8`, while `fastapi-cache-stable 0.3.x` currently tests
-`redis ^4.2.0rc1` (redis-py 4.6.0). Redis-py 5/6 support is planned work,
-not a verified drop-in promise. Comparing two installations requires inspecting
+ranges, extras and resolver result. For example, the **published** upstream `fastapi-cache2==0.2.2`
+uses `redis ^4.2.0rc1`, the **same** client range as this fork's `0.3.x`
+(which verifies redis-py 4.6.0). A later, **unreleased** upstream `main`
+change uses `redis ^5.0.8`. Redis-py 5/6 support is planned work, not a
+verified promise for either published package. Comparing two installations requires inspecting
 their **actual installed versions and the application's lockfile**.
 
 ## Known legacy advisory examples

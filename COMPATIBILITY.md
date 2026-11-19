@@ -167,9 +167,11 @@ vulnerabilities. Neither an installation on EOL Python nor a switch from
 `fastapi-cache2` **automatically fixes** Starlette, AnyIO, urllib3 or
 any unrelated vulnerability. The two distributions may resolve different
 dependency graphs; only individual installed versions and reachable code
-paths establish exposure. The upstream `redis` optional dependency uses
-redis-py 5.x, whereas `0.3.x` of this fork currently verifies redis-py 4.6.0;
-projects requiring redis-py 5/6 must not assume a drop-in resolver match.
+paths establish exposure. The **released** upstream `fastapi-cache2==0.2.2` and this fork
+both declare `redis ^4.2.0rc1` (redis-py 4.x), and this fork verifies
+redis-py 4.6.0. Upstream `main` was later updated to `redis ^5.0.8`, but
+those unreleased source changes do not constitute published compatibility.
+Projects requiring redis-py 5/6 must not assume they are supported yet.
 
 See [Legacy support and known GHSA](audit/security/LEGACY_SUPPORT_AND_RISKS.md)
 and [SECURITY.md](SECURITY.md). **Use Python 3.11–3.13 and patched

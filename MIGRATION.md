@@ -69,11 +69,12 @@ Starlette 0.44.0 with known conditional vulnerabilities. Check
 [legacy advisory guide](audit/security/LEGACY_SUPPORT_AND_RISKS.md) before
 deciding whether to remain on these interpreters.
 
-**Important Redis constraint difference:** upstream `fastapi-cache2`
-uses redis-py 5.x as an optional extra; this fork's verified `0.3.x`
-Redis extra uses redis-py 4.x. A deployment already requiring redis-py 5/6
-cannot assume an unchanged dependency graph and must resolve compatibility
-before switching; this is roadmap work.
+**Redis client versions:** the actually **published** `fastapi-cache2==0.2.2`
+and this fork both declare `redis ^4.2.0rc1` (redis-py 4.x). The upstream
+repository's later, *unreleased* `main` branch switched to redis-py 5.x.
+This fork retains the published legacy constraint and verifies redis-py 4.6.0.
+A deployment already requiring redis-py 5/6 must resolve that separately;
+newer Redis client support is roadmap work.
 
 ## Who should migrate
 

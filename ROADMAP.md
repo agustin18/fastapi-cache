@@ -11,7 +11,7 @@ fresh RC.
 |---|---|---|---|
 | P0 / 0.3.0 | Final security signoff, fresh Dependabot review, final wheel scan and clean-install evidence | Clear documented first stable contract | No new runtime behavior |
 | P1 / 0.3.1 | Fast regression fixes, diagnostic events/logging, clearer migration examples | Build trust with first users | Backward-compatible patches |
-| **P1 / 0.4.x** | **Redis-py 5/6 compatibility matrix** | Upstream 0.2.2 uses 5.x, fork 0.3.x tests 4.x; currently a material migration gap | Opt-in/version-range expansion only after Redis tests |
+| **P1 / 0.4.x** | **Redis-py 5/6 compatibility matrix** | Matches the newer **unreleased upstream main** client range; supports consumers with modern Redis client constraints. The published upstream 0.2.2 and fork 0.3.x both use 4.x | Opt-in/version-range expansion only after Redis tests |
 | **P1 / 0.4.x** | Safe configurable key-builder parameter exclusion | Avoid volatile injected session objects causing permanent cache MISS | Opt-in, never exclude identity/tenant dimensions automatically |
 | P1 / 0.4.x | Observability for MISS/HIT/BYPASS/errors and benchmarks | Real performance comparisons and production diagnosis | No breaking defaults |
 | P2 / 0.5.x | Stampede prevention with single-flight/local and Redis locking | Avoid duplicate expensive recomputations under concurrency | Explicitly opt in; TTL/lock expiry/failure tests |

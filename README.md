@@ -37,8 +37,10 @@ dependencies whenever possible.**
 A vulnerability found in a package shared by this fork and the original
 `fastapi-cache2` may affect *both* if a consumer resolves the same vulnerable
 version and invokes the affected code. They do **not** necessarily install
-the same dependency versions. In particular, upstream `fastapi-cache2`
-uses redis-py 5.x whereas this fork's tested `0.3.x` Redis extra is 4.x.
+the same dependency versions. In particular, the **published `fastapi-cache2==0.2.2`** and this fork
+both declare redis-py **4.x**. The upstream repository's later, **unreleased**
+`main` branch changed the Redis extra to **5.x**; that is not a released
+legacy-package guarantee. Redis-py 5/6 remain unverified in this fork.
 See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md),
 [security policy](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) and
 [legacy vulnerability explanation](https://github.com/agustin18/fastapi-cache/blob/stable/audit/security/LEGACY_SUPPORT_AND_RISKS.md).
