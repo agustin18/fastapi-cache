@@ -30,7 +30,7 @@ jobs:
           assert content.count(old) == 1, "unexpected existing version"
           path.write_text(content.replace(old, 'version = "0.3.0rc2"', 1), encoding="utf-8")
           PY
-          towncrier build --version 0.3.0rc2 --date 2026-11-19 --yes
+          towncrier build --name fastapi-cache-stable --version 0.3.0rc2 --date 2026-11-19 --yes
       - name: Preserve RC2 preparation files in temporary release branch
         run: |
           git config user.name "github-actions[bot]"
