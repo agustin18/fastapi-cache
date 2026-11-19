@@ -36,7 +36,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install poetry==1.8.3
-          poetry update fastapi starlette urllib3 cryptography requests pytest jinja2 python-multipart dnspython --lock --no-interaction
+          poetry update idna pygments --lock --no-interaction
           poetry check --lock
           git diff --stat -- poetry.lock
           git status --short
