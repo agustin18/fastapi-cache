@@ -1,0 +1,41 @@
+name: Temporary Towncrier RC2 build
+
+on:
+  push:
+    branches:
+      - release/prepare-0.3.0rc2
+    paths:
+      - .github/workflows/temp-build-rc2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Install Towncrier
+        run: python -m pip install "towncrier>=26,<27"
+      - name: Set RC2 version and build release notes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("pyproject.toml")
+          content = path.read_text(encoding="utf-8")
+          old = 'version = "0.3.0rc1"'
+          assert content.count(old) == 1, "unexpected existing version"
+          path.write_text(content.replace(old, 'version = "0.3.0rc2"', 1), encoding="utf-8")
+          PY
+          towncrier build --version 0.3.0rc2 --date 2026-11-19 --yes
+      - name: Preserve RC2 preparation files in temporary release branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A pyproject.toml CHANGELOG.md changelog.d
+          git diff --cached --quiet && { echo "No changes generated"; exit 1; }
+          git commit -m "chore(release): prepare 0.3.0rc2 metadata and Towncrier notes"
+          git push origin HEAD:release/prepare-0.3.0rc2
