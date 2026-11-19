@@ -77,7 +77,10 @@ Sources: [redis-py upstream README](https://github.com/redis/redis-py#supported-
   expiration; Redis pipeline with transaction semantics.
 - Wrong-type Redis errors and subsequent connection reuse.
 - Explicit RESP2 / RESP3 on redis-py >=5, plus its default protocol;
-  these are **actual** server connections, not mocks.
+  these are **actual** server connections, not mocks. Redis 7/8 exposes
+  `resp=` in `CLIENT INFO`, so the negotiated wire mode is asserted there.
+  Redis 6.2 does not expose that field and its protocol is exercised but
+  not independently asserted via `CLIENT INFO`.
 - `decode_responses=False` for binary cache payloads, and
   `decode_responses=True` for textual reads and namespace clearing.
 - ACL password authorization, rejected invalid passwords, async close.
@@ -133,3 +136,17 @@ keys is characterized, but a decoded client is **not** certified for
    mandatory (not allowed-failure) tested lanes, real release-shaped metadata,
    clean wheel/sdist and an **independent application** migration/rollback.
 5. No tags or PyPI publication from this research branch.
+
+## Evidence integrity correction (superseded run)
+
+An initial expanded [matrix run 44639267562](https://github.com/agustin18/fastapi-cache/actions/runs/44639267562)
+was **NOT valid evidence of 25/25 test success**. The implicit Actions
+`bash -e` shell used `pytest | tee` without `pipefail`, so pytest failures
+could be masked by a successful `tee` exit. For example, Redis 6.2 does not
+report a `resp=` field in `CLIENT INFO`; that incomplete probe initially
+failed despite a successful job conclusion. This defect is corrected with
+`set -o pipefail` **and a deliberate exit-7 pipeline self-test** before
+pytest. The Redis 6.2 wire-mode limitation is now explicitly characterized.
+
+**Only a subsequent Actions run on the corrected HEAD may be used for the
+final decision.** Do not cite the superseded run as 25 successful test lanes.
