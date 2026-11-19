@@ -131,16 +131,26 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   SECURITY, SUPPORT and migration documentation.
 - [x] Record maintainer-directed scoped 21-GHSA acceptance; it leaves
   Dependabot alerts unchanged.
-- [ ] Obtain independent contra-audit and GitHub-hosted owner approval
-  referencing the release PR HEAD.
-- [ ] Capture current Dependabot alerts again and refresh the dated
-  ledger if there is drift. The 2026-11-19 snapshot is not live status.
-- [ ] Assess and rotate any credentials exposed in Docker Compose
-  command logs/history before continuing sensitive operations.
+- [x] The independent agent gave **technical GO for PR #42**; the
+  maintainer explicitly directed the scoped 21-GHSA acceptance recorded
+  [in that PR's discussion](https://github.com/agustin18/fastapi-cache/pull/42#issuecomment-7016369125).
+  A second self-approval review is not required.
+- [ ] Run **one authenticated Dependabot delta check immediately before
+  production PyPI publication**, against the 2026-11-19 source snapshot.
+  Review newly open/reopened/changed alerts; do not re-triage the
+  21 unchanged and explicitly accepted legacy/consumer risks.
+  This does not block the non-production TestPyPI smoke test.
+- [x] On 2026-11-19 the maintainer **reported the Compose secret issue
+  resolved**. This is the owner's attestation, not a claim that this
+  audit independently accessed private rotation records.
 - [x] Open a distinct stable-promotion PR with version/metadata/notes;
   **not** a PyPI publish or tag.
-- [ ] Verify the built final distribution and explicitly authorize
-  PyPI publication after CI, snapshot refresh and independent review.
+- [ ] Verify exact final 0.3.0 wheel/sdist metadata and SHA-256, then
+  publish to **TestPyPI** using the manual workflow and smoke-install
+  it in a clean environment. The post-merge CI, including modern
+  dependency security profiles, already passed.
+- [ ] Explicitly authorize **production PyPI publication** after the
+  TestPyPI artifact check and one current Dependabot delta check.
 
 ## Outside the first stable promise
 
