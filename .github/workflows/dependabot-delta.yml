@@ -1,0 +1,32 @@
+name: Dependabot delta
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 7 * * 1"
+
+permissions:
+  contents: read
+  vulnerability-alerts: read
+
+concurrency:
+  group: dependabot-delta
+  cancel-in-progress: false
+
+jobs:
+  delta:
+    name: Compare against latest snapshot
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Read-only Dependabot delta
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/reconcile_dependabot_alerts.py \
+            --delta \
+            --repository "$GITHUB_REPOSITORY"
