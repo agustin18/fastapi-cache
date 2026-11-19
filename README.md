@@ -142,7 +142,8 @@ Parameter | type | default | description
 `coder` | `Coder` | `JsonCoder` | which coder to use, e.g. `JsonCoder`
 `key_builder` | `KeyBuilder` callable | `default_key_builder` | which key builder to use
 `injected_dependency_namespace` | `str` | `__fastapi_cache` | prefix for injected dependency keywords.
-`cache_authenticated` | `bool` | `None` | per-endpoint override for caching authenticated requests; global default is `False`; requires an identity-aware `key_builder`.
+`cache_authenticated` | `bool` | `None` | per-endpoint override for authenticated requests; requires an identity-aware `key_builder`.
+`infer_response_model` | `bool` | `False` | opt into FastAPI's response-model inference from a return annotation; can enable output validation and break invalid union/Response annotations. Disabled by default for drop-in compatibility.
 
 The `cache_status_header` argument belongs to `FastAPICache.init()`, **not**
 `@cache()`. It controls the `HIT` / `MISS` response header.
@@ -202,6 +203,28 @@ For broader type support, use `fastapi_cache.coder.PickleCoder` or implement a c
 `PickleCoder` deserializes with Python's `pickle` and must only be used with a cache backend
 whose contents are trusted and integrity-protected. An attacker who can alter cached bytes
 may be able to execute code when those values are read. `JsonCoder` is the default.
+
+### Optional response-model inference
+
+By default, `@cache` preserves the upstream behavior of **not** exposing
+the function's return annotation as a FastAPI response model. Existing
+endpoints that return mixed `Response` and data values therefore keep
+registering without new Pydantic validation.
+
+To have FastAPI infer an OpenAPI response model from a valid annotation
+and validate/serialize the output, opt in explicitly:
+
+```python
+@app.get("/item")
+@cache(expire=60, infer_response_model=True)
+async def item() -> SomeModel:
+    return create_some_model()
+```
+
+Do **not** opt in with annotations FastAPI cannot use as a response model,
+for example `Union[Response, dict]`. Alternatively, set
+`response_model=SomeModel` on `@app.get(...)` as with ordinary FastAPI.
+This option changes schema and response validation, not stored cache keys.
 
 ### Response handling
 

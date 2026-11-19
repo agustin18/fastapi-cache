@@ -93,7 +93,11 @@ for Pydantic v1 models and annotations that cannot be represented by a Pydantic 
   Pydantic v1 is end-of-life; plan an upgrade to Pydantic v2 for typed restoration and
   security fixes.
 - You need tags, stale-while-revalidate, stampede protection or POST caching.
-- You need perfect OpenAPI/`response_model` behavior or `fastapi-pagination`.
+- You need automatic OpenAPI response-model inference without opting in;
+  use `@cache(infer_response_model=True)` for supported return types or
+  explicit `response_model=` in the FastAPI route decorator.
+- You require untested `fastapi-pagination` configurations beyond
+  the pinned integration profile.
 
 ## Install
 

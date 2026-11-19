@@ -30,8 +30,9 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
 
 ## Before stable promotion
 
-- [ ] Characterize OpenAPI response-model inference and dependency-injection
-  cache-key stability. Add regressions for any package-owned fixes.
+- [ ] Review opt-in OpenAPI response-model inference and regression tests
+  for legacy return annotations; characterize dependency-injection
+  cache-key stability without changing the default key builder.
 - [ ] Reproduce
   [fastapi-pagination #557](https://github.com/long2ice/fastapi-cache/issues/557)
   with its stated dependency versions; document a known failure separately

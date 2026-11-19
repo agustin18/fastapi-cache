@@ -67,6 +67,7 @@ def test_cache_signature() -> None:
         "namespace",
         "injected_dependency_namespace",
         "cache_authenticated",
+        "infer_response_model",
     ]
     assert params["expire"].default is None
     assert params["coder"].default is None
@@ -74,6 +75,7 @@ def test_cache_signature() -> None:
     assert params["namespace"].default == ""
     assert params["injected_dependency_namespace"].default == "__fastapi_cache"
     assert params["cache_authenticated"].default is None
+    assert params["infer_response_model"].default is False
 
 
 def test_backend_protocol() -> None:

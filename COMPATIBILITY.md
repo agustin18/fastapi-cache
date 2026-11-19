@@ -31,6 +31,10 @@ This contract describes the documented `0.3.x` line. Use
   keep working.
 - Migration from `fastapi-cache2` does not require application code changes for valid legacy
   use cases, subject to the behavior changes documented in [`MIGRATION.md`](MIGRATION.md).
+- FastAPI return-annotation response-model inference is **opt-in** with
+  `@cache(infer_response_model=True)`. The legacy default avoids rejecting
+  previously valid routes with non-Pydantic-compatible return annotations,
+  such as `Union[Response, dict]`. Opting in also enables output validation.
 - Pydantic v2 users can opt into `TypedJsonCoder` for typed restoration; the default
   `JsonCoder` keeps the legacy decoded behavior. Pydantic v1 and unsupported annotations
   keep the legacy behavior.
@@ -91,6 +95,7 @@ cache(
     namespace="",
     injected_dependency_namespace="__fastapi_cache",
     cache_authenticated=None,
+    infer_response_model=False,
 )
 ```
 

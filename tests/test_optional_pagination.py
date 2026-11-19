@@ -1,8 +1,8 @@
 """Optional reproduction of upstream fastapi-pagination issue #557.
 
 Run explicitly with fastapi-pagination==0.13.1. When not installed, this
-test is skipped by the ordinary library CI matrix. Only the documented
-UninitializedConfigurationError is an expected failure; other exceptions fail.
+test is skipped in the ordinary matrix; the pinned CI lane must PASS, including
+cache HIT and cross-page key isolation, without silently expected failures.
 """
 
 from typing import Dict, Generator
@@ -26,13 +26,14 @@ def reset_cache() -> Generator[None, None, None]:
 def test_fastapi_pagination_upstream_reproduction() -> None:
     pytest.importorskip("fastapi_pagination")
     from fastapi_pagination import Page, Params, add_pagination, paginate
-    from fastapi_pagination.errors import UninitializedConfigurationError
-
+    
     router = APIRouter()
 
     @router.get("/items")
     @cache(expire=60, namespace="items")
-    async def items(params: Params = Depends()) -> Page[Dict[str, int]]:
+    async def items(
+        params: Params = Depends(),  # noqa: B008 - reproduce upstream FastAPI DI
+    ) -> Page[Dict[str, int]]:
         return paginate([{"id": n} for n in range(100)], params)
 
     app = FastAPI()
@@ -40,16 +41,16 @@ def test_fastapi_pagination_upstream_reproduction() -> None:
     add_pagination(app)
     FastAPICache.init(InMemoryBackend(), prefix="pagination")
 
-    try:
-        with TestClient(app) as client:
-            response = client.get("/items", params={"page": 1, "size": 10})
-    except UninitializedConfigurationError:
-        pytest.xfail(
-            "Upstream #557: fastapi-pagination 0.13.1 dependency-context "
-            "integration is not part of the stable compatibility guarantee."
-        )
+    with TestClient(app) as client:
+        first = client.get("/items", params={"page": 1, "size": 10})
+        hit = client.get("/items", params={"page": 1, "size": 10})
+        second_page = client.get("/items", params={"page": 2, "size": 10})
 
-    assert response.status_code == 200, response.text
-    payload = response.json()
-    assert payload["total"] == 100
-    assert len(payload["items"]) == 10
+    assert first.status_code == hit.status_code == second_page.status_code == 200
+    assert first.headers["X-FastAPI-Cache"] == "MISS"
+    assert hit.headers["X-FastAPI-Cache"] == "HIT"
+    assert second_page.headers["X-FastAPI-Cache"] == "MISS"
+    assert first.json() == hit.json()
+    assert first.json()["total"] == second_page.json()["total"] == 100
+    assert [row["id"] for row in first.json()["items"]] == list(range(10))
+    assert [row["id"] for row in second_page.json()["items"]] == list(range(10, 20))
