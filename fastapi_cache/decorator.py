@@ -429,7 +429,15 @@ def cache(
 
             return result
 
-        inner.__signature__ = _augment_signature(wrapped_signature, *to_inject)  # type: ignore[attr-defined]
+        # FastAPI's get_typed_signature resolves parameters but omits the
+        # return annotation. Preserve it for response-model inference and
+        # OpenAPI without changing the decorated function's cache key.
+        response_signature = wrapped_signature
+        if return_type is not None:
+            response_signature = wrapped_signature.replace(
+                return_annotation=return_type
+            )
+        inner.__signature__ = _augment_signature(response_signature, *to_inject)  # type: ignore[attr-defined]
 
         return inner
 
