@@ -53,3 +53,43 @@ The [95-row register](SECURITY_ADVISORY_TRIAGE.csv) now records its
 `triage_status=PENDING` for the final stable-release assessment. Legacy
 Starlette remains vulnerable in downstream file-serving applications.
 No old snapshot was overwritten, and no GitHub alert was dismissed.
+
+## Read-only Dependabot delta
+
+Compare the current alerts with the newest immutable snapshot without writing
+evidence files:
+
+```sh
+python scripts/reconcile_dependabot_alerts.py \
+  --delta \
+  --repository agustin18/fastapi-cache
+```
+
+Use `--baseline PATH` to choose a specific snapshot and
+`--current-snapshot PATH` for an offline comparison. The command never
+overwrites snapshots, triage CSVs or GitHub alerts.
+
+Exit codes:
+
+- `0`: no material change.
+- `1`: new or reopened critical/high alert, or severity escalation into
+  those levels. Treat as a release gate.
+- `2`: comparison incomplete (empty response, missing baseline-open record,
+  unknown state/severity). Investigate the API/auth/data issue; do not read
+  this as a clean result.
+- `3`: a material field changed on an open high/critical alert (package,
+  manifest, scope, relationship, vulnerable range or patched version).
+  Review the prior risk acceptance before relying on it.
+
+The `Dependabot delta` workflow runs manually and weekly, publishes a summary
+in the Actions run, and uses the read-only `vulnerability-alerts` permission.
+After investigating a new alert, capture a new immutable snapshot with the
+normal reconciliation flow and update the baseline intentionally; never edit
+or overwrite an old snapshot to make a delta disappear.
+
+**Known limitation:** the current evidence model identifies alerts by GHSA.
+GitHub can emit more than one alert for the same GHSA (for example, different
+manifests or dependency paths), and the reconciler rejects duplicate GHSA
+rows instead of merging them. Any such duplication fails visibly rather than
+silently producing a green delta.
+

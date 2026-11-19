@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,7 @@ def _alert(
     package: str = "demo-package",
     vulnerable_range: str = "< 1.0.0",
     fixed_version: str | None = None,
+    scope: str = "runtime",
 ) -> dict[str, Any]:
     return {
         "number": number,
@@ -43,7 +45,7 @@ def _alert(
         "dependency": {
             "package": {"name": package},
             "manifest_path": "poetry.lock",
-            "scope": "runtime",
+            "scope": scope,
             "relationship": "transitive",
         },
         "created_at": "2026-11-19T00:00:00Z",
@@ -157,7 +159,10 @@ def test_delta_reports_fixed_changed_and_severity_escalation() -> None:
 
     assert report["newly_fixed"][0]["ghsa_id"] == "GHSA-fixed"
     assert report["changed"][0]["ghsa_id"] == "GHSA-changed"
+    assert report["requires_review"] is True
+    assert report["review_required"][0]["ghsa_id"] == "GHSA-changed"
     assert report["blocking"] is True
+    assert report["exit_code"] == 1
     assert "severity_escalation:GHSA-escalated" in report["blocking_reasons"]
 
 
@@ -171,6 +176,116 @@ def test_delta_reports_auto_dismissed_as_newly_dismissed() -> None:
 
     assert report["blocking"] is False
     assert report["newly_dismissed"][0]["ghsa_id"] == "GHSA-auto"
+
+
+def test_delta_marks_missing_baseline_open_as_incomplete() -> None:
+    baseline = _rows(
+        [_alert(number=20, ghsa_id="GHSA-missing", severity="critical")]
+    )
+
+    report = build_delta_report(baseline, [])
+
+    assert report["comparison_incomplete"] is True
+    assert report["security_blocking"] is False
+    assert report["exit_code"] == 2
+    assert "current_response_empty" in report["incomplete_reasons"]
+    assert "missing_from_current:GHSA-missing" in report["incomplete_reasons"]
+
+
+def test_delta_rejects_unknown_state_and_severity() -> None:
+    current = _rows(
+        [
+            _alert(number=21, ghsa_id="GHSA-unknown-state", state="mystery"),
+            _alert(number=22, ghsa_id="GHSA-unknown-severity", severity=""),
+        ]
+    )
+
+    report = build_delta_report([], current)
+
+    assert report["comparison_incomplete"] is True
+    assert report["exit_code"] == 2
+    assert any(
+        reason.startswith("unknown_state:current:GHSA-unknown-state")
+        for reason in report["incomplete_reasons"]
+    )
+    assert any(
+        reason.startswith("unknown_severity:current:GHSA-unknown-severity")
+        for reason in report["incomplete_reasons"]
+    )
+
+
+def test_delta_requires_review_for_material_high_change() -> None:
+    baseline = _rows(
+        [
+            _alert(
+                number=23,
+                ghsa_id="GHSA-scope-change",
+                severity="high",
+                scope="development",
+            )
+        ]
+    )
+    current = _rows(
+        [
+            _alert(
+                number=23,
+                ghsa_id="GHSA-scope-change",
+                severity="high",
+                scope="runtime",
+            )
+        ]
+    )
+
+    report = build_delta_report(baseline, current)
+
+    assert report["security_blocking"] is False
+    assert report["requires_review"] is True
+    assert report["exit_code"] == 3
+    assert report["review_required"][0]["changes"]["scope"] == {
+        "before": "development",
+        "after": "runtime",
+    }
+
+
+def test_delta_api_failure_is_not_green_and_writes_nothing(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    baseline_path = tmp_path / "baseline.csv"
+    _write_csv(
+        baseline_path,
+        reconciler.CURRENT_SNAPSHOT_FIELDS,
+        _rows([_alert(number=24, ghsa_id="GHSA-existing")]),
+    )
+    original = baseline_path.read_bytes()
+
+    def fail(*args: Any, **kwargs: Any) -> Any:
+        raise subprocess.CalledProcessError(1, ["gh", "api"])
+
+    monkeypatch.setattr(reconciler.shutil, "which", lambda name: "/usr/bin/gh")
+    monkeypatch.setattr(reconciler.subprocess, "run", fail)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "reconcile_dependabot_alerts.py",
+            "--delta",
+            "--repository",
+            "owner/repository",
+            "--baseline",
+            str(baseline_path),
+            "--output-dir",
+            str(tmp_path),
+        ],
+    )
+
+    with pytest.raises(subprocess.CalledProcessError):
+        main()
+
+    assert baseline_path.read_bytes() == original
+    assert sorted(path.name for path in tmp_path.iterdir()) == [
+        "baseline.csv"
+    ]
 
 
 def test_delta_cli_is_read_only(

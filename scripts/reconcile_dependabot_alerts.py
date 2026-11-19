@@ -1201,6 +1201,37 @@ def find_latest_snapshot(directory: Path) -> Path:
     return max(candidates, key=sort_key)
 
 
+VALID_ALERT_STATES = {"open", "fixed", "dismissed", "auto_dismissed"}
+VALID_SEVERITIES = {"low", "medium", "high", "critical"}
+REVIEW_FIELDS = {
+    "package",
+    "manifest_path",
+    "scope",
+    "relationship",
+    "vulnerable_version_range",
+    "first_patched_version",
+}
+
+
+def _validate_delta_row(
+    row: Mapping[str, str],
+    label: str,
+    ghsa_id: str,
+    incomplete_reasons: List[str],
+) -> Tuple[str, str]:
+    state = row.get("state", "").strip().lower()
+    severity = row.get("severity", "").strip().lower()
+    if state not in VALID_ALERT_STATES:
+        incomplete_reasons.append(
+            f"unknown_state:{label}:{ghsa_id}:{state or '<empty>'}"
+        )
+    if state == "open" and severity not in VALID_SEVERITIES:
+        incomplete_reasons.append(
+            f"unknown_severity:{label}:{ghsa_id}:{severity or '<empty>'}"
+        )
+    return state, severity
+
+
 def build_delta_report(
     baseline_rows: Iterable[Mapping[str, str]],
     current_rows: Iterable[Mapping[str, str]],
@@ -1220,40 +1251,85 @@ def build_delta_report(
         "new_closed": [],
         "changed": [],
         "missing_from_current": [],
-        "blocking": False,
+        "review_required": [],
         "blocking_reasons": [],
+        "incomplete_reasons": [],
+        "security_blocking": False,
+        "comparison_incomplete": False,
+        "requires_review": False,
+        "exit_code": 0,
+        "blocking": False,
     }
 
+    if not current:
+        report["incomplete_reasons"].append("current_response_empty")
+
+    for ghsa_id, baseline_row in baseline.items():
+        _validate_delta_row(
+            baseline_row,
+            "baseline",
+            ghsa_id,
+            report["incomplete_reasons"],
+        )
+
     for ghsa_id, current_row in current.items():
-        state = current_row.get("state", "").strip().lower()
-        baseline_row = baseline.get(ghsa_id)
+        state, severity = _validate_delta_row(
+            current_row,
+            "current",
+            ghsa_id,
+            report["incomplete_reasons"],
+        )
+        baseline_entry = baseline.get(ghsa_id)
 
         if state == "open":
-            if baseline_row is None:
+            if baseline_entry is None:
                 report["new_open"].append(_delta_summary(current_row))
-                if _severity_is_blocking(current_row.get("severity", "")):
+                if severity in BLOCKING_SEVERITIES:
                     report["blocking_reasons"].append(
                         "new_open:" + ghsa_id
                     )
                 continue
-            baseline_state = baseline_row.get("state", "").strip().lower()
+            baseline_state = (
+                baseline_entry.get("state", "").strip().lower()
+            )
             if baseline_state != "open":
                 report["reopened"].append(_delta_summary(current_row))
-                if _severity_is_blocking(current_row.get("severity", "")):
+                if severity in BLOCKING_SEVERITIES:
                     report["blocking_reasons"].append(
                         "reopened:" + ghsa_id
                     )
                 continue
-            changes = _material_changes(baseline_row, current_row)
+            changes = _material_changes(baseline_entry, current_row)
             if changes:
                 entry = _delta_summary(current_row)
                 entry["changes"] = changes
                 report["changed"].append(entry)
+                baseline_severity = (
+                    baseline_entry.get("severity", "").strip().lower()
+                )
+                if (
+                    baseline_severity in BLOCKING_SEVERITIES
+                    or severity in BLOCKING_SEVERITIES
+                ):
+                    review_changes = {
+                        field: changes[field]
+                        for field in changes
+                        if field in REVIEW_FIELDS
+                    }
+                    if review_changes:
+                        review_entry = _delta_summary(current_row)
+                        review_entry["changes"] = review_changes
+                        review_entry["reason"] = (
+                            "material_change_on_open_high_or_critical"
+                        )
+                        report["review_required"].append(review_entry)
                 severity_change = changes.get("severity")
                 if (
                     severity_change
                     and _severity_is_blocking(severity_change["after"])
-                    and not _severity_is_blocking(severity_change["before"])
+                    and not _severity_is_blocking(
+                        severity_change["before"]
+                    )
                 ):
                     report["blocking_reasons"].append(
                         "severity_escalation:" + ghsa_id
@@ -1263,10 +1339,12 @@ def build_delta_report(
             continue
 
         if state in {"fixed", "dismissed", "auto_dismissed"}:
-            if baseline_row is None:
+            if baseline_entry is None:
                 report["new_closed"].append(_delta_summary(current_row))
             else:
-                baseline_state = baseline_row.get("state", "").strip().lower()
+                baseline_state = (
+                    baseline_entry.get("state", "").strip().lower()
+                )
                 if baseline_state == "open":
                     key = (
                         "newly_fixed"
@@ -1284,6 +1362,9 @@ def build_delta_report(
             report["missing_from_current"].append(
                 _delta_summary(baseline_row)
             )
+            report["incomplete_reasons"].append(
+                "missing_from_current:" + ghsa_id
+            )
 
     for key in (
         "new_open",
@@ -1293,12 +1374,28 @@ def build_delta_report(
         "new_closed",
         "changed",
         "missing_from_current",
+        "review_required",
     ):
         report[key].sort(key=lambda row: str(row.get("ghsa_id", "")))
     report["unchanged_open"].sort()
     report["unchanged_closed"].sort()
     report["blocking_reasons"] = sorted(set(report["blocking_reasons"]))
-    report["blocking"] = bool(report["blocking_reasons"])
+    report["incomplete_reasons"] = sorted(set(report["incomplete_reasons"]))
+    report["security_blocking"] = bool(report["blocking_reasons"])
+    report["comparison_incomplete"] = bool(
+        report["incomplete_reasons"]
+    )
+    report["requires_review"] = bool(report["review_required"])
+    if report["security_blocking"]:
+        exit_code = 1
+    elif report["comparison_incomplete"]:
+        exit_code = 2
+    elif report["requires_review"]:
+        exit_code = 3
+    else:
+        exit_code = 0
+    report["exit_code"] = exit_code
+    report["blocking"] = exit_code != 0
     return report
 
 
@@ -1384,7 +1481,7 @@ def main() -> int:
         report["baseline_file"] = str(baseline_path)
         report["current_source"] = current_source
         print(json.dumps(report, indent=2, sort_keys=True))
-        return 1 if report["blocking"] else 0
+        return int(report["exit_code"])
 
     if args.baseline is not None:
         parser.error("--baseline requires --delta")

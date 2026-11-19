@@ -24,9 +24,51 @@ jobs:
         with:
           python-version: "3.12"
       - name: Read-only Dependabot delta
+        id: delta
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set +e
           python scripts/reconcile_dependabot_alerts.py \
             --delta \
-            --repository "$GITHUB_REPOSITORY"
+            --repository "$GITHUB_REPOSITORY" > delta.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Publish delta summary
+        if: always()
+        env:
+          EXIT_CODE: ${{ steps.delta.outputs.exit_code }}
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          import os
+          from pathlib import Path
+
+          print("### Dependabot delta")
+          print(f"Exit code: `{os.environ.get('EXIT_CODE', 'unknown')}`")
+          path = Path("delta.json")
+          if not path.exists() or not path.read_text().strip():
+              print("No delta report was produced. Check authentication and API access.")
+              raise SystemExit(0)
+          data = json.loads(path.read_text())
+          print(f"- Baseline records: {data['baseline_records']}")
+          print(f"- Current records: {data['current_records']}")
+          print(f"- Unchanged open: {len(data['unchanged_open'])}")
+          print(f"- New open: {len(data['new_open'])}")
+          print(f"- Reopened: {len(data['reopened'])}")
+          print(f"- Requires review: {len(data['review_required'])}")
+          print(f"- Comparison incomplete: {data['comparison_incomplete']}")
+          if data["blocking_reasons"]:
+              print("\nBlocking reasons:")
+              for reason in data["blocking_reasons"]:
+                  print(f"- `{reason}`")
+          if data["incomplete_reasons"]:
+              print("\nIntegrity reasons:")
+              for reason in data["incomplete_reasons"]:
+                  print(f"- `{reason}`")
+          PY
+          cat delta.json
+      - name: Fail for non-zero delta
+        if: steps.delta.outputs.exit_code != '0'
+        run: exit 1
