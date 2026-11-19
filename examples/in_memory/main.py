@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator, Dict, Optional
 
 import pendulum
-import uvicorn
 from fastapi import FastAPI
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
@@ -172,4 +171,10 @@ def namespaced_injection(
 
 
 if __name__ == "__main__":
+    try:
+        import uvicorn
+    except ImportError as exc:
+        raise SystemExit(
+            "Install uvicorn to run this example: python -m pip install uvicorn"
+        ) from exc
     uvicorn.run("main:app", reload=True)

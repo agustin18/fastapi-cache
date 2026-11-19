@@ -5,7 +5,6 @@ from typing import AsyncIterator
 
 import pendulum
 import redis.asyncio as redis
-import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -94,4 +93,10 @@ async def cache_response_obj():
 
 
 if __name__ == "__main__":
+    try:
+        import uvicorn
+    except ImportError as exc:
+        raise SystemExit(
+            "Install uvicorn to run this example: python -m pip install uvicorn"
+        ) from exc
     uvicorn.run("main:app", reload=True)
