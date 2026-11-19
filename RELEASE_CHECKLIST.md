@@ -30,6 +30,13 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
 
 ## Before stable promotion
 
+- [ ] Before RC2, remove the unused `StaticFiles(directory="./")` mount
+  from the Redis example and validate the regression guard. For
+  [GHSA-7f5h-v6xp-fcq8](https://github.com/Kludex/starlette/security/advisories/GHSA-7f5h-v6xp-fcq8),
+  refresh the Dependabot snapshot and reconcile the consumer/legacy
+  scope before declaring stable; removal of the example mount is not
+  a fix for arbitrary consumers of Starlette.
+
 - [ ] Review opt-in OpenAPI response-model inference and regression tests
   for legacy return annotations; characterize dependency-injection
   cache-key stability without changing the default key builder.

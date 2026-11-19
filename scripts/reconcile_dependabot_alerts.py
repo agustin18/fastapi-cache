@@ -603,6 +603,30 @@ FIXED_DISPOSITIONS = {
 }
 
 CURRENT_ONLY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
+    "GHSA-7f5h-v6xp-fcq8": {
+        "preliminary_disposition": "APPLICATION_CONDITIONAL",
+        "maintainer_decision": "PENDING_CURRENT_SNAPSHOT_AND_LEGACY_REACHABILITY_REVIEW",
+        "profile_scope": (
+            "Starlette 0.39.0 through 0.49.0 FileResponse Range parsing may "
+            "allow unauthenticated CPU exhaustion. The Python 3.8/3.9 lock "
+            "includes Starlette 0.44.0; modern locked profiles are patched. "
+            "fastapi_cache does not construct FileResponse/StaticFiles, and "
+            "the unused StaticFiles(directory='.') mount has been removed "
+            "from the Redis example. Consumers may independently serve files."
+        ),
+        "evidence_reference": (
+            "https://github.com/Kludex/starlette/security/advisories/"
+            "GHSA-7f5h-v6xp-fcq8"
+        ),
+        "remaining_action": (
+            "Capture current Dependabot state into a NEW snapshot, verify the "
+            "selected Python 3.8/3.9 and modern lock profiles, and record the "
+            "advisory in the generated triage register. Confirm no "
+            "FileResponse/StaticFiles path is reachable from the library "
+            "or its examples. Do not mark the consumer-owned vulnerability fixed."
+        ),
+        "release_gate": "Before RC2: example fix; stable: final GHSA disposition",
+    },
     "GHSA-48p4-8xcf-vxj5": {
         "preliminary_disposition": "APPLICATION_CONDITIONAL",
         "maintainer_decision": "PYODIDE_OUTSIDE_VERIFIED_SUPPORT_SCOPE",
