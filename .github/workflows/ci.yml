@@ -16,6 +16,99 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  published-rc-redis-migration:
+    name: Published RC Redis 7 E2E (legacy to RC to rollback)
+    if: github.event_name == 'pull_request' && github.head_ref == 'test/rc1-published-redis-migration'
+    runs-on: ubuntu-24.04
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      REDIS_URL: redis://127.0.0.1:6379/15
+      MIGRATION_E2E_PREFIX: fastapi-cache-migration-e2e-published-rc1-ci
+      MIGRATION_E2E_CONFIRM_ISOLATED_REDIS: "YES"
+      MIGRATION_E2E_CANDIDATE_VERSION: "0.3.0rc1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Download PyPI wheel and verify exact metadata and hash
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/rc1-wheel /tmp/rc1-evidence
+          python -m pip download --no-deps --only-binary=:all: --index-url https://pypi.org/simple/ --dest /tmp/rc1-wheel "fastapi-cache-stable==0.3.0rc1"
+          wheel=/tmp/rc1-wheel/fastapi_cache_stable-0.3.0rc1-py3-none-any.whl
+          printf '%s  %s\n' "251d5249feb319e99ba3438c929b618124a34525a4188dbe3817973d1edba6db" "$wheel" | sha256sum -c -
+          sha256sum "$wheel" > /tmp/rc1-evidence/published-wheel.sha256
+          printf 'source_commit=%s\n' "$GITHUB_SHA" > /tmp/rc1-evidence/ci-provenance.txt
+          python - <<'PY'
+          import email.parser
+          import zipfile
+          from pathlib import Path
+          wheel = Path("/tmp/rc1-wheel/fastapi_cache_stable-0.3.0rc1-py3-none-any.whl")
+          with zipfile.ZipFile(wheel) as archive:
+              name = next(n for n in archive.namelist() if n.endswith(".dist-info/METADATA"))
+              metadata = email.parser.Parser().parsestr(
+                  archive.read(name).decode("utf-8"), headersonly=True
+              )
+          assert metadata["Name"] == "fastapi-cache-stable", metadata["Name"]
+          assert metadata["Version"] == "0.3.0rc1", metadata["Version"]
+          assert metadata["Requires-Python"] == ">=3.8,<3.14"
+          print("Published wheel identity verified")
+          PY
+      - name: Install isolated legacy and candidate environments
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/rc1-legacy
+          python -m venv /tmp/rc1-candidate
+          /tmp/rc1-legacy/bin/python -m pip install \
+            "fastapi==0.111.1" "pydantic==2.8.2" "redis==4.6.0" \
+            "httpx==0.27.0" "fastapi-cache2[redis]==0.2.2"
+          /tmp/rc1-candidate/bin/python -m pip install \
+            "fastapi==0.111.1" "pydantic==2.8.2" "redis==4.6.0" \
+            "httpx==0.27.0" /tmp/rc1-wheel/fastapi_cache_stable-0.3.0rc1-py3-none-any.whl
+          /tmp/rc1-legacy/bin/python -m pip check
+          /tmp/rc1-candidate/bin/python -m pip check
+          /tmp/rc1-legacy/bin/python -m pip freeze > /tmp/rc1-evidence/legacy-installed.txt
+          /tmp/rc1-candidate/bin/python -m pip freeze > /tmp/rc1-evidence/rc-installed.txt
+          /tmp/rc1-legacy/bin/python - <<'PY' | tee /tmp/rc1-evidence/redis-version.txt
+          import redis
+          client = redis.Redis.from_url("redis://127.0.0.1:6379/15")
+          try:
+              version = client.info("server")["redis_version"]
+              assert version.startswith("7."), version
+              print("Redis server:", version)
+          finally:
+              client.close()
+          PY
+      - name: Legacy writer, published RC reader, legacy rollback
+        working-directory: /tmp
+        shell: bash
+        run: |
+          set -euo pipefail
+          script="$GITHUB_WORKSPACE/tests/migration_redis_e2e.py"
+          /tmp/rc1-legacy/bin/python -I "$script" seed 2>&1 | tee /tmp/rc1-evidence/01-seed.txt
+          MIGRATION_E2E_GENERATION=candidate /tmp/rc1-candidate/bin/python -I "$script" candidate 2>&1 | tee /tmp/rc1-evidence/02-candidate.txt
+          MIGRATION_E2E_GENERATION=rollback /tmp/rc1-legacy/bin/python -I "$script" rollback 2>&1 | tee /tmp/rc1-evidence/03-rollback.txt
+      - name: Preserve E2E evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: published-rc1-redis7-migration-evidence
+          path: /tmp/rc1-evidence/
+          if-no-files-found: warn
+          retention-days: 90
+
   lint:
     name: Lint and pre-commit
     runs-on: ubuntu-latest
