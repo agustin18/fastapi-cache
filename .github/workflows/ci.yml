@@ -16,6 +16,107 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lock-remediation-probe:
+    name: Lock remediation probe (${{ matrix.mode }})
+    if: github.event_name == 'pull_request' && github.head_ref == 'audit/lock-remediation-2026-11'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: "transitive"
+            packages: "requests jinja2 urllib3 cryptography dnspython pytest python-multipart"
+          - mode: "framework"
+            packages: "fastapi starlette python-multipart"
+          - mode: "anyio"
+            packages: "anyio"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Install lockfile tool pinned to committed lock
+        run: |
+          python -m pip install poetry==1.8.3
+          poetry --version
+          poetry check --lock
+      - name: Probe updates in a temp copy; never modify checked-out files
+        shell: bash
+        env:
+          PROBE_MODE: ${{ matrix.mode }}
+          PROBE_PACKAGES: ${{ matrix.packages }}
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/poetry-lock-probe"
+          evidence="$RUNNER_TEMP/lock-evidence"
+          mkdir -p "$root" "$evidence"
+          cp pyproject.toml poetry.lock README.md "$root/"
+          printf 'mode=%s\npackages=%s\n' "$PROBE_MODE" "$PROBE_PACKAGES" > "$evidence/mode.txt"
+          set +e
+          (
+            cd "$root"
+            timeout 240s poetry update $PROBE_PACKAGES --lock --no-interaction
+          ) > "$evidence/resolver.log" 2>&1
+          rc=$?
+          set -e
+          printf '%s\n' "$rc" > "$evidence/resolver-exit-code.txt"
+          cp "$root/poetry.lock" "$evidence/result.lock"
+          # A nonzero exit is *not* a passing update. Preserve evidence for review.
+          python - "$GITHUB_WORKSPACE/poetry.lock" "$evidence/result.lock" "$rc" "$evidence/result.json" <<'PY'
+          import json
+          import pathlib
+          import sys
+          import tomllib
+
+          previous, candidate, rc, output = sys.argv[1:]
+          old = tomllib.loads(pathlib.Path(previous).read_text(encoding="utf-8"))
+          new = tomllib.loads(pathlib.Path(candidate).read_text(encoding="utf-8"))
+          def packages(doc):
+              entries = {}
+              for pkg in doc["package"]:
+                  key = pkg["name"].lower()
+                  entries.setdefault(key, []).append(
+                      {"version": pkg["version"], "python": pkg.get("python-versions", "")}
+                  )
+              return {key: sorted(entries[key], key=lambda x: (x["version"], x["python"]))
+                      for key in sorted(entries)}
+          a = packages(old)
+          b = packages(new)
+          changed = {
+              key: {"before": a.get(key, []), "after": b.get(key, [])}
+              for key in sorted(set(a) | set(b)) if a.get(key) != b.get(key)
+          }
+          result = {
+              "resolver_succeeded": int(rc) == 0,
+              "resolver_exit_code": int(rc),
+              "lock_changed": pathlib.Path(previous).read_bytes() != pathlib.Path(candidate).read_bytes(),
+              "packages_changed": changed,
+              "candidate_is_only_an_unreviewed_probe": True,
+          }
+          pathlib.Path(output).write_text(
+              json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+          print(json.dumps(result, indent=2, sort_keys=True))
+          PY
+          if [ "$rc" -eq 0 ]; then
+            (cd "$root" && poetry check --lock)
+          else
+            echo "::warning::Poetry resolver rejected this update group. See artifact logs; not approved."
+          fi
+          git diff --quiet -- pyproject.toml poetry.lock || {
+            echo "::error::Probe unexpectedly changed checked-out manifest/lock"
+            exit 1
+          }
+      - name: Preserve resolver output for independent review
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lock-probe-${{ matrix.mode }}
+          path: "${{ runner.temp }}/lock-evidence/"
+          retention-days: 30
+          if-no-files-found: error
+
   lint:
     name: Lint and pre-commit
     runs-on: ubuntu-latest
