@@ -1,0 +1,35 @@
+name: Temporary authenticated Dependabot capture
+
+on:
+  push:
+    branches:
+      - security/refresh-ghsa-before-rc2
+    paths:
+      - .github/workflows/temp-dependabot-capture.yml
+
+permissions:
+  contents: write
+  vulnerability-alerts: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Capture and reconcile alerts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/reconcile_dependabot_alerts.py
+      - name: Preserve verified snapshot in this temporary branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audit/security/DEPENDABOT_ALERTS_*.csv audit/security/SECURITY_ADVISORY_TRIAGE.csv
+          if ! git diff --cached --quiet; then
+            git commit -m "docs(security): capture authenticated Dependabot evidence before RC2"
+            git push origin HEAD:security/refresh-ghsa-before-rc2
+          fi
