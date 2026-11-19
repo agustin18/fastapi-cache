@@ -6,7 +6,12 @@ on:
       - ".github/workflows/redis-client-matrix.yml"
       - "tests/test_redis_client_matrix.py"
       - "tests/test_redis_clear.py"
-      - "fastapi_cache/backends/redis.py"
+      - "tests/redis_consumer_probe.py"
+      - "tests/conftest.py"
+      - "fastapi_cache/**"
+      - "pyproject.toml"
+      - "poetry.lock"
+      - "audit/redis/**"
   workflow_dispatch:
 
 permissions:
@@ -14,24 +19,45 @@ permissions:
 
 jobs:
   redis-client-matrix:
-    name: redis-py ${{ matrix.client }} / Python ${{ matrix.python }} / Redis ${{ matrix.server }}
+    name: redis-py ${{ matrix.client }} / Py ${{ matrix.python }} / Redis ${{ matrix.server }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 15
+    # Exploratory evidence cannot redefine the published 4.x release gate.
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          # The published 0.3.x compatibility baseline remains mandatory.
-          - { python: "3.8", client: "4.6.0", server: "7.0", experimental: false }
+          # The published redis-py 4.x contract: real wheel, mandatory.
+          - { python: "3.8",  client: "4.6.0", server: "6.2", experimental: false }
+          - { python: "3.9",  client: "4.6.0", server: "7.0", experimental: false }
+          - { python: "3.10", client: "4.6.0", server: "7.0", experimental: false }
+          - { python: "3.11", client: "4.6.0", server: "7.4", experimental: false }
           - { python: "3.12", client: "4.6.0", server: "7.0", experimental: false }
-          # Exploratory combinations: failures are data, not release gates.
-          - { python: "3.8", client: "5.2.1", server: "7.0", experimental: true }
-          - { python: "3.8", client: "6.1.0", server: "7.4", experimental: true }
-          - { python: "3.12", client: "5.2.1", server: "7.4", experimental: true }
+          - { python: "3.13", client: "4.6.0", server: "7.4", experimental: false }
+
+          # Client versions outside published metadata: synthetic wheel in
+          # isolated scratch directory; evidence only, never publish.
+          - { python: "3.8",  client: "5.2.1", server: "6.2", experimental: true }
+          - { python: "3.8",  client: "6.1.0", server: "7.4", experimental: true }
+          - { python: "3.9",  client: "5.2.1", server: "7.4", experimental: true }
+          - { python: "3.9",  client: "6.1.0", server: "7.4", experimental: true }
+          - { python: "3.9",  client: "7.0.1", server: "7.4", experimental: true }
+          - { python: "3.10", client: "5.2.1", server: "7.4", experimental: true }
+          - { python: "3.10", client: "7.2.1", server: "7.4", experimental: true }
+          - { python: "3.10", client: "8.1.0", server: "8.0", experimental: true }
+          - { python: "3.11", client: "6.1.0", server: "8.0", experimental: true }
+          - { python: "3.11", client: "7.2.1", server: "8.0", experimental: true }
+          - { python: "3.11", client: "8.1.0", server: "8.0", experimental: true }
+          - { python: "3.12", client: "5.2.1", server: "6.2", experimental: true }
           - { python: "3.12", client: "6.1.0", server: "7.4", experimental: true }
-          - { python: "3.12", client: "7.2.1", server: "7.4", experimental: true }
+          - { python: "3.12", client: "7.2.1", server: "8.0", experimental: true }
           - { python: "3.12", client: "8.1.0", server: "7.4", experimental: true }
+          - { python: "3.13", client: "5.2.1", server: "7.4", experimental: true }
+          - { python: "3.13", client: "6.1.0", server: "8.0", experimental: true }
+          - { python: "3.13", client: "7.2.1", server: "8.0", experimental: true }
+          - { python: "3.13", client: "8.1.0", server: "8.0", experimental: true }
+
     services:
       redis:
         image: redis:${{ matrix.server }}
@@ -42,27 +68,103 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-      - name: Install project and selected Redis client
+
+      - name: Build isolated real wheel (scratch widened metadata if experimental)
+        env:
+          EXPERIMENTAL: ${{ matrix.experimental }}
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e . "pytest==8.3.5" "httpx==0.27.0"
-          # Install each selected client's real dependencies, including
-          # async-timeout on legacy Python. Published redis<5 metadata remains
-          # unchanged, so newer client lanes are intentionally out-of-range.
-          python -m pip install --force-reinstall "redis==${{ matrix.client }}"
-          python -c "import redis; print('redis-py:', redis.__version__)"
-          if [ "${{ matrix.experimental }}" = "false" ]; then
-            python -m pip check
-          fi
-      - name: Run real Redis backend compatibility checks
+          python -m pip install "build==1.2.2"
+          mkdir -p /tmp/redis-matrix-src
+          cp -a fastapi_cache pyproject.toml README.md LICENSE NOTICE MIGRATION.md SUPPORT.md SECURITY.md CHANGELOG.md FORK_ORIGIN.md COMPATIBILITY.md /tmp/redis-matrix-src/
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          path = Path("/tmp/redis-matrix-src/pyproject.toml")
+          before = 'redis = { version = "^4.2.0rc1", optional = true }'
+          after = 'redis = { version = ">=4.2.0rc1,<9.0.0", optional = true }'
+          content = path.read_text()
+          if content.count(before) != 1:
+              raise SystemExit("Unexpected dependency declaration: refuse scratch rewrite")
+          if os.environ["EXPERIMENTAL"] == "true":
+              path.write_text(content.replace(before, after))
+              print("SCRATCH-ONLY candidate metadata: redis >=4.2.0rc1,<9.0.0")
+          else:
+              print("Original published redis-py 4.x metadata")
+          PY
+          python -m build --wheel --outdir /tmp/redis-matrix-dist /tmp/redis-matrix-src
+
+      - name: Resolve and install wheel in separate venv
+        env:
+          CLIENT: ${{ matrix.client }}
+        run: |
+          python -m venv /tmp/redis-matrix-venv
+          /tmp/redis-matrix-venv/bin/python -m pip install --upgrade pip
+          wheel=$(find /tmp/redis-matrix-dist -maxdepth 1 -name '*.whl' -print -quit)
+          test -n "$wheel"
+          /tmp/redis-matrix-venv/bin/python -m pip install "$wheel[redis]" "redis==$CLIENT" "pytest==8.3.5" "httpx==0.27.0"
+          /tmp/redis-matrix-venv/bin/python -m pip check
+          cd /tmp
+          /tmp/redis-matrix-venv/bin/python - <<'PY'
+          import hashlib
+          import importlib.metadata as im
+          import pathlib
+          import sys
+          from packaging.requirements import Requirement
+
+          import fastapi_cache
+
+          wheel = next(pathlib.Path("/tmp/redis-matrix-dist").glob("*.whl"))
+          module = pathlib.Path(fastapi_cache.__file__).resolve()
+          assert "site-packages" in module.parts, module
+          assert "redis-matrix-src" not in str(module)
+          redis_version = im.version("redis")
+          requirements = [Requirement(line) for line in
+                          im.metadata("fastapi-cache-stable").get_all("Requires-Dist") or []]
+          active = [r for r in requirements if r.name == "redis"]
+          assert len(active) == 1
+          from packaging.version import Version
+          assert Version(redis_version) in active[0].specifier
+          print("Python:", sys.version)
+          print("wheel_sha256:", hashlib.sha256(wheel.read_bytes()).hexdigest())
+          print("Installed module:", module)
+          print("redis-py:", redis_version)
+          print("wheel Requires-Dist redis:", active[0])
+          PY
+
+      - name: Execute isolated real Redis backend and FastAPI tests
         env:
           REDIS_URL: redis://localhost:6379/0
           REQUIRE_REDIS: "1"
         run: |
-          python -m pytest -q -rs tests/test_redis_client_matrix.py tests/test_redis_clear.py
+          cd /tmp
+          /tmp/redis-matrix-venv/bin/python -m pytest -q -rs "$GITHUB_WORKSPACE/tests/test_redis_client_matrix.py" "$GITHUB_WORKSPACE/tests/test_redis_clear.py"
+          /tmp/redis-matrix-venv/bin/python "$GITHUB_WORKSPACE/tests/redis_consumer_probe.py"
+
+      - name: Summarize reproducible research profile
+        if: always()
+        env:
+          CLIENT: ${{ matrix.client }}
+          PY_VERSION: ${{ matrix.python }}
+          SERVER: ${{ matrix.server }}
+          EXPERIMENTAL: ${{ matrix.experimental }}
+        run: |
+          {
+            echo "### Redis compatibility lane"
+            echo "- Source commit: \`$GITHUB_SHA\`"
+            echo "- Python: $PY_VERSION"
+            echo "- redis-py client: $CLIENT"
+            echo "- Redis server image: redis:$SERVER"
+            echo "- Metadata: $(if [ "$EXPERIMENTAL" = true ]; then echo 'scratch-only widened, NOT published'; else echo 'current published constraint'; fi)"
+            if [ -x /tmp/redis-matrix-venv/bin/pip ]; then
+              echo "- Installed dependency check: see step logs"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
