@@ -49,8 +49,8 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   from package-supported interoperability.
 - [ ] Repeat owner-application Redis/InMemory checks against a wheel
   downloaded from PyPI and verified by SHA-256, not editable source.
-- [ ] Complete the 94-row [GHSA register](audit/security/SECURITY_ADVISORY_TRIAGE.csv):
-  93 historical IDs plus one current-only ID. Reconcile each row with
+- [ ] Complete the 95-row [GHSA register](audit/security/SECURITY_ADVISORY_TRIAGE.csv):
+  93 historical IDs plus two current-only IDs. Reconcile each row with
   proportionate proof and explicit disposition; a triage PENDING
   record is **not** an open Dependabot alert.
 - [ ] Resolve/mitigate or explicitly accept residual risks within the
