@@ -21,7 +21,7 @@ tests pinned redis-py versions against actual Redis server containers:
 | 3.12 | 8.1.0 | 7.4 | Exploratory RESP3-default client |
 
 The exploratory lanes intentionally override the published redis-py 4.x
-dependency constraint using `--no-deps`. Consequently, an otherwise passing
+dependency constraint while installing their own transitive dependencies. Consequently, an otherwise passing
 test does **not** imply that `pip check` passes or that the package currently
 supports the corresponding client in its declared metadata. Do not expand
 the constraint until compatibility and supported install profiles are tested.
