@@ -4,7 +4,7 @@
 > The Python import stays `fastapi_cache`; intentional safety/behavior changes
 > are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
 >
-> **Latest stable:** [0.3.0 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.3.0/)
+> **Latest stable:** [0.3.1 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.3.1/)
 > (released 2026-11-19) ·
 > [Quickstart](https://github.com/agustin18/fastapi-cache/blob/stable/docs/QUICKSTART.md) ·
 > [Migration](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md) ·
@@ -58,10 +58,10 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 ## Development roadmap
 
-The published 0.3.0 prioritizes safe, low-friction migration over feature
+The published 0.3.x line prioritizes safe, low-friction migration over feature
 count. See [the roadmap](https://github.com/agustin18/fastapi-cache/blob/stable/ROADMAP.md) and its linked issues for the proposed
 0.3.1 maintenance line and 0.4.0 Redis-client compatibility work.
-Features in the roadmap are **not** included in 0.3.0.
+Features in the roadmap are **not** included in 0.3.x.
 
 ## Features
 
@@ -83,7 +83,7 @@ Features in the roadmap are **not** included in 0.3.0.
 Install the published stable release (pin the version you test):
 
 ```sh
-python -m pip install "fastapi-cache-stable[redis]==0.3.0"
+python -m pip install "fastapi-cache-stable[redis]==0.3.1"
 python -m pip check
 ```
 

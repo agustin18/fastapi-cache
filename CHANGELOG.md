@@ -8,6 +8,16 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.3.1](https://github.com/agustin18/fastapi-cache/tree/v0.3.1) - 2026-11-19
+
+### Bugfixes
+
+- Conservatively bypass cache reads and writes when an endpoint explicitly declares `Request` and uses the default key builder: hidden request headers/state cannot otherwise be guaranteed to partition cached representations. Endpoints using a custom, identity-aware key builder can still cache. Legacy key formats and normal `Header(...)` argument caching remain unchanged. [#53](https://github.com/agustin18/fastapi-cache/issues/53)
+
+### Improved Documentation
+
+- Update post-0.3.0 publication status, release provenance, migration and support guidance; provide a tested-scope quickstart and a linked, prioritized 0.3.1/0.4.0 maintenance and compatibility roadmap. [#52](https://github.com/agustin18/fastapi-cache/issues/52)
+
 ## [0.3.0](https://github.com/agustin18/fastapi-cache/tree/v0.3.0) - 2026-11-19
 
 ### First stable release
