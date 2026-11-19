@@ -2,6 +2,7 @@
 
 This directory contains **historical dependency snapshots and release-security triage**, not user-facing installation instructions or a claim that every recorded advisory is currently open.
 
+- [Exact published RC2 wheel security audit](RC2_EXACT_PYPI_WHEEL_AUDIT_20261119.md): SHA-verified PyPI wheel, 3.11–3.13 full extras profiles, complete audit results and expiring GitHub Actions artifacts.
 - [Dependency security inventory](SECURITY_DEPENDENCY_INVENTORY.md): documented scope, call-path analysis and provenance of the original pre-remediation profiles.
 - [Advisory triage register](SECURITY_ADVISORY_TRIAGE.csv): reconciliation of historical GHSA records with the last captured Dependabot snapshot; individual decisions may still be pending.
 - [Pre-stable security review](STABLE_RELEASE_SECURITY_REVIEW_20261119.md) and

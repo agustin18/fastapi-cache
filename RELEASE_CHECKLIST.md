@@ -48,8 +48,13 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   unchanged; this is **functional-only**, not a resolver/install test.
 - [ ] Independent clean `pip` replacement + resolver + tests in disposable
   consumer environment. Do not count an import overlay as this gate.
-- [ ] Exact published-RC2 wheel runtime security scan on Python 3.11–3.13,
-  retain per-profile evidence and reconcile GHSA review.
+- [x] Exact PyPI-published RC2 wheel audit completed on Python 3.11–3.13
+  with all extras: 3/3 SHA-256 checks, clean venv installs and `pip check`,
+  73 packages installed and 72 third-party packages scanned per profile,
+  no known findings. See [archived provenance](audit/security/RC2_EXACT_PYPI_WHEEL_AUDIT_20261119.md)
+  and linked workflow artifacts (90-day retention).
+- [ ] Approve residual legacy/consumer GHSA scope in a dedicated review;
+  the clean modern wheel does not itself close the 21 open lockfile alerts.
 
 ## Before stable promotion
 

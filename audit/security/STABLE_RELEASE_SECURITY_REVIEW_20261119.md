@@ -112,10 +112,13 @@ the inspected library path, not the arbitrary dependency use of a consumer.
   the existing bounded acceptance of the critical AnyIO legacy exposure and
   the high Starlette #120 consumer-owned risk. The proposed ledger is not
   signoff and changes no Dependabot alert states.
-- [ ] Review the 74 graph-fixed entries as a group against the captured
-  snapshot and repeat the **exact downloaded PyPI wheel** runtime audit on
-  CPython 3.11, 3.12, 3.13 and optional extras; preserve installed versions,
-  complete report and digest. A source rebuild alone is not that exact wheel.
+- [x] Audit the **exact downloaded RC2 PyPI wheel** with all extras on
+  CPython 3.11, 3.12 and 3.13: all three passed the published SHA check,
+  `pip check` and a full `pip-audit` inventory (72 third-party deps,
+  **zero known findings** at scan time). Evidence and 90-day artifacts:
+  [published-wheel audit](RC2_EXACT_PYPI_WHEEL_AUDIT_20261119.md).
+- [ ] Sign off on the 74 graph-fixed rows as a group **within the captured
+  source graph** (not a claim about all future consumer resolutions).
 - [ ] In a disposable `real-estate-arg` environment, uninstall
   `fastapi-cache2==0.2.2`, install `fastapi-cache-stable==0.3.0rc2` via
   normal dependency resolution (no source overlay, no `--no-deps`, no
