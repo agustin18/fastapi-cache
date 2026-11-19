@@ -3,6 +3,7 @@
 import asyncio
 import os
 from contextlib import asynccontextmanager
+from secrets import token_hex
 from typing import Any, AsyncIterator, Dict, Optional
 
 import pytest
@@ -80,7 +81,8 @@ def test_binary_ttl_pipeline_errors(protocol: Optional[int]) -> None:
             raw = bytes((0, 255, 128)) + b"payload"
             await backend.set(key, raw, expire=60)
             ttl, data = await backend.get_with_ttl(key)
-            assert isinstance(ttl, int) and 0 < ttl <= 60
+            assert isinstance(ttl, int)
+            assert 0 < ttl <= 60
             assert data == raw
             assert await backend.get(key) == raw
 
@@ -96,7 +98,8 @@ def test_binary_ttl_pipeline_errors(protocol: Optional[int]) -> None:
 
             await client.delete(key)
             missing_ttl, missing = await backend.get_with_ttl(key)
-            assert missing_ttl == -2 and missing is None
+            assert missing_ttl == -2
+            assert missing is None
 
             await client.set("matrix:short-lived", "value", ex=1)
             await asyncio.sleep(1.2)
@@ -138,7 +141,7 @@ def test_authenticated_client_and_wrong_password() -> None:
     async def run() -> None:
         administrator = _client()
         username = "cache_matrix_probe"
-        password = "test-only-password"
+        password = token_hex(16)
         try:
             await administrator.execute_command(
                 "ACL", "SETUSER", username, "on", ">" + password, "~*", "+@all"
@@ -148,7 +151,7 @@ def test_authenticated_client_and_wrong_password() -> None:
                 decode_responses=False
             )
             denied = Redis.from_url(
-                _redis_url(), username=username, password="invalid-password"
+                _redis_url(), username=username, password=token_hex(16)
             )
             try:
                 backend = RedisBackend(authorized)
