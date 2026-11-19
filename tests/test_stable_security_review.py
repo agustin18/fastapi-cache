@@ -80,7 +80,7 @@ def test_rejects_new_open_alert_without_review(evidence):
     newly_discovered["ghsa_id"] = "GHSA-test-new-1234"
     newly_discovered["current_alert_number"] = "999"
     triage.append(newly_discovered)
-    with pytest.raises(ValueError, match="review does not cover exact triage"):
+    with pytest.raises(ValueError, match="triage GHSA missing from raw snapshot"):
         validate_review(triage, review)
 
 
@@ -88,7 +88,7 @@ def test_rejects_reopened_graph_fixed_alert(evidence):
     triage, review = deepcopy(evidence)
     fixed = next(r for r in triage if r["current_state"] == "fixed")
     fixed["current_state"] = "open"
-    with pytest.raises(ValueError, match="stale review"):
+    with pytest.raises(ValueError, match="raw snapshot disagrees with triage"):
         validate_review(triage, review)
 
 
