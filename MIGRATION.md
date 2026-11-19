@@ -120,16 +120,22 @@ function arguments can already differentiate keys, but this does not
 cover hidden request context. `Authorization`/`Cookie` request bypass
 remains on by default.
 
-**Fixed in 0.3.1** ([#53](https://github.com/agustin18/fastapi-cache/issues/53)):
+**Partially mitigated in 0.3.1** ([#53](https://github.com/agustin18/fastapi-cache/issues/53)):
 cache reads and writes are conservatively bypassed for endpoints that
 explicitly accept `Request` while using the default key builder. Apps
 that need caching in those endpoints must provide a custom
 **variant- and identity-safe key builder**. This may lower hit rates for
 those routes; old Redis entries are not automatically deleted. Neither
 the global default key digest nor the key format for ordinary
-parameter-only endpoints is changed. The bypass cannot detect arbitrary
-context variables or hidden middleware inputs in routes that do not
-declare `Request`.
+parameter-only endpoints is changed.
+
+**Residual scope:** `Vary`-aware caching, headers/state read by hidden
+dependencies or middleware, ambient `contextvars`/application state, and
+per-user/tenant custom key design remain open in
+[#53](https://github.com/agustin18/fastapi-cache/issues/53). The 0.3.1
+bypass cannot detect those inputs in routes that do not declare
+`Request`, and a custom key builder is an explicit application contract,
+not an automatic safety guarantee.
 
 ## Who should not migrate yet
 
