@@ -30,12 +30,15 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
 
 ## Before stable promotion
 
-- [ ] Before RC2, remove the unused `StaticFiles(directory="./")` mount
-  from the Redis example and validate the regression guard. For
-  [GHSA-7f5h-v6xp-fcq8](https://github.com/Kludex/starlette/security/advisories/GHSA-7f5h-v6xp-fcq8),
-  refresh the Dependabot snapshot and reconcile the consumer/legacy
-  scope before declaring stable; removal of the example mount is not
-  a fix for arbitrary consumers of Starlette.
+- [x] Remove the unused `StaticFiles(directory="./")` mount from the
+  Redis example, with a passing regression guard (PR #37).
+- [x] Capture a fresh authenticated Dependabot snapshot on 2026-11-19
+  (120 records, 21 open) and add
+  [GHSA-7f5h-v6xp-fcq8](https://github.com/Kludex/starlette/security/advisories/GHSA-7f5h-v6xp-fcq8)
+  as current-only advisory #120. This is conditionally scoped for RC2,
+  **not** a claim that legacy Starlette or consumers are patched.
+- [ ] Complete the final risk decision for this GHSA before stable,
+  including consumer-owned file-serving routes on legacy Python.
 
 - [ ] Review opt-in OpenAPI response-model inference and regression tests
   for legacy return annotations; characterize dependency-injection
@@ -46,8 +49,8 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   from package-supported interoperability.
 - [ ] Repeat owner-application Redis/InMemory checks against a wheel
   downloaded from PyPI and verified by SHA-256, not editable source.
-- [ ] Complete the 94-row [GHSA register](audit/security/SECURITY_ADVISORY_TRIAGE.csv):
-  93 historical IDs plus one current-only ID. Reconcile each row with
+- [ ] Complete the 95-row [GHSA register](audit/security/SECURITY_ADVISORY_TRIAGE.csv):
+  93 historical IDs plus two current-only IDs. Reconcile each row with
   proportionate proof and explicit disposition; a triage PENDING
   record is **not** an open Dependabot alert.
 - [ ] Resolve/mitigate or explicitly accept residual risks within the
