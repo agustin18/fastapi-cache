@@ -7,6 +7,7 @@ from copy import deepcopy
 import pytest
 from scripts.validate_stable_security_review import (
     REVIEW,
+    SNAPSHOT,
     TRIAGE,
     read_rows,
     validate_review,
@@ -89,3 +90,45 @@ def test_rejects_reopened_graph_fixed_alert(evidence):
     fixed["current_state"] = "open"
     with pytest.raises(ValueError, match="stale review"):
         validate_review(triage, review)
+
+
+def test_raw_snapshot_includes_all_open_ghsa_and_all_reconciled_fields(evidence):
+    triage, review = evidence
+    raw = read_rows(SNAPSHOT)
+    assert len(raw) == 120
+    assert sum(r["state"] == "open" for r in raw) == 21
+    validate_review(triage, review, raw)
+
+
+def test_fails_closed_when_new_open_alert_is_in_raw_snapshot_only(evidence):
+    triage, review = deepcopy(evidence)
+    raw = read_rows(SNAPSHOT)
+    fixed_only = next(
+        row for row in raw if row["state"] == "fixed"
+        and row["ghsa_id"] not in {r["ghsa_id"] for r in triage}
+    )
+    modified_raw = deepcopy(raw)
+    next(r for r in modified_raw if r["ghsa_id"] == fixed_only["ghsa_id"])["state"] = "open"
+    with pytest.raises(ValueError, match="raw snapshot open GHSA absent from triage"):
+        validate_review(triage, review, modified_raw)
+
+
+@pytest.mark.parametrize(
+    ("raw_field", "new_value"),
+    [
+        ("manifest_path", "different-lockfile.txt"),
+        ("vulnerable_version_range", ">=0.0.0"),
+        ("package", "different-package"),
+        ("alert_number", "999"),
+    ],
+)
+def test_rejects_raw_snapshot_mismatch_even_when_ledger_and_triage_agree(
+    evidence, raw_field, new_value
+):
+    triage, review = deepcopy(evidence)
+    raw = read_rows(SNAPSHOT)
+    modified_raw = deepcopy(raw)
+    affected = next(r for r in modified_raw if r["ghsa_id"] == triage[0]["ghsa_id"])
+    affected[raw_field] = new_value
+    with pytest.raises(ValueError, match="raw snapshot disagrees with triage"):
+        validate_review(triage, review, modified_raw)

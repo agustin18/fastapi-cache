@@ -15,6 +15,11 @@ security feed or a claim that the entire transitive dependency graph is safe.
   **95 distinct rows, 74 with current GitHub state fixed, 21 open**. The
   93-row historical baseline is preserved independently; the two current-only
   GHSA are not invented historical alerts.
+- [Raw snapshot vs canonical triage regression](../../scripts/validate_stable_security_review.py):
+  verifies all 120 captured alerts, requires every raw open GHSA in canonical
+  triage and matches identifiers, status, manifest and version fields; the
+  25 omitted rows may be **fixed only**. Adversarial tests add an unregistered
+  open alert and alter raw fields to ensure fail-closed behavior.
 - [Row-by-row release review ledger](STABLE_RELEASE_SECURITY_REVIEW_20261119.csv):
   **95/95 represented** with original alert number, state, class, exact
   source scope, evidence reference and proposed release disposition.

@@ -18,7 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 REVIEW_DIR = ROOT / "audit" / "security"
 TRIAGE = REVIEW_DIR / "SECURITY_ADVISORY_TRIAGE.csv"
 REVIEW = REVIEW_DIR / "STABLE_RELEASE_SECURITY_REVIEW_20261119.csv"
+SNAPSHOT = REVIEW_DIR / "DEPENDABOT_ALERTS_20261119T032907Z.csv"
 EXPECTED_SNAPSHOT = "20261119T032907Z"
+EXPECTED_SNAPSHOT_RECORDS = 120
 
 CATEGORIES = {
     "NOT_APPLICABLE": "NO_REVIEWED_LIBRARY_CALL_PATH",
@@ -73,10 +75,62 @@ def _by_ghsa(rows: Sequence[Mapping[str, str]], name: str) -> dict[str, Mapping[
     return result
 
 
+def validate_captured_snapshot(
+    triage_rows: Sequence[Mapping[str, str]],
+    snapshot_rows: Sequence[Mapping[str, str]],
+) -> None:
+    """Check all 120 raw alerts and require every open GHSA in canonical triage.
+
+    The historical triage intentionally omits 25 graph-fixed-only alerts.
+    Never infer that an omitted raw *open* alert is accepted or irrelevant.
+    """
+    if len(snapshot_rows) != EXPECTED_SNAPSHOT_RECORDS:
+        raise ValueError("captured snapshot size changed; refresh audit evidence")
+    raw = _by_ghsa(snapshot_rows, "raw authenticated snapshot")
+    triage = _by_ghsa(triage_rows, "canonical triage")
+    numbers: set[str] = set()
+    for ghsa, alert in raw.items():
+        if alert.get("snapshot_id") != EXPECTED_SNAPSHOT:
+            raise ValueError(f"captured snapshot identity changed: {ghsa}")
+        number = alert.get("alert_number", "")
+        if not number.isdigit() or number in numbers:
+            raise ValueError(f"invalid/duplicate raw alert number: {ghsa}")
+        numbers.add(number)
+        state = alert.get("state")
+        if state not in {"open", "fixed"}:
+            raise ValueError(f"unrecognized captured alert state: {ghsa}")
+        if state == "open" and ghsa not in triage:
+            raise ValueError(f"raw snapshot open GHSA absent from triage: {ghsa}")
+    for ghsa, old in triage.items():
+        current = raw.get(ghsa)
+        if current is None:
+            raise ValueError(f"triage GHSA missing from raw snapshot: {ghsa}")
+        for source_field, triage_field in (
+            ("snapshot_date", "snapshot_date"),
+            ("snapshot_id", "current_snapshot_id"),
+            ("alert_number", "current_alert_number"),
+            ("state", "current_state"),
+            ("cve_id", "cve_id"),
+            ("severity", "current_severity"),
+            ("package", "current_package"),
+            ("manifest_path", "current_manifest"),
+            ("vulnerable_version_range", "current_vulnerable_version_range"),
+            ("first_patched_version", "current_first_patched_version"),
+        ):
+            if current.get(source_field, "") != old.get(triage_field, ""):
+                raise ValueError(
+                    f"raw snapshot disagrees with triage for {ghsa}: "
+                    f"{source_field}/{triage_field}"
+                )
+
 def validate_review(
     triage_rows: Sequence[Mapping[str, str]],
     review_rows: Sequence[Mapping[str, str]],
+    snapshot_rows: Sequence[Mapping[str, str]] | None = None,
 ) -> dict[str, int]:
+    if snapshot_rows is None:
+        snapshot_rows = read_rows(SNAPSHOT)
+    validate_captured_snapshot(triage_rows, snapshot_rows)
     if not review_rows:
         raise ValueError("empty review ledger")
     if set(REQUIRED_REVIEW_COLUMNS) - set(review_rows[0]):
@@ -147,7 +201,7 @@ def validate_review(
 
 
 def main() -> None:
-    report = validate_review(read_rows(TRIAGE), read_rows(REVIEW))
+    report = validate_review(read_rows(TRIAGE), read_rows(REVIEW), read_rows(SNAPSHOT))
     print(json.dumps(report, indent=2, sort_keys=True))
 
 

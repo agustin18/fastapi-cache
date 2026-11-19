@@ -80,6 +80,9 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   from package-supported interoperability.
 - [ ] Repeat owner-application Redis/InMemory checks against a wheel
   downloaded from PyPI and verified by SHA-256, not editable source.
+- [x] Cross-check the 95-row ledger/triage with all 120 records in the
+  authenticated source snapshot; fail closed if a newly opened GHSA is absent
+  or if identifiers, manifest or vulnerable version ranges differ.
 - [x] Reconcile and individually account for all 95 historical/current GHSA
   in [the pre-stable review ledger](audit/security/STABLE_RELEASE_SECURITY_REVIEW_20261119.csv).
   This is **proposed evidence review**, not risk acceptance.
