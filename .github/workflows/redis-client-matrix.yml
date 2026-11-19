@@ -148,6 +148,14 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           REQUIRE_REDIS: "1"
         run: |
+          # Explicitly enforce pipeline failures: the implicit Actions bash
+          # shell uses -e but does not guarantee -o pipefail.
+          set -o pipefail
+          set +e
+          python -c 'import sys; sys.exit(7)' | tee /tmp/pipefail-probe.log
+          proof=$?
+          set -e
+          test "$proof" -eq 7
           cd /tmp
           /tmp/redis-matrix-venv/bin/python -m pytest -q -rs "$GITHUB_WORKSPACE/tests/test_redis_client_matrix.py" "$GITHUB_WORKSPACE/tests/test_redis_clear.py" | tee /tmp/redis-matrix-tests.log
           /tmp/redis-matrix-venv/bin/python "$GITHUB_WORKSPACE/tests/redis_consumer_probe.py" | tee /tmp/redis-matrix-consumer.log
