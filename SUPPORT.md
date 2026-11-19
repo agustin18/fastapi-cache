@@ -33,7 +33,7 @@ fastapi-cache2.
 ## Legacy compatibility is not security maintenance
 
 Python 3.8–3.10 support is provided only to ease upgrades of existing
-\`fastapi-cache2\` users. Those Python versions are EOL and some supported
+`fastapi-cache2` users. Those Python versions are EOL and some supported
 dependency resolutions retain security advisories. The fork may not
 call the affected APIs, but consumer applications may. **Do not rely
 on this library to repair Starlette, AnyIO or other application

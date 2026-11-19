@@ -7,13 +7,13 @@ advisory is fixed or that a review PR has already received signoff.
 
 This record is a **time-bounded, package-scoped release decision** prepared
 from the immutable authenticated Dependabot snapshot
-\`20261119T032907Z\` (120 alerts: 21 open, 99 fixed) and the 95-row
+`20261119T032907Z` (120 alerts: 21 open, 99 fixed) and the 95-row
 [canonical triage](SECURITY_ADVISORY_TRIAGE.csv), not a live query.
 
 The 25 snapshot entries absent from the historic GHSA register were fixed
 in the captured graph. The 74 represented graph-fixed GHSA remain separate
 from the 21 still-open cases. An alert's GHSA, package/version and
-\`current_state\` are never changed to manufacture closure.
+`current_state` are never changed to manufacture closure.
 
 ## Proposed dispositions for all 21 open GHSA
 
@@ -43,29 +43,29 @@ from the 21 still-open cases. An alert's GHSA, package/version and
 
 **Interpretation of decisions:**
 
-- \`LEGACY_CONDITIONAL_ACCEPT\`: retain Python 3.8/3.9 functional support
-  despite the known affected AnyIO line; no direct \`fastapi_cache\` TLS
+- `LEGACY_CONDITIONAL_ACCEPT`: retain Python 3.8/3.9 functional support
+  despite the known affected AnyIO line; no direct `fastapi_cache` TLS
   trigger was found. Document lack of security support, residual consumer
   TLS risk, and prefer upgrading interpreter plus dependencies.
-- \`CONSUMER_FILE_SERVING_SCOPE\`: no vulnerable file-serving mount in the
-  shipped example after PR #37 and no \`FileResponse\` route in core cache
+- `CONSUMER_FILE_SERVING_SCOPE`: no vulnerable file-serving mount in the
+  shipped example after PR #37 and no `FileResponse` route in core cache
   code. This does not mitigate downstream affected Starlette deployments.
-- \`NO_INSPECTED_PACKAGE_PATH\`: direct source review found no applicable
+- `NO_INSPECTED_PACKAGE_PATH`: direct source review found no applicable
   vulnerable urllib3 API use in core/inspected DynamoDB transport. This is
   **not** a statement about independent urllib3 usage by applications.
-- \`APPLICATION_CONDITIONAL\`: triggering functionality lives in an
+- `APPLICATION_CONDITIONAL`: triggering functionality lives in an
   application-controlled Starlette/AnyIO/IDNA/Pygments usage path rather
   than a demonstrated package-controlled entry point. A consuming
   application must review its actual features and versions.
-- \`DEVELOPMENT_ONLY\`: reviewed reports refer to local dev/test dependency
+- `DEVELOPMENT_ONLY`: reviewed reports refer to local dev/test dependency
   profiles, not the installed published cache wheel runtime.
-- \`RUNTIME_OUTSIDE_SUPPORTED_PROFILE\`: the described Pyodide/browser/Node
+- `RUNTIME_OUTSIDE_SUPPORTED_PROFILE`: the described Pyodide/browser/Node
   advisory is outside the server-side CPython verification contract.
 
 ## Required acceptance boundaries
 
 1. **Do not claim 'zero vulnerabilities' globally.** The published PyPI
-   \`0.3.0rc2\` wheel was scanned on **server-side CPython 3.11–3.13**
+   `0.3.0rc2` wheel was scanned on **server-side CPython 3.11–3.13**
    with all extras. At scan time, 72 installed third-party dependencies
    per profile produced no known findings. This cannot certify Python
    3.8/3.9, an arbitrary consumer's requirements, or future resolver results.
@@ -78,8 +78,8 @@ from the 21 still-open cases. An alert's GHSA, package/version and
    Raw snapshots stay immutable; new or reopened alerts need reassessment.
 5. **Consumer responsibilities** include TLS destinations, independent
    urllib3, static/file-serving routes, form parsing and custom middleware,
-   custom cache keys/tenant isolation, and safe \`PickleCoder\` usage.
-6. **Exact final wheel release gate:** the \`0.3.0\` distribution must be
+   custom cache keys/tenant isolation, and safe `PickleCoder` usage.
+6. **Exact final wheel release gate:** the `0.3.0` distribution must be
    rebuilt, metadata verified and security-audited separately from RC2.
 7. **Operational secret exposure:** any real Docker Compose credentials
    leaked into logs/history must be assessed and rotated before operations

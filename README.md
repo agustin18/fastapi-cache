@@ -25,7 +25,7 @@
 
 **Recommended for production:** CPython **3.11–3.13**, within our tested
 FastAPI/Redis/InMemory matrix. Python **3.8–3.10** stays installable and
-functionally tested to support migrations from \`fastapi-cache2\`, but is
+functionally tested to support migrations from `fastapi-cache2`, but is
 **legacy-only**: these EOL runtimes and their dependency stacks receive
 **no security maintenance commitment**. Known issues in some Python 3.8/3.9
 dependency profiles include [AnyIO TLS](https://github.com/advisories/GHSA-82r6-8w77-94w6)
@@ -35,10 +35,10 @@ application features might. **Use a newer Python and patched compatible
 dependencies whenever possible.**
 
 A vulnerability found in a package shared by this fork and the original
-\`fastapi-cache2\` may affect *both* if a consumer resolves the same vulnerable
+`fastapi-cache2` may affect *both* if a consumer resolves the same vulnerable
 version and invokes the affected code. They do **not** necessarily install
-the same dependency versions. In particular, upstream \`fastapi-cache2\`
-uses redis-py 5.x whereas this fork's tested \`0.3.x\` Redis extra is 4.x.
+the same dependency versions. In particular, upstream `fastapi-cache2`
+uses redis-py 5.x whereas this fork's tested `0.3.x` Redis extra is 4.x.
 See [compatibility & risk matrix](COMPATIBILITY.md),
 [security policy](SECURITY.md) and
 [legacy vulnerability explanation](audit/security/LEGACY_SUPPORT_AND_RISKS.md).

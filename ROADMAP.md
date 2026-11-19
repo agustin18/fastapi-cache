@@ -2,7 +2,7 @@
 
 These are **proposals**, not dates, guarantees or features included in 0.3.0.
 The top priority is a trustworthy first stable release for existing
-\`fastapi-cache2\` users: tested migration, explicit changes, supported
+`fastapi-cache2` users: tested migration, explicit changes, supported
 dependency profiles and conservative security fixes. Avoid adding features
 to the already-reviewed 0.3.0 runtime without a verified regression and a
 fresh RC.

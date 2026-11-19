@@ -155,7 +155,7 @@ its documented legacy decoded behavior, but receives no new upstream security fi
 
 ### Security and compatibility are different promises
 
-| Python | Functional compatibility with the fork | Security support for \`0.3.x\` | Known boundary |
+| Python | Functional compatibility with the fork | Security support for `0.3.x` | Known boundary |
 |---|---|---|---|
 | 3.8–3.9 | Verified legacy matrix, core Redis/InMemory | **No** | Legacy profiles can resolve vulnerable AnyIO 4.5.2 and Starlette 0.44.0 |
 | 3.10 | Verified legacy matrix | **No** | EOL interpreter; security fixes depend on the consuming app and compatible dependencies |
@@ -164,11 +164,11 @@ its documented legacy decoded behavior, but receives no new upstream security fi
 
 A legacy Python installation can work correctly and still retain dependency
 vulnerabilities. Neither an installation on EOL Python nor a switch from
-\`fastapi-cache2\` **automatically fixes** Starlette, AnyIO, urllib3 or
+`fastapi-cache2` **automatically fixes** Starlette, AnyIO, urllib3 or
 any unrelated vulnerability. The two distributions may resolve different
 dependency graphs; only individual installed versions and reachable code
-paths establish exposure. The upstream \`redis\` optional dependency uses
-redis-py 5.x, whereas \`0.3.x\` of this fork currently verifies redis-py 4.6.0;
+paths establish exposure. The upstream `redis` optional dependency uses
+redis-py 5.x, whereas `0.3.x` of this fork currently verifies redis-py 4.6.0;
 projects requiring redis-py 5/6 must not assume a drop-in resolver match.
 
 See [Legacy support and known GHSA](audit/security/LEGACY_SUPPORT_AND_RISKS.md)

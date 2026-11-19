@@ -55,7 +55,7 @@ and [Rollback](#rollback).
 ## Legacy Python security when migrating
 
 Python 3.8–3.10 is a **functional migration bridge**, not a
-security-supported deployment. Replacing \`fastapi-cache2\` does not
+security-supported deployment. Replacing `fastapi-cache2` does not
 automatically remove vulnerabilities in FastAPI/Starlette/AnyIO or your
 application's other dependencies. For any vulnerable dependency,
 exposure depends on the installed version and the code the application
@@ -69,8 +69,8 @@ Starlette 0.44.0 with known conditional vulnerabilities. Check
 [legacy advisory guide](audit/security/LEGACY_SUPPORT_AND_RISKS.md) before
 deciding whether to remain on these interpreters.
 
-**Important Redis constraint difference:** upstream \`fastapi-cache2\`
-uses redis-py 5.x as an optional extra; this fork's verified \`0.3.x\`
+**Important Redis constraint difference:** upstream `fastapi-cache2`
+uses redis-py 5.x as an optional extra; this fork's verified `0.3.x`
 Redis extra uses redis-py 4.x. A deployment already requiring redis-py 5/6
 cannot assume an unchanged dependency graph and must resolve compatibility
 before switching; this is roadmap work.

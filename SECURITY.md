@@ -17,7 +17,7 @@
 
 ## Legacy interpreter risk and consumer responsibility
 
-\`0.3.x\` preserves **functional compatibility** with Python 3.8–3.10 as
+`0.3.x` preserves **functional compatibility** with Python 3.8–3.10 as
 a migration bridge. That does not include security patch support for those
 EOL interpreter lines or their unsupported dependencies. The preferred
 production target is server-side **CPython 3.11–3.13**, plus current
@@ -27,9 +27,9 @@ On examined Python 3.8/3.9 legacy profiles, AnyIO 4.5.2 remains affected
 by [GHSA-82r6-8w77-94w6](https://github.com/advisories/GHSA-82r6-8w77-94w6)
 (TLS hostname/certificate handling) and Starlette 0.44.0 by
 [GHSA-7f5h-v6xp-fcq8](https://github.com/advisories/GHSA-7f5h-v6xp-fcq8)
-(\`FileResponse\` Range DoS). We do not call the vulnerable AnyIO TLS
+(`FileResponse` Range DoS). We do not call the vulnerable AnyIO TLS
 route or serve files in the core cache package. The removed Redis example
-\`StaticFiles\` mount does **not** remove application-owned file-serving,
+`StaticFiles` mount does **not** remove application-owned file-serving,
 form-parsing or other Starlette risks. A consumer still must secure its
 own dependency graph and routes. See
 [legacy compatibility and known advisories](audit/security/LEGACY_SUPPORT_AND_RISKS.md).
@@ -48,7 +48,7 @@ records the proposed scoped decisions for 21 open advisories. Open
 Dependabot alerts stay open unless genuinely fixed, and acceptance of
 consumer-owned risk does not equate to a code fix.
 
-\`PickleCoder\` is unsafe with untrusted cache values; do not accept
+`PickleCoder` is unsafe with untrusted cache values; do not accept
 attacker-controlled pickles. Authenticated request caching requires a
 tenant/user-aware key builder and application-level security review.
 
