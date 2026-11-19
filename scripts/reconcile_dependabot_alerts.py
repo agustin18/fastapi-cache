@@ -1262,7 +1262,7 @@ def build_delta_report(
                 report["unchanged_open"].append(ghsa_id)
             continue
 
-        if state in {"fixed", "dismissed"}:
+        if state in {"fixed", "dismissed", "auto_dismissed"}:
             if baseline_row is None:
                 report["new_closed"].append(_delta_summary(current_row))
             else:

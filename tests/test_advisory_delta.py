@@ -161,6 +161,18 @@ def test_delta_reports_fixed_changed_and_severity_escalation() -> None:
     assert "severity_escalation:GHSA-escalated" in report["blocking_reasons"]
 
 
+def test_delta_reports_auto_dismissed_as_newly_dismissed() -> None:
+    baseline = _rows([_alert(number=11, ghsa_id="GHSA-auto")])
+    current = _rows(
+        [_alert(number=11, ghsa_id="GHSA-auto", state="auto_dismissed")]
+    )
+
+    report = build_delta_report(baseline, current)
+
+    assert report["blocking"] is False
+    assert report["newly_dismissed"][0]["ghsa_id"] == "GHSA-auto"
+
+
 def test_delta_cli_is_read_only(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
