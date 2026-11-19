@@ -1,30 +1,20 @@
 # fastapi-cache-stable
 
-> **Community-maintained stable fork of fastapi-cache2.**
-> The latest published release is beta `0.3.0b1`, based on `v0.2.2`; this branch prepares an
-> unpublished `0.3.0rc1`. Neither is recommended for production before the release gates pass.
-> The `fastapi_cache` import and documented core API signatures are preserved;
-> intentional behavior changes are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
-> See [COMPATIBILITY.md](COMPATIBILITY.md), [MIGRATION.md](MIGRATION.md), [SUPPORT.md](SUPPORT.md),
-> [SECURITY.md](SECURITY.md) and [FORK_ORIGIN.md](FORK_ORIGIN.md). Not affiliated with the original author.
-> The upcoming stable `0.3.0` release will install on Python `>=3.8,<3.14`. Python 3.8–3.10
-> remain legacy functional-compatibility targets only; security support is limited to server-side
-> CPython 3.11–3.13. Pyodide/browser/Node runtimes are not tested or covered by these guarantees;
-> this does not claim functional incompatibility. Python 3.14 remains untested and outside this
-> release's metadata range. The already-published `0.3.0b1` artifact and its metadata remain
-> unchanged.
-
-> **Implemented in this beta:** error responses are not cached, opt-in `TypedJsonCoder` for
-> Pydantic v2, the `clear()` fixes, the auth/privacy bypass, the InMemory
-> `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
-> `_spec_type` namespacing, the non-JSON response bypass, and an explicit second
-> `FastAPICache.init()` call that raises unless you pass `force=True`. Memcached and DynamoDB
-> remain experimental. For the target stable `0.3.0`, DynamoDB is supported only on Python
-> `>=3.10`; the already-published `0.3.0b1` artifact and metadata are unchanged. See
-> [MIGRATION.md](MIGRATION.md).
-
-> **Branch model:** `stable` is the only maintained and release branch. `main` mirrors the
-> upstream project and is not a second development branch.
+> Community-maintained fork of [fastapi-cache2](https://pypi.org/project/fastapi-cache2/).
+> The Python import stays `fastapi_cache`; intentional safety/behavior changes
+> are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
+>
+> **Current releases:** [PyPI](https://pypi.org/project/fastapi-cache-stable/) ·
+> [CHANGELOG](https://github.com/agustin18/fastapi-cache/blob/stable/CHANGELOG.md) · [Compatibility](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md) ·
+> [Support](https://github.com/agustin18/fastapi-cache/blob/stable/SUPPORT.md) · [Stable release gates](https://github.com/agustin18/fastapi-cache/blob/stable/RELEASE_CHECKLIST.md).
+> Evaluate pre-releases independently before production deployment.
+>
+> Installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has
+> security validation; Python 3.8–3.10 is functional legacy compatibility only.
+> DynamoDB/Memcached remain experimental. Browser/Pyodide/Node are untested.
+> Independent project, not endorsed by the upstream maintainer.
+>
+> `stable` is the release branch; `main` tracks upstream.
 
 [![pypi](https://img.shields.io/pypi/v/fastapi-cache-stable.svg?style=flat)](https://pypi.org/p/fastapi-cache-stable)
 [![license](https://img.shields.io/github/license/agustin18/fastapi-cache)](https://github.com/agustin18/fastapi-cache/blob/stable/LICENSE)
@@ -37,56 +27,37 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 ## Features
 
-- Supports `redis`, `memcache`, `dynamodb`, and `in-memory` backends.
-- Easy integration with [FastAPI](https://fastapi.tiangolo.com/).
-- Inherited `ETag` and `Cache-Control` support, including conditional `If-None-Match`
-  requests. `Cache-Control` emits only valid `max-age` values, and ETags are stable,
-  quoted weak validators.
-
-> **Beta caveat:** `0.3.0b1` includes the auth/privacy bypass, the InMemory
-> `expire=None`/instance-isolation fixes, the `Cache-Control` fix, the stable ETag, the
-> `_spec_type` namespacing, the non-JSON response bypass, and explicit re-configuration
-> through `FastAPICache.reset()` or `force=True`. Memcached and DynamoDB remain
-> experimental. See [COMPATIBILITY.md](COMPATIBILITY.md).
+- Same `fastapi_cache` imports and legacy default cache-key algorithm.
+- Correctness fixes for cache invalidation, error responses and HTTP cache headers.
+- Auth/Cookie privacy bypass by default; opt-in typed JSON decoding for Pydantic v2.
+- Redis and InMemory backends; Memcached and DynamoDB remain experimental.
+- CI across Python versions, security profiles and published-wheel Redis migration.
 
 ## Requirements
 
-- FastAPI
-- `redis` when using `RedisBackend`.
-- `memcache` when using `MemcacheBackend`.
-- For target stable `0.3.0`, `aiobotocore` and `aiohttp>=3.14.4` when using `DynamoBackend` on
-  Python `>=3.10`.
-- The target stable `0.3.0` does not install DynamoDB client dependencies on Python 3.8/3.9;
-  Redis and InMemory remain the legacy backend options. The published `0.3.0b1` metadata is
-  unchanged and is not recommended for production.
+- FastAPI with a compatible Python version.
+- Redis standalone verified with Redis 7 and redis-py 4.6.0 (redis-py 4.x).
+- DynamoDB client extra requires Python 3.10+ and patched aiohttp.
+- See [COMPATIBILITY.md](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md) before using optional backends.
 
 ## Install
 
-`0.3.0b1` is the latest published beta referenced here. The repository prepares an
-**unpublished** `0.3.0rc1`; do not assume it is available on TestPyPI/PyPI yet.
-These commands install the published beta:
+Install the normal stable release when available:
 
-```shell
-> pip install "fastapi-cache-stable==0.3.0b1"
+```sh
+python -m pip install "fastapi-cache-stable[redis]"
 ```
 
-or
+To evaluate a **published pre-release candidate**:
 
-```shell
-> pip install "fastapi-cache-stable[redis]==0.3.0b1"
+```sh
+python -m pip install --pre --upgrade "fastapi-cache-stable[redis]"
 ```
 
-or
-
-```shell
-> pip install "fastapi-cache-stable[memcache]==0.3.0b1"
-```
-
-or
-
-```shell
-> pip install "fastapi-cache-stable[dynamodb]==0.3.0b1"
-```
+Other extras: `[memcache]`, `[dynamodb]` (experimental), or no extra for
+InMemory. Before deploying, [check PyPI](https://pypi.org/project/fastapi-cache-stable/)
+and pin the exact version you've tested. Never co-install `fastapi-cache2`;
+both distributions provide `fastapi_cache` files.
 
 ## Migrating from fastapi-cache2
 
@@ -171,7 +142,8 @@ Parameter | type | default | description
 `coder` | `Coder` | `JsonCoder` | which coder to use, e.g. `JsonCoder`
 `key_builder` | `KeyBuilder` callable | `default_key_builder` | which key builder to use
 `injected_dependency_namespace` | `str` | `__fastapi_cache` | prefix for injected dependency keywords.
-`cache_authenticated` | `bool` | `None` | per-endpoint override for caching authenticated requests; global default is `False`; requires an identity-aware `key_builder`.
+`cache_authenticated` | `bool` | `None` | per-endpoint override for authenticated requests; requires an identity-aware `key_builder`.
+`infer_response_model` | `bool` | `False` | opt into FastAPI's response-model inference from a return annotation; can enable output validation and break invalid union/Response annotations. Disabled by default for drop-in compatibility.
 
 The `cache_status_header` argument belongs to `FastAPICache.init()`, **not**
 `@cache()`. It controls the `HIT` / `MISS` response header.
@@ -231,6 +203,28 @@ For broader type support, use `fastapi_cache.coder.PickleCoder` or implement a c
 `PickleCoder` deserializes with Python's `pickle` and must only be used with a cache backend
 whose contents are trusted and integrity-protected. An attacker who can alter cached bytes
 may be able to execute code when those values are read. `JsonCoder` is the default.
+
+### Optional response-model inference
+
+By default, `@cache` preserves the upstream behavior of **not** exposing
+the function's return annotation as a FastAPI response model. Existing
+endpoints that return mixed `Response` and data values therefore keep
+registering without new Pydantic validation.
+
+To have FastAPI infer an OpenAPI response model from a valid annotation
+and validate/serialize the output, opt in explicitly:
+
+```python
+@app.get("/item")
+@cache(expire=60, infer_response_model=True)
+async def item() -> SomeModel:
+    return create_some_model()
+```
+
+Do **not** opt in with annotations FastAPI cannot use as a response model,
+for example `Union[Response, dict]`. Alternatively, set
+`response_model=SomeModel` on `@app.get(...)` as with ordinary FastAPI.
+This option changes schema and response validation, not stored cache keys.
 
 ### Response handling
 
@@ -405,7 +399,7 @@ proxy-injected headers, `request.state`, or internal dependencies, review your c
 This protects the application cache. It does not configure CDN, reverse-proxy, or browser
 caching.
 
-**Upgrading from `0.3.0a1` or earlier:** old entries written for authenticated requests may
+**Upgrading from the legacy package or early prereleases:** old entries written for authenticated requests may
 remain under the default key. Clear or rotate the cache namespace before deploying, including
 all instances/workers and persistent Redis caches. The bypass is not retroactive.
 

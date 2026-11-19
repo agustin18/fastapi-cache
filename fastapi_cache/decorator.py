@@ -242,6 +242,7 @@ def cache(
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
     cache_authenticated: Optional[bool] = None,
+    infer_response_model: bool = False,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -252,6 +253,9 @@ def cache(
     :param key_builder:
     :param cache_authenticated: opt in to caching authenticated requests; requires an
         identity-aware key_builder
+    :param infer_response_model: opt in to FastAPI return-annotation response
+        model inference, including FastAPI's output validation. Off by default
+        to preserve legacy routes with non-Pydantic-compatible annotations.
 
     :return:
     """
@@ -429,7 +433,15 @@ def cache(
 
             return result
 
-        inner.__signature__ = _augment_signature(wrapped_signature, *to_inject)  # type: ignore[attr-defined]
+        # FastAPI's get_typed_signature omits the return annotation. Enabling
+        # inference can make previously valid annotations (e.g. Union[Response,
+        # dict]) fail route registration, so preserve the legacy default.
+        response_signature = wrapped_signature
+        if infer_response_model and return_type is not None:
+            response_signature = wrapped_signature.replace(
+                return_annotation=return_type
+            )
+        inner.__signature__ = _augment_signature(response_signature, *to_inject)  # type: ignore[attr-defined]
 
         return inner
 

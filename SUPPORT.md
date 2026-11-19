@@ -11,8 +11,9 @@ fastapi-cache2.
 - Compatibility and security matrices are verified on server-side CPython. Pyodide, browser and
   Node runtimes are not tested or covered; this does not claim functional incompatibility.
   Applications using urllib3 in those runtimes must assess redirects themselves.
-- This support window has not started; stable `0.3.0` has not been released. The published
-  `0.3.0b1` remains a beta and is not recommended for production.
+- The 12-month maintenance target begins at the first stable release; prereleases
+  do not start it. Check [PyPI](https://pypi.org/project/fastapi-cache-stable/)
+  and [CHANGELOG.md](CHANGELOG.md) for current publication status.
 - Stable `0.3.0` installs on Python `>=3.8,<3.14`. Python 3.8–3.10 have a tested legacy
   functional-compatibility lane, but receive no security-support commitment for EOL runtimes
   or dependency versions. A critical advisory applicable to package-controlled behavior must
