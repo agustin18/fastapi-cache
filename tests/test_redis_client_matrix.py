@@ -13,14 +13,16 @@ import pytest
 from fastapi import FastAPI, Response
 from fastapi.testclient import TestClient
 
-pytest.importorskip("redis")
-
-from redis.asyncio import Redis
-from redis.exceptions import ResponseError
-
 from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
+
+try:
+    from redis.asyncio import Redis
+    from redis.exceptions import ResponseError
+
+    from fastapi_cache.backends.redis import RedisBackend
+except ImportError:
+    pytest.skip("optional redis client is not installed", allow_module_level=True)
 
 pytestmark = pytest.mark.redis
 
