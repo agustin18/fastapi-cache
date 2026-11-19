@@ -109,7 +109,7 @@ You can also enable it per endpoint with `@cache(coder=TypedJsonCoder)`.
 `TypedJsonCoder` validates cached data and propagates validation errors. It only falls back
 for Pydantic v1 models and annotations that cannot be represented by a Pydantic v2 schema.
 
-## Request-dependent cache variants (0.3.0 and future patch)
+## Request-dependent cache variants (0.3.0 → 0.3.1)
 
 **Published 0.3.0** does not automatically vary the default key by
 arbitrary `Request.headers` or `Request.state`. If the endpoint's
@@ -120,16 +120,16 @@ function arguments can already differentiate keys, but this does not
 cover hidden request context. `Authorization`/`Cookie` request bypass
 remains on by default.
 
-Track [#53](https://github.com/agustin18/fastapi-cache/issues/53):
-a **proposed later patch** conservatively bypasses cache read/write
-for endpoints that explicitly accept `Request` while using the default
-key builder. Apps that need caching in those endpoints must provide a
-custom **variant- and identity-safe key builder**. This may lower hit
-rates for those routes; old Redis entries are not automatically deleted.
-Neither the global default key digest nor the key format for ordinary
-parameter-only endpoints is changed. The proposed bypass cannot
-detect arbitrary context variables or hidden middleware inputs in
-routes that do not declare `Request`.
+**Fixed in 0.3.1** ([#53](https://github.com/agustin18/fastapi-cache/issues/53)):
+cache reads and writes are conservatively bypassed for endpoints that
+explicitly accept `Request` while using the default key builder. Apps
+that need caching in those endpoints must provide a custom
+**variant- and identity-safe key builder**. This may lower hit rates for
+those routes; old Redis entries are not automatically deleted. Neither
+the global default key digest nor the key format for ordinary
+parameter-only endpoints is changed. The bypass cannot detect arbitrary
+context variables or hidden middleware inputs in routes that do not
+declare `Request`.
 
 ## Who should not migrate yet
 
@@ -151,15 +151,15 @@ Use a fresh environment and update your **application dependency declaration**
 and lockfile: never install both distributions in one environment, because
 they own the same `fastapi_cache` import.
 
-For the published `0.3.0` stable release in a clean environment:
+For the published `0.3.1` stable release in a clean environment:
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
-python -m pip install "fastapi-cache-stable[redis]==0.3.0"
+python -m pip install "fastapi-cache-stable[redis]==0.3.1"
 python -m pip check
 ```
 
-For evaluating a **future prerelease** (not required for 0.3.0):
+For evaluating a **future prerelease** (not required for 0.3.1):
 
 ```sh
 python -m pip uninstall -y fastapi-cache2

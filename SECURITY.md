@@ -2,11 +2,12 @@
 
 ## Supported versions
 
-- `0.3.0` was first published on **2026-11-19**. The `0.3.x` line
-  targets best-effort security and critical correctness fixes on
-  server-side **CPython 3.11–3.13**, within the 12-month target in
-  [SUPPORT.md](SUPPORT.md) (until 2027-11-19, capacity permitting).
-- Stable `0.3.0` installs on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy
+- `0.3.0` was first published on **2026-11-19**; `0.3.1` is the current
+  patch. The `0.3.x` line targets best-effort security and critical
+  correctness fixes on server-side **CPython 3.11–3.13**, within the
+  12-month target in [SUPPORT.md](SUPPORT.md) (until 2027-11-19,
+  capacity permitting).
+- Stable `0.3.x` installs on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy
   functional-compatibility targets only and have no security-support commitment for EOL
   runtimes or dependencies. Python 3.14 is not included until its full matrix passes.
 - On every maintained release, critical/high findings require a scoped
@@ -55,9 +56,9 @@ genuinely fixed; this does not accept risks on behalf of consumers.
 attacker-controlled pickles. Authenticated request caching requires a
 tenant/user-aware key builder and application-level security review.
 
-## Request-dependent variants in the 0.3.0 release
+## Request-dependent variants in 0.3.0 and 0.3.1
 
-**For published 0.3.0:** the legacy default cache key includes the endpoint
+**In published 0.3.0:** the legacy default cache key includes the endpoint
 function identity and arguments, **not arbitrary values read indirectly from
 `request.headers`, `request.state` or middleware**. A route whose result
 depends on such values may return a cached response from an earlier request
@@ -66,20 +67,17 @@ to the endpoint can already distinguish keys, but not every request-derived
 value appears in the signature. The built-in Authorization/Cookie bypass
 does not cover all custom identity/tenant mechanisms.
 
-**Until a mitigation is published and tested**, do not use the default
-key builder for endpoints that read result-defining request context.
-Avoid caching those endpoints, or supply a carefully reviewed custom key
-builder that separates every relevant user, tenant, locale and response
-variant (including hidden dependency inputs). HTTP `Vary` alone does
-not automatically partition our server-side Redis/InMemory cache.
-
-A follow-up [#53](https://github.com/agustin18/fastapi-cache/issues/53)
-investigates a **conservative source-level change**: if an endpoint
-explicitly accepts `Request` and still uses the default builder, bypass
-the cache. This does not make arbitrary application-global, middleware or
-custom key builders automatically safe, and changing that behavior may
-reduce cache hit rates for existing Request-taking endpoints. The
-published `0.3.0` wheel itself is immutable.
+**Mitigated in 0.3.1** ([#53](https://github.com/agustin18/fastapi-cache/issues/53)):
+if an endpoint explicitly accepts `Request` and uses the default builder,
+cache reads and writes are bypassed. Applications that need caching in
+those endpoints must supply a carefully reviewed custom key builder that
+separates every relevant user, tenant, locale and response variant
+(including hidden dependency inputs). This mitigation does not make
+arbitrary application-global, middleware or custom key builders safe; it
+can reduce cache hit rates for existing Request-taking endpoints. HTTP
+`Vary` alone does not automatically partition our server-side
+Redis/InMemory cache. **0.3.0 users must upgrade to 0.3.1 or avoid caching
+such endpoints**; the published `0.3.0` wheel itself is immutable.
 
 ## Reporting a vulnerability
 

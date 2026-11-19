@@ -5,7 +5,8 @@ fastapi-cache2.
 
 ## Supported lines
 
-- `0.3.x`: `0.3.0` published **2026-11-19**; best-effort security
+- `0.3.x`: `0.3.0` published **2026-11-19**; `0.3.1` patch published
+  **2026-11-19**. Best-effort security
   and critical correctness maintenance targets **2027-11-19**
   (12 months), subject to maintainer capacity. This is a target, not
   a contractual guarantee, for server-side CPython 3.11–3.13.
@@ -15,13 +16,13 @@ fastapi-cache2.
 - The 12-month maintenance target began 2026-11-19; prereleases did not
   start it. Check [PyPI](https://pypi.org/project/fastapi-cache-stable/)
   and [CHANGELOG.md](CHANGELOG.md) for current status.
-- Stable `0.3.0` installs on Python `>=3.8,<3.14`. Python 3.8–3.10 have a tested legacy
+- Stable `0.3.x` installs on Python `>=3.8,<3.14`. Python 3.8–3.10 have a tested legacy
   functional-compatibility lane, but receive no security-support commitment for EOL runtimes
   or dependency versions. A critical advisory applicable to package-controlled behavior must
   be mitigated before release. If it applies only to a specific application-enabled feature or
   optional backend, the trigger and residual risk must be documented and explicitly accepted;
   EOL status alone is not a disposition.
-- In released `0.3.0`, the experimental DynamoDB extra requires
+- In released `0.3.x`, the experimental DynamoDB extra requires
   Python `>=3.10`; Python 3.8/3.9 legacy compatibility is limited to
   Redis/InMemory and the documented core APIs.
 - Python 3.14 remains outside the `0.3.x` metadata range until the full functional matrix passes.
