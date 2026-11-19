@@ -64,6 +64,16 @@ def test_binary_ttl_pipeline_errors(protocol: Optional[int]) -> None:
     async def run() -> None:
         client = _client(protocol=protocol)
         try:
+            # CLIENT INFO exposes the wire protocol actually negotiated on
+            # this connection, not merely the constructor's preference.
+            info = await client.execute_command("CLIENT", "INFO")
+            if isinstance(info, bytes):
+                info = info.decode("utf-8")
+            from importlib.metadata import version
+            major = int(version("redis").split(".", 1)[0])
+            expected_protocol = protocol if protocol is not None else (3 if major >= 8 else 2)
+            assert "resp=" + str(expected_protocol) in info.split()
+
             await client.flushdb()
             backend = RedisBackend(client)
             key = "matrix:binary"
