@@ -6,8 +6,8 @@ This directory contains **historical dependency snapshots and release-security t
   reader-facing compatibility matrix, known inherited risks and practical
   upgrading advice.
 - [21-open-GHSA scoped maintainer decision](MAINTAINER_RISK_ACCEPTANCE_20261119.md):
-  proposed release-risk dispositions and required signoff, not a GitHub
-  alert dismissal.
+  accepted for **0.3.0** under the documented conditions, not a global
+  security fix or a dismissal of open GitHub alerts.
 - [Exact published RC2 wheel security audit](RC2_EXACT_PYPI_WHEEL_AUDIT_20261119.md): SHA-verified PyPI wheel, 3.11–3.13 full extras profiles, complete audit results and expiring GitHub Actions artifacts.
 - [Dependency security inventory](SECURITY_DEPENDENCY_INVENTORY.md): documented scope, call-path analysis and provenance of the original pre-remediation profiles.
 - [Advisory triage register](SECURITY_ADVISORY_TRIAGE.csv): reconciliation of historical GHSA records with the last captured Dependabot snapshot; individual decisions may still be pending.
@@ -16,8 +16,9 @@ This directory contains **historical dependency snapshots and release-security t
   the original ledger is historical reviewed evidence. The **0.3.0
   maintainer-directed scoped decision** is recorded separately in
   [MAINTAINER_RISK_ACCEPTANCE_20261119.md](MAINTAINER_RISK_ACCEPTANCE_20261119.md);
-  it still requires external contra-audit and a GitHub-hosted approval.
-  No GitHub advisory states have been changed.
+  0.3.0 was subsequently approved, tagged and published; see the
+  [post-release status](../../RELEASE_STATUS_0.3.0.md).
+  No GitHub advisory states were fabricated as fixed.
   Run `python scripts/validate_stable_security_review.py` to detect drift.
 - Raw, immutable snapshots: [2026-11-16 baseline](DEPENDABOT_ALERTS_2026-11-16.csv), [2026-11-18 02:09 UTC](DEPENDABOT_ALERTS_20261118T020910Z.csv), [2026-11-18 04:42 UTC](DEPENDABOT_ALERTS_20261118T044213Z.csv), and [2026-11-18 16:51 UTC](DEPENDABOT_ALERTS_20261118T165114Z.csv), and [authenticated 2026-11-19 03:29 UTC](DEPENDABOT_ALERTS_20261119T032907Z.csv).
 
@@ -34,7 +35,7 @@ Without `--current-snapshot`, the script queries GitHub and generates a **new ti
 
 Public-facing usage and security policy remain in [README](../../README.md), [SECURITY.md](../../SECURITY.md), [compatibility guide](../../COMPATIBILITY.md), and the [release checklist](../../RELEASE_CHECKLIST.md). This archive is not included in published runtime distribution metadata.
 
-## Current-only GHSA follow-up (RC2 published; stable pending)
+## Historical GHSA #120 follow-up (stable 0.3.0 published)
 
 [GHSA-7f5h-v6xp-fcq8](https://github.com/Kludex/starlette/security/advisories/GHSA-7f5h-v6xp-fcq8)
 is a Starlette `FileResponse` Range-header CPU DoS affecting versions

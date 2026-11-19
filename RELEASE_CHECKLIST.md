@@ -1,3 +1,17 @@
+# 0.3.0 completed — historical release checklist
+
+**Released on 2026-11-19.** The annotated `v0.3.0` tag, PyPI wheel,
+sdist and GitHub Release are live. The production workflow passed.
+See [0.3.0 release status and hashes](RELEASE_STATUS_0.3.0.md).
+
+**Important:** the historical, unchecked pre-promotion boxes below are
+an audit trail, **not outstanding requirements for the already published
+version**. The 21 reviewed open GHSA were expressly accepted within
+the documented 0.3.0 scope, not marked fixed. New work is tracked in
+[ROADMAP.md](ROADMAP.md) and GitHub issues.
+
+---
+
 # Stable release readiness
 
 This is the **one maintained release-status checklist**. User-facing guides

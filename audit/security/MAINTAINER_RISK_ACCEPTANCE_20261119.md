@@ -1,7 +1,9 @@
 # Scoped release-risk decision for the first stable 0.3.0
 
-**Status: MAINTAINER-DIRECTED SCOPED RISK ACCEPTANCE FOR THE 0.3.0
-RELEASE DECISION; independent contra-audit and final release verification pending.**
+**Status: ACCEPTED WITH THE DOCUMENTED SCOPE FOR RELEASED 0.3.0.
+This document retains the original pre-publication checklist and evidence.**
+For the verified publication and local-agent attestations, see
+[the post-release record](../../RELEASE_STATUS_0.3.0.md).
 
 On **2026-11-19**, the maintainer explicitly instructed preparation of the
 0.3.0 stable-promotion PR **and recording of the previously scoped residual-risk
@@ -168,3 +170,17 @@ or that all external release gates have passed.
 The decision must be reconsidered if a new credible exploit path exists
 in package-controlled behavior, a relevant dependency graph changes, or
 the maintained 0.3.x support scope changes.
+
+## Post-publication addendum — 2026-11-19
+
+The independent release-preparation review returned technical GO for PR #42.
+The maintainer explicitly directed the scoped 21-GHSA acceptance; see the
+[PR discussion](https://github.com/agustin18/fastapi-cache/pull/42#issuecomment-7016369125).
+Subsequently the annotated `v0.3.0` tag, TestPyPI and production PyPI
+workflow completed successfully with matching artifact hashes.
+The local release agent reported a final authenticated delta comparison
+with the same **21 open alerts and no new ones**. The source snapshots,
+individual scope boundaries and historical checklist entries above remain
+unchanged; none of these advisories was marked fixed by this release.
+This addendum does not extend acceptance to new advisories, affected
+consumer deployments or EOL Python security support.

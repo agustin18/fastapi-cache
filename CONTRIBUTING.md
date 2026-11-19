@@ -66,7 +66,7 @@ Blocking for every pull request:
 - Conventional Commits PR title
 - no secrets, no private files, no auto-merge
 
-Legacy security review before stable:
+Ongoing dependency security review (0.3.0 stable is already published):
 
 - Review a fresh dependency-audit report for each legacy Python profile and classify each
   critical/high advisory by package path, trigger and residual risk. EOL status alone does not
