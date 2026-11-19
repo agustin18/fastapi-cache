@@ -17,11 +17,11 @@ def test_user_guides_do_not_pin_old_prerelease_versions(guide: str) -> None:
     assert not re.search(r"\b0\.3\.0(?:a\d+|b\d+|rc\d+)\b", contents)
 
 
-def test_release_checklist_retains_exact_published_artifact() -> None:
+def test_release_checklist_retains_version_independent_provenance() -> None:
     contents = (ROOT / "RELEASE_CHECKLIST.md").read_text(encoding="utf-8")
-    assert "0.3.0rc1" in contents
-    assert (
-        "251d5249feb319e99ba3438c929b618124a34525a4188dbe3817973d1edba6db"
-        in contents
-    )
+    for artifact in ("Wheel", "Sdist"):
+        assert re.search(
+            rf"{artifact} SHA-256:\s*`[0-9a-f]{{64}}`", contents
+        ), f"missing verified {artifact} hash"
+    assert "pypi.org/project/fastapi-cache-stable/" in contents
     assert "Before stable promotion" in contents

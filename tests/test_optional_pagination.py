@@ -26,7 +26,7 @@ def reset_cache() -> Generator[None, None, None]:
 def test_fastapi_pagination_upstream_reproduction() -> None:
     pytest.importorskip("fastapi_pagination")
     from fastapi_pagination import Page, Params, add_pagination, paginate
-    
+
     router = APIRouter()
 
     @router.get("/items")

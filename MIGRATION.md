@@ -161,7 +161,7 @@ resolve from regular PyPI; do not mix TestPyPI and PyPI candidates via
 | Python 3.10 | Verified legacy compatibility | Main functional tests and Pydantic v1 migration job; EOL, no security-support commitment |
 | Python 3.8/3.9 | Verified legacy compatibility | Pinned FastAPI 0.111.1/Pydantic 1.10.27/2.8.2 matrix and wheel smoke; EOL, no security-support commitment |
 | Python 3.14 | Unsupported for stable `0.3.0` | Add and pass a full matrix before announcing support |
-| FastAPI | Verified with 0.111.1 and current 0.x | Older 0.100.x validation is a beta gate; no upper pin yet (`fastapi = "*"`) |
+| FastAPI | Verified with 0.111.1 and current 0.x | Older 0.100.x is unverified; no upper pin yet (`fastapi = "*"`) |
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
 | `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
@@ -546,7 +546,9 @@ synthetic auth values. Set `MIGRATION_E2E_CONFIRM_ISOLATED_REDIS=YES` only after
 glob metacharacters, checks for any existing key under the prefix before seeding, and never flushes
 the Redis database. Candidate namespace cleanup also verifies that an unrelated namespace witness
 survives.
-Build a wheel from the exact candidate source and install it by path in a clean candidate venv.
+To validate a published release, download that exact candidate wheel and
+verify its SHA-256 before installing it by path. Before publication, build
+from the exact candidate source and record the locally built hash.
 Use separate clean Python 3.11 venvs with FastAPI 0.111.1, Pydantic 2.8.2, Redis 4.6.0 and HTTPX
 0.27.0; install `fastapi-cache2[redis]==0.2.2` in the legacy venv. Run from outside the source
 checkout so imports resolve to the installed distributions. Set `REPO`, `REDIS_URL`,
