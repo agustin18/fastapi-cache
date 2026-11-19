@@ -170,7 +170,7 @@ resolve from regular PyPI; do not mix TestPyPI and PyPI candidates via
 
 > The Redis integration job installs the resolver-selected `redis` version from the project
 > constraint (`^4.2.0rc1`), currently 4.6.0, and runs against a Redis 7 service. Other client
-> or server versions are not verified in `0.3.0b1`.
+> or server versions are not verified.
 
 ## Behavior changes in 0.3.0
 
@@ -199,8 +199,8 @@ independently revalidate a cache entry against an upstream origin.
 
 ### Authenticated requests
 
-`0.3.0a1` caches requests with `Authorization`/`Cookie` using the default key. `0.3.0a2`
-bypasses the cache for requests with a non-empty
+The legacy library cached requests with `Authorization`/`Cookie` using the
+default key. The maintained implementation bypasses the cache for a non-empty
 `Authorization` or `Cookie` header. Public requests keep caching. Functions decorated
 without a `Request` parameter have no HTTP identity context and keep using the cache.
 
@@ -270,7 +270,7 @@ Do not ignore a cookie in a custom key builder unless it cannot affect the respo
 This fix protects the application cache. It does not configure CDN, reverse-proxy, or browser
 caching.
 
-**Action required when upgrading from `0.3.0a1` or earlier:** entries written for
+**Action required when migrating from the legacy library or early prereleases:** entries written for
 authenticated requests may remain under the old default key. The bypass only affects new
 requests. Before deploying, clear or rotate the cache namespace, including all
 instances/workers and persistent Redis caches. A public request could otherwise read an old
@@ -278,8 +278,8 @@ private entry.
 
 ### InMemory expiration and isolation
 
-In `0.3.0a1`, `expire=None` expires almost immediately, and `_store`/`_lock` are shared across
-all `InMemoryBackend` instances. In `0.3.0a2`:
+In the original library, `expire=None` can expire immediately and
+`_store`/`_lock` are shared across instances. The maintained implementation:
 
 - `expire=None` means no expiration; `get_with_ttl` returns `-1`, matching Redis/DynamoDB.
 - Each backend instance owns its store and lock. A new backend after `FastAPICache.reset()`
@@ -292,7 +292,7 @@ all `InMemoryBackend` instances. In `0.3.0a2`:
 
 The decorator now omits `max-age` when the effective expiry is unknown (`expire=None`) or
 negative, including no-expiration InMemory hits (`ttl=-1`). `ETag` and the cache-status
-header are still emitted. This is implemented in `0.3.0a2`.
+header are still emitted.
 
 No data-format migration is needed: InMemory data is process-local and is lost on restart.
 If you relied on class-level sharing between instances, use a shared backend instead.
@@ -306,7 +306,7 @@ and `*` are supported. Conditional requests are evaluated against the generated
 representation on both cache hits and misses, including after `Cache-Control: no-cache`.
 Malformed entity-tags are ignored. A matching conditional GET returns `304 Not Modified`
 with the ETag and cache-status headers and no body. The ETag value changes once when
-upgrading from `0.3.0a1`/0.2.2 because the format changed; clients revalidate and receive
+upgrading from the legacy library because the format changed; clients revalidate and receive
 the new value.
 
 The default key-builder implementation and its argument shape are unchanged from
@@ -349,9 +349,9 @@ namespace as well.
 
 ### Second `init()` call
 
-In `0.3.0a1` and `0.3.0a2`, a second `FastAPICache.init()` was a silent no-op: the first
-configuration stayed active and the new arguments were ignored. In `0.3.0b1` a second call
-raises `RuntimeError`.
+In the legacy library, a second `FastAPICache.init()` was a silent no-op:
+the first configuration stayed active. The maintained implementation raises
+`RuntimeError` on a second call unless deliberately reconfigured.
 
 ```python
 FastAPICache.init(InMemoryBackend(), prefix="first")
@@ -394,11 +394,9 @@ coder; the library does not delete data automatically.
    `fastapi-cache-stable`, and verify `fastapi_cache.__version__`.
 4. **Configure once.** Call `FastAPICache.init(...)` once during startup. Define prefix,
    expire, coder and key builder. Review authenticated endpoints.
-5. **Run tests.** Expect changes in error responses and `clear()` in `0.3.0a1`; in `0.3.0a2`,
-   authenticated requests bypass the cache, InMemory expiry/isolation changes apply, the ETag
-   format changes once, `_spec_type` user payloads are preserved, and non-JSON responses
-   bypass the cache. A second `init()` now raises `RuntimeError` unless you pass `force=True`.
-   Update asserts with the documented behavior.
+5. **Run tests.** Verify error-response bypass, invalidation, authentication,
+   InMemory expiry/isolation, ETags, special-type values and repeated initialization.
+   Update assertions only for intentional behavior changes.
 6. **Flush only affected data.** The default key formula is unchanged, and the ETag change only
    makes clients revalidate; neither requires a full namespace flush by itself. Clear or rotate
    namespaces that contain old authenticated entries before enabling the default auth bypass.
@@ -428,7 +426,7 @@ The default key-builder algorithm is unchanged: it uses module/function
 identity and `repr()` of arguments. Never omit user/tenant/permission values
 from a cache key merely to increase hits. The upstream
 [`exclude_params` proposal #574](https://github.com/long2ice/fastapi-cache/pull/574)
-has **not** been implemented in `0.3.0rc1`.
+is **not** implemented in the documented baseline.
 
 ## Rollback
 
@@ -459,15 +457,14 @@ from writing new shared keys.
 and clients revalidate. Clear or rotate namespaces containing old authenticated responses before
 deploying the new bypass; flush old special-type entries if you depend on date/datetime/Decimal
 conversion, or entries affected by the documented error-response/clear bugs.
-**Is `0.3.0b1` production-ready?** No. It is a beta for migration and distribution testing.
-Test it against your own application before relying on it.
-**What is implemented in `0.3.0b1`?** Everything from `0.3.0a2`: error responses are not
-cached, opt-in `TypedJsonCoder` for Pydantic v2, `clear()` key/namespace semantics, the
-legacy compatibility matrix, the auth/privacy bypass, the InMemory fixes, `Cache-Control`,
-the stable ETag, `_spec_type` preservation, and the non-JSON response bypass. It also adds
-the explicit second-`init()` contract.
-**What is still missing?** `0.3.0` final is not released. Memcached and DynamoDB remain
-experimental with unit-level coverage only, and DynamoDB `clear` is still not implemented.
+**Which version should I deploy?** Choose the exact release tested in your
+application. Check [PyPI](https://pypi.org/project/fastapi-cache-stable/)
+and [CHANGELOG.md](CHANGELOG.md) for current publication status.
+
+**What is still missing?** Memcached and DynamoDB remain experimental;
+DynamoDB `clear` is not implemented. See [COMPATIBILITY.md](COMPATIBILITY.md)
+for support boundaries.
+
 **Is Pydantic v1 supported?** Migration compatibility only. Pydantic v1 is end-of-life
 (1.10.27 is the final release) and receives no new security fixes. Typed restoration requires
 Pydantic v2.
@@ -491,10 +488,8 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
   For a deliberate live replacement, close resources owned by the old backend before using
   `force=True`. Tests that re-enter one application's lifespan in the same process should close
   owned resources and call `FastAPICache.reset()` before the next startup. `reset()` does not
-  close resources or delete cached data. This behavior shipped in `0.3.0b1`; see
+  close resources or delete cached data. See
   [Second `init()` call](#second-init-call).
-  The auth/privacy, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
-  implemented in `0.3.0a2`.
 - Redis standalone is verified with Redis 7 and redis-py 4.6.0; redis-py 5/6 are not
   supported by the current dependency constraint and are untested.
 - No full backend parity.
@@ -508,7 +503,7 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 - For the target stable `0.3.0`, the experimental DynamoDB extra is supported only on Python
   `>=3.10` and requires the patched aiohttp line (`>=3.14.4`). On Python 3.8/3.9,
   `fastapi-cache-stable[dynamodb]` does not install aiobotocore or aiohttp; Redis and InMemory
-  remain the legacy backend options. The published `0.3.0b1` artifact remains unchanged.
+  remain the legacy backend options.
 - The modern Poetry lock profile selects AnyIO `>=4.14.2` on Python `>=3.10`; the legacy
   Python 3.8/3.9 lock profile still resolves an older AnyIO because no fixed compatible release
   is available there. The existing runtime residual acceptance remains separately bounded. For
@@ -518,47 +513,20 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 - The 24-month `1.x` support window in `SUPPORT.md` is conditional on the `1.x` release and
   a co-maintainer being in place; no multi-year promise is active today.
 
-## Verification checklist
+## Application migration checklist
 
-### Legacy alpha migration checklist (not current stable-release evidence)
+Before live traffic, verify the **exact pinned distribution**:
 
-The unchecked items below are a retained migration checklist. They are not a record of tests
-run against the current PR candidate; use the current release gates below for that status.
+- [ ] `fastapi-cache2` is uninstalled before installing the fork.
+- [ ] Public requests produce correct MISS → HIT, TTL and response bodies.
+- [ ] Key inputs include all relevant tenant, identity and result parameters.
+- [ ] Legacy private/special Redis entries are selectively invalidated.
+- [ ] OpenAPI, dependency injection and pagination are tested if used.
+- [ ] Key and namespace invalidation, lifespan re-entry and rollback work.
+- [ ] Rollback does not restore unsafe shared caching of private responses.
 
-- [ ] `pip uninstall fastapi-cache2` and `pip install fastapi-cache-stable==0.3.0a2` in a clean venv.
-- [ ] `import fastapi_cache` and `__version__` are correct.
-- [ ] Characterization tests pass or are updated with justification.
-- [ ] HIT/MISS, status and types verified.
-- [ ] `clear(namespace)` and `clear(key)` verified.
-- [ ] Rollback tested in staging.
-
-### Previously implemented `0.3.0` fixes
-
-- [x] Two users with different credentials do not share a response (implemented in `0.3.0a2`).
-- [x] ETag is stable across worker processes (implemented in `0.3.0a2`).
-- [x] Response `Cache-Control`/`max-age` output omits invalid expiry values (implemented in `0.3.0a2`).
-- [x] InMemory `expire=None` and instance isolation behave as documented (implemented in `0.3.0a2`).
-- [x] Non-JSON responses and metadata-bearing `JSONResponse` are bypassed; responses with
-  `Set-Cookie`, `Cache-Control: no-store/private`, or a background task are never cached
-  (implemented in `0.3.0a2`).
-- [x] `_spec_type` user payloads are preserved (implemented in `0.3.0a2`).
-- [x] A second `init()` is explicit (merged on `stable`; ships in `0.3.0b1`).
-
-### Remaining `0.3.0` release gates
-
-These checks are not implied by the historical items above. Release policy and security gates
-are tracked in [`SECURITY_DEPENDENCY_INVENTORY.md`](SECURITY_DEPENDENCY_INVENTORY.md).
-
-- [x] Parse request `Cache-Control` directive names case-insensitively across combined, whitespace,
-  and repeated header fields; verify `no-store` bypasses lookup/storage and `no-cache` recomputes
-  and refreshes the result (implemented in PR #26).
-- [x] Run the package-level Redis migration E2E below against a local candidate wheel; see the
-  exact run provenance in `SECURITY_DEPENDENCY_INVENTORY.md`.
-- [x] Validate one owner-maintained application with Redis runtime caching and its InMemory
-  integration fixture; sanitized evidence is recorded in `SECURITY_DEPENDENCY_INVENTORY.md`.
-- [ ] Review the 94 GHSA register rows (93 historical and one current-only) to the appropriate release stage before stable; PENDING does not mean the GitHub alert remains open.
-- [ ] Build and verify a uniquely versioned RC artifact; repeat the critical migration E2E
-  against that exact published artifact before stable.
+See [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for maintainer release
+evidence and security gates, which do not belong in an end-user guide.
 
 ## Reproducing the Redis migration E2E
 
