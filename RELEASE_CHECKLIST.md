@@ -46,8 +46,14 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   passing with the published RC2 wheel **overlaid** on the running container
   (FastAPI 0.136.3, redis-py 4.6.0). The installed dependency was left
   unchanged; this is **functional-only**, not a resolver/install test.
-- [ ] Independent clean `pip` replacement + resolver + tests in disposable
-  consumer environment. Do not count an import overlay as this gate.
+- [x] Clean `pip` replacement in a disposable `real-estate-arg` Docker
+  backend, **as reported by the executing local agent**: removed
+  `fastapi-cache2==0.2.2`, installed the exact published PyPI
+  `fastapi-cache-stable[redis]==0.3.0rc2` with normal dependency
+  resolution, `pip check` passed, `130 passed in 16.58s`.
+  Original checkout/container kept `fastapi-cache2==0.2.2`.
+  Note: no independently archived CI artifact for this consumer test;
+  attach its logs/provenance to final release review.
 - [x] Exact PyPI-published RC2 wheel audit completed on Python 3.11–3.13
   with all extras: 3/3 SHA-256 checks, clean venv installs and `pip check`,
   73 packages installed and 72 third-party packages scanned per profile,
@@ -65,11 +71,11 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   [GHSA-7f5h-v6xp-fcq8](https://github.com/Kludex/starlette/security/advisories/GHSA-7f5h-v6xp-fcq8)
   as current-only advisory #120. This is conditionally scoped for RC2,
   **not** a claim that legacy Starlette or consumers are patched.
-- [ ] Obtain explicit maintainer signoff on
-  [the 95-row pre-stable review](audit/security/STABLE_RELEASE_SECURITY_REVIEW_20261119.md),
-  including this GHSA, the AnyIO critical legacy acceptance and other
-  consumer-owned file-serving routes. Proposed verdicts are not approved
-  dispositions.
+- [ ] Obtain signed maintainer decision on the
+  [21-open-GHSA scoped acceptance](audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md),
+  checked against [the 95-row pre-stable review](audit/security/STABLE_RELEASE_SECURITY_REVIEW_20261119.md).
+  Python 3.8–3.10 remain functional legacy only; no consumer security
+  guarantees are implied by the fork.
 
 - [ ] Review opt-in OpenAPI response-model inference and regression tests
   for legacy return annotations; characterize dependency-injection
@@ -78,8 +84,11 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   [fastapi-pagination #557](https://github.com/long2ice/fastapi-cache/issues/557)
   with its stated dependency versions; document a known failure separately
   from package-supported interoperability.
-- [ ] Repeat owner-application Redis/InMemory checks against a wheel
-  downloaded from PyPI and verified by SHA-256, not editable source.
+- [x] Repeat owner-application tests using the published PyPI RC2 wheel:
+  initial wheel-overlay test and later genuine dependency replacement in
+  a disposable `real-estate-arg` container each passed **130** selected
+  tests, per local agent; the clean replacement included `pip check`.
+  Preserve logs/digest evidence for release provenance.
 - [x] Cross-check the 95-row ledger/triage with all 120 records in the
   authenticated source snapshot; fail closed if a newly opened GHSA is absent
   or if identifiers, manifest or vulnerable version ranges differ.
@@ -100,6 +109,20 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
 - [ ] Prepare stable metadata/version, CHANGELOG and support notices;
   verify CI, release workflow and publish from the reviewed commit.
 - [ ] Approve the stable publication explicitly, as a separate action.
+
+## Documentation and operations before stable
+
+- [x] Document Python 3.8–3.10 functional-only legacy compatibility
+  and recommend Python 3.11–3.13 in the README, COMPATIBILITY,
+  SECURITY, SUPPORT and migration documentation.
+- [ ] Independently review/approve the scoped 21-GHSA decision.
+  Maintainer signoff does not mark open Dependabot alerts fixed.
+- [ ] Capture current Dependabot alerts again and refresh the dated
+  ledger if there is drift. The 2026-11-19 snapshot is not live status.
+- [ ] Assess and rotate any credentials exposed in Docker Compose
+  command logs/history before continuing sensitive operations.
+- [ ] Make a distinct stable-promotion PR with version/metadata/notes;
+  verify and authorize its final wheel after its CI passes.
 
 ## Outside the first stable promise
 

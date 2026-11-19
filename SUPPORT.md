@@ -30,6 +30,22 @@ fastapi-cache2.
 - Feature work is best effort.
 - The support window is reviewed annually and may be revised with a public notice.
 
+## Legacy compatibility is not security maintenance
+
+Python 3.8–3.10 support is provided only to ease upgrades of existing
+\`fastapi-cache2\` users. Those Python versions are EOL and some supported
+dependency resolutions retain security advisories. The fork may not
+call the affected APIs, but consumer applications may. **Do not rely
+on this library to repair Starlette, AnyIO or other application
+dependencies automatically.** Prefer CPython 3.11–3.13 with current
+compatible packages for production.
+
+See [the version/security matrix](COMPATIBILITY.md),
+[our public security policy](SECURITY.md), and
+[the dated advisory assessment](audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md).
+A scoped risk decision does not dismiss a GitHub advisory and does not
+establish security support for an EOL Python runtime.
+
 ## Handover
 
 - A co-maintainer is required before `1.0.0`. If none is available, `1.0.0` will not be
