@@ -40,7 +40,6 @@ include = [
 [tool.poetry.dependencies]
 python = ">=3.8,<3.14"
 fastapi = "*"
-uvicorn = "*"
 jinja2 = ">=3.0"
 redis = { version = "^4.2.0rc1", optional = true }
 typing-extensions = { version = ">=4.1.0" }
@@ -109,6 +108,8 @@ anyio = [
     { version = "<4.14.2", python = ">=3.8,<3.10" },
 ]
 towncrier = { version = ">=26,<27", python = ">=3.9" }
+# Examples and local development server only; never a runtime dependency.
+uvicorn = "*"
 
 [tool.poetry.group.distributing]
 optional = true
