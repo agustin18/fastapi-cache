@@ -1,9 +1,20 @@
 # Scoped release-risk decision for the first stable 0.3.0
 
-**Status: PROPOSED FOR MAINTAINER APPROVAL IN THIS PR.**
-The owner has expressed willingness to retain documented legacy compatibility
-despite reviewed dependency risks. That direction is not a claim that every
-advisory is fixed or that a review PR has already received signoff.
+**Status: MAINTAINER-DIRECTED SCOPED RISK ACCEPTANCE FOR THE 0.3.0
+RELEASE DECISION; independent contra-audit and final release verification pending.**
+
+On **2026-11-19**, the maintainer explicitly instructed preparation of the
+0.3.0 stable-promotion PR **and recording of the previously scoped residual-risk
+acceptance**. This file records that decision and its boundaries; it does not
+impersonate a GitHub account signature or claim a submitted GitHub review.
+The maintainer can confirm the recorded decision by reviewing/approving the PR
+on GitHub. Approval of these boundaries is not permission to publish an
+unchecked artifact.
+
+The maintainer accepts **the 21 individual, previously reviewed release
+dispositions below**, not vulnerabilities in arbitrary consumer applications,
+not a blanket claim of safety on end-of-life Python, and not newly discovered
+directly reachable critical/high library vulnerabilities.
 
 This record is a **time-bounded, package-scoped release decision** prepared
 from the immutable authenticated Dependabot snapshot
@@ -15,7 +26,7 @@ in the captured graph. The 74 represented graph-fixed GHSA remain separate
 from the 21 still-open cases. An alert's GHSA, package/version and
 `current_state` are never changed to manufacture closure.
 
-## Proposed dispositions for all 21 open GHSA
+## Maintainer-directed release dispositions for all 21 open GHSA
 
 | Advisory | Captured severity | Package | Proposed release decision | Alert # |
 |---|---|---|---|---|
@@ -94,23 +105,59 @@ from the 21 still-open cases. An alert's GHSA, package/version and
 - [User-facing legacy support explanation](LEGACY_SUPPORT_AND_RISKS.md)
 - [Public support](../../SUPPORT.md) and [security policy](../../SECURITY.md)
 
-## Final signoff record (maintainer to complete after independent review)
+## Maintainer-directed risk decision and pending publication gates
 
-- [ ] Approve the package-scoped decisions for **all 21 open GHSA** above.
-- [ ] Acknowledge the **74 graph-fixed** entries as historical snapshot
-  status only; do not interpret these as universal vulnerability fixes.
-- [ ] Approve the critical AnyIO 4.5.2 legacy residual **only** for the
-  documented Python 3.8/3.9/test profile boundaries.
-- [ ] Approve the Starlette #120/#64 consumer-owned file-serving boundary;
-  confirm examples do not expose the affected route.
-- [ ] Confirm the documented urllib3/optional-backend analysis and that
-  the proposed decision is not a promise about consumer-owned urllib3.
-- [ ] Confirm the dated snapshot has been refreshed before publishing;
-  investigate any newly open/changed alert.
-- [ ] Record approval in the review/merge discussion of this PR, including
-  the commit SHA and date. This document alone is not proof of signoff.
+**Decision date:** 2026-11-19 (recorded at explicit owner request for a
+0.3.0 release PR; GitHub-hosted approval/identity attestation still pending).
 
-**Result after signoff:** the 21 alerts may remain open in the legacy
-development lock while stable can proceed, **provided** no new,
-directly exploitable critical/high package-controlled behavior is found
-and the final wheel checks pass.
+- [x] Accept the **21 individual release-specific dispositions** in the table
+  and their restrictions; this does not close or dismiss any GHSA.
+- [x] Acknowledge the **74 graph-fixed** ledger rows and 25 omitted snapshot
+  rows as resolved **in the dated captured dependency graph only**, not as
+  globally fixed bugs or an assurance for all consumers.
+- [x] Specifically accept the critical **AnyIO #75** residual only for
+  the documented Python **3.8/3.9 functional legacy/test** profiles.
+  No security support is promised to those runtimes, and downstream AnyIO
+  TLS usage still requires consumer action or an interpreter upgrade.
+- [x] Specifically accept the conditional **Starlette #120/#64/#70**
+  scope: the library no longer ships an unsafe StaticFiles mount and does
+  not serve files or parse forms through the affected code paths. An
+  application independently using vulnerable Starlette file/form handling
+  is **not protected** by installing this fork.
+- [x] Accept the **urllib3** package-path disposition only as no
+  directly applicable library call found in the reviewed cache/DynamoDB
+  transport. Consumer-owned urllib3 usage is **not accepted on their behalf**.
+- [x] Confirm that Python 3.8–3.10 are **functional legacy compatibility**
+  only; recommend server-side CPython 3.11–3.13, with 0.3.x best-effort
+  security maintenance limited to the documented modern profiles.
+- [x] Preserve the captured alert states and the **canonical source triage**
+  as historical evidence (including its PENDING bookkeeping status).
+  This separate document records the **release-specific acceptance**;
+  source PENDING is **not** secretly converted to FIXED or globally accepted.
+
+**Independent and operational conditions still outstanding:**
+
+- [ ] Independent contra-auditor rechecks these exact 21 scopes and the
+  package-controlled call paths against the release PR HEAD; any
+  demonstrated directly reachable critical/high flaw is **NO-GO**.
+- [ ] Maintainer records traceable GitHub PR approval or comment referencing
+  the reviewed HEAD and this 21-GHSA decision; the conversation instruction
+  recorded here is not a forged GitHub review.
+- [ ] Refresh **authenticated Dependabot** immediately before release;
+  reconcile new/reopened/changed GHSA. This acceptance does not cover new
+  advisories or a changed exploit scope.
+- [ ] Verify the versioned **0.3.0 final wheel and sdist**, installability,
+  runtime dependency inventory and vulnerability audit in Python 3.11–3.13
+  using a fresh build; the published RC2 hash is not the final hash.
+- [ ] Assess any credentials exposed by Docker Compose logs/history and
+  rotate/revoke exposed real secrets before sensitive publish operations.
+- [ ] Separately authorize the actual PyPI publication **after** the
+  release PR, CI, security refresh and artifact verification.
+
+**Decision:** GO to prepare/review the first stable 0.3.0 distribution
+under these bounded conditions; **NOT** a claim that 0.3.0 is published
+or that all external release gates have passed.
+
+The decision must be reconsidered if a new credible exploit path exists
+in package-controlled behavior, a relevant dependency graph changes, or
+the maintained 0.3.x support scope changes.

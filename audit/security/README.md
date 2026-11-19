@@ -13,7 +13,11 @@ This directory contains **historical dependency snapshots and release-security t
 - [Advisory triage register](SECURITY_ADVISORY_TRIAGE.csv): reconciliation of historical GHSA records with the last captured Dependabot snapshot; individual decisions may still be pending.
 - [Pre-stable security review](STABLE_RELEASE_SECURITY_REVIEW_20261119.md) and
   [95-row release-disposition ledger](STABLE_RELEASE_SECURITY_REVIEW_20261119.csv):
-  **proposals for auditor and maintainer approval**, not a change to GitHub alert state.
+  the original ledger is historical reviewed evidence. The **0.3.0
+  maintainer-directed scoped decision** is recorded separately in
+  [MAINTAINER_RISK_ACCEPTANCE_20261119.md](MAINTAINER_RISK_ACCEPTANCE_20261119.md);
+  it still requires external contra-audit and a GitHub-hosted approval.
+  No GitHub advisory states have been changed.
   Run `python scripts/validate_stable_security_review.py` to detect drift.
 - Raw, immutable snapshots: [2026-11-16 baseline](DEPENDABOT_ALERTS_2026-11-16.csv), [2026-11-18 02:09 UTC](DEPENDABOT_ALERTS_20261118T020910Z.csv), [2026-11-18 04:42 UTC](DEPENDABOT_ALERTS_20261118T044213Z.csv), and [2026-11-18 16:51 UTC](DEPENDABOT_ALERTS_20261118T165114Z.csv), and [authenticated 2026-11-19 03:29 UTC](DEPENDABOT_ALERTS_20261119T032907Z.csv).
 

@@ -126,17 +126,20 @@ agent evidence, not independently archived CI provenance here.
 
 ## Explicit release gates still outstanding
 
-- [ ] **Owner/auditor signoff** on all 21 *open* advisory dispositions. Confirm
-  the existing bounded acceptance of the critical AnyIO legacy exposure and
-  the high Starlette #120 consumer-owned risk. The proposed ledger is not
-  signoff and changes no Dependabot alert states.
+- [x] **Maintainer-directed release-specific risk acceptance recorded** in
+  [the 0.3.0 decision](MAINTAINER_RISK_ACCEPTANCE_20261119.md)
+  for all 21 previously reviewed open GHSA, including AnyIO #75,
+  Starlette #120/#64/#70 and the bounded urllib3 paths. A **separate
+  independent contra-audit/GitHub-hosted attestation is outstanding**.
+  The original evidence ledger is still not a change to Dependabot state.
 - [x] Audit the **exact downloaded RC2 PyPI wheel** with all extras on
   CPython 3.11, 3.12 and 3.13: all three passed the published SHA check,
   `pip check` and a full `pip-audit` inventory (72 third-party deps,
   **zero known findings** at scan time). Evidence and 90-day artifacts:
   [published-wheel audit](RC2_EXACT_PYPI_WHEEL_AUDIT_20261119.md).
-- [ ] Sign off on the 74 graph-fixed rows as a group **within the captured
-  source graph** (not a claim about all future consumer resolutions).
+- [x] Maintainer-directed acknowledgment of 74 graph-fixed rows **only
+  within the dated captured dependency graph** (not all future consumers),
+  recorded in the release-specific acceptance document.
 - [x] Agent reports completed disposable `real-estate-arg` clean pip
   replacement: `fastapi-cache2==0.2.2` removed, `0.3.0rc2[redis]`
   installed with dependencies and `pip check`, **130 tests passed**.
@@ -146,13 +149,16 @@ agent evidence, not independently archived CI provenance here.
   agent but not archived in this repository.
 - [ ] Re-run a **fresh authenticated** Dependabot capture before stable signoff
   and reconcile any changed/new GHSA (fail closed on new open alerts).
-- [ ] Once those gates pass, decide the individual stable dispositions in the
-  canonical triage register, retaining the original state and evidence
-  separately. A reviewer's PR approval is the place to authorize documented
-  risk acceptance; this draft does not manufacture that approval.
-- [ ] Only then open the distinct `0.3.0` release-preparation PR. Rebuild and
-  re-audit that uniquely versioned distribution; stable is **not** the same
-  bytes or hash as RC2.
+- [x] Record individual stable dispositions separately in the
+  [maintainer-directed 0.3.0 acceptance](MAINTAINER_RISK_ACCEPTANCE_20261119.md),
+  retaining the source triage's original evidence/alert states and PENDING
+  tracking fields. A GitHub PR review can attest the owner decision; no
+  review signature was fabricated.
+- [ ] Fresh snapshot and independent contra-audit before PyPI publication.
+- [x] Stage the distinct `0.3.0` release-preparation PR for review,
+  without publishing PyPI or creating a release tag.
+- [ ] Rebuild and re-audit that uniquely versioned distribution; stable
+  is **not** the same bytes or hash as RC2.
 
 ## Reproducibility
 
