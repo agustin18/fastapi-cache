@@ -2,17 +2,18 @@
 
 ## Supported versions
 
-- Security fixes for `0.3.x` on Python 3.11–3.13 are planned to begin with the first stable
-  `0.3.0` release and follow the best-effort window in `SUPPORT.md`. No stable `0.3.x` release
-  has shipped yet.
+- `0.3.0` was first published on **2026-11-19**. The `0.3.x` line
+  targets best-effort security and critical correctness fixes on
+  server-side **CPython 3.11–3.13**, within the 12-month target in
+  [SUPPORT.md](SUPPORT.md) (until 2027-11-19, capacity permitting).
 - Stable `0.3.0` installs on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy
   functional-compatibility targets only and have no security-support commitment for EOL
   runtimes or dependencies. Python 3.14 is not included until its full matrix passes.
-- Before stable, critical findings in legacy profiles must be triaged for applicability,
-  mitigations and residual risk. A critical finding applicable to package-controlled behavior
-  must be mitigated. If an advisory requires a specific application-enabled feature or
-  optional backend, document that trigger and residual risk and obtain explicit maintainer
-  acceptance. EOL status alone never closes a finding.
+- On every maintained release, critical/high findings require a scoped
+  reachability assessment. If exploitable through package-controlled
+  behavior, fix or block. For application-enabled features or optional
+  backends, document the trigger, mitigation and residual risk.
+  End-of-life status alone does not dismiss an advisory.
 - `1.x`: security fixes (planned).
 
 ## Legacy interpreter risk and consumer responsibility
@@ -41,12 +42,14 @@ so identical vulnerabilities or dependency versions cannot be assumed.
 Security scans are specific to the actual installed environment.
 
 The exact PyPI RC2 wheel was installed and audited on CPython 3.11–3.13
-with all extras, with no known third-party findings **at the scan date**.
-That is not a guarantee of zero vulnerabilities for all environments.
-The [dated maintainer release-risk assessment](audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md)
-records the proposed scoped decisions for 21 open advisories. Open
-Dependabot alerts stay open unless genuinely fixed, and acceptance of
-consumer-owned risk does not equate to a code fix.
+with all extras, with no known third-party findings **at that scan date**.
+The final 0.3.0 production wheel and sdist were published with matching
+TestPyPI/PyPI SHA-256 hashes, CI and package installation checks; see
+[release provenance](RELEASE_STATUS_0.3.0.md). These checks cannot
+guarantee zero vulnerabilities in arbitrary consumer environments.
+The [scoped maintainer 21-GHSA release decision](audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md)
+is accepted for 0.3.0. Open Dependabot alerts remain open unless
+genuinely fixed; this does not accept risks on behalf of consumers.
 
 `PickleCoder` is unsafe with untrusted cache values; do not accept
 attacker-controlled pickles. Authenticated request caching requires a

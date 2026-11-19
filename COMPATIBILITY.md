@@ -186,7 +186,7 @@ compatible dependencies for production**, not EOL interpreters.
 Status definitions:
 
 - **Verified**: tested in CI with identified versions.
-- **Targeted for 0.3.0**: intended behavior, not yet guaranteed.
+- **Targeted for a future release**: proposed behavior; not yet shipped or guaranteed.
 - **Experimental**: interface available, coverage insufficient.
 - **Unsupported**: outside the compatibility contract.
 

@@ -84,8 +84,8 @@ the [full 95-row register](SECURITY_ADVISORY_TRIAGE.csv) and the
 
 ## Maintainer release-security decision
 
-For the first stable release, the proposed decision is **accept only the
-specifically scoped residual risks** after reviewing the 21 open GHSA, while
+For the published 0.3.0 release, the maintainer's decision was to
+**accept only the specifically scoped residual risks** in the 21 open GHSA, while
 keeping their raw Dependabot state as `open` where applicable. A conditional
 or not-applicable finding means *not reachable in the inspected package path*
 or *outside the supported profile*, not globally patched or risk-free.
@@ -95,7 +95,11 @@ to Python 3.8–3.10 and **does not cover** consumer-owned network connections,
 file-serving, form parsing, URL handling, independent `urllib3` use or
 untrusted pickles. These remain the deploying application's responsibility.
 
-The signed decision should be recorded by an explicit maintainer review of
-[the dated release-risk assessment](MAINTAINER_RISK_ACCEPTANCE_20261119.md).
-A merged evidence-only ledger is not, by itself, that decision. Re-check
-Dependabot before the stable promotion; newly open GHSA need fresh review.
+The maintainer-directed decision is documented in
+[the dated assessment](MAINTAINER_RISK_ACCEPTANCE_20261119.md)
+and [PR #42 discussion](https://github.com/agustin18/fastapi-cache/pull/42#issuecomment-7016369125).
+This was an explicit release authorization, not a GitHub vulnerability
+dismissal or a promise about consumer applications. The
+[release status](../../RELEASE_STATUS_0.3.0.md) records the agent-reported
+Dependabot delta check before publication; recheck new, reopened or
+materially changed applicable advisories in future releases.
