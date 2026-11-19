@@ -16,6 +16,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lock-refresh-generator:
+    name: Generate Poetry lock update (temporary, branch-only)
+    if: github.event_name == 'pull_request' && github.head_ref == 'security/refresh-poetry-lock' && github.event.pull_request.head.repo.full_name == 'agustin18/fastapi-cache'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Generate full updated lock using Poetry 1.8.3
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install poetry==1.8.3
+          poetry check --lock
+          poetry update --lock --no-interaction
+          poetry check --lock
+          git diff --stat -- poetry.lock
+          git status --short
+      - name: Commit generated lock on PR branch (not stable)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- poetry.lock; then
+            echo "No lock changes after full resolver refresh"
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add poetry.lock
+            git commit -m 'chore(deps): refresh Poetry 1.8.3 dependency lock'
+            git push origin "HEAD:${{ github.head_ref }}"
+          fi
+
   pagination-integration:
     name: Characterize fastapi-pagination 0.13.1 (upstream issue 557)
     runs-on: ubuntu-24.04
