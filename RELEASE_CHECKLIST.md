@@ -28,6 +28,29 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   integration tests using a local candidate wheel. That does **not**
   prove the owner application passed using the **published** RC wheel.
 
+## RC2 release preparation — not yet published
+
+- [x] PRs #33, #35, #36, #37 and #38 have been integrated in `stable`.
+- [x] The latest authenticated security snapshot is
+  [20261119T032907Z](audit/security/DEPENDABOT_ALERTS_20261119T032907Z.csv):
+  21 open alerts with separately documented applicability; the new
+  Starlette Range advisory is current-only #120 and remains open.
+- [x] Set candidate source version to `0.3.0rc2` and build release notes
+  with Towncrier from the six merged change fragments.
+- [ ] Review and approve the **exact release PR head** after CI, CodeQL,
+  Poetry lock profiles and wheel/sdist checks all pass.
+- [ ] Merge this candidate preparation PR to `stable`, then create and
+  verify a unique `v0.3.0rc2` tag on the reviewed release commit.
+- [ ] Obtain explicit publication approval; publish to TestPyPI and PyPI
+  via protected manual workflows, never from an unreviewed branch.
+- [ ] Download the published wheel and sdist, record **new** SHA-256 hashes,
+  compare METADATA/inventory, scan the exact installed wheel across modern
+  supported Python versions, and run Redis migration plus owner-application
+  Redis/InMemory verification from the published wheel.
+
+Previous RC1 hashes below remain historical provenance; they are not
+hashes of the newly prepared RC2 artifacts.
+
 ## Before stable promotion
 
 - [x] Remove the unused `StaticFiles(directory="./")` mount from the

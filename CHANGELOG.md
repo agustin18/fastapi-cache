@@ -8,6 +8,28 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.3.0rc2](https://github.com/agustin18/fastapi-cache/tree/v0.3.0rc2) - 2026-11-19
+
+### Bugfixes
+
+- Add opt-in FastAPI return-annotation response-model inference with
+  `@cache(infer_response_model=True)`, while preserving legacy route
+  registration and cache-key behavior by default. Characterize injected
+  dependency keys and strengthen optional pagination integration tests. [#33](https://github.com/agustin18/fastapi-cache/issues/33)
+- Remove the unused Redis example static-file mount, which previously served the process working directory and exposed legacy Starlette FileResponse paths. Track the conditional Starlette Range-header GHSA for explicit pre-stable reconciliation without claiming downstream dependencies are patched. [#37](https://github.com/agustin18/fastapi-cache/issues/37)
+
+### Improved Documentation
+
+- Clarify migration, exact release-artifact validation and rollback precautions;
+  document inherited integration limits, and correct README Redis lifecycle and
+  custom key-builder examples. [#31](https://github.com/agustin18/fastapi-cache/issues/31)
+- Move immutable Dependabot snapshots, the advisory triage register and the security dependency inventory into `audit/security/`, with links and reconciliation defaults updated. Keep existing user-facing guide URLs stable. [#36](https://github.com/agustin18/fastapi-cache/issues/36)
+
+### Misc
+
+- Refresh the Poetry dependency lock to reduce vulnerable, stale transitive packages while retaining the Python 3.8–3.13 compatibility contract. Security dispositions remain subject to profile-specific review. [#35](https://github.com/agustin18/fastapi-cache/issues/35)
+- Capture and reconcile the authenticated Dependabot snapshot after PR #37. Document the Starlette Range-header GHSA as a conditional legacy/consumer risk for RC2 without marking the alert fixed or extending security support to Python 3.8/3.9. [#38](https://github.com/agustin18/fastapi-cache/issues/38)
+
 ## [0.3.0rc1](https://pypi.org/project/fastapi-cache-stable/0.3.0rc1/) - 2026-11-18
 
 ### Bugfixes
