@@ -12,6 +12,9 @@ from typing import Any, AsyncIterator, Dict
 import pytest
 from fastapi import FastAPI, Response
 from fastapi.testclient import TestClient
+
+pytest.importorskip("redis")
+
 from redis.asyncio import Redis
 from redis.exceptions import ResponseError
 
