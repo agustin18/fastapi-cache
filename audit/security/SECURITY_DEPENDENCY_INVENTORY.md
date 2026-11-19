@@ -1,5 +1,14 @@
 # Dependency security inventory
 
+> **Historical source inventory (2026-11-16 and later dated analyses).**
+> The counts, example paths, release readiness and pre-RC artifact references
+> below are preserved as contemporaneous evidence and may be superseded.
+> For the RC2-to-stable release decision, consult
+> [the 2026-11-19 pre-stable security review](STABLE_RELEASE_SECURITY_REVIEW_20261119.md)
+> and [its 95-row decision ledger](STABLE_RELEASE_SECURITY_REVIEW_20261119.csv).
+> This archive is not a live Dependabot report or a final signoff.
+
+
 **Snapshot:** 2026-11-16 · **Stable SHA:** `38e2dc5bde5f5ce442b5c0ef4949e54544ee05c1` · **Package:** `fastapi-cache-stable==0.3.0b1`
 
 This is an inventory for release planning, not an exploitability verdict. It records the pre-remediation lock snapshot; PR #25's h11/httpcore remediation is described below. The alert-level snapshot is in [`DEPENDABOT_ALERTS_2026-11-16.csv`](DEPENDABOT_ALERTS_2026-11-16.csv).
