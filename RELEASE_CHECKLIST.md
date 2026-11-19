@@ -59,8 +59,11 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   73 packages installed and 72 third-party packages scanned per profile,
   no known findings. See [archived provenance](audit/security/RC2_EXACT_PYPI_WHEEL_AUDIT_20261119.md)
   and linked workflow artifacts (90-day retention).
-- [ ] Approve residual legacy/consumer GHSA scope in a dedicated review;
-  the clean modern wheel does not itself close the 21 open lockfile alerts.
+- [x] Record maintainer-directed release-specific **bounded risk acceptance**
+  for all 21 captured open GHSA, without dismissing their GitHub alerts:
+  [0.3.0 signoff record](audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md).
+  Separate independent contra-audit and fresh snapshot are still needed
+  before publication.
 
 ## Before stable promotion
 
@@ -71,19 +74,20 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   [GHSA-7f5h-v6xp-fcq8](https://github.com/Kludex/starlette/security/advisories/GHSA-7f5h-v6xp-fcq8)
   as current-only advisory #120. This is conditionally scoped for RC2,
   **not** a claim that legacy Starlette or consumers are patched.
-- [ ] Obtain signed maintainer decision on the
-  [21-open-GHSA scoped acceptance](audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md),
-  checked against [the 95-row pre-stable review](audit/security/STABLE_RELEASE_SECURITY_REVIEW_20261119.md).
-  Python 3.8–3.10 remain functional legacy only; no consumer security
-  guarantees are implied by the fork.
+- [x] Record the maintainer-requested scoped 21-GHSA acceptance in
+  [the 0.3.0 decision](audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md),
+  checked against the [95-row historical review](audit/security/STABLE_RELEASE_SECURITY_REVIEW_20261119.md).
+  This records an explicit owner direction, **not** a forged GitHub
+  review signature or approval of the final publish action.
+  Python 3.8–3.10 remain functional legacy only.
 
-- [ ] Review opt-in OpenAPI response-model inference and regression tests
-  for legacy return annotations; characterize dependency-injection
-  cache-key stability without changing the default key builder.
-- [ ] Reproduce
+- [x] Review opt-in OpenAPI response-model inference and regressions
+  for legacy return annotations; exercise DI/cache-key behavior in
+  PR #33 and its regression CI without changing default key generation.
+- [x] Characterize
   [fastapi-pagination #557](https://github.com/long2ice/fastapi-cache/issues/557)
-  with its stated dependency versions; document a known failure separately
-  from package-supported interoperability.
+  in pinned CI; this bounds the reported configuration and does not
+  claim blanket interoperability with every version.
 - [x] Repeat owner-application tests using the published PyPI RC2 wheel:
   initial wheel-overlay test and later genuine dependency replacement in
   a disposable `real-estate-arg` container each passed **130** selected
@@ -95,19 +99,29 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
 - [x] Reconcile and individually account for all 95 historical/current GHSA
   in [the pre-stable review ledger](audit/security/STABLE_RELEASE_SECURITY_REVIEW_20261119.csv).
   This is **proposed evidence review**, not risk acceptance.
-- [ ] Approve the 21 open advisory verdicts and close the canonical
-  [GHSA triage register](audit/security/SECURITY_ADVISORY_TRIAGE.csv)
-  with traceable final decisions; historical fixed-state entries must not be
-  confused with live vulnerability status.
-- [ ] Resolve/mitigate or explicitly accept residual risks within the
-  agreed security-support contract. No unmitigated critical/high
-  vulnerability directly reachable in a package-controlled path.
+- [x] Record all **21** individually scoped release dispositions in the
+  [maintainer acceptance document](audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md).
+  Preserve the [canonical source triage](audit/security/SECURITY_ADVISORY_TRIAGE.csv)
+  and original GitHub alert states/PENDING evidence unchanged. The separate
+  decision document carries the **release acceptance**, not a fictitious
+  vulnerability fix.
+- [x] Document/accept scoped residual dependency risks within the
+  Python 3.11–3.13 support contract, according to the paths reviewed.
+- [ ] Independent contra-auditor confirms **no directly reachable
+  unmitigated critical/high vulnerability controlled by the library**
+  in the exact promotion diff.
 - [ ] Repeat exact-artifact runtime audits for the final candidate
   and compare METADATA, installed inventory and wheel/sdist hashes.
-- [ ] If code changes after the published RC, publish a new prerelease
-  candidate (for example `rc3`) and test that exact artifact before stable.
-- [ ] Prepare stable metadata/version, CHANGELOG and support notices;
-  verify CI, release workflow and publish from the reviewed commit.
+- [x] Runtime library/backend code and dependency constraints remain
+  unchanged from the published RC2; this PR prepares release metadata,
+  version and documentation only. No RC3 required on that basis.
+  **If the contra-audit leads to runtime changes**, publish a new RC and
+  test its exact artifact before revisiting stable.
+- [x] Stage `0.3.0` metadata/version, release notes and support notices
+  in a distinct PR; release changelog fragments are preserved for
+  Towncrier release generation.
+- [ ] Verify the merged commit, final distribution CI/security audits
+  and manual publishing workflow from the immutable `v0.3.0` tag.
 - [ ] Approve the stable publication explicitly, as a separate action.
 
 ## Documentation and operations before stable
@@ -115,14 +129,18 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
 - [x] Document Python 3.8–3.10 functional-only legacy compatibility
   and recommend Python 3.11–3.13 in the README, COMPATIBILITY,
   SECURITY, SUPPORT and migration documentation.
-- [ ] Independently review/approve the scoped 21-GHSA decision.
-  Maintainer signoff does not mark open Dependabot alerts fixed.
+- [x] Record maintainer-directed scoped 21-GHSA acceptance; it leaves
+  Dependabot alerts unchanged.
+- [ ] Obtain independent contra-audit and GitHub-hosted owner approval
+  referencing the release PR HEAD.
 - [ ] Capture current Dependabot alerts again and refresh the dated
   ledger if there is drift. The 2026-11-19 snapshot is not live status.
 - [ ] Assess and rotate any credentials exposed in Docker Compose
   command logs/history before continuing sensitive operations.
-- [ ] Make a distinct stable-promotion PR with version/metadata/notes;
-  verify and authorize its final wheel after its CI passes.
+- [x] Open a distinct stable-promotion PR with version/metadata/notes;
+  **not** a PyPI publish or tag.
+- [ ] Verify the built final distribution and explicitly authorize
+  PyPI publication after CI, snapshot refresh and independent review.
 
 ## Outside the first stable promise
 
