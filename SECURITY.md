@@ -55,6 +55,32 @@ genuinely fixed; this does not accept risks on behalf of consumers.
 attacker-controlled pickles. Authenticated request caching requires a
 tenant/user-aware key builder and application-level security review.
 
+## Request-dependent variants in the 0.3.0 release
+
+**For published 0.3.0:** the legacy default cache key includes the endpoint
+function identity and arguments, **not arbitrary values read indirectly from
+`request.headers`, `request.state` or middleware**. A route whose result
+depends on such values may return a cached response from an earlier request
+with different headers. A FastAPI `Header(...)` parameter that is passed
+to the endpoint can already distinguish keys, but not every request-derived
+value appears in the signature. The built-in Authorization/Cookie bypass
+does not cover all custom identity/tenant mechanisms.
+
+**Until a mitigation is published and tested**, do not use the default
+key builder for endpoints that read result-defining request context.
+Avoid caching those endpoints, or supply a carefully reviewed custom key
+builder that separates every relevant user, tenant, locale and response
+variant (including hidden dependency inputs). HTTP `Vary` alone does
+not automatically partition our server-side Redis/InMemory cache.
+
+A follow-up [#53](https://github.com/agustin18/fastapi-cache/issues/53)
+investigates a **conservative source-level change**: if an endpoint
+explicitly accepts `Request` and still uses the default builder, bypass
+the cache. This does not make arbitrary application-global, middleware or
+custom key builders automatically safe, and changing that behavior may
+reduce cache hit rates for existing Request-taking endpoints. The
+published `0.3.0` wheel itself is immutable.
+
 ## Reporting a vulnerability
 
 Use GitHub private vulnerability reporting:

@@ -279,6 +279,10 @@ def cache(
         to_inject: List[Parameter] = []
         request_param = _locate_param(wrapped_signature, injected_request, to_inject)
         response_param = _locate_param(wrapped_signature, injected_response, to_inject)
+        # FastAPI injects Request internally on every cached route. Only an
+        # explicitly declared Request can be inspected by the endpoint itself,
+        # including headers/state absent from the legacy args/kwargs cache key.
+        explicit_request = request_param not in to_inject
         return_type = get_typed_return_annotation(func)
 
         @wraps(func)
@@ -329,6 +333,17 @@ def cache(
             effective_coder = coder or FastAPICache.get_coder()
             effective_expire = expire or FastAPICache.get_expire()
             effective_key_builder = key_builder or FastAPICache.get_key_builder()
+            if (
+                explicit_request
+                and request is not None
+                and effective_key_builder is default_key_builder
+            ):
+                # A Request parameter can influence the returned data via
+                # headers/state not represented in args/kwargs. Avoid serving
+                # a legacy shared cache entry or storing another one. Apps
+                # requiring cache hits must opt into a complete, identity-
+                # and variant-aware custom key builder.
+                return await ensure_async_func(*args, **kwargs)
             if (
                 has_auth_headers
                 and cache_authenticated_enabled
