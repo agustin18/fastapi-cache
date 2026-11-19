@@ -30,12 +30,15 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
 
 ## Before stable promotion
 
-- [ ] Before RC2, remove the unused `StaticFiles(directory="./")` mount
-  from the Redis example and validate the regression guard. For
-  [GHSA-7f5h-v6xp-fcq8](https://github.com/Kludex/starlette/security/advisories/GHSA-7f5h-v6xp-fcq8),
-  refresh the Dependabot snapshot and reconcile the consumer/legacy
-  scope before declaring stable; removal of the example mount is not
-  a fix for arbitrary consumers of Starlette.
+- [x] Remove the unused `StaticFiles(directory="./")` mount from the
+  Redis example, with a passing regression guard (PR #37).
+- [x] Capture a fresh authenticated Dependabot snapshot on 2026-11-19
+  (120 records, 21 open) and add
+  [GHSA-7f5h-v6xp-fcq8](https://github.com/Kludex/starlette/security/advisories/GHSA-7f5h-v6xp-fcq8)
+  as current-only advisory #120. This is conditionally scoped for RC2,
+  **not** a claim that legacy Starlette or consumers are patched.
+- [ ] Complete the final risk decision for this GHSA before stable,
+  including consumer-owned file-serving routes on legacy Python.
 
 - [ ] Review opt-in OpenAPI response-model inference and regression tests
   for legacy return annotations; characterize dependency-injection

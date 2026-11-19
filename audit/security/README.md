@@ -29,8 +29,11 @@ predate this follow-up. The Redis example previously mounted
 serve files from the process working directory; that mount is removed by the
 follow-up PR.
 
-The reconciliation script recognizes this GHSA as a **pending, conditional**
-current-only disposition when a fresh authenticated snapshot contains it.
-Do not invent an alert number, edit a historical snapshot, mark the alert
-fixed, or treat removal of an example path as patching downstream Starlette.
-Run a fresh capture and review its resulting row before stable promotion.
+An [authenticated 2026-11-19 snapshot](DEPENDABOT_ALERTS_20261119T032907Z.csv)
+contains 120 alert records (21 open: 1 critical, 9 high, 9 medium, 2 low;
+99 fixed). It confirms alert **#120** for this GHSA remains **open/high**.
+The [95-row register](SECURITY_ADVISORY_TRIAGE.csv) now records its
+`APPLICATION_CONDITIONAL` scope and the example-path mitigation while keeping
+`triage_status=PENDING` for the final stable-release assessment. Legacy
+Starlette remains vulnerable in downstream file-serving applications.
+No old snapshot was overwritten, and no GitHub alert was dismissed.

@@ -999,6 +999,8 @@ def test_range_header_starlette_ghsa_has_explicit_pending_scope() -> None:
 
     disposition = CURRENT_ONLY_DISPOSITIONS["GHSA-7f5h-v6xp-fcq8"]
     assert disposition["preliminary_disposition"] == "APPLICATION_CONDITIONAL"
-    assert disposition["maintainer_decision"].startswith("PENDING_")
+    assert disposition["maintainer_decision"] == (
+        "RC2_SCOPED_PACKAGE_PATH_REVIEWED_LEGACY_CONSUMER_RISK_REMAINS"
+    )
     assert "0.44.0" in disposition["profile_scope"]
     assert "triage_status" not in disposition

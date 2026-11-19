@@ -605,7 +605,7 @@ FIXED_DISPOSITIONS = {
 CURRENT_ONLY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
     "GHSA-7f5h-v6xp-fcq8": {
         "preliminary_disposition": "APPLICATION_CONDITIONAL",
-        "maintainer_decision": "PENDING_CURRENT_SNAPSHOT_AND_LEGACY_REACHABILITY_REVIEW",
+        "maintainer_decision": "RC2_SCOPED_PACKAGE_PATH_REVIEWED_LEGACY_CONSUMER_RISK_REMAINS",
         "profile_scope": (
             "Starlette 0.39.0 through 0.49.0 FileResponse Range parsing may "
             "allow unauthenticated CPU exhaustion. The Python 3.8/3.9 lock "
@@ -619,11 +619,13 @@ CURRENT_ONLY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
             "GHSA-7f5h-v6xp-fcq8"
         ),
         "remaining_action": (
-            "Capture current Dependabot state into a NEW snapshot, verify the "
-            "selected Python 3.8/3.9 and modern lock profiles, and record the "
-            "advisory in the generated triage register. Confirm no "
-            "FileResponse/StaticFiles path is reachable from the library "
-            "or its examples. Do not mark the consumer-owned vulnerability fixed."
+            "Fresh authenticated snapshot 20261119T032907Z confirms alert #120 "
+            "open. Core fastapi_cache has no FileResponse or StaticFiles route "
+            "and the unused Redis example mount is removed. Python 3.8/3.9 "
+            "lock retains affected Starlette; consuming applications must "
+            "upgrade or otherwise mitigate their own FileResponse/StaticFiles "
+            "routes. Before stable, finalize this conditional GHSA and all "
+            "directly reachable material findings."
         ),
         "release_gate": "Before RC2: example fix; stable: final GHSA disposition",
     },
