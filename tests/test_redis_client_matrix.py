@@ -73,7 +73,17 @@ def test_binary_ttl_pipeline_errors(protocol: Optional[int]) -> None:
             from importlib.metadata import version
             major = int(version("redis").split(".", 1)[0])
             expected_protocol = protocol if protocol is not None else (3 if major >= 8 else 2)
-            assert "resp=" + str(expected_protocol) in info.split()
+            observed_protocols = [
+                part for part in info.split() if part.startswith("resp=")
+            ]
+            if observed_protocols:
+                assert observed_protocols == ["resp=" + str(expected_protocol)]
+            else:
+                # Redis 6.2 CLIENT INFO does not expose a resp= field.
+                # Explicit modes are exercised on this server, but the wire
+                # protocol assertion remains a Redis 7+ evidence gate.
+                server_version = (await client.info("server"))["redis_version"]
+                assert int(server_version.split(".", 1)[0]) == 6
 
             await client.flushdb()
             backend = RedisBackend(client)
