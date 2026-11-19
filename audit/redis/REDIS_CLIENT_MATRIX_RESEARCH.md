@@ -1,57 +1,135 @@
-# Redis client compatibility investigation for #47
+# Redis client compatibility investigation — issue #47
 
-**Research only.** This branch does not change the published `redis` extra,
-cache key format, runtime dependencies, or version number. Existing
-`fastapi-cache-stable==0.3.1` continues to declare redis-py 4.x.
+**Status:** exploratory research only; requires a complete verified Actions run
+and an independent consumer before widening published package metadata.
 
-## Matrix
+The existing published `fastapi-cache-stable==0.3.1` contract remains
+`redis = "^4.2.0rc1"` (redis-py 4.x). This PR does **not** change
+`pyproject.toml`, `poetry.lock`, cache key formats, backend runtime code,
+or a release tag.
 
-The standalone workflow [Redis client compatibility research](../../.github/workflows/redis-client-matrix.yml)
-tests pinned redis-py versions against actual Redis server containers:
+## Evidence model
 
-| Python | redis-py client | Redis server | Interpretation |
-|---|---|---|---|
-| 3.8 | 4.6.0 | 7.0 | Required legacy baseline |
-| 3.12 | 4.6.0 | 7.0 | Required modern baseline |
-| 3.8 | 5.2.1 | 7.0 | Exploratory |
-| 3.8 | 6.1.0 | 7.4 | Exploratory; final redis-py 6.x supporting Python 3.8 |
-| 3.12 | 5.2.1 | 7.4 | Exploratory |
-| 3.12 | 6.1.0 | 7.4 | Exploratory |
-| 3.12 | 7.2.1 | 7.4 | Exploratory |
-| 3.12 | 8.1.0 | 7.4 | Exploratory RESP3-default client |
+Workflow: [redis-client-matrix.yml](../../.github/workflows/redis-client-matrix.yml).
 
-The exploratory lanes intentionally override the published redis-py 4.x
-dependency constraint while installing their own transitive dependencies. Consequently, an otherwise passing
-test does **not** imply that `pip check` passes or that the package currently
-supports the corresponding client in its declared metadata. Do not expand
-the constraint until compatibility and supported install profiles are tested.
+- Builds a **real wheel** from a scratch copy of the checkout.
+- Required redis-py 4.x lanes retain the unmodified dependency metadata.
+- Exploratory redis-py 5–8 lanes build a **non-publishable scratch wheel**
+  whose Redis requirement alone is temporarily widened to
+  `>=4.2.0rc1,<9.0.0`. The scratch change is made outside the repository,
+  with an exact-text precondition; it is not a proposal to publish that range.
+- Installs each wheel and its selected Redis client via pip in a fresh
+  non-editable virtual environment, verifies package imports come from
+  `site-packages`, validates the wheel's active `Requires-Dist` and runs
+  `pip check`. The package version inside this scratch wheel remains
+  `0.3.1` **only as build metadata**, not as a new published artifact.
+- Runs the Redis backend tests and an external-process FastAPI consumer probe
+  from outside the source checkout, all against actual isolated Redis
+  containers. The probe checks MISS/HIT, namespace clear, per-tenant
+  identity-aware key building, explicit Request default bypass and
+  reinitialization/restart behavior.
+- Captures per-lane uploaded artifacts: wheel digest, versions, install
+  manifest, pip check and test stdout. **The artifacts are evidence of this
+  temporary research build only, not of PyPI release provenance.**
 
-Redis-py 6.1.x is the last 6.x series supporting Python 3.8; later releases
-require newer interpreters. redis-py 8 defaults to RESP3 on the wire while
-retaining legacy response shapes by default.
+### Deliberately pinned matrix
 
-References: [redis PyPI](https://pypi.org/project/redis/),
+The 25 explicit workflow lanes are the source of truth. They include every
+supported Python 3.8–3.13 interpreter, redis-py 4.6 / 5.2 / 6.1 / 7.0 / 7.2 /
+8.1 where upstream's interpreter requirements allow it, and Redis servers
+6.2, 7.0, 7.4 and 8.0. Tests cover 4.x required baseline lanes plus the
+out-of-range exploratory lanes.
+
+| Python | Required published lane | Exploratory redis-py clients |
+|---|---|---|
+| 3.8 | 4.6.0 | 5.2.1, 6.1.0 |
+| 3.9 | 4.6.0 | 5.2.1, 6.1.0, 7.0.1 |
+| 3.10 | 4.6.0 | 5.2.1, 7.2.1, 8.1.0 |
+| 3.11 | 4.6.0 | 6.1.0, 7.2.1, 8.1.0 |
+| 3.12 | 4.6.0 | 5.2.1, 6.1.0, 7.2.1, 8.1.0 |
+| 3.13 | 4.6.0 | 5.2.1, 6.1.0, 7.2.1, 8.1.0 |
+
+A passing lane demonstrates compatibility **only for that exact client,
+Python, server, and set of operations**. It does not establish a complete
+cross-product of all supported versions or justify using open-ended majors.
+All exploratory lanes use `continue-on-error` in this *research workflow*.
+Before the implementation PR is accepted, selected combinations must become
+**required checks**.
+
+Upstream redis-py interpreter boundaries (not inferred from wheel names):
+
+- Python 3.8: last compatible redis-py series 6.1.x.
+- Python 3.9: last compatible redis-py series 7.0.x.
+- Python 3.10: last compatible redis-py series 8.1.x.
+- Starting redis-py 8.0: RESP3 is the default wire protocol, with legacy
+  Python response shapes by default.
+
+Sources: [redis-py upstream README](https://github.com/redis/redis-py#supported-python-versions),
+[RESP3 features](https://redis.readthedocs.io/en/latest/resp3_features.html),
 [redis-py releases](https://github.com/redis/redis-py/releases).
 
-## What the test actually proves
+## Functional surface characterized
 
-- Against real servers, direct RedisBackend GET/SET, binary payloads, TTL
-  pipelines and wrong-type error propagation.
-- FastAPI decorator MISS -> HIT with a live Redis backend.
-- Existing `tests/test_redis_clear.py` exercises namespace boundaries,
-  SCAN/UNLINK, glob escaping, batching, deletion and decode_responses clear.
+`tests/test_redis_client_matrix.py` and existing
+`tests/test_redis_clear.py` exercise:
 
-## Not yet proven
+- Binary GET/SET, TTL=positive, no-expiry TTL=-1, missing TTL=-2 and
+  expiration; Redis pipeline with transaction semantics.
+- Wrong-type Redis errors and subsequent connection reuse.
+- Explicit RESP2 / RESP3 on redis-py >=5, plus its default protocol;
+  these are **actual** server connections, not mocks.
+- `decode_responses=False` for binary cache payloads, and
+  `decode_responses=True` for textual reads and namespace clearing.
+- ACL password authorization, rejected invalid passwords, async close.
+- Namespace boundaries, glob metacharacters, filtered SCAN, UNLINK,
+  duplicate/no-op clears, batches and key deletion.
+- Real FastAPI request-level MISS/HIT, and an independent installed-wheel
+  application with authentication, tenant separation, clear and restart.
 
-- Redis Cluster real-server behavior; namespace clear remains explicitly
-  unsupported in cluster mode.
-- Redis-py 8 against a Redis 8 server and non-default response parsing options.
-- All supported Python versions across every redis-py major and the full
-  compatibility/security dependency graph.
-- Real consumer migration/rollback with independently published wheels.
-- Compatibility with authentication, TLS, Sentinel, failover and constrained
-  production connections.
+**Important decoder boundary:** `RedisBackend` expects `bytes` payloads.
+A `Redis(decode_responses=True)` returns `str` for textual cache values
+and can fail on arbitrary non-UTF8 payloads; clearing namespace with decoded
+keys is characterized, but a decoded client is **not** certified for
+`@cache` value serialization. Future implementation must either document
+`decode_responses=False` clearly or implement and test coercion safely.
 
-Record results from the real workflow before proposing any new runtime
-constraint. An exploratory red job is a finding to diagnose, not an automatic
-reason to break the existing redis-py 4.x migration lane.
+## Constraints and remaining independent gates
+
+- **Real-estate-arg:** this consumer repository was not accessible to the
+  auditor connection. The isolated wheel consumer is useful automated
+  evidence, **not** a substitute for running its real application suite.
+  Local maintainer must run a clean, non-editable install for at least one
+  independent application, verify functional HIT/MISS, auth, tenant context,
+  namespace clear, rollback and previous version where relevant. Record
+  commit, commands, environment and redacted results in a separate review.
+- Redis Cluster: real cluster operations **not covered**. Namespace clear
+  intentionally remains `NotImplementedError`. Existing fake-cluster tests
+  prove the intentional failure and key-only behavior only.
+- Sentinel failover and TLS: **not covered by real infrastructure**. These
+  are connection-establishment responsibilities of the application-supplied
+  Redis client; no end-to-end claims until exercised against real services.
+- Auth: ACL username/password tested against a real standalone Redis
+  server, not a managed external provider.
+- Connection pools/RESP3: explicitly chosen protocol, inherited default,
+  basic client close and redis-server compatibility are covered, not every
+  hiredis parser, optional module, notification or reconnect/failover path.
+- Long-lived multi-process cache consistency, production throughput,
+  shared Redis/Valkey environments and complex custom key builders require
+  later consumer/integration evidence.
+- The temporary widened candidate wheel proves pip-resolution feasibility
+  for selected versions only. The **implementation PR must choose and test
+  real Python-conditional production requirements**, produce wheel/sdist
+  under their final metadata, run normal `pip check` and legacy migration
+  tests, and complete the security review. No production upgrade is implicit.
+
+## Acceptance for moving to implementation (not releasing 0.4.0)
+
+1. CI green for mandatory published lanes; record **all** exploratory lane
+   results and any allowed-to-fail exceptions from the exact head commit.
+2. Record response semantics, `decode_responses` boundary, TLS/Cluster/Sentinel
+   scope decisions and client/server/CPython version table with evidence.
+3. Identify a minimal support-lane proposal by Python, not one blanket range.
+4. Keep #47 open. Implement in a new PR from current `stable`, with
+   mandatory (not allowed-failure) tested lanes, real release-shaped metadata,
+   clean wheel/sdist and an **independent application** migration/rollback.
+5. No tags or PyPI publication from this research branch.
