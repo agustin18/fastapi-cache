@@ -5,10 +5,14 @@
 > are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
 >
 > **Latest stable:** [0.3.0 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.3.0/)
-> (released 2026-11-19) · [Quickstart](docs/QUICKSTART.md) ·
-> [Migration](MIGRATION.md) · [Compatibility](COMPATIBILITY.md) ·
-> [Security](SECURITY.md) · [Support](SUPPORT.md) ·
-> [Changelog](CHANGELOG.md) · [Release provenance](RELEASE_STATUS_0.3.0.md).
+> (released 2026-11-19) ·
+> [Quickstart](https://github.com/agustin18/fastapi-cache/blob/stable/docs/QUICKSTART.md) ·
+> [Migration](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md) ·
+> [Compatibility](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md) ·
+> [Security](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) ·
+> [Support](https://github.com/agustin18/fastapi-cache/blob/stable/SUPPORT.md) ·
+> [Changelog](https://github.com/agustin18/fastapi-cache/blob/stable/CHANGELOG.md) ·
+> [Release provenance](https://github.com/agustin18/fastapi-cache/blob/stable/RELEASE_STATUS_0.3.0.md).
 > Pre-releases must be independently evaluated before production deployment.
 >
 > Installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has
@@ -55,7 +59,7 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 ## Development roadmap
 
 The published 0.3.0 prioritizes safe, low-friction migration over feature
-count. See [ROADMAP.md](ROADMAP.md) and its linked issues for the proposed
+count. See [the roadmap](https://github.com/agustin18/fastapi-cache/blob/stable/ROADMAP.md) and its linked issues for the proposed
 0.3.1 maintenance line and 0.4.0 Redis-client compatibility work.
 Features in the roadmap are **not** included in 0.3.0.
 
@@ -84,7 +88,7 @@ python -m pip check
 ```
 
 For process-local InMemory caching, omit `[redis]`. See the
-[5-minute quickstart](docs/QUICKSTART.md) for a complete example.
+[5-minute quickstart](https://github.com/agustin18/fastapi-cache/blob/stable/docs/QUICKSTART.md) for a complete example.
 
 To evaluate a **published pre-release candidate**:
 

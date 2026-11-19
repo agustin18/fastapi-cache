@@ -66,13 +66,21 @@ Blocking for every pull request:
 - Conventional Commits PR title
 - no secrets, no private files, no auto-merge
 
-Ongoing dependency security review (0.3.0 stable is already published):
+Dependency/security maintenance after 0.3.0:
 
-- Review a fresh dependency-audit report for each legacy Python profile and classify each
-  critical/high advisory by package path, trigger and residual risk. EOL status alone does not
-  close an applicable issue. A critical advisory in a package-controlled path blocks release.
-- Application-only surfaces such as form parsing are described separately from code paths used
-  by this package; optional experimental backends receive their own review.
+- Preserve the [bounded 0.3.0 GHSA decision](audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md).
+  On release candidates or dependency/security changes, collect a **fresh delta**:
+  review new, reopened or materially changed findings and any newly reachable
+  package-controlled path. **Do not reapprove 21 unchanged scoped advisories
+  for every documentation or bugfix PR.**
+- EOL Python alone never closes an applicable finding; a new exploitable
+  critical/high issue in package-controlled code blocks a release until
+  fixed or appropriately mitigated.
+- Keep consumer-owned Starlette/AnyIO/urllib3 routes separate from our
+  inspected package paths, and review experimental backend dependencies
+  when those backends change. Do not dismiss alerts as fixed without evidence.
+- For a released version, separate documented historical risk acceptance
+  from the installed dependency inventory and the current app's threat model.
 
 Baseline gates (ratchet, do not regress):
 
