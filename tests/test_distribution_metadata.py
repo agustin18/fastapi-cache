@@ -1,6 +1,7 @@
 from importlib.metadata import metadata
 
 from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
 from packaging.version import Version
 
 
@@ -24,6 +25,28 @@ def test_python_classifiers_match_stable_support_policy() -> None:
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
     }
+
+
+def test_uvicorn_is_not_published_as_requirement() -> None:
+    requirements = [
+        Requirement(value)
+        for value in metadata("fastapi-cache-stable").get_all("Requires-Dist") or []
+    ]
+    assert all(canonicalize_name(req.name) != "uvicorn" for req in requirements)
+
+
+def test_jinja2_remains_a_mandatory_runtime_requirement() -> None:
+    requirements = [
+        Requirement(value)
+        for value in metadata("fastapi-cache-stable").get_all("Requires-Dist") or []
+    ]
+    jinja2_requirements = [
+        req for req in requirements if canonicalize_name(req.name) == "jinja2"
+    ]
+    assert len(jinja2_requirements) == 1
+    requirement = jinja2_requirements[0]
+    assert requirement.marker is None or requirement.marker.evaluate({"extra": ""})
+    assert Version("3.0") in requirement.specifier
 
 
 def test_dynamodb_extra_is_excluded_from_legacy_python_profiles() -> None:
