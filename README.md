@@ -4,10 +4,12 @@
 > The Python import stays `fastapi_cache`; intentional safety/behavior changes
 > are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
 >
-> **Current releases:** [PyPI](https://pypi.org/project/fastapi-cache-stable/) ·
-> [CHANGELOG](https://github.com/agustin18/fastapi-cache/blob/stable/CHANGELOG.md) · [Compatibility](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md) ·
-> [Support](https://github.com/agustin18/fastapi-cache/blob/stable/SUPPORT.md) · [Stable release gates](https://github.com/agustin18/fastapi-cache/blob/stable/RELEASE_CHECKLIST.md).
-> Evaluate pre-releases independently before production deployment.
+> **Latest stable:** [0.3.0 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.3.0/)
+> (released 2026-11-19) · [Quickstart](docs/QUICKSTART.md) ·
+> [Migration](MIGRATION.md) · [Compatibility](COMPATIBILITY.md) ·
+> [Security](SECURITY.md) · [Support](SUPPORT.md) ·
+> [Changelog](CHANGELOG.md) · [Release provenance](RELEASE_STATUS_0.3.0.md).
+> Pre-releases must be independently evaluated before production deployment.
 >
 > Installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has
 > security validation; Python 3.8–3.10 is functional legacy compatibility only.
@@ -52,11 +54,10 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 ## Development roadmap
 
-The first stable release deliberately prioritizes security-scoped,
-low-friction migration over adding every advanced caching feature.
-See the [roadmap](https://github.com/agustin18/fastapi-cache/blob/stable/ROADMAP.md) for planned Redis-py 5/6 compatibility,
-safer cache key configuration, observability, cache-stampede prevention,
-and optional backend parity. These features are **not** claimed for 0.3.0.
+The published 0.3.0 prioritizes safe, low-friction migration over feature
+count. See [ROADMAP.md](ROADMAP.md) and its linked issues for the proposed
+0.3.1 maintenance line and 0.4.0 Redis-client compatibility work.
+Features in the roadmap are **not** included in 0.3.0.
 
 ## Features
 
@@ -75,11 +76,15 @@ and optional backend parity. These features are **not** claimed for 0.3.0.
 
 ## Install
 
-Install the normal stable release when available:
+Install the published stable release (pin the version you test):
 
 ```sh
-python -m pip install "fastapi-cache-stable[redis]"
+python -m pip install "fastapi-cache-stable[redis]==0.3.0"
+python -m pip check
 ```
+
+For process-local InMemory caching, omit `[redis]`. See the
+[5-minute quickstart](docs/QUICKSTART.md) for a complete example.
 
 To evaluate a **published pre-release candidate**:
 

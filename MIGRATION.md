@@ -129,14 +129,15 @@ Use a fresh environment and update your **application dependency declaration**
 and lockfile: never install both distributions in one environment, because
 they own the same `fastapi_cache` import.
 
-For the normal stable release (once published):
+For the published `0.3.0` stable release in a clean environment:
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
-python -m pip install "fastapi-cache-stable[redis]"
+python -m pip install "fastapi-cache-stable[redis]==0.3.0"
+python -m pip check
 ```
 
-For a **published prerelease**:
+For evaluating a **future prerelease** (not required for 0.3.0):
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
@@ -528,7 +529,7 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 - Stable `0.3.0` installs on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy functional
   compatibility only and are excluded from stable security support. Python 3.11–3.13 are the
   security-supported matrix. Python 3.14 awaits a full CI matrix.
-- For the target stable `0.3.0`, the experimental DynamoDB extra is supported only on Python
+- In released `0.3.0`, the experimental DynamoDB extra is installable only on Python
   `>=3.10` and requires the patched aiohttp line (`>=3.14.4`). On Python 3.8/3.9,
   `fastapi-cache-stable[dynamodb]` does not install aiobotocore or aiohttp; Redis and InMemory
   remain the legacy backend options.
