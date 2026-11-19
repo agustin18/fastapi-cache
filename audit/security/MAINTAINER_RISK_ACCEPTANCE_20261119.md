@@ -137,20 +137,27 @@ from the 21 still-open cases. An alert's GHSA, package/version and
 
 **Independent and operational conditions still outstanding:**
 
-- [ ] Independent contra-auditor rechecks these exact 21 scopes and the
-  package-controlled call paths against the release PR HEAD; any
-  demonstrated directly reachable critical/high flaw is **NO-GO**.
-- [ ] Maintainer records traceable GitHub PR approval or comment referencing
-  the reviewed HEAD and this 21-GHSA decision; the conversation instruction
-  recorded here is not a forged GitHub review.
-- [ ] Refresh **authenticated Dependabot** immediately before release;
-  reconcile new/reopened/changed GHSA. This acceptance does not cover new
-  advisories or a changed exploit scope.
+- [x] Independent local agent returned **technical GO for PR #42**
+  (the 0.3.0 preparation). Its 27/27 CI passed, without a runtime or
+  dependency change from the audited RC2. Newly demonstrated
+  package-controlled critical/high flaws remain a hard NO-GO.
+- [x] Maintainer-directed bounded acceptance was recorded
+  [on PR #42](https://github.com/agustin18/fastapi-cache/pull/42#issuecomment-7016369125)
+  against head `38a900967e2043bc604a5230d4b4bb9f6a16d541`;
+  merge commit `ad2d577e2d345131c56c06f0859961b17675e652`.
+  The PR comment is a release decision record, not a fabricated
+  GitHub APPROVE review. Owner self-approval is not required.
+- [ ] Make **one authenticated Dependabot delta check immediately before
+  production PyPI**, using the 2026-11-19 snapshot. Review only
+  new/reopened/materially changed findings. Already scoped and unchanged
+  residual GHSA **do not need re-acceptance**. The preliminary
+  non-production TestPyPI test need not wait for this.
 - [ ] Verify the versioned **0.3.0 final wheel and sdist**, installability,
   runtime dependency inventory and vulnerability audit in Python 3.11–3.13
   using a fresh build; the published RC2 hash is not the final hash.
-- [ ] Assess any credentials exposed by Docker Compose logs/history and
-  rotate/revoke exposed real secrets before sensitive publish operations.
+- [x] Maintainer reported on 2026-11-19 that the Docker Compose secrets
+  issue is **resolved**. This records the owner's operational
+  attestation, not independent access to private rotation evidence.
 - [ ] Separately authorize the actual PyPI publication **after** the
   release PR, CI, security refresh and artifact verification.
 

@@ -10,6 +10,10 @@ normal GET/JSON cached-response behavior for the documented combinations,
 while changing some unsafe/incorrect edge cases. Read
 [MIGRATION.md](MIGRATION.md) before switching from the original package.
 
+**Canonical 0.3.0 version history:** [CHANGELOG.md](CHANGELOG.md) includes
+this stable entry and references all three final pre-release preparation PRs.
+These longer notes provide the installation and operational detail.
+
 ## Release highlights
 
 - Safer default cache handling for requests carrying `Authorization` or
