@@ -52,9 +52,9 @@ out-of-range exploratory lanes.
 A passing lane demonstrates compatibility **only for that exact client,
 Python, server, and set of operations**. It does not establish a complete
 cross-product of all supported versions or justify using open-ended majors.
-All exploratory lanes use `continue-on-error` in this *research workflow*.
-Before the implementation PR is accepted, selected combinations must become
-**required checks**.
+All 25 lanes are **strictly required to pass** for this research PR: exploratory
+means out of published support, not allowed-to-fail CI. The implementation PR
+must then make its selected production support lanes mandatory release checks.
 
 Upstream redis-py interpreter boundaries (not inferred from wheel names):
 
