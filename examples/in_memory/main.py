@@ -9,7 +9,6 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
 from pydantic import BaseModel
-from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 
@@ -53,7 +52,10 @@ async def get_date():
 
 @app.get("/datetime")
 @cache(namespace="test", expire=2)
-async def get_datetime(request: Request, response: Response):
+async def get_datetime(response: Response):
+    # No Request-derived inputs: allowing the cache to reuse this result is
+    # intentional. If the result starts using Request headers/state, supply
+    # a complete custom key builder before enabling caching.
     return {"now": pendulum.now()}
 
 

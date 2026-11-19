@@ -92,6 +92,10 @@ not yet in this package's declared support range; see
   `Vary`, locale, tenant or custom-auth headers. Use a suitable
   custom key builder, or bypass caching until variation is proven safe.
   See [the header/Vary investigation](https://github.com/agustin18/fastapi-cache/issues/53).
+  **In released 0.3.0**, do not cache an endpoint whose response
+  depends on unkeyed request context. A future patch is being reviewed
+  to bypass declared `Request` endpoints with the default builder;
+  until released, implement an explicit safe key builder or avoid caching.
 - Do not cache secrets or deserialize untrusted cache bytes with
   `PickleCoder`.
 - `FastAPICache.init()` must run once per worker/lifespan;

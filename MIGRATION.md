@@ -109,6 +109,28 @@ You can also enable it per endpoint with `@cache(coder=TypedJsonCoder)`.
 `TypedJsonCoder` validates cached data and propagates validation errors. It only falls back
 for Pydantic v1 models and annotations that cannot be represented by a Pydantic v2 schema.
 
+## Request-dependent cache variants (0.3.0 and future patch)
+
+**Published 0.3.0** does not automatically vary the default key by
+arbitrary `Request.headers` or `Request.state`. If the endpoint's
+response changes by locale, custom tenant/auth header or middleware
+state that is not present in its function arguments, the same key may
+replay a stale representation. `Header(...)` values passed into
+function arguments can already differentiate keys, but this does not
+cover hidden request context. `Authorization`/`Cookie` request bypass
+remains on by default.
+
+Track [#53](https://github.com/agustin18/fastapi-cache/issues/53):
+a **proposed later patch** conservatively bypasses cache read/write
+for endpoints that explicitly accept `Request` while using the default
+key builder. Apps that need caching in those endpoints must provide a
+custom **variant- and identity-safe key builder**. This may lower hit
+rates for those routes; old Redis entries are not automatically deleted.
+Neither the global default key digest nor the key format for ordinary
+parameter-only endpoints is changed. The proposed bypass cannot
+detect arbitrary context variables or hidden middleware inputs in
+routes that do not declare `Request`.
+
 ## Who should not migrate yet
 
 - You need full Memcached or DynamoDB parity. They are experimental in `0.3.x`.

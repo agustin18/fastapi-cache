@@ -198,7 +198,7 @@ def test_cookie_bypasses_by_default() -> None:
 
 def test_public_endpoint_still_caches() -> None:
     init_cache()
-    app, calls, _ = build_app()
+    app, calls, _ = build_app(key_builder=auth_key_builder)
 
     with TestClient(app) as client:
         first = client.get("/me")
@@ -349,7 +349,7 @@ def test_non_get_still_bypasses() -> None:
 def test_bypass_never_accesses_backend() -> None:
     backend = SpyBackend()
     FastAPICache.init(backend, prefix="auth-test")
-    app, calls, _ = build_app()
+    app, calls, _ = build_app(key_builder=auth_key_builder)
 
     with TestClient(app) as client:
         authenticated = client.get(
@@ -370,7 +370,7 @@ def test_bypass_never_accesses_backend() -> None:
 
 def test_authenticated_request_ignores_existing_public_entry() -> None:
     init_cache()
-    app, calls, _ = build_app()
+    app, calls, _ = build_app(key_builder=auth_key_builder)
 
     with TestClient(app) as client:
         public = client.get("/me")
@@ -457,7 +457,7 @@ def test_global_opt_in_with_decorator_safe_builder() -> None:
 
 def test_empty_auth_headers() -> None:
     init_cache()
-    app, calls, _ = build_app()
+    app, calls, _ = build_app(key_builder=auth_key_builder)
 
     with TestClient(app) as client:
         first = client.get(
@@ -654,7 +654,7 @@ def test_no_request_context_keeps_caching() -> None:
     assert calls["n"] == 1
 
 
-def test_legacy_entry_survives_until_namespace_invalidated() -> None:
+def test_explicit_request_does_not_serve_legacy_shared_entry() -> None:
     backend = init_cache()
     app, calls, endpoint = build_app()
     legacy_key = default_key_builder(endpoint, "auth-test:", args=(), kwargs={})
@@ -668,12 +668,15 @@ def test_legacy_entry_survives_until_namespace_invalidated() -> None:
 
     with TestClient(app) as client:
         public = client.get("/me")
-        assert public.json()["authorization"] == "Bearer alice"
-        assert calls["n"] == 0
+        assert public.json()["authorization"] is None
+        assert "X-FastAPI-Cache" not in public.headers
+        assert calls["n"] == 1
+        # Do not touch unrelated entries in the shared backend.
+        assert legacy_key in backend._store  # pyright: ignore[reportPrivateUsage]
 
         backend._store.clear()  # pyright: ignore[reportPrivateUsage]
         after_clear = client.get("/me")
 
     assert after_clear.json()["authorization"] is None
-    assert after_clear.headers["X-FastAPI-Cache"] == "MISS"
-    assert calls["n"] == 1
+    assert "X-FastAPI-Cache" not in after_clear.headers
+    assert calls["n"] == 2
