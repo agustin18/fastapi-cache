@@ -37,7 +37,7 @@ The generated lock's relevant Python variants are:
 | idna | 3.7 (Py3.8) | 3.20 (Py3.9+) |
 | Pygments | 2.18.0 (Py3.8) | 2.21.0 (Py3.9+) |
 | cryptography | Not directly required by the old dev profile | 50.0.2 (modern) |
-| Jinja2 | — | 3.1.6 |
+| Jinja2 | 3.1.6 (all supported profiles) | 3.1.6 |
 
 The latest FastAPI dependency graph no longer installs some packages
 that were present under FastAPI 0.111.1 (including python-multipart,
