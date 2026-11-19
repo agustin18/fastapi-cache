@@ -334,24 +334,24 @@ def cache(
             effective_expire = expire or FastAPICache.get_expire()
             effective_key_builder = key_builder or FastAPICache.get_key_builder()
             if (
-                explicit_request
-                and request is not None
-                and effective_key_builder is default_key_builder
-            ):
-                # A Request parameter can influence the returned data via
-                # headers/state not represented in args/kwargs. Avoid serving
-                # a legacy shared cache entry or storing another one. Apps
-                # requiring cache hits must opt into a complete, identity-
-                # and variant-aware custom key builder.
-                return await ensure_async_func(*args, **kwargs)
-            if (
                 has_auth_headers
                 and cache_authenticated_enabled
                 and effective_key_builder is default_key_builder
             ):
+                # Preserve the explicit auth contract even when a declared
+                # Request would otherwise trigger the conservative bypass.
                 raise ValueError(
                     "Authenticated caching requires a custom, identity-aware key_builder"
                 )
+            if (
+                explicit_request
+                and request is not None
+                and effective_key_builder is default_key_builder
+            ):
+                # A Request parameter can influence returned data through
+                # headers/state absent from args/kwargs. Do not serve any
+                # previous unsafe shared entry or store a new one.
+                return await ensure_async_func(*args, **kwargs)
             backend = FastAPICache.get_backend()
             cache_status_header = FastAPICache.get_cache_status_header()
             if_none_match = (
