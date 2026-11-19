@@ -134,7 +134,8 @@ def main() -> None:
             assert "X-FastAPI-Cache" not in unsafe_b.headers
 
             cleared = client.post("/clear")
-            assert cleared.status_code == 200 and cleared.json()["count"] == 2
+            assert cleared.status_code == 200
+            assert cleared.json()["count"] == 2
             assert client.get("/tenant", headers=alice).headers["X-FastAPI-Cache"] == "MISS"
 
         # Simulate a clean app restart using the same persisted Redis data.
