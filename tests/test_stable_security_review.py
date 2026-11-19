@@ -5,7 +5,6 @@ from __future__ import annotations
 from copy import deepcopy
 
 import pytest
-
 from scripts.validate_stable_security_review import (
     REVIEW,
     TRIAGE,
@@ -46,7 +45,7 @@ def test_all_open_alerts_still_require_explicit_approval(evidence):
 
 
 @pytest.mark.parametrize(
-    "change,expected_error",
+    ("change", "expected_error"),
     [
         ("missing_row", "review does not cover exact triage"),
         ("open_called_fixed", "open GHSA not bounded by source class"),

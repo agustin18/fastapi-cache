@@ -11,8 +11,8 @@ from __future__ import annotations
 import csv
 import json
 from collections import Counter
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Dict, List, Mapping
 
 ROOT = Path(__file__).resolve().parents[1]
 REVIEW_DIR = ROOT / "audit" / "security"
@@ -48,7 +48,7 @@ REQUIRED_REVIEW_COLUMNS = (
 )
 
 
-def read_rows(path: Path) -> List[Dict[str, str]]:
+def read_rows(path: Path) -> list[dict[str, str]]:
     with path.open("r", encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
         if not reader.fieldnames:
@@ -61,8 +61,8 @@ def read_rows(path: Path) -> List[Dict[str, str]]:
     return rows
 
 
-def _by_ghsa(rows: List[Mapping[str, str]], name: str) -> Dict[str, Mapping[str, str]]:
-    result: Dict[str, Mapping[str, str]] = {}
+def _by_ghsa(rows: Sequence[Mapping[str, str]], name: str) -> dict[str, Mapping[str, str]]:
+    result: dict[str, Mapping[str, str]] = {}
     for row in rows:
         ghsa = row.get("ghsa_id", "")
         if not ghsa.startswith("GHSA-"):
@@ -74,9 +74,9 @@ def _by_ghsa(rows: List[Mapping[str, str]], name: str) -> Dict[str, Mapping[str,
 
 
 def validate_review(
-    triage_rows: List[Mapping[str, str]],
-    review_rows: List[Mapping[str, str]],
-) -> Dict[str, int]:
+    triage_rows: Sequence[Mapping[str, str]],
+    review_rows: Sequence[Mapping[str, str]],
+) -> dict[str, int]:
     if not review_rows:
         raise ValueError("empty review ledger")
     if set(REQUIRED_REVIEW_COLUMNS) - set(review_rows[0]):
