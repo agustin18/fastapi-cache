@@ -25,6 +25,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - mode: "full"
+            packages: ""
           - mode: "transitive"
             packages: "requests jinja2 urllib3 cryptography dnspython pytest python-multipart"
           - mode: "framework"
