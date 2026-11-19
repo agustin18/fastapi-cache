@@ -11,7 +11,6 @@ on:
       - "fastapi_cache/**"
       - "pyproject.toml"
       - "poetry.lock"
-      - "audit/redis/**"
   workflow_dispatch:
 
 permissions:
@@ -146,8 +145,51 @@ jobs:
           REQUIRE_REDIS: "1"
         run: |
           cd /tmp
-          /tmp/redis-matrix-venv/bin/python -m pytest -q -rs "$GITHUB_WORKSPACE/tests/test_redis_client_matrix.py" "$GITHUB_WORKSPACE/tests/test_redis_clear.py"
-          /tmp/redis-matrix-venv/bin/python "$GITHUB_WORKSPACE/tests/redis_consumer_probe.py"
+          /tmp/redis-matrix-venv/bin/python -m pytest -q -rs "$GITHUB_WORKSPACE/tests/test_redis_client_matrix.py" "$GITHUB_WORKSPACE/tests/test_redis_clear.py" | tee /tmp/redis-matrix-tests.log
+          /tmp/redis-matrix-venv/bin/python "$GITHUB_WORKSPACE/tests/redis_consumer_probe.py" | tee /tmp/redis-matrix-consumer.log
+
+      - name: Capture audit evidence even on experimental failures
+        if: always()
+        env:
+          CLIENT: ${{ matrix.client }}
+          PY_VERSION: ${{ matrix.python }}
+          SERVER: ${{ matrix.server }}
+          EXPERIMENTAL: ${{ matrix.experimental }}
+        run: |
+          mkdir -p /tmp/redis-matrix-evidence
+          cp /tmp/redis-matrix-*.log /tmp/redis-matrix-evidence/ 2>/dev/null || true
+          if [ -x /tmp/redis-matrix-venv/bin/pip ]; then
+            /tmp/redis-matrix-venv/bin/pip freeze > /tmp/redis-matrix-evidence/pip-freeze.txt
+            /tmp/redis-matrix-venv/bin/pip check > /tmp/redis-matrix-evidence/pip-check.txt 2>&1 || true
+          fi
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          directory = Path("/tmp/redis-matrix-evidence")
+          wheels = sorted(Path("/tmp/redis-matrix-dist").glob("*.whl"))
+          profile = {
+              "git_commit": os.environ["GITHUB_SHA"],
+              "python": os.environ["PY_VERSION"],
+              "redis_py": os.environ["CLIENT"],
+              "redis_server_image": "redis:" + os.environ["SERVER"],
+              "metadata_scope": ("scratch widened, NOT published"
+                                 if os.environ["EXPERIMENTAL"] == "true"
+                                 else "unmodified published range"),
+              "wheel_sha256": (hashlib.sha256(wheels[0].read_bytes()).hexdigest()
+                               if len(wheels) == 1 else None),
+              "logs_attached": [p.name for p in directory.glob("*.log")],
+          }
+          (directory / "profile.json").write_text(json.dumps(profile, indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: redis-matrix-py${{ matrix.python }}-client${{ matrix.client }}-server${{ matrix.server }}
+          path: /tmp/redis-matrix-evidence/
+          retention-days: 90
 
       - name: Summarize reproducible research profile
         if: always()
