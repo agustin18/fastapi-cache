@@ -12,7 +12,7 @@
 > [Security](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) ·
 > [Support](https://github.com/agustin18/fastapi-cache/blob/stable/SUPPORT.md) ·
 > [Changelog](https://github.com/agustin18/fastapi-cache/blob/stable/CHANGELOG.md) ·
-> [Release provenance](https://github.com/agustin18/fastapi-cache/blob/stable/RELEASE_STATUS_0.3.0.md).
+> [Release provenance](https://github.com/agustin18/fastapi-cache/blob/stable/RELEASE_STATUS_0.3.1.md).
 > Pre-releases must be independently evaluated before production deployment.
 >
 > Installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has
