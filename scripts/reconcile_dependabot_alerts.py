@@ -142,14 +142,21 @@ PRELIMINARY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
     "GHSA-wqp7-x3pw-xc5r": {
         "preliminary_disposition": "APPLICATION_CONDITIONAL",
         "profile_scope": (
-            "Windows-only risk in the example's Starlette StaticFiles route; not a core "
-            "cache API path. Consumers serving static files need separate review."
+            "Windows-only Starlette StaticFiles file-serving risk. The Redis "
+            "example's unused StaticFiles(directory='.') mount was removed "
+            "by PR #37; the library itself does not mount static files. "
+            "Applications that independently serve static files on Windows "
+            "must assess their own vulnerable Starlette versions."
         ),
         "evidence_reference": (
             "SECURITY_DEPENDENCY_INVENTORY.md#source-verified-preliminary-code-path-dispositions"
         ),
-        "remaining_action": "Bound the Windows/example deployment scope before RC.",
-        "release_gate": "RC",
+        "remaining_action": (
+            "The package example no longer mounts StaticFiles (PR #37). "
+            "Confirm legacy Starlette profile and consumer-owned Windows "
+            "file-serving risk in the final stable review."
+        ),
+        "release_gate": "Stable: consumer-owned Windows scope and legacy dependency review",
     },
     "GHSA-cq5v-8q36-5273": {
         "preliminary_disposition": "EXPERIMENTAL_EXTRA",
@@ -624,10 +631,10 @@ CURRENT_ONLY_DISPOSITIONS: Dict[str, Dict[str, str]] = {
             "and the unused Redis example mount is removed. Python 3.8/3.9 "
             "lock retains affected Starlette; consuming applications must "
             "upgrade or otherwise mitigate their own FileResponse/StaticFiles "
-            "routes. Before stable, finalize this conditional GHSA and all "
-            "directly reachable material findings."
+            "routes. RC2 has been published; before stable, obtain a final "
+            "decision on the consumer-owned residual and material findings."
         ),
-        "release_gate": "Before RC2: example fix; stable: final GHSA disposition",
+        "release_gate": "RC2 done; stable: final GHSA risk signoff",
     },
     "GHSA-48p4-8xcf-vxj5": {
         "preliminary_disposition": "APPLICATION_CONDITIONAL",
