@@ -22,6 +22,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Tuple,
     cast,
 )
 
@@ -1122,13 +1123,308 @@ def _fetch_current_alerts(repository: str) -> List[Mapping[str, Any]]:
     return cast(List[Mapping[str, Any]], pages)
 
 
+DELTA_COMPARE_FIELDS = (
+    "cve_id",
+    "severity",
+    "package",
+    "manifest_path",
+    "scope",
+    "relationship",
+    "vulnerable_version_range",
+    "first_patched_version",
+)
+BLOCKING_SEVERITIES = {"critical", "high"}
+
+
+def _severity_is_blocking(value: str) -> bool:
+    return value.strip().lower() in BLOCKING_SEVERITIES
+
+
+def _index_alerts(
+    rows: Iterable[Mapping[str, str]], label: str
+) -> Dict[str, Mapping[str, str]]:
+    indexed: Dict[str, Mapping[str, str]] = {}
+    for row in rows:
+        ghsa_id = row.get("ghsa_id", "").strip()
+        if not ghsa_id:
+            raise ValueError(f"{label} row is missing ghsa_id")
+        if ghsa_id in indexed:
+            raise ValueError(f"duplicate {label} GHSA: {ghsa_id}")
+        indexed[ghsa_id] = row
+    return indexed
+
+
+def _delta_summary(row: Mapping[str, str]) -> Dict[str, Any]:
+    fields = (
+        "alert_number",
+        "ghsa_id",
+        "state",
+        "severity",
+        "package",
+        "manifest_path",
+        "scope",
+        "relationship",
+        "vulnerable_version_range",
+        "first_patched_version",
+    )
+    return {field: row.get(field, "") for field in fields}
+
+
+def _material_changes(
+    baseline_row: Mapping[str, str], current_row: Mapping[str, str]
+) -> Dict[str, Dict[str, str]]:
+    changes: Dict[str, Dict[str, str]] = {}
+    for field in DELTA_COMPARE_FIELDS:
+        before = baseline_row.get(field, "")
+        after = current_row.get(field, "")
+        if before != after:
+            changes[field] = {"before": before, "after": after}
+    return changes
+
+
+def find_latest_snapshot(directory: Path) -> Path:
+    """Return the newest immutable DEPENDABOT_ALERTS snapshot in a directory."""
+    candidates = [
+        path
+        for path in directory.glob("DEPENDABOT_ALERTS_*.csv")
+        if path.is_file()
+    ]
+    if not candidates:
+        raise FileNotFoundError(
+            f"no DEPENDABOT_ALERTS_*.csv snapshot in {directory}"
+        )
+
+    def sort_key(path: Path) -> int:
+        digits = re.sub(r"\D", "", path.stem)
+        return int(digits) if digits else -1
+
+    return max(candidates, key=sort_key)
+
+
+VALID_ALERT_STATES = {"open", "fixed", "dismissed", "auto_dismissed"}
+VALID_SEVERITIES = {"low", "medium", "high", "critical"}
+REVIEW_FIELDS = {
+    "package",
+    "manifest_path",
+    "scope",
+    "relationship",
+    "vulnerable_version_range",
+    "first_patched_version",
+}
+
+
+def _validate_delta_row(
+    row: Mapping[str, str],
+    label: str,
+    ghsa_id: str,
+    incomplete_reasons: List[str],
+) -> Tuple[str, str]:
+    state = row.get("state", "").strip().lower()
+    severity = row.get("severity", "").strip().lower()
+    if state not in VALID_ALERT_STATES:
+        incomplete_reasons.append(
+            f"unknown_state:{label}:{ghsa_id}:{state or '<empty>'}"
+        )
+    if state == "open" and severity not in VALID_SEVERITIES:
+        incomplete_reasons.append(
+            f"unknown_severity:{label}:{ghsa_id}:{severity or '<empty>'}"
+        )
+    return state, severity
+
+
+def build_delta_report(
+    baseline_rows: Iterable[Mapping[str, str]],
+    current_rows: Iterable[Mapping[str, str]],
+) -> Dict[str, Any]:
+    """Compare current alerts with a baseline without writing any evidence file."""
+    baseline = _index_alerts(baseline_rows, "baseline")
+    current = _index_alerts(current_rows, "current")
+    report: Dict[str, Any] = {
+        "baseline_records": len(baseline),
+        "current_records": len(current),
+        "unchanged_open": [],
+        "unchanged_closed": [],
+        "new_open": [],
+        "reopened": [],
+        "newly_fixed": [],
+        "newly_dismissed": [],
+        "new_closed": [],
+        "changed": [],
+        "missing_from_current": [],
+        "review_required": [],
+        "blocking_reasons": [],
+        "incomplete_reasons": [],
+        "security_blocking": False,
+        "comparison_incomplete": False,
+        "requires_review": False,
+        "exit_code": 0,
+        "blocking": False,
+    }
+
+    if not current:
+        report["incomplete_reasons"].append("current_response_empty")
+
+    for ghsa_id, baseline_row in baseline.items():
+        _validate_delta_row(
+            baseline_row,
+            "baseline",
+            ghsa_id,
+            report["incomplete_reasons"],
+        )
+
+    for ghsa_id, current_row in current.items():
+        state, severity = _validate_delta_row(
+            current_row,
+            "current",
+            ghsa_id,
+            report["incomplete_reasons"],
+        )
+        baseline_entry = baseline.get(ghsa_id)
+
+        if state == "open":
+            if baseline_entry is None:
+                report["new_open"].append(_delta_summary(current_row))
+                if severity in BLOCKING_SEVERITIES:
+                    report["blocking_reasons"].append(
+                        "new_open:" + ghsa_id
+                    )
+                continue
+            baseline_state = (
+                baseline_entry.get("state", "").strip().lower()
+            )
+            if baseline_state != "open":
+                report["reopened"].append(_delta_summary(current_row))
+                if severity in BLOCKING_SEVERITIES:
+                    report["blocking_reasons"].append(
+                        "reopened:" + ghsa_id
+                    )
+                continue
+            changes = _material_changes(baseline_entry, current_row)
+            if changes:
+                entry = _delta_summary(current_row)
+                entry["changes"] = changes
+                report["changed"].append(entry)
+                baseline_severity = (
+                    baseline_entry.get("severity", "").strip().lower()
+                )
+                if (
+                    baseline_severity in BLOCKING_SEVERITIES
+                    or severity in BLOCKING_SEVERITIES
+                ):
+                    review_changes = {
+                        field: changes[field]
+                        for field in changes
+                        if field in REVIEW_FIELDS
+                    }
+                    if review_changes:
+                        review_entry = _delta_summary(current_row)
+                        review_entry["changes"] = review_changes
+                        review_entry["reason"] = (
+                            "material_change_on_open_high_or_critical"
+                        )
+                        report["review_required"].append(review_entry)
+                severity_change = changes.get("severity")
+                if (
+                    severity_change
+                    and _severity_is_blocking(severity_change["after"])
+                    and not _severity_is_blocking(
+                        severity_change["before"]
+                    )
+                ):
+                    report["blocking_reasons"].append(
+                        "severity_escalation:" + ghsa_id
+                    )
+            else:
+                report["unchanged_open"].append(ghsa_id)
+            continue
+
+        if state in {"fixed", "dismissed", "auto_dismissed"}:
+            if baseline_entry is None:
+                report["new_closed"].append(_delta_summary(current_row))
+            else:
+                baseline_state = (
+                    baseline_entry.get("state", "").strip().lower()
+                )
+                if baseline_state == "open":
+                    key = (
+                        "newly_fixed"
+                        if state == "fixed"
+                        else "newly_dismissed"
+                    )
+                    report[key].append(_delta_summary(current_row))
+                else:
+                    report["unchanged_closed"].append(ghsa_id)
+
+    for ghsa_id, baseline_row in baseline.items():
+        if ghsa_id in current:
+            continue
+        if baseline_row.get("state", "").strip().lower() == "open":
+            report["missing_from_current"].append(
+                _delta_summary(baseline_row)
+            )
+            report["incomplete_reasons"].append(
+                "missing_from_current:" + ghsa_id
+            )
+
+    for key in (
+        "new_open",
+        "reopened",
+        "newly_fixed",
+        "newly_dismissed",
+        "new_closed",
+        "changed",
+        "missing_from_current",
+        "review_required",
+    ):
+        report[key].sort(key=lambda row: str(row.get("ghsa_id", "")))
+    report["unchanged_open"].sort()
+    report["unchanged_closed"].sort()
+    report["blocking_reasons"] = sorted(set(report["blocking_reasons"]))
+    report["incomplete_reasons"] = sorted(set(report["incomplete_reasons"]))
+    report["security_blocking"] = bool(report["blocking_reasons"])
+    report["comparison_incomplete"] = bool(
+        report["incomplete_reasons"]
+    )
+    report["requires_review"] = bool(report["review_required"])
+    if report["security_blocking"]:
+        exit_code = 1
+    elif report["comparison_incomplete"]:
+        exit_code = 2
+    elif report["requires_review"]:
+        exit_code = 3
+    else:
+        exit_code = 0
+    report["exit_code"] = exit_code
+    report["blocking"] = exit_code != 0
+    return report
+
+
+def _read_saved_snapshot(
+    path: Path,
+) -> Tuple[List[Dict[str, str]], str, str]:
+    rows = _read_csv(path)
+    if not rows:
+        raise ValueError("saved current snapshot is empty: " + str(path))
+    snapshot_date = rows[0].get("snapshot_date", "")
+    snapshot_id = rows[0].get("snapshot_id", "")
+    if not snapshot_date or not snapshot_id:
+        raise ValueError("saved current snapshot is missing its identity fields")
+    if any(
+        row.get("snapshot_date") != snapshot_date
+        or row.get("snapshot_id") != snapshot_id
+        for row in rows
+    ):
+        raise ValueError("saved current snapshot contains mixed identities")
+    return rows, snapshot_date, snapshot_id
+
+
 def _read_existing_triage(path: Path) -> List[Dict[str, str]]:
     if not path.exists():
         return []
     return _read_csv(path)
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository", default=DEFAULT_REPOSITORY)
     parser.add_argument("--historical", type=Path, default=HISTORICAL_SNAPSHOT)
@@ -1147,7 +1443,48 @@ def main() -> None:
         action="store_true",
         help="explicitly replace the current snapshot file if it already exists",
     )
+    parser.add_argument(
+        "--delta",
+        action="store_true",
+        help=(
+            "read-only comparison with a baseline snapshot; never writes "
+            "snapshots or triage evidence"
+        ),
+    )
+    parser.add_argument(
+        "--baseline",
+        type=Path,
+        help="baseline snapshot for --delta (default: newest captured snapshot)",
+    )
     args = parser.parse_args()
+
+    if args.delta:
+        if args.snapshot_date is not None or args.overwrite_current_snapshot:
+            parser.error(
+                "--delta cannot be combined with --snapshot-date or "
+                "--overwrite-current-snapshot"
+            )
+        baseline_path = args.baseline or find_latest_snapshot(args.output_dir)
+        if args.current_snapshot is not None:
+            current_rows, _, _ = _read_saved_snapshot(args.current_snapshot)
+            current_source = str(args.current_snapshot)
+        else:
+            snapshot_date = datetime.now(timezone.utc).date().isoformat()
+            snapshot_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            current_rows = build_current_snapshot(
+                _fetch_current_alerts(args.repository),
+                snapshot_date,
+                snapshot_id,
+            )
+            current_source = "GitHub API"
+        report = build_delta_report(_read_csv(baseline_path), current_rows)
+        report["baseline_file"] = str(baseline_path)
+        report["current_source"] = current_source
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return int(report["exit_code"])
+
+    if args.baseline is not None:
+        parser.error("--baseline requires --delta")
 
     if args.current_snapshot is not None:
         if args.snapshot_date is not None or args.overwrite_current_snapshot:
@@ -1156,19 +1493,9 @@ def main() -> None:
                 "--overwrite-current-snapshot"
             )
         current_path = args.current_snapshot
-        current_rows = _read_csv(current_path)
-        if not current_rows:
-            raise ValueError("saved current snapshot is empty: " + str(current_path))
-        snapshot_date = current_rows[0].get("snapshot_date", "")
-        snapshot_id = current_rows[0].get("snapshot_id", "")
-        if not snapshot_date or not snapshot_id:
-            raise ValueError("saved current snapshot is missing its identity fields")
-        if any(
-            row.get("snapshot_date") != snapshot_date
-            or row.get("snapshot_id") != snapshot_id
-            for row in current_rows
-        ):
-            raise ValueError("saved current snapshot contains mixed identities")
+        current_rows, snapshot_date, snapshot_id = _read_saved_snapshot(
+            current_path
+        )
     else:
         snapshot_date = (
             args.snapshot_date or datetime.now(timezone.utc).date().isoformat()
@@ -1250,7 +1577,8 @@ def main() -> None:
             indent=2,
         )
     )
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
