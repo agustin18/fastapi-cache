@@ -39,9 +39,9 @@ A vulnerability found in a package shared by this fork and the original
 version and invokes the affected code. They do **not** necessarily install
 the same dependency versions. In particular, upstream `fastapi-cache2`
 uses redis-py 5.x whereas this fork's tested `0.3.x` Redis extra is 4.x.
-See [compatibility & risk matrix](COMPATIBILITY.md),
-[security policy](SECURITY.md) and
-[legacy vulnerability explanation](audit/security/LEGACY_SUPPORT_AND_RISKS.md).
+See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md),
+[security policy](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) and
+[legacy vulnerability explanation](https://github.com/agustin18/fastapi-cache/blob/stable/audit/security/LEGACY_SUPPORT_AND_RISKS.md).
 
 ## Introduction
 
@@ -52,7 +52,7 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 The first stable release deliberately prioritizes security-scoped,
 low-friction migration over adding every advanced caching feature.
-See the [roadmap](ROADMAP.md) for planned Redis-py 5/6 compatibility,
+See the [roadmap](https://github.com/agustin18/fastapi-cache/blob/stable/ROADMAP.md) for planned Redis-py 5/6 compatibility,
 safer cache key configuration, observability, cache-stampede prevention,
 and optional backend parity. These features are **not** claimed for 0.3.0.
 

@@ -97,6 +97,8 @@ from the 21 still-open cases. An alert's GHSA, package/version and
 ## Final signoff record (maintainer to complete after independent review)
 
 - [ ] Approve the package-scoped decisions for **all 21 open GHSA** above.
+- [ ] Acknowledge the **74 graph-fixed** entries as historical snapshot
+  status only; do not interpret these as universal vulnerability fixes.
 - [ ] Approve the critical AnyIO 4.5.2 legacy residual **only** for the
   documented Python 3.8/3.9/test profile boundaries.
 - [ ] Approve the Starlette #120/#64 consumer-owned file-serving boundary;
