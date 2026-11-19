@@ -16,6 +16,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: redis-research-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   redis-client-matrix:
     name: redis-py ${{ matrix.client }} / Py ${{ matrix.python }} / Redis ${{ matrix.server }}
