@@ -14,12 +14,12 @@ normal success-path behavior. Bug fixes that change edge-case behavior are liste
 are covered by regression tests. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full
 contract.
 
-> **Release status:** `0.3.0b1` is published, while `0.3.0rc1`
-> is prepared on `stable` but is **not assumed to be published**. This guide
-> documents the target RC/stable behavior; check the installed artifact before
-> relying on a fix. The target range is Python `>=3.8,<3.14`; Python 3.8–3.10
-> are legacy functional-compatibility only, and security support is server-side
-> CPython 3.11–3.13.
+> **Release channels:** Use [PyPI](https://pypi.org/project/fastapi-cache-stable/)
+> for current publications and [CHANGELOG.md](CHANGELOG.md) for historical
+> versions. This guide describes the maintained behavior, not individual
+> alpha/beta milestones. The installation range is Python `>=3.8,<3.14`;
+> security validation covers server-side CPython 3.11–3.13, while 3.8–3.10
+> are legacy functional-compatibility targets only.
 
 ## Quick migration for GET, JSON and Redis/InMemory
 
@@ -54,7 +54,7 @@ and [Rollback](#rollback).
 
 ## Who should migrate
 
-- You use `fastapi-cache2` 0.2.2 and run stable `0.3.0` on Python 3.8–3.13.
+- You are migrating `fastapi-cache2==0.2.2` to a version supported by the documented Python matrix.
 - Python 3.8–3.10 remain legacy functional-compatibility targets. They are EOL and do not
   receive a stable security-support commitment; Python 3.11–3.13 form the security-supported
   matrix.
@@ -97,59 +97,52 @@ for Pydantic v1 models and annotations that cannot be represented by a Pydantic 
 
 ## Install
 
-**Already published beta:** install `0.3.0b1` only if you explicitly want
-to test the historical beta:
+Use a fresh environment and update your **application dependency declaration**
+and lockfile: never install both distributions in one environment, because
+they own the same `fastapi_cache` import.
+
+For the normal stable release (once published):
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
-python -m pip install "fastapi-cache-stable[redis]==0.3.0b1"
+python -m pip install "fastapi-cache-stable[redis]"
 ```
 
-**After the RC is actually published on PyPI**, use the exact candidate
-version in a **clean environment**, and update your application's dependency
-declaration and lockfile. Before publication this will correctly fail:
+For a **published prerelease**:
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
-python -m pip install "fastapi-cache-stable[redis]==0.3.0rc1"
+python -m pip install --pre --upgrade "fastapi-cache-stable[redis]"
 python -m pip check
 python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 ```
 
-Omit `[redis]` for InMemory-only use. Never co-install `fastapi-cache2`
-and `fastapi-cache-stable`: both own `fastapi_cache`. Uninstall the old
-distribution **before** installing the fork. `pip check` alone does not
-detect that file ownership collision.
+Omit `[redis]` if only InMemory is needed. Pin the exact tested version
+before deploying. `pip check` does **not** detect the co-installation
+collision; uninstall `fastapi-cache2` **before** installing the fork.
 
-### Verify the exact TestPyPI wheel after publication
+### Verify an exact wheel from TestPyPI
 
-The commands below describe a **future verification step**; they do not
-claim the RC has been published on TestPyPI. Download **without dependencies**
-from TestPyPI, verify the SHA-256 against the release-approved wheel, then
-install the downloaded file in a clean environment:
+Use the version approved in [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
+and compare its downloaded SHA-256 with the approved CI artifact:
 
 ```sh
+RELEASE_VERSION="<approved-version>"
 python -m pip download --no-deps --only-binary=:all: \
-  --index-url https://test.pypi.org/simple/ \
-  -d testpypi-dist "fastapi-cache-stable==0.3.0rc1"
+  --index-url https://test.pypi.org/simple/ -d testpypi-dist \
+  "fastapi-cache-stable==$RELEASE_VERSION"
 
-python -m pip hash \
-  testpypi-dist/fastapi_cache_stable-0.3.0rc1-py3-none-any.whl
-# Compare the SHA-256 with the approved CI/release artifact.
+python -m pip hash testpypi-dist/*.whl
+# Compare the displayed SHA-256 with the approved CI artifact.
 
-python -m pip uninstall -y fastapi-cache2
-python -m pip install \
-  testpypi-dist/fastapi_cache_stable-0.3.0rc1-py3-none-any.whl \
-  "redis==4.6.0"
+python -m pip install testpypi-dist/*.whl "redis==4.6.0"
 python -m pip check
 python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 ```
 
-The Redis client is pinned to the previously validated 4.6.0 profile for
-this demonstration; other dependencies resolve from normal PyPI.
-Avoid mixing index candidates with `--extra-index-url` when proving the
-identity of a TestPyPI artifact. Releasing the same version on PyPI
-requires separate validation and authorization.
+This verified Redis profile uses redis-py 4.6.0. Other runtime dependencies
+resolve from regular PyPI; do not mix TestPyPI and PyPI candidates via
+`--extra-index-url` when verifying provenance.
 
 ## Compatibility matrix
 
@@ -181,37 +174,28 @@ requires separate validation and authorization.
 
 ## Behavior changes in 0.3.0
 
-These are intentional bug fixes targeted for `0.3.0`. `0.3.0a1` implements the error-response,
-typed-decode and clear-semantics fixes; `0.3.0a2` implements the auth/privacy bypass, the
-InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes; `0.3.0b1` implements the
-explicit second-`init()` contract. Each one has a regression test and is listed here so you
-can decide whether it affects you.
+These intentional fixes are covered by regression tests. Version-by-version
+history belongs in [CHANGELOG.md](CHANGELOG.md), not in this upgrade guide.
 
-| Change | Before (0.2.2) | After (0.3.0) | Status |
-|---|---|---|---|
-| Error responses | A cached 404 could be returned as 200 | Responses with status >= 400 are not cached | Implemented in 0.3.0a1 |
-| Typed JSON decode | Cache hits returned plain dicts/lists | Opt-in `TypedJsonCoder` on Pydantic v2; default `JsonCoder`, Pydantic v1 and unsupported annotations keep the legacy decoded behavior; validation errors propagate | Implemented in 0.3.0a1 |
-| Authenticated requests | Two users could share a cache key | Requests with a non-empty `Authorization` or `Cookie` header bypass the cache by default; other authentication/session mechanisms are not detected automatically. Opt in with `cache_authenticated=True` and a safe `key_builder` | Implemented in 0.3.0a2 |
-| ETag | `hash()` changes per process; header unquoted | Stable SHA-256 digest, quoted weak ETag, weak `If-None-Match` comparison including lists and `*` | Implemented in 0.3.0a2 |
-| `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key; pass the full key | Implemented in 0.3.0a1 |
-| Namespace boundary | `clear("app:user")` also deleted `app:users` | Requires the `:` boundary | Implemented in 0.3.0a1 |
-| Redis Cluster namespace clear | Partial/unsafe clearing | Raises `NotImplementedError`; use key-only clear or flush out of band | Implemented in 0.3.0a1 |
-| `expire=None` in InMemory | Expired almost immediately | Means no expiration; `get_with_ttl` returns `-1` | Implemented in 0.3.0a2 |
-| `Cache-Control` | Could emit `max-age=None` or `max-age=-1` | Only valid values; `max-age` is omitted when no valid expiry exists | Implemented in 0.3.0a2 |
-| Request `Cache-Control` directives | Combined or case-varied `no-cache`/`no-store` directives could be ignored | Directive names are parsed case-insensitively across comma-separated and repeated fields; `no-cache` recomputes and refreshes the entry, while `no-store` bypasses this decorator cache for the request | Implemented in PR #26 |
-| `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced as `__fastapi_cache_spec_type__`; user data is preserved | Implemented in 0.3.0a2 |
-| Response caching | Streaming/file/redirect and metadata-bearing `JSONResponse` could be cached incorrectly | `JsonCoder` caches only simple `200`/`application/json` `JSONResponse`; other responses bypass; `PickleCoder` bypasses streaming/file/template; `Set-Cookie`, `Cache-Control: no-store/private` and background tasks never cache | Implemented in 0.3.0a2 |
-| Second `init` | Silent no-op | Reconfiguration is explicit: `reset()` or `force=True` | Implemented in 0.3.0b1 |
+| Change | Original library | Maintained behavior |
+|---|---|---|
+| Error responses | A cached 404 could be returned as 200 | Responses with status >= 400 are not cached |
+| Typed JSON decode | Cache hits returned plain dicts/lists | Opt-in `TypedJsonCoder` on Pydantic v2; default `JsonCoder`, Pydantic v1 and unsupported annotations keep the legacy decoded behavior; validation errors propagate |
+| Authenticated requests | Two users could share a cache key | Requests with a non-empty `Authorization` or `Cookie` header bypass the cache by default; other authentication/session mechanisms are not detected automatically. Opt in with `cache_authenticated=True` and a safe `key_builder` |
+| ETag | `hash()` changes per process; header unquoted | Stable SHA-256 digest, quoted weak ETag, weak `If-None-Match` comparison including lists and `*` |
+| `clear(key=...)` | Deleted the whole prefix namespace | Deletes only that key; pass the full key |
+| Namespace boundary | `clear("app:user")` also deleted `app:users` | Requires the `:` boundary |
+| Redis Cluster namespace clear | Partial/unsafe clearing | Raises `NotImplementedError`; use key-only clear or flush out of band |
+| `expire=None` in InMemory | Expired almost immediately | Means no expiration; `get_with_ttl` returns `-1` |
+| `Cache-Control` | Could emit `max-age=None` or `max-age=-1` | Only valid values; `max-age` is omitted when no valid expiry exists |
+| Request `Cache-Control` directives | Combined or case-varied `no-cache`/`no-store` directives could be ignored | Directive names are parsed case-insensitively across comma-separated and repeated fields; `no-cache` recomputes and refreshes the entry, while `no-store` bypasses this decorator cache for the request |
+| `_spec_type` | User payloads with that key raised `TypeError` | Internal marker is namespaced as `__fastapi_cache_spec_type__`; user data is preserved |
+| Response caching | Streaming/file/redirect and metadata-bearing `JSONResponse` could be cached incorrectly | `JsonCoder` caches only simple `200`/`application/json` `JSONResponse`; other responses bypass; `PickleCoder` bypasses streaming/file/template; `Set-Cookie`, `Cache-Control: no-store/private` and background tasks never cache |
+| Second `init` | Silent no-op | Reconfiguration is explicit: `reset()` or `force=True` |
 
-The error-response, typed-decode and clear-semantics fixes are implemented in `0.3.0a1`.
-The auth/privacy bypass, InMemory, `Cache-Control`, ETag, `_spec_type` and non-JSON fixes are
-implemented in `0.3.0a2`. The second-`init` fix is implemented in `0.3.0b1`; no alpha
-contains it.
-
-For decorated endpoints, a request `Cache-Control: no-store` bypasses both cache lookup and
-storage for that request. A request with `no-cache` runs the wrapped endpoint and refreshes its
-cached result; the decorator does not validate a stored response with a separate upstream
-origin.
+A request `Cache-Control: no-store` bypasses lookup and storage; a request
+`no-cache` recomputes and refreshes the value. The decorator does not
+independently revalidate a cache entry against an upstream origin.
 
 ### Authenticated requests
 
