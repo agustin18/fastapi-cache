@@ -85,6 +85,13 @@ not yet in this package's declared support range; see
 - Authenticated `Authorization` or `Cookie` requests **bypass** the
   cache by default. To enable authenticated caching, use an explicit
   identity-aware `key_builder` and review tenant/user isolation.
+- The default key builder does **not automatically incorporate arbitrary
+  request headers**, including values read indirectly from `Request`
+  or middleware. A header exposed as a FastAPI function argument may
+  already be represented in the key, but do **not** assume that for all
+  `Vary`, locale, tenant or custom-auth headers. Use a suitable
+  custom key builder, or bypass caching until variation is proven safe.
+  See [the header/Vary investigation](https://github.com/agustin18/fastapi-cache/issues/53).
 - Do not cache secrets or deserialize untrusted cache bytes with
   `PickleCoder`.
 - `FastAPICache.init()` must run once per worker/lifespan;

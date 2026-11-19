@@ -34,10 +34,12 @@ cache keys and safe default HTTP/private-response behavior.
 | Order | Focused PR / issue | Deliverable / acceptance |
 |---|---|---|
 | **P0** | This post-release documentation PR | Remove false "0.3.0 not published" messages; add [quickstart](docs/QUICKSTART.md) and provenance; keep historical GHSA evidence immutable |
-| **P1** | [#44: mandatory dependencies](https://github.com/agustin18/fastapi-cache/issues/44) | Check `uvicorn`/`jinja2` runtime reachability, wheel metadata and clean installs; trim **only if** verified compatible; quantify dependency-graph reduction |
-| **P1** | [#46: security delta monitoring](https://github.com/agustin18/fastapi-cache/issues/46) | Repeatable **new/reopened/changed GHSA** comparison split by modern runtime, legacy test and application-owned risks; no blanket dismissal of 21 accepted alerts |
+| **P0 — investigation** | [#53: Vary/header partitioning and privacy](https://github.com/agustin18/fastapi-cache/issues/53) | Reproduce header-dependent content served across otherwise equal keys. Distinguish captured `Header(...)` params from `Request`/middleware headers outside `kwargs`. **If a package-controlled data leak is confirmed, prioritize a narrow safe fix in 0.3.x**, otherwise design opt-in key variation for 0.4.x |
+| **P1** | [#44: trim uvicorn only if safe](https://github.com/agustin18/fastapi-cache/issues/44) | Test whether mandatory `uvicorn` can be removed with clean wheel installs. **Keep `jinja2`** while `coder.py` eagerly imports `starlette.templating`; moving it requires a separately tested refactor |
+| **P1** | [#46: extend existing GHSA reconciler](https://github.com/agustin18/fastapi-cache/issues/46) | Build a read-only **delta mode and CI** on top of `scripts/reconcile_dependabot_alerts.py`. Do not replace it or reapprove unchanged accepted legacy risks |
+| **P1 — conditional** | [#55: MD5/FIPS key portability](https://github.com/agustin18/fastapi-cache/issues/55) | Reproduce restricted-hash failures; retain legacy key digests and **Python 3.8** support. Upstream `usedforsecurity=False` proposal needs version-specific handling (documented for hashlib constructors since 3.9) |
 | **P2** | [#45: DynamoDB correctness](https://github.com/agustin18/fastapi-cache/issues/45) | Reproduce/fix expired-value reads and client cleanup lifecycle if verified; keep DynamoDB experimental and defer parity without real integration |
-| **P2** | [#48: documentation site](https://github.com/agustin18/fastapi-cache/issues/48), first stage | Structure install/migration, examples and public API reference; a full hosted docs site can follow in 0.4.0 |
+| **P2** | [#48: documentation site](https://github.com/agustin18/fastapi-cache/issues/48) | PR #52 already supplies the quickstart and release status; the issue tracks **versioned hosted docs**, link checks, and tested recipes for future work |
 
 A `0.3.1` release is **not mandatory for docs-only merges**; batch a
 small, regression-tested improvement and publish only when there is
@@ -52,8 +54,8 @@ install range in a patch.
 |---|---|---|
 | **P0 — release driver** | [#47: redis-py 5/6/7, research 8](https://github.com/agustin18/fastapi-cache/issues/47) | Tests with **real Redis** exercise GET, SET, TTL, pipelining, SCAN/UNLINK, clear boundaries, binary values, error paths and MISS→HIT. The published 4.6 migration lane remains working if technically possible. Widen redis extra only for versions actually tested |
 | **P1 — optional** | [#51: Python 3.14 qualification](https://github.com/agustin18/fastapi-cache/issues/51) | Full compatibility and security matrix succeeds; if not, keep metadata unchanged and record blockers. No EOL interpreter drop solely to improve Dependabot counts |
-| **P1 — optional** | [#49: safe exclude_params](https://github.com/agustin18/fastapi-cache/issues/49) | Explicit opt-in, stable legacy keys when unset, privacy/tenant identity guard tests, documented key migration |
-| **P2 — stretch** | [#50: HIT/MISS/BYPASS/ERROR events](https://github.com/agustin18/fastapi-cache/issues/50) | Hook failures isolated; no raw keys, cookie/token/user data by default; no mandatory telemetry dependencies |
+| **P1 — optional** | [#49: safe exclude_params](https://github.com/agustin18/fastapi-cache/issues/49) | Explicit opt-in; deterministic-key/PYTHONHASHSEED tests; do not exclude tenant or user identity by default; preserve legacy keys and document migration |
+| **P1 — conditional security design** | [#53: Vary/header-aware keys](https://github.com/agustin18/fastapi-cache/issues/53) | If an exploitable defect is found, prioritize a narrow 0.3.x correction; otherwise design opt-in header variation and key/namespace migration with exhaustive HTTP/privacy tests |
 | **P2 — documentation** | [#48: tested docs site](https://github.com/agustin18/fastapi-cache/issues/48) | Build/link checks; Redis, InMemory, safe-auth and migration examples exercised in CI |
 
 **Keep 0.4.0 bounded:** redis-py compatibility and a documented tested
@@ -71,13 +73,19 @@ No reason to delay verified Redis support for unrelated features.
 - **Backend parity:** Memcached real TTL and `clear` contract; DynamoDB
   real-service tests and key invalidation; precise Redis Cluster
   namespace-clear behavior. Do not advertise unimplemented APIs.
-- **InMemory capacity/eviction:** bounded optional store with verified
-  expiration and isolation. Current store has no size cap.
+- [#54: InMemory capacity/eviction](https://github.com/agustin18/fastapi-cache/issues/54):
+  bounded opt-in store with verified expiration, eviction and isolation.
+  Current store has no size cap.
 - **App-scoped configuration:** explore replacing process-global singleton
   only with a compatibility strategy; a breaking API belongs in a major
   version or a deliberately parallel API.
-- **Advanced HTTP:** `Vary`, POST opt-in, stale-while-revalidate, HTTP
-  privacy model and CDN interactions only after explicit threat modeling.
+- **Observability:** [#50](https://github.com/agustin18/fastapi-cache/issues/50)
+  is now **0.5.x preferred**; an isolated opt-in implementation can ship
+  earlier only if it does not delay #47.
+- **Advanced HTTP:** beyond the prioritized header/Vary security
+  investigation [#53](https://github.com/agustin18/fastapi-cache/issues/53),
+  study POST opt-in, stale-while-revalidate, cache headers and CDN
+  interactions only after explicit threat modeling.
 
 ## Competitor feature map (source-code/docs snapshot 2026-11-19)
 
@@ -118,12 +126,24 @@ for a redis-py client major.
 
 ## Proposed PR order
 
-**0.3.1 candidates:** this docs/provenance PR → #44 (dependency audit)
-→ #46 (GHSA delta workflow) → #45 (minimal tested backend correctness).
+**Immediate:** this PR #52 (post-release docs) plus #53 (header/Vary
+security reproduction). Any confirmed exploitable package-owned cross-user
+variant leak takes precedence over feature work.
 
-**0.4.0 candidates:** #47 (redis-py) → #51 (Python 3.14 assessment)
-→ #49 (safe keys, only if ready) → #50 (observability, stretch)
-+ #48 (documentation site in independent documentation PRs).
+**0.3.1 candidates:** #44 (uvicorn-only dependency audit; keep Jinja2)
+→ #46 (read-only delta mode in existing reconciler) → #55 (FIPS
+portability if compatible) → #45 (tested experimental backend fixes).
+Batch small fixes into a patch release only if useful.
+
+**0.4.0 driver:** #47 (redis-py 5/6/7; evaluate 8).
+Optional parallel tracks: #51 (Python 3.14 qualification), #49
+(exclude_params), #53 (header-variation API if not fixed earlier)
+and #48 (versioned documentation site). These must not block a
+verified Redis-client compatibility release.
+
+**0.5.0+ proposals:** #50 (observability), #54 (bounded InMemory),
+config-per-app, cache stampede locks and tag invalidation, subject to
+user demand and concurrency/security tests.
 
 A final change log, tested distribution and tagged release are needed
 for **each new published version**, but are **not a reason to re-open
