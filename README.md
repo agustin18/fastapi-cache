@@ -20,10 +20,43 @@
 [![license](https://img.shields.io/github/license/agustin18/fastapi-cache)](https://github.com/agustin18/fastapi-cache/blob/stable/LICENSE)
 [![CI](https://github.com/agustin18/fastapi-cache/actions/workflows/ci.yml/badge.svg)](https://github.com/agustin18/fastapi-cache/actions/workflows/ci.yml)
 
+
+### Python versions and security
+
+**Recommended for production:** CPython **3.11–3.13**, within our tested
+FastAPI/Redis/InMemory matrix. Python **3.8–3.10** stays installable and
+functionally tested to support migrations from `fastapi-cache2`, but is
+**legacy-only**: these EOL runtimes and their dependency stacks receive
+**no security maintenance commitment**. Known issues in some Python 3.8/3.9
+dependency profiles include [AnyIO TLS](https://github.com/advisories/GHSA-82r6-8w77-94w6)
+and [Starlette file serving](https://github.com/advisories/GHSA-7f5h-v6xp-fcq8).
+The library does not exercise those specific paths directly, but other
+application features might. **Use a newer Python and patched compatible
+dependencies whenever possible.**
+
+A vulnerability found in a package shared by this fork and the original
+`fastapi-cache2` may affect *both* if a consumer resolves the same vulnerable
+version and invokes the affected code. They do **not** necessarily install
+the same dependency versions. In particular, the **published `fastapi-cache2==0.2.2`** and this fork
+both declare redis-py **4.x**. The upstream repository's later, **unreleased**
+`main` branch changed the Redis extra to **5.x**; that is not a released
+legacy-package guarantee. Redis-py 5/6 remain unverified in this fork.
+See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md),
+[security policy](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) and
+[legacy vulnerability explanation](https://github.com/agustin18/fastapi-cache/blob/stable/audit/security/LEGACY_SUPPORT_AND_RISKS.md).
+
 ## Introduction
 
 `fastapi-cache` is a tool to cache FastAPI endpoint and function results, with
 backends supporting Redis, Memcached, and Amazon DynamoDB.
+
+## Development roadmap
+
+The first stable release deliberately prioritizes security-scoped,
+low-friction migration over adding every advanced caching feature.
+See the [roadmap](https://github.com/agustin18/fastapi-cache/blob/stable/ROADMAP.md) for planned Redis-py 5/6 compatibility,
+safer cache key configuration, observability, cache-stampede prevention,
+and optional backend parity. These features are **not** claimed for 0.3.0.
 
 ## Features
 

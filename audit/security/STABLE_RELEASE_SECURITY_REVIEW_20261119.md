@@ -111,6 +111,19 @@ the inspected library path, not the arbitrary dependency use of a consumer.
    in the reconciled profile. **Pygments** requires a specific lexer invocation
    outside this library's runtime code.
 
+## Maintainer proposal for scoped acceptance
+
+The follow-up [21-GHSA maintainer decision record](MAINTAINER_RISK_ACCEPTANCE_20261119.md)
+describes conditional risk acceptance, legacy Python recommendations and
+consumer responsibilities. It remains subject to owner PR review;
+this original dated evidence ledger stays preserved without rewriting
+open Dependabot status or claiming fixed transitive packages.
+
+The `real-estate-arg` agent subsequently reported a clean pip
+`fastapi-cache2` -> PyPI RC2 replacement in a disposable Docker
+backend and **130 passing tests (16.58s)**. This is third-party/local
+agent evidence, not independently archived CI provenance here.
+
 ## Explicit release gates still outstanding
 
 - [ ] **Owner/auditor signoff** on all 21 *open* advisory dispositions. Confirm
@@ -124,12 +137,13 @@ the inspected library path, not the arbitrary dependency use of a consumer.
   [published-wheel audit](RC2_EXACT_PYPI_WHEEL_AUDIT_20261119.md).
 - [ ] Sign off on the 74 graph-fixed rows as a group **within the captured
   source graph** (not a claim about all future consumer resolutions).
-- [ ] In a disposable `real-estate-arg` environment, uninstall
-  `fastapi-cache2==0.2.2`, install `fastapi-cache-stable==0.3.0rc2` via
-  normal dependency resolution (no source overlay, no `--no-deps`, no
-  co-installation), run `pip check`, the same 130 selected integration tests,
-  and verify rollback. Previous **overlay-based** 130/130 passing is useful
-  functional evidence, not a clean dependency migration.
+- [x] Agent reports completed disposable `real-estate-arg` clean pip
+  replacement: `fastapi-cache2==0.2.2` removed, `0.3.0rc2[redis]`
+  installed with dependencies and `pip check`, **130 tests passed**.
+  Original application/container retained its legacy installation.
+- [ ] Retain independent reviewable output from the consumer run:
+  package inventory/lock delta and execution logs were reported by the
+  agent but not archived in this repository.
 - [ ] Re-run a **fresh authenticated** Dependabot capture before stable signoff
   and reconcile any changed/new GHSA (fail closed on new open alerts).
 - [ ] Once those gates pass, decide the individual stable dispositions in the

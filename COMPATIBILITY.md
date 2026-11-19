@@ -153,6 +153,30 @@ final release. Stable `0.3.0` retains the package range `>=3.8,<3.14`; Python 3.
 tested for legacy functional compatibility but are not security-supported. Pydantic v1 keeps
 its documented legacy decoded behavior, but receives no new upstream security fixes.
 
+### Security and compatibility are different promises
+
+| Python | Functional compatibility with the fork | Security support for `0.3.x` | Known boundary |
+|---|---|---|---|
+| 3.8–3.9 | Verified legacy matrix, core Redis/InMemory | **No** | Legacy profiles can resolve vulnerable AnyIO 4.5.2 and Starlette 0.44.0 |
+| 3.10 | Verified legacy matrix | **No** | EOL interpreter; security fixes depend on the consuming app and compatible dependencies |
+| **3.11–3.13** | **Verified** | **Best-effort, recommended** | Verified modern runtime wheel profiles; not a claim about all consumer packages |
+| 3.14 | Not verified | No | Not in 0.3.x metadata range |
+
+A legacy Python installation can work correctly and still retain dependency
+vulnerabilities. Neither an installation on EOL Python nor a switch from
+`fastapi-cache2` **automatically fixes** Starlette, AnyIO, urllib3 or
+any unrelated vulnerability. The two distributions may resolve different
+dependency graphs; only individual installed versions and reachable code
+paths establish exposure. The **released** upstream `fastapi-cache2==0.2.2` and this fork
+both declare `redis ^4.2.0rc1` (redis-py 4.x), and this fork verifies
+redis-py 4.6.0. Upstream `main` was later updated to `redis ^5.0.8`, but
+those unreleased source changes do not constitute published compatibility.
+Projects requiring redis-py 5/6 must not assume they are supported yet.
+
+See [Legacy support and known GHSA](audit/security/LEGACY_SUPPORT_AND_RISKS.md)
+and [SECURITY.md](SECURITY.md). **Use Python 3.11–3.13 and patched
+compatible dependencies for production**, not EOL interpreters.
+
 ## Supported matrix for `0.3.x`
 
 > Stable `0.3.0` metadata is `python = ">=3.8,<3.14"`. Functional compatibility and security
