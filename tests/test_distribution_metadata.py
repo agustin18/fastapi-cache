@@ -117,7 +117,7 @@ def test_redis_extra_has_exactly_one_python_conditional_requirement() -> None:
         for value in metadata("fastapi-cache-stable").get_all("Requires-Dist") or []
         if canonicalize_name(Requirement(value).name) == "redis"
     ]
-    assert len(requirements) == 6  # three Python windows, each for redis/all
+    assert len(requirements) == 3  # three windows; each marker serves redis/all
 
     cases = {
         "3.8": (Version("6.1.1"), Version("6.2.0")),
