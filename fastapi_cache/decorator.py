@@ -509,10 +509,8 @@ def cache(
                 cache_key = scoped_key
 
             if normalized_vary_headers:
-                if request is None:
-                    # Without ASGI request headers we cannot construct the
-                    # declared variant key. Do not fall back to a shared key.
-                    return await ensure_async_func(*args, **kwargs)
+                # Guarded earlier, before any key builder was invoked.
+                assert request is not None  # noqa: S101  # type guard
                 variant = tuple(
                     (name, tuple(request.headers.getlist(name)))
                     for name in normalized_vary_headers
