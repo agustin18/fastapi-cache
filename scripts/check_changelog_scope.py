@@ -8,9 +8,10 @@ carries the audited skip-changelog label). Run with a full git fetch.
 from __future__ import annotations
 
 import argparse
+import shutil
 import subprocess
 from pathlib import PurePosixPath
-from typing import Iterable, List
+from typing import Iterable
 
 
 def is_docs_only(paths: Iterable[str]) -> bool:
@@ -22,11 +23,15 @@ def is_docs_only(paths: Iterable[str]) -> bool:
     )
 
 
-def list_changed_paths(base: str = "origin/stable") -> List[str]:
+def list_changed_paths(base: str = "origin/stable") -> list[str]:
     # --no-renames keeps *both* sides of a rename in view, so renaming
     # Python/workflow files to Markdown cannot accidentally bypass the gate.
-    result = subprocess.run(
-        ["git", "diff", "--name-only", "--no-renames", f"{base}...HEAD"],
+    git_executable = shutil.which("git")
+    if git_executable is None:
+        raise RuntimeError("git executable is required for changelog scope")
+    # The CI-supplied ref is trusted, arguments are never sent through a shell.
+    result = subprocess.run(  # noqa: S603
+        [git_executable, "diff", "--name-only", "--no-renames", f"{base}...HEAD"],
         check=True,
         capture_output=True,
         text=True,
