@@ -85,6 +85,20 @@ can reduce cache hit rates for existing Request-taking endpoints. HTTP
 Redis/InMemory cache. **0.3.0 users must upgrade to 0.3.1 or avoid caching
 such endpoints**; the published `0.3.0` wheel itself is immutable.
 
+## Factory-generated route key collisions (0.4.0; issue #68)
+
+Published `0.4.0` can cache a result under the same legacy key for
+distinct factory-generated handlers that share module/name, arguments,
+and namespace. A later request to a different route may receive the
+first route's result. Treat generated-handler caching on a shared backend
+as a **correctness and potential information-isolation hazard**.
+Use distinct per-route `@cache(namespace=...)` values or a reviewed
+route/identity-aware builder, and expire/rotate old ambiguous entries.
+The prospective #68 correction preserves ordinary route keys while
+separating generated HTTP handlers; it has **not been published** in 0.4.0.
+Do not assume it protects hidden `contextvars`, tenant identity, or
+separate applications sharing a namespace (#53).
+
 ## Reporting a vulnerability
 
 Use GitHub private vulnerability reporting:
