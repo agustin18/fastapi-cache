@@ -150,3 +150,58 @@ pytest. The Redis 6.2 wire-mode limitation is now explicitly characterized.
 
 **Only a subsequent Actions run on the corrected HEAD may be used for the
 final decision.** Do not cite the superseded run as 25 successful test lanes.
+
+
+## Proposed production lanes (not approved)
+
+These are candidate conditional metadata ranges based on the tested matrix and
+upstream interpreter support. They are **not** published in this PR.
+
+| Python | Candidate redis-py range | Evidence lanes |
+|---|---|---|
+| 3.8 | `>=4.2.0rc1,<6.2` | 4.6.0, 5.2.1, 6.1.0 |
+| 3.9 | `>=4.2.0rc1,<7.1` | 4.6.0, 5.2.1, 6.1.0, 7.0.1 |
+| 3.10–3.13 | `>=4.2.0rc1,<8.2` | 4.6.0, 5.2.1, 6.1.0, 7.2.1, 8.1.0 |
+
+The `redis-range-resolution` workflow job validates a scratch wheel with those
+conditional requirements resolves to the expected client major/minor and passes
+`pip check` on representative Python 3.8/3.9/3.10/3.13 interpreters. The
+implementation PR must replace the scratch metadata with release-shaped
+metadata, test the lower and upper bounds, and avoid claiming untested
+interpreter/client combinations.
+
+## Security scan (research evidence)
+
+On 2026-11-19, `pip-audit 2.10.1` was run against requirement files for
+`redis==4.6.0`, `redis==6.1.0`, `redis==7.2.1` and `redis==8.1.0`. All four
+reported **no known vulnerabilities** from the configured advisory sources.
+This is a point-in-time research result, not a permanent guarantee and not a
+replacement for the Dependabot delta/security review in the implementation PR.
+
+## Scope decision for a candidate 0.4.0
+
+Unless new evidence justifies otherwise, the implementation should claim:
+
+- Standalone Redis with redis-py clients in the tested series and RESP2/RESP3
+  behavior covered by this matrix.
+- ACL username/password authentication on a standalone server.
+- `decode_responses=False` as the supported binary cache path; decoded clients
+  are characterized but not certified for arbitrary `@cache` values.
+- **Not certified:** Redis Cluster, Sentinel/failover, TLS, managed-provider
+  failover and Cluster namespace clearing. `RedisBackend.clear(namespace=...)`
+  must continue to raise the explicit `NotImplementedError` on cluster clients.
+- TLS/Sentinel are application-supplied client connection concerns; no
+  end-to-end claim without real infrastructure evidence.
+
+## Implementation workflow shape
+
+The research workflow intentionally runs every exploratory lane. The separate
+implementation PR should run only the selected mandatory support lanes (the
+published-lane baseline plus the chosen upper-bound/client combinations) and
+keep the exploratory lanes as optional evidence. Do not run 28 research jobs on
+every future PR.
+
+## Real consumer cross-check
+
+See [real-estate-arg consumer validation](REAL_ESTATE_ARG_CONSUMER_VALIDATION.md)
+for the local migration/rollback evidence.
