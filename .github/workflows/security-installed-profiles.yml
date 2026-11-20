@@ -46,7 +46,10 @@ jobs:
         run: |
           set -euo pipefail
           python -m venv "$RUNNER_TEMP/consumer"
-          "$RUNNER_TEMP/consumer/bin/python" -m pip install --upgrade pip
+          # Python 3.11 venv bootstrap may supply vulnerable setuptools 79.x,
+          # unrelated to the package's Requires-Dist. Keep tooling audited too.
+          "$RUNNER_TEMP/consumer/bin/python" -m pip install --upgrade \
+            pip setuptools==84.2.1
           if [ "$PROFILE_DISTRIBUTION" = "sdist" ]; then
             distribution="$(realpath dist/*.tar.gz)"
           else
