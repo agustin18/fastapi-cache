@@ -41,6 +41,62 @@ jobs:
           git fetch origin stable
           git merge-base --is-ancestor "$GITHUB_SHA" origin/stable
 
+
+  security-delta:
+    name: Block unreviewed Dependabot risk before PyPI
+    needs: preflight
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      vulnerability-alerts: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Enforce fresh authenticated Dependabot delta (fail closed)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/reconcile_dependabot_alerts.py \
+            --delta --repository "$GITHUB_REPOSITORY" \
+            > "$RUNNER_TEMP/dependabot-delta.json"
+      - name: Summarize release security delta
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path(os.environ["RUNNER_TEMP"]) / "dependabot-delta.json"
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write("### Authenticated Dependabot release gate\\n")
+              if not path.is_file() or not path.stat().st_size:
+                  summary.write(
+                      "No valid delta report was produced. Publication is blocked.\\n"
+                  )
+              else:
+                  try:
+                      report = json.loads(path.read_text())
+                  except (OSError, ValueError):
+                      summary.write(
+                          "Cannot parse authenticated delta. Publication is blocked.\\n"
+                      )
+                  else:
+                      for label, value in (
+                          ("Baseline records", report.get("baseline_records")),
+                          ("Current records", report.get("current_records")),
+                          ("Unchanged open", len(report.get("unchanged_open", []))),
+                          ("New open", len(report.get("new_open", []))),
+                          ("Reopened", len(report.get("reopened", []))),
+                          ("Requires review", len(report.get("review_required", []))),
+                          ("Incomplete", report.get("comparison_incomplete")),
+                          ("Exit code", report.get("exit_code")),
+                      ):
+                          summary.write(f"- {label}: `{value}`\\n")
+          PY
+
   test:
     name: Test the release commit on Python ${{ matrix.python }}
     needs: preflight
@@ -85,7 +141,7 @@ jobs:
 
   publish:
     name: Publish to PyPI
-    needs: build
+    needs: [build, security-delta]
     runs-on: ubuntu-latest
     environment:
       name: pypi
