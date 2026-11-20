@@ -133,18 +133,27 @@ def _route_scoped_generated_key(
     The legacy default builder identifies a function by module and *name*.
     Different closures from a factory share that identity even when they
     return different data. functools.wraps can hide their generated names,
-    so actual closure code must also count. This may rotate cached keys for
-    module-level handlers wrapped by a closure; unwrapped module-level
-    endpoints retain their original digest. Never read potentially
+    so check closures *and* explicit __wrapped__ markers (including wrappers
+    that capture values only through default arguments). This also rotates
+    keys for ordinary module-level handlers wrapped by decorators; unwrapped
+    module-level endpoints retain their original digest. Never read possibly
     contaminated pre-fix entries from detected handlers.
     """
     qualname = getattr(func, "__qualname__", "")
-    # functools.wraps can copy a module-level template's __qualname__ and
-    # __name__ onto a generated endpoint. Its *code*, however, still has
-    # closure variables. Inspect co_freevars rather than trusting metadata.
+    # functools.wraps copies a module-level template's __qualname__ and
+    # __name__ onto a generated endpoint, hiding the original factory name.
+    # co_freevars catches closures, but not values bound as default arguments.
+    # Explicit __wrapped__ metadata identifies those wrappers without
+    # running inspect.unwrap or following potentially cyclic wrapper chains.
     code = getattr(func, "__code__", None)
     has_closure = bool(getattr(code, "co_freevars", ()))
-    if not has_closure and "<locals>" not in qualname and func.__name__ != "<lambda>":
+    has_wrapper = getattr(func, "__wrapped__", None) is not None
+    if (
+        not has_closure
+        and not has_wrapper
+        and "<locals>" not in qualname
+        and func.__name__ != "<lambda>"
+    ):
         return key
 
     scope = request.scope
