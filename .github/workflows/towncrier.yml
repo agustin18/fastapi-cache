@@ -30,7 +30,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install "towncrier>=26,<27"
+      # A release-status/README-only edit must not need a fictional news
+      # fragment. Fail closed for any Python, metadata, workflow, test or
+      # other non-Markdown change, including rename/delete paths.
+      - name: Classify changelog requirement
+        id: scope
+        run: python scripts/check_changelog_scope.py --output "$GITHUB_OUTPUT"
       - name: Check changelog fragment
+        if: steps.scope.outputs.docs_only != 'true'
         run: |
           if [[ "${{ contains(github.event.pull_request.labels.*.name, 'skip-changelog') }}" == "true" ]]; then
             echo "skip-changelog label present"
