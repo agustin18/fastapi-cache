@@ -10,13 +10,13 @@ import hashlib
 import importlib.metadata as metadata
 import json
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 
-import fastapi_cache
 from fastapi import FastAPI, Request, Response
 from fastapi.testclient import TestClient
 
+import fastapi_cache
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
@@ -99,8 +99,8 @@ def main():
         args=(7,),
         kwargs={"lang": "es"},
     )
-    reference = hashlib.md5(
-        "__main__:sample_endpoint:(7,):{'lang': 'es'}".encode()
+    reference = hashlib.md5(  # noqa: S324 - legacy golden, not auth
+        b"__main__:sample_endpoint:(7,):{'lang': 'es'}"
     ).hexdigest()
     assert key == EXPECTED_KEY
     assert key == "migration-parity:ordinary:" + reference
@@ -163,10 +163,12 @@ def main():
         assert bob.json()["principal"] == "Bearer Bob"
         assert CALLS["variant"] == CALLS["private"] == 2
         assert error_first.status_code == error_second.status_code == 418
-        assert status(error_first) is None and status(error_second) is None
+        assert status(error_first) is None
+        assert status(error_second) is None
         assert CALLS["error"] == 2
         etag = ordinary_second.headers["etag"]
-        assert etag.startswith('W/"') and etag.endswith('"')
+        assert etag.startswith('W/"')
+        assert etag.endswith('"')
 
     report = {
         "mode": mode,
