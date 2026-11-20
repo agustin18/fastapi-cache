@@ -8,11 +8,12 @@ This contract describes the documented `0.3.x` line. Use
 [PyPI](https://pypi.org/project/fastapi-cache-stable/) and
 [CHANGELOG.md](CHANGELOG.md) for current releases and historical versions.
 
-## Upcoming Redis client support candidate (#47; not published)
+## Redis client support in the staged 0.4.0 release (not yet published)
 
 The published `0.3.1` release continues to declare redis-py 4.x. The
-unreleased #47 implementation changes only the optional Redis client
-requirements and verification matrix, not the RedisBackend runtime semantics.
+staged `0.4.0` release incorporates the merged #47 implementation, changing
+only the optional Redis client requirements and verification matrix, not
+the RedisBackend runtime semantics.
 
 | CPython | Candidate redis-py versions | Constraint |
 |---|---|---|
@@ -30,8 +31,8 @@ TLS/Sentinel/Cluster/failover certification remains out of scope.
 The investigation is recorded in
 [audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md](audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md),
 and the implementation PR runs a smaller mandatory wheel/sdist CI matrix.
-No Redis compatibility expansion is promised to `0.3.x` consumers until a
-subsequent version is explicitly published.
+Existing `0.3.x` PyPI artifacts remain unchanged. The expanded contract
+applies only after `0.4.0` is explicitly published and verified.
 
 ## What "drop-in" means
 
