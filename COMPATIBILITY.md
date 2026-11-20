@@ -33,6 +33,24 @@ and the implementation PR runs a smaller mandatory wheel/sdist CI matrix.
 Existing `0.3.x` PyPI artifacts remain immutable. The expanded contract
 applies to the published `0.4.0` artifact.
 
+## Factory-generated HTTP handlers (#68, prospective correction)
+
+**Published 0.4.0 remains affected**: factory-created functions can share
+module/name/args/namespace while serving different HTTP routes. This can
+cause a wrong response to be replayed. See [#68](https://github.com/agustin18/fastapi-cache/issues/68).
+Until a corrective release is available, give generated routes distinct
+namespaces or review an explicit path-aware key builder.
+
+A narrowly scoped candidate fix changes **only generated HTTP handler
+cache keys** (functions with `<locals>` in `__qualname__` or a lambda)
+by adding stable request method/host/root/path partitioning to the legacy
+key. Standard module-level handler keys and the exported
+`default_key_builder` stay unchanged. Existing factory-handler entries
+are intentionally not reused; private/tenant context outside request
+arguments is still the caller's responsibility (#53). Direct non-ASGI
+`@cache` usage retains the legacy key behavior. A PR is **not** an
+authorization to publish this correction; check the released version.
+
 ## What "drop-in" means
 
 - The distribution is `fastapi-cache-stable`, but the Python import remains `fastapi_cache`.
