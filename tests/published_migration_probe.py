@@ -89,7 +89,9 @@ def main():
 
     module = Path(fastapi_cache.__file__).resolve()
     assert "site-packages" in module.parts, module
-    assert not str(module).startswith(str(Path(os.environ["GITHUB_WORKSPACE"]))), module
+    checkout = os.environ.get("GITHUB_WORKSPACE")
+    if checkout:
+        assert not str(module).startswith(str(Path(checkout).resolve())), module
 
     key = default_key_builder(
         sample_endpoint,
