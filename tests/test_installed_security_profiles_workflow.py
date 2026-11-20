@@ -31,6 +31,7 @@ def test_profiles_install_and_audit_real_distribution() -> None:
         '"$distribution[$PROFILE_EXTRA]"'
     ) in workflow
     assert '"$RUNNER_TEMP/consumer/bin/python" -m pip check' in workflow
+    assert "setuptools==84.2.1" in workflow
     assert "pip-audit==2.10.1" in workflow
     assert '--path "$target" --aliases off --format json' in workflow
     assert "scripts/validate_security_audit.py" in workflow
