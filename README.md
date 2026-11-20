@@ -400,6 +400,15 @@ for configured cacheable requests. **An HTTP `Vary` response header alone
 never partitions the library's internal cache.** If the endpoint emits a
 `Vary` field not present in `vary_headers`, the response bypasses storage.
 
+For a **cacheable returned `Response`**, the decorator applies generated
+`Vary` to the actual returned object, not just FastAPI's injected response.
+A plain `JSONResponse` is checked for `JsonCoder` eligibility *before*
+the header is added; a plain `Response` with `PickleCoder` also keeps the
+header on MISS and HIT. The generated ETag and cache-status headers follow
+the returned object as well, and 304 responses carry `Vary`. A
+`JSONResponse` that already has custom headers, including `Vary`,
+still bypasses the default JSON coder.
+
 The caller is responsible for listing **every** representation-defining
 header. Application state derived from hidden `contextvars`, middleware,
 non-header sources or arbitrary dependencies cannot be discovered. Using
