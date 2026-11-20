@@ -1,7 +1,6 @@
 # Redis client compatibility investigation — issue #47
 
-**Status:** exploratory research only; requires a complete verified Actions run
-and an independent consumer before widening published package metadata.
+**Status:** research evidence verified on the final 28-lane CI; published dependency expansion remains a separate implementation and release decision.
 
 The existing published `fastapi-cache-stable==0.3.1` contract remains
 `redis = "^4.2.0rc1"` (redis-py 4.x). This PR does **not** change
@@ -34,7 +33,7 @@ Workflow: [redis-client-matrix.yml](../../.github/workflows/redis-client-matrix.
 
 ### Deliberately pinned matrix
 
-The 25 explicit workflow lanes are the source of truth. They include every
+The 28 explicit workflow lanes are the source of truth. They include every
 supported Python 3.8–3.13 interpreter, redis-py 4.6 / 5.2 / 6.1 / 7.0 / 7.2 /
 8.1 where upstream's interpreter requirements allow it, and Redis servers
 6.2, 7.0, 7.4 and 8.0. Tests cover 4.x required baseline lanes plus the
@@ -52,7 +51,7 @@ out-of-range exploratory lanes.
 A passing lane demonstrates compatibility **only for that exact client,
 Python, server, and set of operations**. It does not establish a complete
 cross-product of all supported versions or justify using open-ended majors.
-All 25 lanes are **strictly required to pass** for this research PR: exploratory
+All 28 lanes are **strictly required to pass** for this research PR: exploratory
 means out of published support, not allowed-to-fail CI. The implementation PR
 must then make its selected production support lanes mandatory release checks.
 
@@ -209,8 +208,8 @@ for the local migration/rollback evidence.
 
 ## Final verified research run (2026-11-20)
 
-- PR #62 head: `b1a9fdbf1f2fbf7f3120856cb8b10c8480900a15`
-- Actions run: [44653885509](https://github.com/agustin18/fastapi-cache/actions/runs/44653885509)
+- PR #62 head: `b3ea0084f1e08a3a0aa53bf13b1d9c15a774c1c3`
+- Actions run: [44654470241](https://github.com/agustin18/fastapi-cache/actions/runs/44654470241)
 - Result: **63/63 checks success**; **32 jobs** (28 real-server matrix + 4 conditional-range resolver jobs); **28 matrix artifacts**.
 - All 28 matrix lanes passed, including the added Redis 6.2 cross-client lanes
   (6.1.0/Py3.8, 7.2.1/Py3.12, 8.1.0/Py3.10) and Redis 6.2/7.0/7.4/8.0.
@@ -222,7 +221,7 @@ for the local migration/rollback evidence.
 - `pip-audit 2.10.1` found no known vulnerabilities for the tested
   redis-py requirement files 4.6.0/6.1.0/7.2.1/8.1.0 at this point in time.
 
-The earlier 25-lane/57-check report is superseded by this run. The research
-PR remains draft because the implementation metadata, release-shaped
-wheel/sdist, independent consumer evidence and final scope decisions still
-belong to the separate implementation PR.
+The earlier 25-lane/57-check report and the flawed 44639267562 run are superseded by this final verified run. The research PR remains research-only: the final release-shaped dependency metadata,
+wheel/sdist, repeatable consumer migration evidence and publication approval
+belong to the separate implementation PR. The local independent consumer report
+is supporting evidence, not a CI-proven run in this repository.
