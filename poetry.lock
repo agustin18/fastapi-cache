@@ -3653,12 +3653,12 @@ doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linke
 test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-itertools", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy", "pytest-ruff (>=0.2.1)"]
 
 [extras]
-all = ["aiobotocore", "aiohttp", "aiomcache", "redis"]
+all = ["aiobotocore", "aiohttp", "aiomcache", "redis", "redis", "redis"]
 dynamodb = ["aiobotocore", "aiohttp"]
 memcache = ["aiomcache"]
-redis = ["redis"]
+redis = ["redis", "redis", "redis"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.14"
-content-hash = "325cc679ed24e30d90841ff63d3c24fc917d07d0d330f2c9ba73f0d1659920f9"
+content-hash = "68226ddf17b646af6d4ad3e7c875426173c1b4338b0f23d15e3c0f3f585885bd"
