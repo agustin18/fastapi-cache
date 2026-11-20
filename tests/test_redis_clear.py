@@ -1,5 +1,6 @@
 import asyncio
 import os
+from functools import wraps
 from typing import Any, Awaitable, Callable, Dict, Generator, List
 
 import pytest
@@ -303,6 +304,11 @@ def test_redis_cluster_key_only_clear(redis_backend_cls: Any) -> None:
     assert fake.unlinked == ["app:user:one"]
 
 
+
+async def _factory_route_template() -> Dict[str, str]:
+    return {}
+
+
 def test_factory_routes_are_isolated_in_real_redis(
     redis_url: str, redis_backend_cls: Any
 ) -> None:
@@ -317,6 +323,7 @@ def test_factory_routes_are_isolated_in_real_redis(
             def make_handler(
                 value: str,
             ) -> Callable[[], Awaitable[Dict[str, str]]]:
+                @wraps(_factory_route_template)
                 async def endpoint() -> Dict[str, str]:
                     return {"value": value}
 
@@ -324,10 +331,12 @@ def test_factory_routes_are_isolated_in_real_redis(
 
             app = FastAPI()
             app.add_api_route(
-                "/a", cache(expire=60)(make_handler("A")), methods=["GET"]
+                "/a", cache(expire=60, namespace="generated")(make_handler("A")),
+                methods=["GET"],
             )
             app.add_api_route(
-                "/b", cache(expire=60)(make_handler("B")), methods=["GET"]
+                "/b", cache(expire=60, namespace="generated")(make_handler("B")),
+                methods=["GET"],
             )
 
             async with AsyncClient(
@@ -338,6 +347,15 @@ def test_factory_routes_are_isolated_in_real_redis(
                 hit_a = await consumer.get("/a")
                 hit_b = await consumer.get("/b")
 
+                cleared = await FastAPICache.clear(namespace="generated")
+                reloaded_a = await consumer.get("/a")
+                reloaded_b = await consumer.get("/b")
+
+            assert cleared == 2
+            assert reloaded_a.headers["X-FastAPI-Cache"] == "MISS"
+            assert reloaded_b.headers["X-FastAPI-Cache"] == "MISS"
+            assert reloaded_a.json() == {"value": "A"}
+            assert reloaded_b.json() == {"value": "B"}
             assert first_a.json() == hit_a.json() == {"value": "A"}
             assert first_b.json() == hit_b.json() == {"value": "B"}
             assert first_a.headers["X-FastAPI-Cache"] == "MISS"
