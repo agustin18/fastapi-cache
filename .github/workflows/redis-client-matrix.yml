@@ -290,7 +290,7 @@ jobs:
           redis_requirements = [r for r in requirements if r.name == "redis"]
           active = [
               r for r in redis_requirements
-              if r.marker is None or r.marker.evaluate()
+              if r.marker is None or r.marker.evaluate({"extra": "redis"})
           ]
           assert len(active) == 1, redis_requirements
           assert Version(installed) in active[0].specifier

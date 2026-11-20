@@ -205,3 +205,24 @@ every future PR.
 
 See [real-estate-arg consumer validation](REAL_ESTATE_ARG_CONSUMER_VALIDATION.md)
 for the local migration/rollback evidence.
+
+
+## Final verified research run (2026-11-20)
+
+- PR #62 head: `b1a9fdbf1f2fbf7f3120856cb8b10c8480900a15`
+- Actions run: [44653885509](https://github.com/agustin18/fastapi-cache/actions/runs/44653885509)
+- Result: **63/63 checks success**; **32 jobs** (28 real-server matrix + 4 conditional-range resolver jobs); **28 matrix artifacts**.
+- All 28 matrix lanes passed, including the added Redis 6.2 cross-client lanes
+  (6.1.0/Py3.8, 7.2.1/Py3.12, 8.1.0/Py3.10) and Redis 6.2/7.0/7.4/8.0.
+- The resolver jobs passed for the proposed conditional wheel:
+  Python 3.8 → redis-py 6.1.x, Python 3.9 → 7.0.x,
+  Python 3.10/3.13 → 8.1.x, each with `pip check`.
+- Real `real-estate-arg` consumer migration/rollback: see
+  [consumer validation](REAL_ESTATE_ARG_CONSUMER_VALIDATION.md).
+- `pip-audit 2.10.1` found no known vulnerabilities for the tested
+  redis-py requirement files 4.6.0/6.1.0/7.2.1/8.1.0 at this point in time.
+
+The earlier 25-lane/57-check report is superseded by this run. The research
+PR remains draft because the implementation metadata, release-shaped
+wheel/sdist, independent consumer evidence and final scope decisions still
+belong to the separate implementation PR.
