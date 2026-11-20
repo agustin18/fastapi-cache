@@ -329,7 +329,7 @@ def test_factory_routes_are_isolated_in_real_redis(
                     async def default_endpoint(value: str = value) -> Dict[str, str]:
                         return {"value": value}
 
-                    assert default_endpoint.__code__.co_freevars == ()
+                    assert getattr(default_endpoint, "__code__").co_freevars == ()
                     return default_endpoint
 
                 @wraps(_factory_route_template)
