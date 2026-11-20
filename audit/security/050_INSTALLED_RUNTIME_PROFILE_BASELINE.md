@@ -10,6 +10,14 @@ Source HEAD: `d72410954d81c2f30be2ed08fe096f104ce7aff5` (2026-11-20).
 - Existing `scripts/validate_security_audit.py` validates the installed inventory against pip-audit records, third-party skip restrictions, package versions and wheel metadata. Existing `poetry.lock` has **multiple Python-conditional resolutions**: finding an affected version in the file does not demonstrate that it was selected by a modern installation.
 - The previous 21-alert dispositions in `audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md` are scoped historical assessments. No alert is dismissed as fixed solely because an installed modern profile is clean.
 
+## Initial matrix finding and resolution (2026-11-20)
+
+The first [seven-profile run 44805248777](https://github.com/agustin18/fastapi-cache/actions/runs/44805248777) **failed** in the Python 3.11 bare and Redis wheel lanes, correctly detecting **3 pip-audit vulnerability records associated with one distribution**: `setuptools==79.0.1`. The full pre-fix evidence is retained in [artifact 14662607336](https://github.com/agustin18/fastapi-cache/actions/runs/44805248777/artifacts/14662607336), including installed inventory and JSON findings. Two of its entries refer to PYSEC-2026-3447 (sdist exclusion matching in macOS) and one to GHSA-xmj3-9gf7-h52w (legacy wheel installation on Windows). The fixed versions are setuptools 83.0.0 and 84.1.0 respectively.
+
+This version came from the **Python 3.11 virtualenv bootstrap**, not from `fastapi-cache-stable` metadata. The project wheel is built using Poetry Core, not a setuptools runtime dependency. The new CI environment is deliberately hardened with `setuptools==84.2.1` before installation, and the installed environment is still **fully scanned** (setuptools is not exempted or filtered). The fixed tooling version does not change any published `Requires-Dist`. Check the revised exact-head CI result before treating this as resolved.
+
+Operational implication: independent consumers who retain an older vulnerable setuptools should upgrade or remove it when unnecessary. The security impact of the two reported advisories is packaging workflow-specific, not demonstrated to be reachable through the FastAPI cache decorator running on the Linux CI host. **Do not delete the original failure evidence or reclassify it as a fix to the historical 21 GHSA.**
+
 ## Remaining profile gap and tests proposed here
 
 The regular CI tests `[all]` on wheel installs for CPython 3.11–3.13. This PR adds a separate, **non-publishing** workflow that tests:
