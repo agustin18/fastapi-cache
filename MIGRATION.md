@@ -72,9 +72,33 @@ deciding whether to remain on these interpreters.
 **Redis client versions:** the actually **published** `fastapi-cache2==0.2.2`
 and this fork both declare `redis ^4.2.0rc1` (redis-py 4.x). The upstream
 repository's later, *unreleased* `main` branch switched to redis-py 5.x.
-This fork retains the published legacy constraint and verifies redis-py 4.6.0.
-A deployment already requiring redis-py 5/6 must resolve that separately;
-newer Redis client support is roadmap work.
+Published `0.3.1` retains this legacy constraint. The unreleased #47
+implementation tests client 4–8 against real standalone servers and proposes
+Python-conditional markers; do not infer support from a research PR alone.
+
+## Redis client upgrade checklist for the unreleased #47 candidate
+
+**Not yet published.** A future release based on #47 will admit Redis client
+versions according to the supported Python interpreter:
+
+| Python | Optional redis-py range |
+|---|---|
+| 3.8 | `>=4.2.0rc1,<6.2` |
+| 3.9 | `>=4.2.0rc1,<7.1` |
+| 3.10–3.13 | `>=4.2.0rc1,<8.2` |
+
+- Upgrade the consumer's Redis client within the matching Python window; keep
+  `decode_responses=False` for the cache backend's binary payloads.
+- Confirm application-installed dependencies with `pip check`, not only
+  `poetry check --lock` in this repository.
+- Compare anonymous and authorized MISS/HIT, variant/tenant isolation,
+  namespace clear and expired entries with the baseline client 4.6.0.
+- If upgrading to redis-py 8, exercise RESP2 and RESP3 and check any other
+  client consumers sharing the Redis connection.
+- Retain a tested rollback pin (e.g. redis-py 4.6.0) and verify previous
+  cached entries remain readable before and after reverting.
+- Redis Cluster namespace clear remains `NotImplementedError`. TLS, Sentinel,
+  Cluster/failover and managed-provider transports are not certified by #47.
 
 ## Who should migrate
 
