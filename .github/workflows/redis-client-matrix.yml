@@ -1,16 +1,9 @@
 name: Redis client compatibility research
 
+# Research-only cross-product remains opt-in; implementation/release CI has
+# a separate, smaller required matrix. This workflow must not block changes
+# to pyproject.toml with its scratch 4.x-only preconditions.
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/redis-client-matrix.yml"
-      - "tests/test_redis_client_matrix.py"
-      - "tests/test_redis_clear.py"
-      - "tests/redis_consumer_probe.py"
-      - "tests/conftest.py"
-      - "fastapi_cache/**"
-      - "pyproject.toml"
-      - "poetry.lock"
   workflow_dispatch:
 
 permissions:
