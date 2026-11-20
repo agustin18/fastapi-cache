@@ -14,6 +14,7 @@ from secrets import token_hex
 from typing import Any, AsyncIterator, Dict
 
 from fastapi import Depends, FastAPI, Response
+from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 from redis import Redis as SyncRedis
 from redis.asyncio import Redis
@@ -22,6 +23,7 @@ from starlette.requests import Request
 import fastapi_cache
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache.coder import PickleCoder
 from fastapi_cache.decorator import cache
 
 
@@ -64,6 +66,21 @@ def main() -> None:
         response.headers["Vary"] = "X-Tenant"
         return {"tenant": tenant.get(), "call": calls["n"]}
 
+    @app.get("/response-json", dependencies=[Depends(set_tenant)])
+    @cache(expire=60, namespace="returned-json", vary_headers=("X-Tenant",))
+    async def returned_json() -> Response:
+        return JSONResponse({"tenant": tenant.get()})
+
+    @app.get("/response-plain", dependencies=[Depends(set_tenant)])
+    @cache(
+        expire=60,
+        coder=PickleCoder,
+        namespace="returned-plain",
+        vary_headers=("X-Tenant",),
+    )
+    async def returned_plain() -> Response:
+        return Response(content=tenant.get(), media_type="text/plain")
+
     @app.post("/clear")
     async def clear() -> Dict[str, int]:
         return {"count": await FastAPICache.clear(namespace="tenant")}
@@ -104,6 +121,37 @@ def main() -> None:
             assert response.status_code == 200
             assert response.json() == {"count": 2}
             assert not list(redis_sync.scan_iter(match=prefix + ":tenant:*"))
+
+            # A Response returned by the endpoint bypasses the injected
+            # Response object. Test real wheel/persistent Redis behavior for
+            # both JsonCoder (JSONResponse) and PickleCoder (plain Response).
+            for kind in ("response-json", "response-plain"):
+                path = "/" + kind
+                initial = client.get(path, headers={"X-Tenant": "alpha"})
+                cached = client.get(path, headers={"X-Tenant": "alpha"})
+                conditional_response = client.get(
+                    path,
+                    headers={
+                        "X-Tenant": "alpha",
+                        "If-None-Match": initial.headers["etag"],
+                    },
+                )
+                other_variant = client.get(path, headers={"X-Tenant": "beta"})
+                assert [item.status_code for item in (
+                    initial, cached, conditional_response, other_variant
+                )] == [200, 200, 304, 200]
+                assert [item.headers["X-FastAPI-Cache"] for item in (
+                    initial, cached, conditional_response, other_variant
+                )] == ["MISS", "HIT", "HIT", "MISS"]
+                assert all(
+                    item.headers["vary"].lower() == "x-tenant"
+                    for item in (initial, cached, conditional_response, other_variant)
+                )
+                assert initial.headers["etag"] == cached.headers["etag"]
+                assert initial.headers["etag"] == conditional_response.headers["etag"]
+                assert not conditional_response.content
+                assert initial.content == cached.content
+                assert other_variant.content != initial.content
     finally:
         # No FLUSHDB; cleanup only our unique prefix in case an assertion failed.
         for key in redis_sync.scan_iter(match=prefix + ":*"):
