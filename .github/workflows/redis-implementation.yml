@@ -1,0 +1,170 @@
+name: Redis published-range implementation
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/redis-implementation.yml"
+      - "pyproject.toml"
+      - "poetry.lock"
+      - "fastapi_cache/**"
+      - "tests/test_distribution_metadata.py"
+      - "tests/test_redis_client_matrix.py"
+      - "tests/test_redis_clear.py"
+      - "tests/redis_consumer_probe.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: redis-implementation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wheel-real-redis:
+    name: Wheel Py ${{ matrix.python }} / redis-py ${{ matrix.client }} / Redis ${{ matrix.server }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Old redis-py 4.x migration remains mandatory for every supported
+          # Python interval, not just the newest client per interval.
+          - { python: "3.8",  client: "4.6.0", server: "6.2" }
+          - { python: "3.8",  client: "6.1.1", server: "7.4" }
+          - { python: "3.9",  client: "4.6.0", server: "7.0" }
+          - { python: "3.9",  client: "7.0.1", server: "7.4" }
+          - { python: "3.10", client: "4.6.0", server: "7.0" }
+          - { python: "3.10", client: "8.1.0", server: "6.2" }
+          - { python: "3.11", client: "4.6.0", server: "7.4" }
+          - { python: "3.11", client: "7.2.1", server: "8.0" }
+          - { python: "3.12", client: "4.6.0", server: "7.0" }
+          - { python: "3.12", client: "8.1.0", server: "8.0" }
+          - { python: "3.13", client: "4.6.0", server: "7.4" }
+          - { python: "3.13", client: "8.1.0", server: "8.0" }
+    services:
+      redis:
+        image: redis:${{ matrix.server }}
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Build wheel from real production metadata
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install "build==1.2.2"
+          python -m build --wheel --outdir /tmp/redis-impl-dist .
+          test "$(find /tmp/redis-impl-dist -type f -name '*.whl' | wc -l)" -eq 1
+      - name: Install clean wheel and selected Redis client
+        env:
+          CLIENT: ${{ matrix.client }}
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/redis-impl-venv
+          /tmp/redis-impl-venv/bin/python -m pip install --upgrade pip
+          wheel=$(find /tmp/redis-impl-dist -maxdepth 1 -name '*.whl' -print -quit)
+          /tmp/redis-impl-venv/bin/python -m pip install "$wheel[redis]" "redis==$CLIENT" "pytest==8.3.5" "httpx==0.27.0"
+          /tmp/redis-impl-venv/bin/python -m pip check
+          cd /tmp
+          /tmp/redis-impl-venv/bin/python - <<'PY'
+          import importlib.metadata as im
+          from pathlib import Path
+          from packaging.requirements import Requirement
+          from packaging.utils import canonicalize_name
+          import fastapi_cache
+          import os
+
+          module = Path(fastapi_cache.__file__).resolve()
+          assert "site-packages" in module.parts, module
+          assert im.version("redis") == os.environ["CLIENT"]
+          redis = [Requirement(x) for x in im.metadata("fastapi-cache-stable").get_all("Requires-Dist") or []
+                   if canonicalize_name(Requirement(x).name) == "redis"]
+          active = [r for r in redis if r.marker is not None and r.marker.evaluate({"extra": "redis"})]
+          assert len(active) == 1, active
+          from packaging.version import Version
+          assert Version(os.environ["CLIENT"]) in active[0].specifier, active[0]
+          print("Production wheel:", module, "Redis requirement:", active[0])
+          PY
+      - name: Run installed-wheel metadata, real-server and consumer regressions
+        env:
+          REDIS_URL: redis://localhost:6379/0
+          REQUIRE_REDIS: "1"
+        run: |
+          set -euo pipefail
+          cd /tmp
+          /tmp/redis-impl-venv/bin/python -m pytest -q -rs             "$GITHUB_WORKSPACE/tests/test_distribution_metadata.py"             "$GITHUB_WORKSPACE/tests/test_redis_client_matrix.py"             "$GITHUB_WORKSPACE/tests/test_redis_clear.py"
+          /tmp/redis-impl-venv/bin/python "$GITHUB_WORKSPACE/tests/redis_consumer_probe.py"
+
+  sdist-install:
+    name: Sdist metadata / Py ${{ matrix.python }} / redis-py ${{ matrix.client }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { python: "3.8", client: "6.1.1" }
+          - { python: "3.9", client: "7.0.1" }
+          - { python: "3.12", client: "8.1.0" }
+          - { python: "3.13", client: "4.6.0" }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Build source distribution
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install "build==1.2.2"
+          python -m build --sdist --outdir /tmp/redis-impl-sdist .
+      - name: Clean sdist installation and metadata regression
+        env:
+          CLIENT: ${{ matrix.client }}
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/redis-sdist-venv
+          /tmp/redis-sdist-venv/bin/python -m pip install --upgrade pip
+          sdist=$(find /tmp/redis-impl-sdist -maxdepth 1 -name '*.tar.gz' -print -quit)
+          test -n "$sdist"
+          /tmp/redis-sdist-venv/bin/python -m pip install "$sdist[redis]" "redis==$CLIENT" "pytest==8.3.5" "packaging>=24"
+          /tmp/redis-sdist-venv/bin/python -m pip check
+          cd /tmp
+          /tmp/redis-sdist-venv/bin/python -m pytest -q -rs "$GITHUB_WORKSPACE/tests/test_distribution_metadata.py"
+          /tmp/redis-sdist-venv/bin/python - <<'PY'
+          from pathlib import Path
+          import fastapi_cache
+          p = Path(fastapi_cache.__file__).resolve()
+          assert "site-packages" in p.parts, p
+          print("Sdist installed module:", p)
+          PY
+
+  redis-package-audit:
+    name: Targeted redis-py security advisories
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Scan pinned clients (direct-advisory scope only)
+        run: |
+          set -euo pipefail
+          python -m pip install "pip-audit==2.10.1"
+          for client in 4.6.0 6.1.1 7.0.1 7.2.1 8.1.0; do
+            printf 'redis==%s\n' "$client" > /tmp/redis-client-requirements.txt
+            echo "Auditing redis-py $client (direct package only)"
+            python -m pip_audit -r /tmp/redis-client-requirements.txt --no-deps --disable-pip
+          done
