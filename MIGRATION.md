@@ -198,6 +198,18 @@ value only enters middleware state or a `ContextVar`.
   varying `Accept-Language` alone cannot protect an endpoint also reading
   hidden tenant/role state. Context variables, request state, dependencies,
   headers added by reverse proxies and non-header context are not inferred.
+- The name validation forbids **only** `Authorization`, `Cookie` and
+  `Proxy-Authorization` as credential-related names. Custom credential
+  fields such as `X-API-Key` are syntactically permitted but are **not**
+  automatically safe and do not trigger the default auth bypass. Use
+  validated identity and permissions in a complete custom key builder,
+  or bypass caching for such endpoints. Never rely on an untrusted client
+  header alone to authorize tenant access.
+- Arbitrary caller-controlled header values can generate many distinct
+  cache keys and exhaust the backend. Validate/normalize accepted values,
+  apply rate limits, suitable TTLs and capacity/eviction safeguards.
+  SHA-256 for key identifiers hides raw header strings but is neither
+  encryption, authentication nor cache-flood protection.
 
 **Prepublication status:** this contract is in PR #81, not in released
 0.4.1. A passing test proves only the listed paths and configurations,
