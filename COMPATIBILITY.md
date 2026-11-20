@@ -158,6 +158,7 @@ cache(
     injected_dependency_namespace="__fastapi_cache",
     cache_authenticated=None,
     infer_response_model=False,
+    vary_headers=None,  # opt-in Sequence[str], proposed for 0.5.0
 )
 ```
 
@@ -316,6 +317,23 @@ Historical introduction versions belong in [CHANGELOG.md](CHANGELOG.md).
 | Responses with `Set-Cookie`, `Cache-Control: no-store/private`, or a background task are never cached | Cookies and private data could be replayed to other clients |
 | Injected `response` metadata is checked before cache reads and writes | Dict/list responses could cache cookies, private data, custom statuses, or custom headers |
 | A second `FastAPICache.init(...)` is not a silent no-op | Configuration was impossible to change |
+
+## Explicit HTTP header variants (opt-in, proposed for 0.5.0)
+
+The optional `vary_headers` decorator argument isolates only explicitly
+declared, validated HTTP request field names; it does not infer hidden state.
+Non-opted-in routes retain the original key format. Opted-in keys use the
+versioned `prefix:namespace:vary-v1:` space and hash the entire ordered
+header-value vector. Missing and empty headers are intentionally distinct.
+A `Vary` HTTP response header on its own has **no automatic effect** on
+internal key selection.
+
+Explicit `Request` routes still bypass the default builder even if
+`vary_headers` is supplied. Authenticated caching continues to require
+a reviewed identity-aware custom key builder. Any undeclared variation,
+including middleware/contextvar/tenant data, is the application's
+responsibility. Deploy using deliberate namespace rotation or cleanup
+of historical entries; do not conflate key isolation with deletion.
 
 ## Cache data compatibility
 
