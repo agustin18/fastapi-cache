@@ -47,6 +47,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install ruff==0.17.5 pre-commit
+      - name: Show temporary import-order diff for new variant test files
+        run: |
+          ruff check --select I --diff tests/redis_vary_probe.py tests/test_vary_headers.py || true
       - name: Ruff
         run: ruff check .
       - name: Pre-commit
