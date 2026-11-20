@@ -384,7 +384,7 @@ def test_wrapped_default_handler_does_not_read_shared_old_key() -> None:
 def test_module_level_wrapped_handler_rotates_old_key_without_freevars() -> None:
     """Document key rotation for decorators that set __wrapped__ outside factories."""
     endpoint = decorated_module_level_endpoint
-    assert endpoint.__code__.co_freevars == ()
+    assert getattr(endpoint, "__code__").co_freevars == ()
     assert endpoint.__qualname__ == module_level_endpoint.__qualname__
     assert endpoint.__wrapped__ is module_level_endpoint
 
