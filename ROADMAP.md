@@ -1,9 +1,9 @@
 # Roadmap — fastapi-cache-stable
 
-**Published baseline:** [0.4.0](https://pypi.org/project/fastapi-cache-stable/0.4.0/)
-on **2026-11-20**. The `v0.4.0` tag points at the verified release commit;
-see [0.4.0 release status](docs/releases/RELEASE_STATUS_0.4.0.md) for artifact
-hashes and evidence. The `0.3.x` artifacts remain the previous migration line.
+**Published baseline:** [0.4.1](https://pypi.org/project/fastapi-cache-stable/0.4.1/)
+on **2026-11-20**. The 0.4.1 patch includes the factory/wrapped-handler key
+isolation; see [0.4.1 release status](docs/releases/RELEASE_STATUS_0.4.1.md)
+for publication evidence. The 0.4.0 release remains the previous baseline. The `0.3.x` artifacts remain the previous migration line.
 **Do not reopen a completed publication gate without new material evidence.**
 
 Everything below is a **candidate plan, not a delivery promise**.
@@ -58,7 +58,7 @@ not a general guarantee.
 |---|---|---|
 | **P1** | [#55: MD5/FIPS key portability](https://github.com/agustin18/fastapi-cache/issues/55) | Reproduce restricted-hash failures; retain legacy key digests and **Python 3.8** support. Upstream `usedforsecurity=False` needs version-specific handling |
 | **P1** | [#45: DynamoDB correctness](https://github.com/agustin18/fastapi-cache/issues/45) | Reproduce/fix expired-value reads and client cleanup lifecycle if verified; keep DynamoDB experimental |
-| **P0 — correctness** | [#68: confirmed factory-route key collision](https://github.com/agustin18/fastapi-cache/issues/68) | Distinct closures can share default key and replay another route's response. Reported HTTP reproduction on 0.4.0; independently verified identical key digest. Land focused FastAPI/Redis/InMemory regression and investigate a **narrow 0.4.x patch** without silent legacy key rehash |
+| **P0 — correctness** | [#68: confirmed factory-route key collision](https://github.com/agustin18/fastapi-cache/issues/68) | Fixed by #73 and prepared for 0.4.1: generated/wrapped handlers are partitioned, unwrapped module-level keys are unchanged, and old generated entries are not reused. Complete publication/verification; residual #53 limits remain |
 | **P0 — security review** | [#53: residual header/Vary design](https://github.com/agustin18/fastapi-cache/issues/53) | Coordinate hidden-request/tenant variants with #68. Keep current 0.3.1/0.4.0 explicit-Request bypass; prioritize proven privacy risks and versioned cache-key migration |
 | **P2 — conditional** | [#51: Python 3.14 qualification](https://github.com/agustin18/fastapi-cache/issues/51) | Full functional/security matrix must pass before changing metadata; otherwise stay out of range |
 

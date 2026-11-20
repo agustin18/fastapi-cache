@@ -2,8 +2,8 @@
 
 ## Supported versions
 
-- `0.4.0` is the current stable release, published **2026-11-20**. The
-  `0.4.x` line targets best-effort security and critical correctness fixes on
+- `0.4.1` is the current prepared patch for the `0.4.x` line; `0.4.0`
+  was published **2026-11-20**. The line targets best-effort security and critical correctness fixes on
   server-side **CPython 3.11–3.13**, within the 12-month target in
   [SUPPORT.md](SUPPORT.md) (until 2027-11-20, capacity permitting).
 - `0.3.0` and `0.3.1` remain the previous migration line, with the
@@ -47,8 +47,9 @@ Security scans are specific to the actual installed environment.
 
 The exact PyPI RC2 wheel was installed and audited on CPython 3.11–3.13
 with all extras, with no known third-party findings **at that scan date**.
-The current 0.4.0 release and the historical 0.3.0 release are recorded with
-hashes, CI and package-installation checks in their release status files; see
+The 0.4.0 release and the historical 0.3.0 release are recorded with hashes,
+CI and package-installation checks; the prepared 0.4.1 patch records its own
+final evidence after publication. See [0.4.1 status](docs/releases/RELEASE_STATUS_0.4.1.md),
 [0.4.0 provenance](docs/releases/RELEASE_STATUS_0.4.0.md) and
 [0.3.0 provenance](docs/releases/RELEASE_STATUS_0.3.0.md). These checks cannot
 guarantee zero vulnerabilities in arbitrary consumer environments.
@@ -62,7 +63,7 @@ Dependabot alerts remain open unless genuinely fixed.
 attacker-controlled pickles. Authenticated request caching requires a
 tenant/user-aware key builder and application-level security review.
 
-## Request-dependent variants (0.3.0, 0.3.1 and 0.4.0)
+## Request-dependent variants (0.3.0, 0.3.1, 0.4.0 and 0.4.1)
 
 **In published 0.3.0:** the legacy default cache key includes the endpoint
 function identity and arguments, **not arbitrary values read indirectly from
@@ -89,7 +90,8 @@ such endpoints**; the published `0.3.0` wheel itself is immutable.
 
 Published `0.4.0` can cache a result under the same legacy key for
 distinct factory-generated handlers that share module/name, arguments,
-and namespace. A later request to a different route may receive the
+and namespace. The prepared `0.4.1` patch isolates these generated/wrapped
+handlers; validate the published artifact before relying on it. A later request to a different route may receive the
 first route's result. Treat generated-handler caching on a shared backend
 as a **correctness and potential information-isolation hazard**.
 Use distinct per-route `@cache(namespace=...)` values or a reviewed

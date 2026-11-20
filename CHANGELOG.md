@@ -8,11 +8,29 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.4.1](https://github.com/agustin18/fastapi-cache/tree/v0.4.1) - 2026-11-20
+
+### Bugfixes
+
+- Partition default cached HTTP entries for factory-generated handlers, including handlers wrapped with `functools.wraps` that capture values through default arguments without code free variables. Use stable method/Host/mount/path plus the legacy key; preserve ordinary unwrapped module-level keys, the exported key builder and custom builders. Existing generated/wrapped entries are intentionally not reused; Host casing is normalized and untrusted Host values require edge validation. HTTP InMemory/Redis isolation, namespace clearing and key compatibility are covered; hidden request context remains tracked in #53. [#68](https://github.com/agustin18/fastapi-cache/issues/68)
+
+### Improved Documentation
+
+- Make the Towncrier PR gate recognize Markdown/RST-only documentation updates while still requiring fragments for source, packaging, tests and workflows; add fail-closed regression coverage and the 0.5.0 release-train planning. [#67](https://github.com/agustin18/fastapi-cache/issues/67)
+
 ## [0.4.0](https://github.com/agustin18/fastapi-cache/tree/v0.4.0) - 2026-11-20
 
 ### Features
 
 - Broaden the optional Redis client compatibility contract using Python-specific dependency markers: Python 3.8 admits redis-py 4.x through 6.1.x, Python 3.9 through 7.0.x, and Python 3.10–3.13 through 8.1.x. Keep redis-py 4.x migration paths valid, and require real-server, wheel/sdist, metadata, and consumer regressions. Redis Cluster namespace clearing, Sentinel/TLS transport certification, and arbitrary binary caching with `decode_responses=True` remain outside the supported scope. [#47](https://github.com/agustin18/fastapi-cache/issues/47)
+
+### Changes
+
+- Remove `uvicorn` from mandatory runtime dependencies; keep it only for examples/local development and retain `jinja2` for the eager `starlette.templating` import. [#44](https://github.com/agustin18/fastapi-cache/issues/44)
+
+### Improved Documentation
+
+- Add a read-only Dependabot delta mode with distinct blocking/incomplete/review exit codes and a manual/scheduled security workflow; it never rewrites snapshots or triage evidence. [#46](https://github.com/agustin18/fastapi-cache/issues/46)
 
 
 ## [0.3.1](https://github.com/agustin18/fastapi-cache/tree/v0.3.1) - 2026-11-19
