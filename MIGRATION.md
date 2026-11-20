@@ -183,9 +183,10 @@ remain and the qualified name can appear to be module-level. Handlers with
 The default decorator derives a separate SHA-256 key based on method,
 host, mount root, request path and the legacy key. **Unwrapped module-level
 handlers** and the exported `default_key_builder` remain byte-for-byte
-unchanged. Existing module-level handlers decorated by a closure wrapper
-may also receive newly partitioned keys; that invalidates their effective
-cache warm state even if the responses were previously safe. Custom builders
+unchanged. Existing module-level handlers decorated by another wrapper that sets
+`__wrapped__` (including, but not limited to, closure wrappers) may also
+receive newly partitioned keys. That invalidates their effective cache
+warm state even if the responses were previously safe. Custom builders
 remain application-controlled. New generated-route entries retain the same
 namespace prefix, but **old closure-handler cache entries are intentionally
 not reused**. Do not mistake a code merge for a published release; check
