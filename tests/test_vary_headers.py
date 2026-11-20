@@ -398,3 +398,24 @@ def test_vary_headers_does_not_bypass_authentication_protection() -> None:
     assert second.json() == {"n": 2}
     assert all("X-FastAPI-Cache" not in r.headers for r in (first, second))
     assert not backend._store  # pyright: ignore[reportPrivateUsage]
+
+
+def test_non_http_invocation_does_not_call_a_variant_key_builder() -> None:
+    backend = InMemoryBackend()
+    FastAPICache.init(backend)
+    calls = {"n": 0}
+
+    def forbidden_builder(func: Any, namespace: str = "", *,
+                          request: Any = None, response: Any = None,
+                          args: Any, kwargs: Any) -> str:
+        raise AssertionError("no HTTP Request: never create a shared cache key")
+
+    @cache(expire=60, key_builder=forbidden_builder,
+           vary_headers=("Accept-Language",))
+    async def pure_function() -> Dict[str, int]:
+        calls["n"] += 1
+        return {"n": calls["n"]}
+
+    assert asyncio.run(pure_function()) == {"n": 1}
+    assert asyncio.run(pure_function()) == {"n": 2}
+    assert not backend._store  # pyright: ignore[reportPrivateUsage]
