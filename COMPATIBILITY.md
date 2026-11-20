@@ -326,7 +326,12 @@ Non-opted-in routes retain the original key format. Opted-in keys use the
 versioned `prefix:namespace:vary-v1:` space and hash the entire ordered
 header-value vector. Missing and empty headers are intentionally distinct.
 A `Vary` HTTP response header on its own has **no automatic effect** on
-internal key selection.
+internal key selection. On cacheable returned `Response` values, generated
+`Vary` and cache metadata must appear on the **actual returned object**
+on MISS/HIT, not just the injected response; 304 also preserves `Vary`.
+`JsonCoder` checks a plain `JSONResponse` for eligibility before adding
+generated metadata. Returned `Response` values can use `PickleCoder`
+when compatible with their other response metadata.
 
 Explicit `Request` routes still bypass the default builder even if
 `vary_headers` is supplied. Authenticated caching continues to require
