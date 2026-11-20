@@ -44,9 +44,10 @@ A vulnerability found in a package shared by this fork and the original
 `fastapi-cache2` may affect *both* if a consumer resolves the same vulnerable
 version and invokes the affected code. They do **not** necessarily install
 the same dependency versions. In particular, the **published `fastapi-cache2==0.2.2`** and this fork
-both declare redis-py **4.x**. The upstream repository's later, **unreleased**
+both declare redis-py **4.x** in their **published 0.3.x** metadata. The upstream repository's later, **unreleased**
 `main` branch changed the Redis extra to **5.x**; that is not a released
-legacy-package guarantee. Redis-py 5/6 remain unverified in this fork.
+legacy-package guarantee. Broader redis-py 5–8 support is implemented in the
+unreleased #47 candidate, not yet available on PyPI.
 See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md),
 [security policy](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) and
 [legacy vulnerability explanation](https://github.com/agustin18/fastapi-cache/blob/stable/audit/security/LEGACY_SUPPORT_AND_RISKS.md).
@@ -465,9 +466,11 @@ those entries and for `expire=None`.
 
 When using the Redis backend, please make sure you pass in a redis client that does [_not_ decode responses][redis-decode] (`decode_responses` **must** be `False`, which is the default). Cached data is stored as `bytes` (binary), decoding these in the Redis client would break caching.
 
-`RedisBackend` is tested with Redis 7 and redis-py 4.6.0. The `redis` extra pins
-`redis = "^4.2.0rc1"`, which does not include redis-py 5/6; those clients are untested.
-Broader Redis client/server support is targeted for a later release.
+The published `0.3.1` release still declares Redis client 4.x. The unreleased
+#47 implementation proposes Python-conditional Redis client ranges (4.x through
+6.1.x on Python 3.8, through 7.0.x on 3.9 and through 8.1.x on 3.10–3.13).
+See `COMPATIBILITY.md` and `audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md` for
+real-server evidence. Do not assume these wider versions are already published.
 
 [redis-decode]: https://redis-py.readthedocs.io/en/latest/examples/connection_examples.html#by-default-Redis-return-binary-responses,-to-decode-them-use-decode_responses=True
 

@@ -107,3 +107,81 @@ def test_dynamodb_extra_is_excluded_from_legacy_python_profiles() -> None:
     assert not any(
         requirement.name.lower() == "anyio" for requirement in requirements
     )
+
+
+
+def test_redis_extra_has_exactly_one_python_conditional_requirement() -> None:
+    """The published wheel must never require two Redis client series at once."""
+    requirements = [
+        Requirement(value)
+        for value in metadata("fastapi-cache-stable").get_all("Requires-Dist") or []
+        if canonicalize_name(Requirement(value).name) == "redis"
+    ]
+    assert len(requirements) == 3  # three windows; each marker serves redis/all
+
+    cases = {
+        "3.8": (Version("6.1.1"), Version("6.2.0")),
+        "3.9": (Version("7.0.1"), Version("7.1.0")),
+        "3.10": (Version("8.1.0"), Version("8.2.0")),
+        "3.11": (Version("8.1.0"), Version("8.2.0")),
+        "3.12": (Version("8.1.0"), Version("8.2.0")),
+        "3.13": (Version("8.1.0"), Version("8.2.0")),
+    }
+
+    for python, (latest_allowed, first_excluded) in cases.items():
+        for extra in ("redis", "all"):
+            environment = {
+                "python_version": python,
+                "python_full_version": python + ".0",
+                "extra": extra,
+            }
+            active = [
+                requirement
+                for requirement in requirements
+                if requirement.marker is not None
+                and requirement.marker.evaluate(environment)
+            ]
+            assert len(active) == 1, (python, extra, active)
+            requirement = active[0]
+            assert Version("4.6.0") in requirement.specifier
+            assert latest_allowed in requirement.specifier
+            assert first_excluded not in requirement.specifier
+
+    for python, extra in (
+        ("3.8", ""),
+        ("3.9", ""),
+        ("3.10", ""),
+        ("3.13", ""),
+        ("3.14", "redis"),
+        ("3.14", "all"),
+    ):
+        environment = {
+            "python_version": python,
+            "python_full_version": python + ".0",
+            "extra": extra,
+        }
+        assert not any(
+            requirement.marker is None
+            or requirement.marker.evaluate(environment)
+            for requirement in requirements
+        ), (python, extra)
+
+
+def test_redis_is_never_mandatory_without_an_extra() -> None:
+    requirements = [
+        Requirement(value)
+        for value in metadata("fastapi-cache-stable").get_all("Requires-Dist") or []
+        if canonicalize_name(Requirement(value).name) == "redis"
+    ]
+    for python in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13"):
+        assert not any(
+            requirement.marker is None
+            or requirement.marker.evaluate(
+                {
+                    "extra": "",
+                    "python_version": python,
+                    "python_full_version": python + ".0",
+                }
+            )
+            for requirement in requirements
+        )
