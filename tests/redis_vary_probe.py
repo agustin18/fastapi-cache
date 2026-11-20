@@ -25,7 +25,6 @@ from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
 
-
 async def close(client: Redis) -> None:
     aclose = getattr(client, "aclose", None)
     if aclose is not None:
@@ -90,7 +89,8 @@ def main() -> None:
             ]
             assert alpha.json() == again.json() == {"tenant": "alpha", "call": 1}
             assert beta.json() == {"tenant": "beta", "call": 2}
-            assert conditional.status_code == 304 and not conditional.content
+            assert conditional.status_code == 304
+            assert not conditional.content
             assert all(r.headers["vary"].lower() == "x-tenant"
                        for r in (alpha, beta, again, conditional))
             assert "X-FastAPI-Cache" not in private.headers
