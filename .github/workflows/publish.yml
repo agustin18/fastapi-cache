@@ -71,17 +71,17 @@ jobs:
 
           path = Path(os.environ["RUNNER_TEMP"]) / "dependabot-delta.json"
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
-              summary.write("### Authenticated Dependabot release gate\\n")
+              summary.write("### Authenticated Dependabot release gate\n")
               if not path.is_file() or not path.stat().st_size:
                   summary.write(
-                      "No valid delta report was produced. Publication is blocked.\\n"
+                      "No valid delta report was produced. Publication is blocked.\n"
                   )
               else:
                   try:
                       report = json.loads(path.read_text())
                   except (OSError, ValueError):
                       summary.write(
-                          "Cannot parse authenticated delta. Publication is blocked.\\n"
+                          "Cannot parse authenticated delta. Publication is blocked.\n"
                       )
                   else:
                       for label, value in (
@@ -94,7 +94,7 @@ jobs:
                           ("Incomplete", report.get("comparison_incomplete")),
                           ("Exit code", report.get("exit_code")),
                       ):
-                          summary.write(f"- {label}: `{value}`\\n")
+                          summary.write(f"- {label}: `{value}`\n")
           PY
 
   test:
