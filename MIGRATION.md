@@ -178,12 +178,16 @@ value only enters middleware state or a `ContextVar`.
   old entries are not looked up by newly varied routes but remain in Redis
   until expiry or explicit cleanup. Confirm no other app still uses that
   namespace before deleting its keys.
-- Configured variants emit HTTP `Vary` and preserve it on cache HIT and
-  304. An injected `Vary` response naming undeclared fields causes a
-  bypass rather than an unsafe HIT. A returned `JSONResponse` with
-  custom headers, including `Vary`, still bypasses the default JSON coder.
-  `Vary` sent *alone* by a route, proxy or middleware does **not** partition
-  `FastAPICache`'s internal store.
+- Configured variants emit HTTP `Vary` on MISS, HIT and 304, including
+  when the endpoint returns a `Response` rather than using the injected
+  response object. For returned `JSONResponse`, the generated `Vary` is
+  added **after** `JsonCoder.can_encode()` and before encoding; a returned
+  plain `Response` may be cached with an opt-in `PickleCoder`. An
+  injected or returned `Vary` response naming undeclared fields causes
+  a bypass rather than an unsafe HIT. A returned `JSONResponse` that
+  already has custom headers, including `Vary`, still bypasses the
+  default JSON coder. `Vary` sent *alone* by a route, proxy or middleware
+  does **not** partition `FastAPICache`'s internal store.
 - The original explicit-`Request`/default-builder bypass remains active
   even with `vary_headers`. Applications requiring cached `Request`
   endpoints must use a fully identity/tenant-aware custom `key_builder`.
