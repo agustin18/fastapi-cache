@@ -43,6 +43,18 @@ def _wrapped_factory(value: str) -> Callable[[], Awaitable[Dict[str, str]]]:
     return endpoint
 
 
+def _wrapped_default_factory(
+    value: str,
+) -> Callable[..., Awaitable[Dict[str, str]]]:
+    # Unlike a closure capture, default-bound values have NO co_freevars.
+    # wraps copies the module-level template's name/qualname/signature.
+    @wraps(module_level_endpoint)
+    async def endpoint(value: str = value) -> Dict[str, str]:
+        return {"value": value}
+
+    return endpoint
+
+
 def _mock_request(
     *, host: str = "example.test", method: str = "GET",
     root_path: str = "", path: str = "/a"
@@ -306,3 +318,58 @@ def test_clear_named_namespace_for_generated_routes() -> None:
         assert second_other.json() == {"value": "C"}
 
     asyncio.run(run())
+
+
+def test_functools_wraps_with_default_bound_factory_routes_do_not_collide() -> None:
+    """The generator must not use a stale shared key even without co_freevars."""
+    left, right = _wrapped_default_factory("A"), _wrapped_default_factory("B")
+    assert left.__name__ == right.__name__ == module_level_endpoint.__name__
+    assert left.__qualname__ == right.__qualname__ == module_level_endpoint.__qualname__
+    assert "<locals>" not in left.__qualname__
+    assert left.__code__.co_freevars == right.__code__.co_freevars == ()
+    assert getattr(left, "__wrapped__", None) is module_level_endpoint
+    assert getattr(right, "__wrapped__", None) is module_level_endpoint
+    assert default_key_builder(left, "factory:", args=(), kwargs={}) == (
+        default_key_builder(right, "factory:", args=(), kwargs={})
+    )
+
+    backend = InMemoryBackend()
+    FastAPICache.init(backend, prefix="factory")
+    app = FastAPI()
+    app.add_api_route("/a", cache(expire=60)(left), methods=["GET"])
+    app.add_api_route("/b", cache(expire=60)(right), methods=["GET"])
+
+    with TestClient(app) as client:
+        first_a = client.get("/a")
+        first_b = client.get("/b")
+        hit_a = client.get("/a")
+        hit_b = client.get("/b")
+
+    assert first_a.json() == hit_a.json() == {"value": "A"}
+    assert first_b.json() == hit_b.json() == {"value": "B"}
+    assert first_a.headers["X-FastAPI-Cache"] == "MISS"
+    assert first_b.headers["X-FastAPI-Cache"] == "MISS"
+    assert hit_a.headers["X-FastAPI-Cache"] == "HIT"
+    assert hit_b.headers["X-FastAPI-Cache"] == "HIT"
+    assert len(backend._store) == 2  # pyright: ignore[reportPrivateUsage]
+
+
+def test_wrapped_default_handler_does_not_read_shared_old_key() -> None:
+    backend = InMemoryBackend()
+    FastAPICache.init(backend, prefix="factory")
+    endpoint = _wrapped_default_factory("fresh")
+    old_key = default_key_builder(endpoint, "factory:", args=(), kwargs={})
+    backend._store[old_key] = Value(  # pyright: ignore[reportPrivateUsage]
+        JsonCoder.encode({"value": "incorrect-cached-response"}), None
+    )
+    app = FastAPI()
+    app.add_api_route("/default", cache(expire=60)(endpoint), methods=["GET"])
+
+    with TestClient(app) as client:
+        first = client.get("/default")
+        second = client.get("/default")
+
+    assert first.json() == second.json() == {"value": "fresh"}
+    assert first.headers["X-FastAPI-Cache"] == "MISS"
+    assert second.headers["X-FastAPI-Cache"] == "HIT"
+    assert old_key in backend._store  # pyright: ignore[reportPrivateUsage]
