@@ -33,6 +33,17 @@ def test_published_default_key_golden_remains_bit_compatible() -> None:
     assert actual == f"migration-parity:ordinary:{digest}"
 
 
+def test_redis_fixture_freezes_the_persisted_namespace_golden() -> None:
+    digest = hashlib.md5(  # noqa: S324 - key compatibility, not auth
+        b"__main__:ordinary:():{}"
+    ).hexdigest()
+    assert digest == "8bab420608af608a3fa1dcf5ee7e2ece"
+    harness = (ROOT / "tests/migration_redis_e2e.py").read_text()
+    assert f"ordinary:{digest}" in harness
+    assert "def verify_candidate_migration()" in harness
+    assert "def verify_rollback_read()" in harness
+
+
 def test_workflow_uses_separate_published_py_p_i_providers() -> None:
     workflow = (
         ROOT / ".github/workflows/migration-published-parity.yml"
