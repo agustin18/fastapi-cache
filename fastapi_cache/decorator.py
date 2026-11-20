@@ -442,6 +442,12 @@ def cache(
             ):
                 return await ensure_async_func(*args, **kwargs)
 
+            if normalized_vary_headers and request is None:
+                # Direct @cache() function calls have no HTTP header values.
+                # Do not invoke even a custom builder or construct a shared
+                # fallback key when variation was explicitly requested.
+                return await ensure_async_func(*args, **kwargs)
+
             prefix = FastAPICache.get_prefix()
             has_auth_headers = _has_auth_headers(request)
             cache_authenticated_enabled = (
