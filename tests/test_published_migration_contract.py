@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -60,7 +60,7 @@ def parity_records() -> tuple[dict, dict]:
         "ordinary": ["MISS", "HIT"],
         "sync": ["MISS", "HIT"],
         "conditional_304": 304,
-        "module_location": "/tmp/sample-venv/lib/python3.11/site-packages/fastapi_cache/__init__.py",
+        "module_location": "site-packages/fastapi_cache/__init__.py",
     }
     old = {
         **common,
