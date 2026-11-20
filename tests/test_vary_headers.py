@@ -4,6 +4,7 @@ These tests run with InMemory; the same key builder and backend protocol are
 exercised by the installed-distribution Redis migration checks.
 """
 
+import asyncio
 from contextvars import ContextVar
 from typing import Any, Dict, Generator, List, Tuple
 
@@ -16,6 +17,14 @@ from starlette.testclient import TestClient
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
+from fastapi_cache.key_builder import default_key_builder
+
+
+_module_context: ContextVar[str] = ContextVar("vary-module-region", default="")
+
+
+async def _module_level_variant() -> Dict[str, str]:
+    return {"region": _module_context.get()}
 
 
 @pytest.fixture(autouse=True)
@@ -306,3 +315,86 @@ def test_custom_key_builder_is_not_silently_replaced_by_vary_headers() -> None:
         {"language": "en"}, {"language": "es"}, {"language": "en"}
     ]
     assert len(seen) == 3
+
+
+def test_pre_opt_in_legacy_key_cannot_be_read_by_new_variant() -> None:
+    """A persisted old shared entry must not feed a newly varied endpoint."""
+    backend = InMemoryBackend()
+    FastAPICache.init(backend, prefix="legacy-vary")
+    old_key = default_key_builder(
+        _module_level_variant, "legacy-vary:tenant", args=(), kwargs={}
+    )
+    asyncio.run(backend.set(old_key, b'{"region":"stale-from-legacy"}', expire=120))
+    app = FastAPI()
+
+    async def select_region(request: Request) -> None:
+        _module_context.set(request.headers.get("X-Region", ""))
+
+    app.add_api_route(
+        "/module",
+        cache(expire=60, namespace="tenant", vary_headers=("X-Region",))(
+            _module_level_variant
+        ),
+        methods=["GET"],
+        dependencies=[Depends(select_region)],
+    )
+
+    with TestClient(app) as client:
+        first = client.get("/module", headers={"X-Region": "north"})
+        second = client.get("/module", headers={"X-Region": "north"})
+
+    assert first.headers["X-FastAPI-Cache"] == "MISS"
+    assert second.headers["X-FastAPI-Cache"] == "HIT"
+    assert first.json() == second.json() == {"region": "north"}
+    assert old_key in backend._store  # pyright: ignore[reportPrivateUsage]
+    assert len(backend._store) == 2  # pyright: ignore[reportPrivateUsage]
+    assert asyncio.run(FastAPICache.clear(namespace="tenant")) == 2
+    assert not backend._store  # pyright: ignore[reportPrivateUsage]
+
+
+def test_vary_wildcard_does_not_get_cached_even_if_some_fields_are_declared() -> None:
+    FastAPICache.init(InMemoryBackend())
+    app = FastAPI()
+    calls = {"n": 0}
+
+    @app.get("/wildcard")
+    @cache(expire=60, vary_headers=("Accept-Language",))
+    async def wildcard(response: Response) -> Dict[str, int]:
+        calls["n"] += 1
+        response.headers["Vary"] = "*"
+        return {"n": calls["n"]}
+
+    with TestClient(app) as client:
+        first = client.get("/wildcard")
+        second = client.get("/wildcard")
+
+    assert first.json() == {"n": 1}
+    assert second.json() == {"n": 2}
+    assert all("X-FastAPI-Cache" not in r.headers for r in (first, second))
+
+
+def test_vary_headers_does_not_bypass_authentication_protection() -> None:
+    backend = InMemoryBackend()
+    FastAPICache.init(backend)
+    app = FastAPI()
+    calls = {"n": 0}
+
+    @app.get("/authenticated")
+    @cache(expire=60, vary_headers=("Accept-Language",))
+    async def authenticated() -> Dict[str, int]:
+        calls["n"] += 1
+        return {"n": calls["n"]}
+
+    with TestClient(app) as client:
+        first = client.get(
+            "/authenticated",
+            headers={"Authorization": "Bearer alice", "Accept-Language": "en"},
+        )
+        second = client.get(
+            "/authenticated",
+            headers={"Authorization": "Bearer bob", "Accept-Language": "en"},
+        )
+    assert first.json() == {"n": 1}
+    assert second.json() == {"n": 2}
+    assert all("X-FastAPI-Cache" not in r.headers for r in (first, second))
+    assert not backend._store  # pyright: ignore[reportPrivateUsage]
