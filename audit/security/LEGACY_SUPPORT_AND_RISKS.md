@@ -100,6 +100,6 @@ The maintainer-directed decision is documented in
 and [PR #42 discussion](https://github.com/agustin18/fastapi-cache/pull/42#issuecomment-7016369125).
 This was an explicit release authorization, not a GitHub vulnerability
 dismissal or a promise about consumer applications. The
-[release status](../../RELEASE_STATUS_0.3.0.md) records the agent-reported
+[release status](../../docs/releases/RELEASE_STATUS_0.3.0.md) records the agent-reported
 Dependabot delta check before publication; recheck new, reopened or
 materially changed applicable advisories in future releases.

@@ -3,7 +3,7 @@
 **Status: ACCEPTED WITH THE DOCUMENTED SCOPE FOR RELEASED 0.3.0.
 This document retains the original pre-publication checklist and evidence.**
 For the verified publication and local-agent attestations, see
-[the post-release record](../../RELEASE_STATUS_0.3.0.md).
+[the post-release record](../../docs/releases/RELEASE_STATUS_0.3.0.md).
 
 On **2026-11-19**, the maintainer explicitly instructed preparation of the
 0.3.0 stable-promotion PR **and recording of the previously scoped residual-risk

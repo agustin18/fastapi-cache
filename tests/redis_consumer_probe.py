@@ -1,4 +1,4 @@
-"""Black-box FastAPI consumer of an installed research wheel, not the checkout.
+"""Black-box FastAPI consumer of an installed distribution wheel, not the checkout.
 
 Execute only inside isolated CI Redis containers and a venv without editable installs.
 The application models ordinary caching, authenticated tenant isolation, clear, and
@@ -65,7 +65,7 @@ async def remove_previous_data() -> None:
 def main() -> None:
     module_path = Path(fastapi_cache.__file__).resolve()
     assert "site-packages" in module_path.parts, module_path
-    assert version("fastapi-cache-stable") == "0.3.1"
+    assert version("fastapi-cache-stable") == fastapi_cache.__version__
 
     url = os.environ["REDIS_URL"]
     ordinary_calls = {"count": 0}

@@ -1,7 +1,7 @@
-# Quickstart — fastapi-cache-stable 0.3.1
+# Quickstart — fastapi-cache-stable 0.4.0
 
 Five-minute example of response caching with
-[`fastapi-cache-stable`](https://pypi.org/project/fastapi-cache-stable/0.3.1/).
+[`fastapi-cache-stable`](https://pypi.org/project/fastapi-cache-stable/0.4.0/).
 The Python import remains `fastapi_cache`.
 
 ## Install
@@ -12,7 +12,7 @@ environment. Create a clean virtual environment:
 ```sh
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install "fastapi-cache-stable==0.3.1" "uvicorn"
+python -m pip install "fastapi-cache-stable==0.4.0" "uvicorn"
 python -m pip check
 ```
 
@@ -63,7 +63,7 @@ next identical request within the TTL should show `HIT`.
 The decorator order matters: `@app.get` is **above** `@cache`.
 
 **InMemory is per Python process**, not shared between workers; it
-has no size cap in 0.3.x. Use Redis standalone when workers must
+has no size cap in 0.4.x. Use Redis standalone when workers must
 share cached values.
 
 ## Redis standalone
@@ -71,14 +71,14 @@ share cached values.
 First install the tested Redis client line:
 
 ```sh
-python -m pip install "fastapi-cache-stable[redis]==0.3.1"
+python -m pip install "fastapi-cache-stable[redis]==0.4.0"
 ```
 
 Use [the complete Redis lifespan example](../README.md#quick-start)
-and a **test Redis instance**. The 0.3.x compatibility matrix verifies
-**redis-py 4.6.0** with **Redis server 7**. Redis client 5/6/7 are
-not yet in this package's declared support range; see
-[the Redis issue](https://github.com/agustin18/fastapi-cache/issues/47).
+and a **test Redis instance**. The 0.4.x compatibility matrix covers
+Python-conditional redis-py 4.6–8.1 clients and Redis servers 6.2/7.0/7.4/8.0;
+see [COMPATIBILITY.md](../COMPATIBILITY.md) and the
+[Redis research evidence](../audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md).
 
 ## Privacy and migration rules
 
@@ -92,12 +92,11 @@ not yet in this package's declared support range; see
   `Vary`, locale, tenant or custom-auth headers. Use a suitable
   custom key builder, or bypass caching until variation is proven safe.
   See [the header/Vary investigation](https://github.com/agustin18/fastapi-cache/issues/53).
-  **0.3.1** bypasses cache reads and writes when an endpoint explicitly
-  declares `Request` and uses the default builder; endpoints with a
-  custom, identity-aware key builder still cache. **0.3.0** users must
-  upgrade to 0.3.1 or avoid caching such endpoints. This does not make
-  hidden middleware/context variables safe for routes that do not
-  declare `Request`.
+  **0.3.1 and 0.4.0** bypass cache reads and writes when an endpoint
+  explicitly declares `Request` and uses the default builder; endpoints
+  with a custom, identity-aware key builder still cache. This does not make
+  hidden middleware/context variables safe for routes that do not declare
+  `Request`.
 - Do not cache secrets or deserialize untrusted cache bytes with
   `PickleCoder`.
 - `FastAPICache.init()` must run once per worker/lifespan;

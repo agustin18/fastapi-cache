@@ -8,6 +8,13 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.4.0](https://github.com/agustin18/fastapi-cache/tree/v0.4.0) - 2026-11-20
+
+### Features
+
+- Broaden the optional Redis client compatibility contract using Python-specific dependency markers: Python 3.8 admits redis-py 4.x through 6.1.x, Python 3.9 through 7.0.x, and Python 3.10–3.13 through 8.1.x. Keep redis-py 4.x migration paths valid, and require real-server, wheel/sdist, metadata, and consumer regressions. Redis Cluster namespace clearing, Sentinel/TLS transport certification, and arbitrary binary caching with `decode_responses=True` remain outside the supported scope. [#47](https://github.com/agustin18/fastapi-cache/issues/47)
+
+
 ## [0.3.1](https://github.com/agustin18/fastapi-cache/tree/v0.3.1) - 2026-11-19
 
 ### Bugfixes
@@ -25,7 +32,7 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 - Promote the previously tested `0.3.0rc2` runtime to the first stable
   `fastapi-cache-stable` release. The Python module remains `fastapi_cache`
   and documented migration behavior is unchanged since RC2; see
-  [the 0.3.0 release notes](RELEASE_NOTES_0.3.0.md) and
+  [the 0.3.0 release notes](docs/releases/RELEASE_NOTES_0.3.0.md) and
   [the migration guide](MIGRATION.md).
 - Preserve Python 3.8–3.10 as **functional legacy compatibility only**;
   recommend server-side CPython 3.11–3.13 for best-effort security maintenance.

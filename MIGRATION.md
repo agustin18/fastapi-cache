@@ -72,14 +72,14 @@ deciding whether to remain on these interpreters.
 **Redis client versions:** the actually **published** `fastapi-cache2==0.2.2`
 and this fork both declare `redis ^4.2.0rc1` (redis-py 4.x). The upstream
 repository's later, *unreleased* `main` branch switched to redis-py 5.x.
-Published `0.3.1` retains this legacy constraint. The unreleased #47
-implementation tests client 4–8 against real standalone servers and proposes
-Python-conditional markers; do not infer support from a research PR alone.
+`0.3.1` remains the previous migration line and retains redis-py 4.x. The
+published `0.4.0` uses Python-conditional metadata tested against real
+standalone servers; it does not change RedisBackend runtime semantics.
 
-## Redis client upgrade checklist for the unreleased #47 candidate
+## Redis client upgrade checklist for 0.4.0
 
-**Not yet published.** A future release based on #47 will admit Redis client
-versions according to the supported Python interpreter:
+The published `0.4.0` metadata admits Redis client versions according to
+the supported Python interpreter:
 
 | Python | Optional redis-py range |
 |---|---|
@@ -110,7 +110,7 @@ versions according to the supported Python interpreter:
 - Your endpoints are GET and return JSON, Pydantic models, dataclasses or standard types.
 - You need a maintained package without changing the `fastapi_cache` import.
 
-Python 3.8/3.9/3.10 and Pydantic v1 are end-of-life upstream. Stable `0.3.0` preserves tested
+Python 3.8/3.9/3.10 and Pydantic v1 are end-of-life upstream. Stable `0.4.0` preserves tested
 functional compatibility for the documented Python 3.8–3.10 combinations, but those EOL
 profiles receive no security-support promise. Any critical advisory still requires an
 applicability assessment; EOL status alone does not close it. A critical advisory applicable to
@@ -163,7 +163,7 @@ not an automatic safety guarantee.
 
 ## Who should not migrate yet
 
-- You need full Memcached or DynamoDB parity. They are experimental in `0.3.x`.
+- You need full Memcached or DynamoDB parity. They are experimental in `0.4.x`.
 - You use Redis Cluster and need complete namespace clearing.
 - You need typed restoration on Pydantic v1; the legacy decoded behavior is preserved instead.
   Pydantic v1 is end-of-life; plan an upgrade to Pydantic v2 for typed restoration and
@@ -181,15 +181,15 @@ Use a fresh environment and update your **application dependency declaration**
 and lockfile: never install both distributions in one environment, because
 they own the same `fastapi_cache` import.
 
-For the published `0.3.1` stable release in a clean environment:
+For the published `0.4.0` stable release in a clean environment:
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
-python -m pip install "fastapi-cache-stable[redis]==0.3.1"
+python -m pip install "fastapi-cache-stable[redis]==0.4.0"
 python -m pip check
 ```
 
-For evaluating a **future prerelease** (not required for 0.3.1):
+For evaluating a **future prerelease** (not required for 0.4.0):
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
@@ -204,7 +204,7 @@ collision; uninstall `fastapi-cache2` **before** installing the fork.
 
 ### Verify an exact wheel from TestPyPI
 
-Use the version approved in [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
+Use the version approved in [RELEASE_CHECKLIST.md](docs/releases/RELEASE_CHECKLIST.md)
 and compare its downloaded SHA-256 with the approved CI artifact:
 
 ```sh
@@ -228,7 +228,7 @@ resolve from regular PyPI; do not mix TestPyPI and PyPI candidates via
 ## Compatibility matrix
 
 - **Verified**: tested in CI with identified versions.
-- **Targeted for 0.3.0**: intended behavior, not yet guaranteed.
+- **Targeted for 0.4.0**: intended behavior, not yet guaranteed.
 - **Experimental**: interface available, coverage insufficient.
 - **Unsupported**: outside the compatibility contract.
 
@@ -237,7 +237,7 @@ resolve from regular PyPI; do not mix TestPyPI and PyPI candidates via
 | Python 3.11–3.13 | Verified, security-supported | Main functional matrix and separate runtime security-audit profile |
 | Python 3.10 | Verified legacy compatibility | Main functional tests and Pydantic v1 migration job; EOL, no security-support commitment |
 | Python 3.8/3.9 | Verified legacy compatibility | Pinned FastAPI 0.111.1/Pydantic 1.10.27/2.8.2 matrix and wheel smoke; EOL, no security-support commitment |
-| Python 3.14 | Unsupported for stable `0.3.0` | Add and pass a full matrix before announcing support |
+| Python 3.14 | Unsupported for stable `0.4.0` | Add and pass a full matrix before announcing support |
 | FastAPI | Verified with 0.111.1 and current 0.x | Older 0.100.x is unverified; no upper pin yet (`fastapi = "*"`) |
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
@@ -549,7 +549,7 @@ for support boundaries.
 **Is Pydantic v1 supported?** Migration compatibility only. Pydantic v1 is end-of-life
 (1.10.27 is the final release) and receives no new security fixes. Typed restoration requires
 Pydantic v2.
-**Does stable `0.3.0` support Python 3.8–3.10?** Yes, for the documented legacy functional
+**Does stable `0.4.0` support Python 3.8–3.10?** Yes, for the documented legacy functional
 matrix and installation range `>=3.8,<3.14`. Those EOL interpreters are outside the
 security-support matrix; Python 3.11–3.13 are security-supported.
 **Is Redis Cluster supported?** Only with the documented limitations; complete namespace
@@ -562,7 +562,7 @@ original author.
 vulnerability, use [private vulnerability reporting](https://github.com/agustin18/fastapi-cache/security/advisories/new)
 instead of a public issue; see [SECURITY.md](SECURITY.md).
 
-## Known limitations in 0.3.x
+## Known limitations in 0.4.x
 
 - No tags, stale-while-revalidate, stampede protection or POST caching.
 - A second `FastAPICache.init()` call raises `RuntimeError`; initialize once per worker.
@@ -578,10 +578,10 @@ instead of a public issue; see [SECURITY.md](SECURITY.md).
 - No memory cap in `InMemoryBackend`.
 - Typed restoration is opt-in via `TypedJsonCoder` and requires Pydantic v2. Pydantic v1
   and unsupported annotations keep the legacy decoded behavior.
-- Stable `0.3.0` installs on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy functional
+- Stable `0.4.0` installs on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy functional
   compatibility only and are excluded from stable security support. Python 3.11–3.13 are the
   security-supported matrix. Python 3.14 awaits a full CI matrix.
-- In released `0.3.0`, the experimental DynamoDB extra is installable only on Python
+- In released `0.4.0`, the experimental DynamoDB extra is installable only on Python
   `>=3.10` and requires the patched aiohttp line (`>=3.14.4`). On Python 3.8/3.9,
   `fastapi-cache-stable[dynamodb]` does not install aiobotocore or aiohttp; Redis and InMemory
   remain the legacy backend options.
@@ -606,7 +606,7 @@ Before live traffic, verify the **exact pinned distribution**:
 - [ ] Key and namespace invalidation, lifespan re-entry and rollback work.
 - [ ] Rollback does not restore unsafe shared caching of private responses.
 
-See [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for maintainer release
+See [RELEASE_CHECKLIST.md](docs/releases/RELEASE_CHECKLIST.md) for maintainer release
 evidence and security gates, which do not belong in an end-user guide.
 
 ## Reproducing the Redis migration E2E
