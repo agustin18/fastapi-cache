@@ -5,7 +5,7 @@ exists only in the candidate branch; the published migration goldens stay frozen
 Do not flushdb or change another application's keys.
 """
 
-import asyncio
+import os
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from importlib.metadata import version
@@ -13,18 +13,17 @@ from pathlib import Path
 from secrets import token_hex
 from typing import Any, AsyncIterator, Dict
 
-import fastapi_cache
 from fastapi import Depends, FastAPI, Response
 from fastapi.testclient import TestClient
 from redis import Redis as SyncRedis
 from redis.asyncio import Redis
 from starlette.requests import Request
 
+import fastapi_cache
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
-import os
 
 
 async def close(client: Redis) -> None:
