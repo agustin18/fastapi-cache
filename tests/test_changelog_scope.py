@@ -44,3 +44,5 @@ def test_unknown_file_types_fail_closed() -> None:
 
 def test_no_diff_fails_closed() -> None:
     assert not is_docs_only([])
+
+# Temporary negative gate test comment.

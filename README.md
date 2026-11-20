@@ -484,3 +484,5 @@ xdg-open htmlcov/index.html
 ## License
 
 This project is licensed under the [Apache-2.0](https://github.com/agustin18/fastapi-cache/blob/stable/LICENSE) License.
+
+Temporary negative gate test.
