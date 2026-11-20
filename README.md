@@ -417,8 +417,18 @@ response also depends on `X-Tenant` safe; include a trustworthy tenant
 dimension or use a reviewed, complete custom `key_builder`. Endpoints
 that explicitly declare `Request` still **bypass** the default key builder
 even with `vary_headers`; use an identity- and tenant-aware custom builder
-there. `Authorization`, `Cookie` and `Proxy-Authorization` cannot be named
-as vary fields, and the existing authenticated-request bypass is unchanged.
+there. Only `Authorization`, `Cookie` and `Proxy-Authorization` are
+explicitly rejected as credential-related `vary_headers` names. Names
+like `X-API-Key`, `X-Auth-Token` and application-defined identity headers
+can pass the **syntactic** name check; that is **not** a safety endorsement
+or an authentication/authorization boundary. The existing
+`Authorization`/`Cookie` bypass is unchanged and cannot detect every
+custom authentication mechanism. Use validated identity/permissions and
+a reviewed custom `key_builder` when needed. A client can choose many
+distinct header values and flood the cache with variants: validate and
+normalize input, rate-limit, bound cache growth and expiration. Hashing
+hides the literal header value from cache keys, but does not authenticate
+it, encrypt it or prevent low-entropy guesses.
 
 New opted-in entries **cannot read pre-opt-in keys**. Clear or rotate affected
 namespaces (and remove potentially unsafe historical entries) before serving
