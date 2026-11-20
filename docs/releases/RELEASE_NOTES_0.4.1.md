@@ -1,8 +1,7 @@
 # fastapi-cache-stable 0.4.1 — factory-route cache isolation
 
-> **Status: release preparation only. Not published.**
-> The current public PyPI release remains `0.4.0` until the manual 0.4.1
-> publication is completed and verified.
+> **Status: published 2026-11-20.**
+> PyPI: [fastapi-cache-stable==0.4.1](https://pypi.org/project/fastapi-cache-stable/0.4.1/).
 
 ## What's fixed
 
