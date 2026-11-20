@@ -309,10 +309,11 @@ async def _factory_route_template() -> Dict[str, str]:
     return {}
 
 
+@pytest.mark.parametrize("bind_default", [False, True])
 def test_factory_routes_are_isolated_in_real_redis(
-    redis_url: str, redis_backend_cls: Any
+    redis_url: str, redis_backend_cls: Any, bind_default: bool
 ) -> None:
-    """Two distinct factory closures cannot serve each other's cached payloads."""
+    """Even wraps+default-bound functions cannot share Redis cache entries."""
 
     async def run() -> None:
         client = _client(redis_url)
@@ -322,7 +323,15 @@ def test_factory_routes_are_isolated_in_real_redis(
 
             def make_handler(
                 value: str,
-            ) -> Callable[[], Awaitable[Dict[str, str]]]:
+            ) -> Callable[..., Awaitable[Dict[str, str]]]:
+                if bind_default:
+                    @wraps(_factory_route_template)
+                    async def default_endpoint(value: str = value) -> Dict[str, str]:
+                        return {"value": value}
+
+                    assert default_endpoint.__code__.co_freevars == ()
+                    return default_endpoint
+
                 @wraps(_factory_route_template)
                 async def endpoint() -> Dict[str, str]:
                     return {"value": value}
