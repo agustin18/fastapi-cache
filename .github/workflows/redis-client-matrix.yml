@@ -271,6 +271,7 @@ jobs:
         run: |
           python -m venv /tmp/redis-range-venv
           /tmp/redis-range-venv/bin/python -m pip install --upgrade pip
+          /tmp/redis-range-venv/bin/python -m pip install "packaging>=24"
           wheel=$(find /tmp/redis-range-dist -maxdepth 1 -name '*.whl' -print -quit)
           test -n "$wheel"
           /tmp/redis-range-venv/bin/python -m pip install "$wheel[redis]"
