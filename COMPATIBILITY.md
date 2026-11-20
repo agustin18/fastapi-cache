@@ -33,6 +33,43 @@ and the implementation PR runs a smaller mandatory wheel/sdist CI matrix.
 Existing `0.3.x` PyPI artifacts remain immutable. The expanded contract
 applies to the published `0.4.0` artifact.
 
+## Factory-generated HTTP handlers (#68, prospective correction)
+
+**Published 0.4.0 remains affected**: factory-created functions can share
+module/name/args/namespace while serving different HTTP routes. This can
+cause a wrong response to be replayed. See [#68](https://github.com/agustin18/fastapi-cache/issues/68).
+Until a corrective release is available, give generated routes distinct
+namespaces or review an explicit path-aware key builder.
+
+A narrowly scoped candidate fix separates **generated/wrapped HTTP handler
+cache keys** by stable request method/host/root/path and the legacy digest.
+It detects actual function **closures via code free variables** and
+explicit decorator wrappers via `__wrapped__`, even when
+`functools.wraps` has copied module-level `__name__`/`__qualname__`
+metadata. This covers factory values bound as **default arguments**,
+which have no code free variables. Local functions and lambdas are also
+detected. Checking `__wrapped__` directly is sufficient here; recursively
+calling `inspect.unwrap` is unnecessary and would add work/possible wrapper
+chain errors per request.
+
+The exported `default_key_builder` and **unwrapped module-level** handler
+keys remain unchanged. Any module-level handler decorated by another
+function that sets `__wrapped__`, even when it is not a closure or factory,
+can intentionally receive a new scoped key; review cache warm-up and old
+entry TTLs before deploying. Previously shared
+generated/wrapped entries are intentionally not reused.
+
+HTTP `Host` is included, normalized **only for ASCII casing**:
+`EXAMPLE.TEST` and `example.test` share an entry, while distinct hosts,
+ports or spellings can cause different keys. Unrestricted client-supplied
+`Host` values can create unbounded cache entries; configure
+`TrustedHostMiddleware`/equivalent host validation at the edge. This is
+not an authorization check or a tenant boundary. Hidden request context,
+custom key builders and independent applications sharing a backend
+prefix remain separate responsibilities (#53). Direct non-ASGI `@cache`
+usage retains the legacy key behavior. A PR is **not** an authorization
+to publish this correction; check the released version.
+
 ## What "drop-in" means
 
 - The distribution is `fastapi-cache-stable`, but the Python import remains `fastapi_cache`.

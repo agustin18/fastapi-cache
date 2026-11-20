@@ -121,6 +121,68 @@ def _uncacheable(
     return "no-store" in request_cache_control
 
 
+
+def _route_scoped_generated_key(
+    func: Callable[..., object],
+    request: Request,
+    key: str,
+    namespace: str,
+) -> Optional[str]:
+    """Scope locally generated FastAPI handlers without changing normal legacy keys.
+
+    The legacy default builder identifies a function by module and *name*.
+    Different closures from a factory share that identity even when they
+    return different data. functools.wraps can hide their generated names,
+    so check closures *and* explicit __wrapped__ markers (including wrappers
+    that capture values only through default arguments). This also rotates
+    keys for ordinary module-level handlers wrapped by decorators; unwrapped
+    module-level endpoints retain their original digest. Never read possibly
+    contaminated pre-fix entries from detected handlers.
+    """
+    qualname = getattr(func, "__qualname__", "")
+    # functools.wraps copies a module-level template's __qualname__ and
+    # __name__ onto a generated endpoint, hiding the original factory name.
+    # co_freevars catches closures, but not values bound as default arguments.
+    # Explicit __wrapped__ metadata identifies those wrappers without
+    # running inspect.unwrap or following potentially cyclic wrapper chains.
+    code = getattr(func, "__code__", None)
+    has_closure = bool(getattr(code, "co_freevars", ()))
+    has_wrapper = getattr(func, "__wrapped__", None) is not None
+    if (
+        not has_closure
+        and not has_wrapper
+        and "<locals>" not in qualname
+        and func.__name__ != "<lambda>"
+    ):
+        return key
+
+    scope = request.scope
+    path = scope.get("path")
+    method = scope.get("method")
+    root_path = scope.get("root_path", "")
+    if (
+        not isinstance(path, str)
+        or not isinstance(method, str)
+        or not isinstance(root_path, str)
+    ):
+        # Cannot establish a stable route identity: fail closed.
+        return None
+
+    # No Python object id / function repr: identical across workers and
+    # stable for the same deployed route. Distinct hosts/mounts/methods/paths
+    # cannot replay one another's entries through the default builder.
+    route_identity = (
+        # HTTP hostnames are case-insensitive; avoid needless cache
+        # fragmentation between Example.COM and example.com.
+        request.headers.get("host", "").lower(),
+        method,
+        root_path,
+        path,
+    )
+    digest = hashlib.sha256(repr((route_identity, key)).encode()).hexdigest()
+    return f"{namespace}:{digest}"
+
+
 def _has_auth_headers(request: Optional[Request]) -> bool:
     """Return true when the request carries an authentication header."""
     if request is None:
@@ -371,6 +433,14 @@ def cache(
             if isawaitable(cache_key):
                 cache_key = await cache_key
             assert isinstance(cache_key, str)  # noqa: S101  # assertion is a type guard
+
+            if request is not None and effective_key_builder is default_key_builder:
+                scoped_key = _route_scoped_generated_key(
+                    func, request, cache_key, f"{prefix}:{namespace}"
+                )
+                if scoped_key is None:
+                    return await ensure_async_func(*args, **kwargs)
+                cache_key = scoped_key
 
             try:
                 ttl, cached = await backend.get_with_ttl(cache_key)

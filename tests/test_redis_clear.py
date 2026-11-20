@@ -1,10 +1,15 @@
 import asyncio
 import os
-from typing import Any, Generator, List
+from functools import wraps
+from types import FunctionType
+from typing import Any, Awaitable, Callable, Dict, Generator, List
 
 import pytest
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 
 from fastapi_cache import FastAPICache
+from fastapi_cache.decorator import cache
 
 try:
     from fastapi_cache.backends.redis import RedisBackend
@@ -298,3 +303,79 @@ def test_redis_cluster_key_only_clear(redis_backend_cls: Any) -> None:
 
     assert asyncio.run(backend.clear(key="app:user:one")) == 1
     assert fake.unlinked == ["app:user:one"]
+
+
+
+async def _factory_route_template() -> Dict[str, str]:
+    return {}
+
+
+@pytest.mark.parametrize("bind_default", [False, True])
+def test_factory_routes_are_isolated_in_real_redis(
+    redis_url: str, redis_backend_cls: Any, bind_default: bool
+) -> None:
+    """Even wraps+default-bound functions cannot share Redis cache entries."""
+
+    async def run() -> None:
+        client = _client(redis_url)
+        try:
+            await client.flushdb()
+            FastAPICache.init(redis_backend_cls(client), prefix="factory")
+
+            def make_handler(
+                value: str,
+            ) -> Callable[..., Awaitable[Dict[str, str]]]:
+                if bind_default:
+                    @wraps(_factory_route_template)
+                    async def default_endpoint(value: str = value) -> Dict[str, str]:
+                        return {"value": value}
+
+                    assert isinstance(default_endpoint, FunctionType)
+                    assert default_endpoint.__code__.co_freevars == ()
+                    return default_endpoint
+
+                @wraps(_factory_route_template)
+                async def endpoint() -> Dict[str, str]:
+                    return {"value": value}
+
+                return endpoint
+
+            app = FastAPI()
+            app.add_api_route(
+                "/a", cache(expire=60, namespace="generated")(make_handler("A")),
+                methods=["GET"],
+            )
+            app.add_api_route(
+                "/b", cache(expire=60, namespace="generated")(make_handler("B")),
+                methods=["GET"],
+            )
+
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://testserver"
+            ) as consumer:
+                first_a = await consumer.get("/a")
+                first_b = await consumer.get("/b")
+                hit_a = await consumer.get("/a")
+                hit_b = await consumer.get("/b")
+
+                cleared = await FastAPICache.clear(namespace="generated")
+                reloaded_a = await consumer.get("/a")
+                reloaded_b = await consumer.get("/b")
+
+            assert cleared == 2
+            assert reloaded_a.headers["X-FastAPI-Cache"] == "MISS"
+            assert reloaded_b.headers["X-FastAPI-Cache"] == "MISS"
+            assert reloaded_a.json() == {"value": "A"}
+            assert reloaded_b.json() == {"value": "B"}
+            assert first_a.json() == hit_a.json() == {"value": "A"}
+            assert first_b.json() == hit_b.json() == {"value": "B"}
+            assert first_a.headers["X-FastAPI-Cache"] == "MISS"
+            assert first_b.headers["X-FastAPI-Cache"] == "MISS"
+            assert hit_a.headers["X-FastAPI-Cache"] == "HIT"
+            assert hit_b.headers["X-FastAPI-Cache"] == "HIT"
+            assert len(await client.keys("factory:*")) == 2
+        finally:
+            await client.flushdb()
+            await client.close()
+
+    asyncio.run(run())
