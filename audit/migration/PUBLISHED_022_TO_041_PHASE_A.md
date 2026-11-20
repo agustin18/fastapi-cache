@@ -47,6 +47,18 @@ This is MD5 of the original function identity, args and kwargs; it is a
 cache-key **compatibility** digest, not a cryptographic security assertion.
 No process-local Python `hash()` value is part of this golden.
 
+The **actual persisted Redis ordinary key** is also asserted on the legacy
+writer, stable reader and legacy rollback, retaining the unique test-only
+prefix while fixing the original digest:
+
+```text
+<unique-test-prefix>:ordinary:8bab420608af608a3fa1dcf5ee7e2ece
+```
+
+Its digest is from `__main__:ordinary:():{}`, with no injected response
+argument in the key. This is a separate end-to-end storage golden, not an
+assumption inferred from `default_key_builder` in the new fork.
+
 Ordinary module-level GET endpoints maintain `MISS → HIT` behavior, response
 body and Redis entry accessibility; `If-None-Match` on the cached response
 returns HTTP 304. **The ETag bytes are intentionally not equal** between
