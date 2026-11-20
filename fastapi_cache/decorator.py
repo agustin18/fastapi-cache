@@ -59,6 +59,7 @@ def _normalize_vary_headers(names: Optional[Sequence[str]]) -> Tuple[str, ...]:
         name = original.strip().lower()
         if (
             not name
+            or name == "*"
             or len(name) > 128
             or _HTTP_FIELD_NAME.fullmatch(name) is None
             or name in _SENSITIVE_VARY_FIELDS
