@@ -16,6 +16,7 @@ from starlette.testclient import TestClient
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.coder import PickleCoder
 from fastapi_cache.decorator import cache
 from fastapi_cache.key_builder import default_key_builder
 
@@ -416,6 +417,40 @@ def test_non_http_invocation_does_not_call_a_variant_key_builder() -> None:
         calls["n"] += 1
         return {"n": calls["n"]}
 
-    assert asyncio.run(pure_function()) == {"n": 1}
-    assert asyncio.run(pure_function()) == {"n": 2}
+    async def exercise() -> Tuple[Dict[str, int], Dict[str, int]]:
+        return await pure_function(), await pure_function()
+
+    first, second = asyncio.run(exercise())
+    assert first == {"n": 1}
+    assert second == {"n": 2}
     assert not backend._store  # pyright: ignore[reportPrivateUsage]
+
+
+def test_non_string_or_excessive_vary_field_list_is_rejected() -> None:
+    with pytest.raises(TypeError, match="vary_headers"):
+        cache(vary_headers=(123,))  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="32 fields"):
+        cache(vary_headers=tuple("X-Field-%s" % number for number in range(33)))
+
+
+def test_undeclared_vary_on_returned_jsonresponse_blocks_pickle_cache() -> None:
+    FastAPICache.init(InMemoryBackend())
+    app = FastAPI()
+    calls = {"n": 0}
+
+    @app.get("/pickle-unsafe")
+    @cache(expire=60, coder=PickleCoder, vary_headers=("Accept-Language",))
+    async def unsafe() -> Response:
+        calls["n"] += 1
+        return JSONResponse(
+            {"n": calls["n"]},
+            headers={"Vary": "X-Unlisted"},
+        )
+
+    with TestClient(app) as client:
+        first = client.get("/pickle-unsafe")
+        second = client.get("/pickle-unsafe")
+    assert first.json() == {"n": 1}
+    assert second.json() == {"n": 2}
+    assert all("X-FastAPI-Cache" not in response.headers
+               for response in (first, second))
