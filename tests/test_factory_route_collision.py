@@ -33,6 +33,12 @@ async def module_level_endpoint() -> Dict[str, str]:
     return {"value": "module"}
 
 
+@wraps(module_level_endpoint)
+async def decorated_module_level_endpoint() -> Dict[str, str]:
+    """An explicit wrapper with no freevars still gets a scoped cache key."""
+    return {"value": "decorated-module"}
+
+
 
 
 def _wrapped_factory(value: str) -> Callable[[], Awaitable[Dict[str, str]]]:
@@ -373,3 +379,31 @@ def test_wrapped_default_handler_does_not_read_shared_old_key() -> None:
     assert first.headers["X-FastAPI-Cache"] == "MISS"
     assert second.headers["X-FastAPI-Cache"] == "HIT"
     assert old_key in backend._store  # pyright: ignore[reportPrivateUsage]
+
+
+def test_module_level_wrapped_handler_rotates_old_key_without_freevars() -> None:
+    """Document key rotation for decorators that set __wrapped__ outside factories."""
+    endpoint = decorated_module_level_endpoint
+    assert endpoint.__code__.co_freevars == ()
+    assert endpoint.__qualname__ == module_level_endpoint.__qualname__
+    assert endpoint.__wrapped__ is module_level_endpoint
+
+    backend = InMemoryBackend()
+    FastAPICache.init(backend, prefix="factory")
+    old_key = default_key_builder(endpoint, "factory:", args=(), kwargs={})
+    backend._store[old_key] = Value(  # pyright: ignore[reportPrivateUsage]
+        JsonCoder.encode({"value": "previous-warm-cache"}), None
+    )
+
+    app = FastAPI()
+    app.add_api_route("/decorated", cache(expire=60)(endpoint), methods=["GET"])
+
+    with TestClient(app) as client:
+        first = client.get("/decorated")
+        second = client.get("/decorated")
+
+    assert first.json() == second.json() == {"value": "decorated-module"}
+    assert first.headers["X-FastAPI-Cache"] == "MISS"
+    assert second.headers["X-FastAPI-Cache"] == "HIT"
+    assert old_key in backend._store  # pyright: ignore[reportPrivateUsage]
+    assert len(backend._store) == 2  # pyright: ignore[reportPrivateUsage]
