@@ -337,8 +337,15 @@ Explicit `Request` routes still bypass the default builder even if
 `vary_headers` is supplied. Authenticated caching continues to require
 a reviewed identity-aware custom key builder. Any undeclared variation,
 including middleware/contextvar/tenant data, is the application's
-responsibility. Deploy using deliberate namespace rotation or cleanup
-of historical entries; do not conflate key isolation with deletion.
+responsibility. The only credential-related names explicitly rejected
+from `vary_headers` are `Authorization`, `Cookie`, and
+`Proxy-Authorization`; `X-API-Key` and similar custom fields are not
+recognized as authenticated identity. Raw client-controlled values can
+multiply backend entries: use validated header domains, rate limits,
+capacity limits/eviction and TTLs. Hashed key components do **not**
+authenticate tenants or prevent cache flooding. Deploy using deliberate
+namespace rotation or cleanup of historical entries; do not conflate
+key isolation with deletion.
 
 ## Cache data compatibility
 
