@@ -12,7 +12,7 @@ def test_pypi_requires_authenticated_dependabot_delta() -> None:
     )[0]
     publish = workflow.split("\n  publish:\n", 1)[1]
 
-    assert "needs: preflight" in gate
+    assert "needs: build" in gate
     assert "vulnerability-alerts: read" in gate
     assert "GH_TOKEN: ${{ github.token }}" in gate
     assert '--delta --repository "$GITHUB_REPOSITORY"' in gate

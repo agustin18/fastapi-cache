@@ -44,7 +44,7 @@ jobs:
 
   security-delta:
     name: Block unreviewed Dependabot risk before PyPI
-    needs: preflight
+    needs: build
     runs-on: ubuntu-24.04
     permissions:
       contents: read
