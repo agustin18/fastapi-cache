@@ -1,0 +1,162 @@
+name: Published legacy migration parity
+
+on:
+  pull_request:
+    branches: [stable]
+    paths:
+      - ".github/workflows/migration-published-parity.yml"
+      - "tests/published_migration_probe.py"
+      - "tests/published_migration_compare.py"
+      - "tests/migration_redis_e2e.py"
+      - "tests/redis_consumer_probe.py"
+      - "MIGRATION.md"
+      - "audit/migration/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  published-migration:
+    name: Py ${{ matrix.python }} / PyPI 0.2.2 to 0.4.1 / Redis 7.4
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
+    services:
+      redis:
+        image: redis:7.4
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Download immutable published PyPI wheels and save their hashes
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/parity-dist/legacy" "$RUNNER_TEMP/parity-dist/stable"
+          mkdir -p "$RUNNER_TEMP/parity-evidence"
+          python -m pip install --upgrade pip
+          python -m pip download --only-binary=:all: --no-deps \
+            --dest "$RUNNER_TEMP/parity-dist/legacy" "fastapi-cache2==0.2.2"
+          python -m pip download --only-binary=:all: --no-deps \
+            --dest "$RUNNER_TEMP/parity-dist/stable" "fastapi-cache-stable==0.4.1"
+          test "$(find "$RUNNER_TEMP/parity-dist/legacy" -name '*.whl' | wc -l)" -eq 1
+          test "$(find "$RUNNER_TEMP/parity-dist/stable" -name '*.whl' | wc -l)" -eq 1
+          sha256sum "$RUNNER_TEMP"/parity-dist/{legacy,stable}/*.whl \
+            > "$RUNNER_TEMP/parity-evidence/pypi-wheel-sha256.txt"
+      - name: Install each published provider in a separate clean environment
+        run: |
+          set -euo pipefail
+          for provider in legacy stable; do
+            python -m venv "$RUNNER_TEMP/$provider"
+            "$RUNNER_TEMP/$provider/bin/python" -m pip install --upgrade \
+              pip setuptools==84.2.1
+          done
+          legacy_wheel="$(find "$RUNNER_TEMP/parity-dist/legacy" -name '*.whl' -print -quit)"
+          stable_wheel="$(find "$RUNNER_TEMP/parity-dist/stable" -name '*.whl' -print -quit)"
+          "$RUNNER_TEMP/legacy/bin/python" -m pip install \
+            "$legacy_wheel[redis]" "redis==4.6.0" \
+            "fastapi==0.111.1" "pydantic==2.8.2" "httpx==0.27.0"
+          "$RUNNER_TEMP/stable/bin/python" -m pip install \
+            "$stable_wheel[redis]" "redis==4.6.0" \
+            "fastapi==0.111.1" "pydantic==2.8.2" "httpx==0.27.0"
+          "$RUNNER_TEMP/legacy/bin/python" -m pip check
+          "$RUNNER_TEMP/stable/bin/python" -m pip check
+          "$RUNNER_TEMP/legacy/bin/python" -m pip freeze \
+            > "$RUNNER_TEMP/parity-evidence/legacy-pip-freeze.txt"
+          "$RUNNER_TEMP/stable/bin/python" -m pip freeze \
+            > "$RUNNER_TEMP/parity-evidence/stable-pip-freeze.txt"
+      - name: Assert portable key goldens and document InMemory behavior differences
+        run: |
+          set -euo pipefail
+          cd /tmp
+          MIGRATION_PARITY_OUTPUT="$RUNNER_TEMP/parity-evidence/legacy-inmemory.json" \
+            "$RUNNER_TEMP/legacy/bin/python" -I \
+            "$GITHUB_WORKSPACE/tests/published_migration_probe.py" legacy
+          MIGRATION_PARITY_OUTPUT="$RUNNER_TEMP/parity-evidence/stable-inmemory.json" \
+            "$RUNNER_TEMP/stable/bin/python" -I \
+            "$GITHUB_WORKSPACE/tests/published_migration_probe.py" stable
+          python -I "$GITHUB_WORKSPACE/tests/published_migration_compare.py" \
+            "$RUNNER_TEMP/parity-evidence/legacy-inmemory.json" \
+            "$RUNNER_TEMP/parity-evidence/stable-inmemory.json"
+      - name: Exercise actual legacy writer, stable reader and safe rollback on Redis
+        env:
+          REDIS_URL: redis://localhost:6379/0
+          MIGRATION_E2E_CONFIRM_ISOLATED_REDIS: "YES"
+          MIGRATION_E2E_CANDIDATE_VERSION: "0.4.1"
+          MIGRATION_E2E_GENERATION: candidate
+          PY_VERSION: ${{ matrix.python }}
+        run: |
+          set -euo pipefail
+          cd /tmp
+          py_tag="${PY_VERSION//./}"
+          export MIGRATION_E2E_PREFIX="fastapi-cache-migration-e2e-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${py_tag}"
+          export MIGRATION_E2E_GENERATION=legacy
+          "$RUNNER_TEMP/legacy/bin/python" -I \
+            "$GITHUB_WORKSPACE/tests/migration_redis_e2e.py" seed \
+            | tee "$RUNNER_TEMP/parity-evidence/redis-legacy-seed.log"
+          export MIGRATION_E2E_GENERATION=candidate
+          "$RUNNER_TEMP/stable/bin/python" -I \
+            "$GITHUB_WORKSPACE/tests/migration_redis_e2e.py" candidate \
+            | tee "$RUNNER_TEMP/parity-evidence/redis-stable-reader.log"
+          export MIGRATION_E2E_GENERATION=rollback
+          "$RUNNER_TEMP/legacy/bin/python" -I \
+            "$GITHUB_WORKSPACE/tests/migration_redis_e2e.py" rollback \
+            | tee "$RUNNER_TEMP/parity-evidence/redis-legacy-rollback.log"
+      - name: Confirm stable consumer with modern redis-py client separately
+        env:
+          REDIS_URL: redis://localhost:6379/0
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/stable/bin/python" -m pip install "redis==8.1.0"
+          "$RUNNER_TEMP/stable/bin/python" -m pip check
+          "$RUNNER_TEMP/stable/bin/python" -m pip freeze \
+            > "$RUNNER_TEMP/parity-evidence/stable-modern-redis-pip-freeze.txt"
+          cd /tmp
+          # redis_consumer_probe deliberately flushes its database. This job
+          # runs against a dedicated isolated Redis service after migration tests.
+          "$RUNNER_TEMP/stable/bin/python" -I \
+            "$GITHUB_WORKSPACE/tests/redis_consumer_probe.py" \
+            | tee "$RUNNER_TEMP/parity-evidence/stable-modern-redis.log"
+      - name: Record immutable source and Redis provenance
+        if: always()
+        env:
+          PY_VERSION: ${{ matrix.python }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          dst = Path(os.environ["RUNNER_TEMP"]) / "parity-evidence"
+          dst.mkdir(exist_ok=True)
+          (dst / "run-metadata.json").write_text(json.dumps({
+              "source_sha": os.environ["GITHUB_SHA"],
+              "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+              "python": os.environ["PY_VERSION"],
+              "redis_server_image": "redis:7.4",
+              "published_old": "fastapi-cache2==0.2.2",
+              "published_fork": "fastapi-cache-stable==0.4.1",
+              "legacy_client": "redis==4.6.0",
+              "modern_client_stable_only": "redis==8.1.0",
+              "note": "Python 3.8-3.10 functional lanes and exact 0.5.0 wheel/sdist are Part B",
+          }, indent=2) + "\n")
+          PY
+      - name: Keep reproducible comparison logs and package hashes
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: migration-published-parity-python-${{ matrix.python }}
+          path: ${{ runner.temp }}/parity-evidence/
+          if-no-files-found: warn
+          retention-days: 90

@@ -167,6 +167,12 @@ def _namespace_snapshot(namespace: str) -> tuple[bytes, bytes, int]:
 def _assert_ordinary_ttl() -> None:
     keys = _redis_keys("ordinary")
     assert len(keys) == 1
+    # MD5 of "__main__:ordinary:():{}" from published 0.2.2.
+    # This must remain a fixed golden; don't rederive it via the fork.
+    expected_key = (
+        f"{PREFIX}:ordinary:8bab420608af608a3fa1dcf5ee7e2ece".encode()
+    )
+    assert keys[0] == expected_key, (keys[0], expected_key)
     client = redis.Redis.from_url(REDIS_URL)
     try:
         ttl = client.ttl(keys[0])
@@ -230,6 +236,7 @@ def seed_legacy_data() -> None:
 
 
 def verify_candidate_migration() -> None:
+    _assert_ordinary_ttl()
     unrelated_before = _namespace_snapshot("unrelated")
     with TestClient(app) as client:
         cleanup_response = client.post("/migration/cleanup")
@@ -263,7 +270,10 @@ def verify_candidate_migration() -> None:
         assert private_calls == 1
 
         anonymous = client.get("/private")
-        assert anonymous.headers["X-FastAPI-Cache"] == "MISS"
+        # Since published 0.3.1, endpoints explicitly taking Request bypass
+        # the default builder even when the request is anonymous.
+        # The old harness predated this intentional privacy correction.
+        assert "X-FastAPI-Cache" not in anonymous.headers
         assert anonymous.json()["principal"] == "anonymous"
         assert private_calls == 2
 
@@ -288,6 +298,7 @@ def verify_candidate_migration() -> None:
 
 
 def verify_rollback_read() -> None:
+    _assert_ordinary_ttl()
     with TestClient(app) as client:
         response = client.get("/ordinary")
     assert response.headers["X-FastAPI-Cache"] == "HIT"

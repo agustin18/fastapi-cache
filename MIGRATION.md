@@ -656,6 +656,18 @@ evidence and security gates, which do not belong in an end-user guide.
 
 ## Reproducing the Redis migration E2E
 
+For a repeatable **published-to-published** Part A comparison, the CI workflow
+[`Published legacy migration parity`](.github/workflows/migration-published-parity.yml)
+installs `fastapi-cache2==0.2.2` and `fastapi-cache-stable==0.4.1`
+from their actual PyPI wheels in separate virtual environments. It records
+the default-key golden, InMemory GET/304, legacy auth/`Request` behavior
+changes, real Redis 7.4 migration and compatible ordinary-data rollback,
+then tests the stable wheel with redis-py 8.1.0. See the
+[bounded Part A contract](audit/migration/PUBLISHED_022_TO_041_PHASE_A.md).
+This is **not** a test of the future 0.5.0 wheel/sdist, arbitrary consumer
+authentication, or unrestricted rollback.
+
+
 The manual harness in [`tests/migration_redis_e2e.py`](tests/migration_redis_e2e.py) runs a legacy
 writer, a candidate reader and a legacy rollback reader in separate Python processes. It covers
 ordinary persisted entries and TTL, an authenticated entry that requires targeted invalidation,
