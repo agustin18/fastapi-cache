@@ -584,10 +584,11 @@ def cache(
                     if _etag_matches(if_none_match, etag):
                         response.status_code = HTTP_304_NOT_MODIFIED
                         return response
-                if isinstance(result, Response):
+                if normalized_vary_headers and isinstance(result, Response):
                     # Starlette sends the returned Response, not FastAPI's
-                    # injected response. Stamp metadata on the real object.
-                    result.headers.update(headers)
+                    # injected response. Preserve the non-opt-in contract.
+                    if response is not None:
+                        result.headers.update(headers)
 
             else:  # cache hit
                 if response:
@@ -610,10 +611,11 @@ def cache(
                 result = cast(
                     R, effective_coder.decode_as_type(cached, type_=return_type)
                 )
-                if isinstance(result, Response):
+                if normalized_vary_headers and isinstance(result, Response):
                     # PickleCoder can restore a Response directly. Metadata
                     # attached only to the injected response is not sent.
-                    result.headers.update(headers)
+                    if response is not None:
+                        result.headers.update(headers)
 
             return result
 
