@@ -1,9 +1,11 @@
 """Regression for generated FastAPI handlers sharing legacy cache identities."""
 
+import asyncio
 from typing import Awaitable, Callable, Dict, Generator
 
 import pytest
 from fastapi import FastAPI
+from starlette.requests import Request
 from starlette.testclient import TestClient
 
 from fastapi_cache import FastAPICache, JsonCoder, default_key_builder
@@ -112,3 +114,29 @@ def test_module_level_http_endpoint_uses_unchanged_legacy_key() -> None:
     assert first.json() == second.json() == {"value": "module"}
     assert legacy_key in backend._store  # pyright: ignore[reportPrivateUsage]
     assert len(backend._store) == 1  # pyright: ignore[reportPrivateUsage]
+
+
+def test_generated_handler_without_stable_http_path_fails_closed() -> None:
+    """An incomplete ASGI scope never reads or writes a legacy shared key."""
+    backend = InMemoryBackend()
+    FastAPICache.init(backend, prefix="factory")
+    calls = [0]
+
+    @cache(expire=60)
+    async def endpoint() -> Dict[str, int]:
+        calls[0] += 1
+        return {"n": calls[0]}
+
+    # The request is sufficient for an HTTP method/header check but lacks
+    # the route/path needed to derive a non-colliding generated-handler key.
+    request = Request({"type": "http", "method": "GET", "headers": []})
+
+    async def run() -> None:
+        first = await endpoint(__fastapi_cache_request=request)  # type: ignore[call-arg]
+        second = await endpoint(__fastapi_cache_request=request)  # type: ignore[call-arg]
+        assert first == {"n": 1}
+        assert second == {"n": 2}
+
+    asyncio.run(run())
+    assert calls == [2]
+    assert not backend._store  # pyright: ignore[reportPrivateUsage]
