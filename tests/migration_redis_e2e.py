@@ -263,7 +263,10 @@ def verify_candidate_migration() -> None:
         assert private_calls == 1
 
         anonymous = client.get("/private")
-        assert anonymous.headers["X-FastAPI-Cache"] == "MISS"
+        # Since published 0.3.1, endpoints explicitly taking Request bypass
+        # the default builder even when the request is anonymous.
+        # The old harness predated this intentional privacy correction.
+        assert "X-FastAPI-Cache" not in anonymous.headers
         assert anonymous.json()["principal"] == "anonymous"
         assert private_calls == 2
 
