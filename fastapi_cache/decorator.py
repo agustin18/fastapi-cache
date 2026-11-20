@@ -121,6 +121,50 @@ def _uncacheable(
     return "no-store" in request_cache_control
 
 
+
+def _route_scoped_generated_key(
+    func: Callable[..., object],
+    request: Request,
+    key: str,
+    namespace: str,
+) -> Optional[str]:
+    """Scope locally generated FastAPI handlers without changing normal legacy keys.
+
+    The legacy default builder identifies a function by module and *name*.
+    Different closures from a factory share that identity even when they
+    return different data. Only HTTP handlers with locally generated names
+    require the added route partition; module-level endpoints retain their
+    original digest. Do not read potentially contaminated pre-fix entries.
+    """
+    qualname = getattr(func, "__qualname__", "")
+    if "<locals>" not in qualname and func.__name__ != "<lambda>":
+        return key
+
+    scope = request.scope
+    path = scope.get("path")
+    method = scope.get("method")
+    root_path = scope.get("root_path", "")
+    if (
+        not isinstance(path, str)
+        or not isinstance(method, str)
+        or not isinstance(root_path, str)
+    ):
+        # Cannot establish a stable route identity: fail closed.
+        return None
+
+    # No Python object id / function repr: identical across workers and
+    # stable for the same deployed route. Distinct hosts/mounts/methods/paths
+    # cannot replay one another's entries through the default builder.
+    route_identity = (
+        request.headers.get("host", ""),
+        method,
+        root_path,
+        path,
+    )
+    digest = hashlib.sha256(repr((route_identity, key)).encode()).hexdigest()
+    return f"{namespace}:{digest}"
+
+
 def _has_auth_headers(request: Optional[Request]) -> bool:
     """Return true when the request carries an authentication header."""
     if request is None:
@@ -371,6 +415,14 @@ def cache(
             if isawaitable(cache_key):
                 cache_key = await cache_key
             assert isinstance(cache_key, str)  # noqa: S101  # assertion is a type guard
+
+            if request is not None and effective_key_builder is default_key_builder:
+                scoped_key = _route_scoped_generated_key(
+                    func, request, cache_key, f"{prefix}:{namespace}"
+                )
+                if scoped_key is None:
+                    return await ensure_async_func(*args, **kwargs)
+                cache_key = scoped_key
 
             try:
                 ttl, cached = await backend.get_with_ttl(cache_key)
