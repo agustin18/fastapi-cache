@@ -2,8 +2,8 @@
 
 ## Supported versions
 
-- `0.4.1` is the current prepared patch for the `0.4.x` line; `0.4.0`
-  was published **2026-11-20**. The line targets best-effort security and critical correctness fixes on
+- `0.4.1` is the current published patch for the `0.4.x` line
+  (released **2026-11-20**). The line targets best-effort security and critical correctness fixes on
   server-side **CPython 3.11–3.13**, within the 12-month target in
   [SUPPORT.md](SUPPORT.md) (until 2027-11-20, capacity permitting).
 - `0.3.0` and `0.3.1` remain the previous migration line, with the
@@ -48,8 +48,7 @@ Security scans are specific to the actual installed environment.
 The exact PyPI RC2 wheel was installed and audited on CPython 3.11–3.13
 with all extras, with no known third-party findings **at that scan date**.
 The 0.4.0 release and the historical 0.3.0 release are recorded with hashes,
-CI and package-installation checks; the prepared 0.4.1 patch records its own
-final evidence after publication. See [0.4.1 status](docs/releases/RELEASE_STATUS_0.4.1.md),
+CI and package-installation checks; published 0.4.1 records its own final evidence. See [0.4.1 status](docs/releases/RELEASE_STATUS_0.4.1.md),
 [0.4.0 provenance](docs/releases/RELEASE_STATUS_0.4.0.md) and
 [0.3.0 provenance](docs/releases/RELEASE_STATUS_0.3.0.md). These checks cannot
 guarantee zero vulnerabilities in arbitrary consumer environments.
@@ -86,20 +85,20 @@ can reduce cache hit rates for existing Request-taking endpoints. HTTP
 Redis/InMemory cache. **0.3.0 users must upgrade to 0.3.1 or avoid caching
 such endpoints**; the published `0.3.0` wheel itself is immutable.
 
-## Factory-generated route key collisions (0.4.0; issue #68)
+## Factory-generated route key collisions (affected 0.4.0; fixed 0.4.1)
 
 Published `0.4.0` can cache a result under the same legacy key for
 distinct factory-generated handlers that share module/name, arguments,
-and namespace. The prepared `0.4.1` patch isolates these generated/wrapped
-handlers; validate the published artifact before relying on it. A later request to a different route may receive the
+and namespace. Published `0.4.1` isolates these generated/wrapped handlers;
+validate the installed version before relying on the fix. A later request to a different route may receive the
 first route's result. Treat generated-handler caching on a shared backend
 as a **correctness and potential information-isolation hazard**.
 Use distinct per-route `@cache(namespace=...)` values or a reviewed
 route/identity-aware builder, and expire/rotate old ambiguous entries.
-The prospective #68 correction preserves unwrapped module-level route
+The #68 correction preserves unwrapped module-level route
 keys while separating generated HTTP handlers, including wrappers
 using `functools.wraps` that capture data as default arguments and have
-no code free variables; it has **not been published** in 0.4.0.
+no code free variables. The fix ships in **0.4.1**, not 0.4.0.
 Module-level handlers wrapped by decorators setting `__wrapped__`
 may intentionally rotate to new
 keys; stale shared entries are not read but may persist until expiration.
