@@ -20,7 +20,6 @@ from fastapi_cache.coder import PickleCoder
 from fastapi_cache.decorator import cache
 from fastapi_cache.key_builder import default_key_builder
 
-
 _module_context: ContextVar[str] = ContextVar("vary-module-region", default="")
 
 
@@ -430,7 +429,7 @@ def test_non_string_or_excessive_vary_field_list_is_rejected() -> None:
     with pytest.raises(TypeError, match="vary_headers"):
         cache(vary_headers=(123,))  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="32 fields"):
-        cache(vary_headers=tuple("X-Field-%s" % number for number in range(33)))
+        cache(vary_headers=tuple(f"X-Field-{number}" for number in range(33)))
 
 
 def test_undeclared_vary_on_returned_jsonresponse_blocks_pickle_cache() -> None:
