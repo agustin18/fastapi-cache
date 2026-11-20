@@ -175,8 +175,10 @@ namespaces **before accepting traffic**.
 
 **Proposed change under review for a subsequent release (not in 0.4.0):**
 for generated FastAPI HTTP handlers, detect actual **closures** from
-function code free variables even when `functools.wraps` copies a
-module-level template's name and qualified name. Handlers with
+function code free variables and functions with explicit `__wrapped__`
+metadata created by decorators such as `functools.wraps`. This includes
+factory values captured in **default parameters**, where no free variables
+remain and the qualified name can appear to be module-level. Handlers with
 `<locals>` in `__qualname__` or a `<lambda>` name are also included.
 The default decorator derives a separate SHA-256 key based on method,
 host, mount root, request path and the legacy key. **Unwrapped module-level
