@@ -174,23 +174,32 @@ route- and identity-aware key builder; rotate/clear potentially shared
 namespaces **before accepting traffic**.
 
 **Proposed change under review for a subsequent release (not in 0.4.0):**
-for generated FastAPI HTTP handlers whose `__qualname__` includes
-`<locals>` (or whose name is `<lambda>`), the default decorator can
-derive a separate SHA-256 key based on the method, host, mount root, request
-path and legacy key. Module-level handler keys and the exported
-`default_key_builder` remain byte-for-byte unchanged. Explicit custom
-builders remain application-controlled. The new generated-route entries
-continue to use the same namespace prefix, but **old generated-route cache
-entries are intentionally not reused**. Do not mistake a code merge for a
-published release; check PyPI and the changelog first.
+for generated FastAPI HTTP handlers, detect actual **closures** from
+function code free variables even when `functools.wraps` copies a
+module-level template's name and qualified name. Handlers with
+`<locals>` in `__qualname__` or a `<lambda>` name are also included.
+The default decorator derives a separate SHA-256 key based on method,
+host, mount root, request path and the legacy key. **Unwrapped module-level
+handlers** and the exported `default_key_builder` remain byte-for-byte
+unchanged. Existing module-level handlers decorated by a closure wrapper
+may also receive newly partitioned keys; that invalidates their effective
+cache warm state even if the responses were previously safe. Custom builders
+remain application-controlled. New generated-route entries retain the same
+namespace prefix, but **old closure-handler cache entries are intentionally
+not reused**. Do not mistake a code merge for a published release; check
+PyPI and the changelog first.
 
 **Limitations:** This narrowly addresses generated *HTTP route* key collisions.
 It does not automatically fix direct `@cache` calls without an ASGI request,
 duplicate module-level handler names, different applications sharing the
 same host/path/backend prefix, or hidden locale/tenant/context inputs (#53).
-Configure distinct backend prefixes for separate applications, use a
-trusted-host policy on public servers, and never assume a cache key is an
-authorization boundary. A route that explicitly declares `Request` still
+Configure distinct backend prefixes for separate applications and
+validate incoming Host values with `TrustedHostMiddleware` or an equivalent
+reverse-proxy allowlist: Host values influence the generated-route cache
+key, and arbitrary unvalidated hosts can fragment it and exhaust cache
+capacity. Host is normalized for case, **not** for ports, trailing dots,
+aliases or alternate spellings. Never treat the host-dependent cache key
+as an authorization boundary. A route that explicitly declares `Request` still
 follows the existing default-builder bypass. Old cached entries remain until
 expiry or targeted namespace cleanup; do not flush shared Redis databases.
 
