@@ -34,7 +34,7 @@ def reset_cache() -> Generator[None, None, None]:
     FastAPICache.reset()
 
 
-def test_direct_header_still_uses_unmodified_default_key() -> None:
+def test_direct_header_still_partitions_the_unmodified_default_cache() -> None:
     FastAPICache.init(InMemoryBackend())
     app = FastAPI()
     calls = {"n": 0}
@@ -453,3 +453,123 @@ def test_undeclared_vary_on_returned_jsonresponse_blocks_pickle_cache() -> None:
     assert second.json() == {"n": 2}
     assert all("X-FastAPI-Cache" not in response.headers
                for response in (first, second))
+
+
+@pytest.mark.parametrize("response_kind", ["json", "plain"])
+def test_returned_response_has_vary_cache_headers_on_miss_hit_and_304(
+    response_kind: str,
+) -> None:
+    """Returned Response must carry headers, not just the injected Response."""
+    FastAPICache.init(InMemoryBackend())
+    app = FastAPI()
+    language: ContextVar[str] = ContextVar("return-vary-language", default="")
+    calls = {"n": 0}
+
+    async def select_language(request: Request) -> None:
+        language.set(request.headers.get("Accept-Language", "en"))
+
+    if response_kind == "plain":
+        selected_coder = PickleCoder
+    else:
+        selected_coder = None
+
+    @app.get("/returned", dependencies=[Depends(select_language)])
+    @cache(
+        expire=60,
+        namespace="returned-response",
+        coder=selected_coder,
+        vary_headers=("Accept-Language",),
+    )
+    async def returned() -> Response:
+        calls["n"] += 1
+        payload = {"language": language.get(), "n": calls["n"]}
+        if response_kind == "plain":
+            return Response(
+                content=str(payload),
+                media_type="text/plain",
+            )
+        return JSONResponse(payload)
+
+    with TestClient(app) as client:
+        first = client.get("/returned", headers={"Accept-Language": "en"})
+        second = client.get("/returned", headers={"Accept-Language": "en"})
+        third = client.get(
+            "/returned",
+            headers={
+                "Accept-Language": "en",
+                "If-None-Match": first.headers["etag"],
+            },
+        )
+        other = client.get("/returned", headers={"Accept-Language": "es"})
+
+    assert [response.status_code for response in (first, second, third, other)] == [
+        200, 200, 304, 200
+    ]
+    assert [response.headers["X-FastAPI-Cache"]
+            for response in (first, second, third, other)] == [
+        "MISS", "HIT", "HIT", "MISS"
+    ]
+    assert all(
+        response.headers["vary"].lower() == "accept-language"
+        for response in (first, second, third, other)
+    )
+    assert all(
+        response.headers["cache-control"] == "max-age=60"
+        or response.headers["cache-control"].startswith("max-age=")
+        for response in (first, second, third, other)
+    )
+    assert first.headers["etag"] == second.headers["etag"] == third.headers["etag"]
+    assert third.content == b""
+    assert first.content == second.content
+    assert other.content != first.content
+    assert calls["n"] == 2
+
+
+def test_factory_routes_keep_vary_v1_isolation_and_original_key_scope() -> None:
+    """Route-scoped factory isolation (#68) composes with header variation (#53)."""
+    backend = InMemoryBackend()
+    FastAPICache.init(backend, prefix="factory-and-vary")
+    app = FastAPI()
+
+    def factory(value: str) -> Any:
+        async def endpoint(
+            language: str = Header(default="en", alias="Accept-Language"),
+        ) -> Dict[str, str]:
+            return {"route": value, "language": language}
+
+        return endpoint
+
+    app.add_api_route(
+        "/a",
+        cache(expire=60, namespace="generated",
+              vary_headers=("Accept-Language",))(factory("a")),
+        methods=["GET"],
+    )
+    app.add_api_route(
+        "/b",
+        cache(expire=60, namespace="generated",
+              vary_headers=("Accept-Language",))(factory("b")),
+        methods=["GET"],
+    )
+
+    with TestClient(app) as client:
+        first = client.get("/a", headers={"Accept-Language": "en"})
+        second = client.get("/b", headers={"Accept-Language": "en"})
+        third = client.get("/a", headers={"Accept-Language": "es"})
+        repeat = client.get("/a", headers={"Accept-Language": "en"})
+        other_repeat = client.get("/b", headers={"Accept-Language": "en"})
+
+    assert [response.headers["X-FastAPI-Cache"]
+            for response in (first, second, third, repeat, other_repeat)] == [
+        "MISS", "MISS", "MISS", "HIT", "HIT"
+    ]
+    assert first.json() == repeat.json() == {"route": "a", "language": "en"}
+    assert second.json() == other_repeat.json() == {
+        "route": "b", "language": "en"
+    }
+    assert third.json() == {"route": "a", "language": "es"}
+    assert len(backend._store) == 3  # pyright: ignore[reportPrivateUsage]
+    assert all(
+        key.startswith("factory-and-vary:generated:vary-v1:")
+        for key in backend._store  # pyright: ignore[reportPrivateUsage]
+    )
