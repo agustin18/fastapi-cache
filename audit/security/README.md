@@ -17,7 +17,7 @@ This directory contains **historical dependency snapshots and release-security t
   maintainer-directed scoped decision** is recorded separately in
   [MAINTAINER_RISK_ACCEPTANCE_20261119.md](MAINTAINER_RISK_ACCEPTANCE_20261119.md);
   0.3.0 was subsequently approved, tagged and published; see the
-  [post-release status](../../RELEASE_STATUS_0.3.0.md).
+  [post-release status](../../docs/releases/RELEASE_STATUS_0.3.0.md).
   No GitHub advisory states were fabricated as fixed.
   Run `python scripts/validate_stable_security_review.py` to detect drift.
 - Raw, immutable snapshots: [2026-11-16 baseline](DEPENDABOT_ALERTS_2026-11-16.csv), [2026-11-18 02:09 UTC](DEPENDABOT_ALERTS_20261118T020910Z.csv), [2026-11-18 04:42 UTC](DEPENDABOT_ALERTS_20261118T044213Z.csv), and [2026-11-18 16:51 UTC](DEPENDABOT_ALERTS_20261118T165114Z.csv), and [authenticated 2026-11-19 03:29 UTC](DEPENDABOT_ALERTS_20261119T032907Z.csv).
@@ -33,7 +33,7 @@ python scripts/reconcile_dependabot_alerts.py \
 
 Without `--current-snapshot`, the script queries GitHub and generates a **new timestamped** snapshot under `audit/security/` by default, together with an updated register. It requires suitable GitHub credentials. Preserve and review manual triage decisions before accepting newly generated results.
 
-Public-facing usage and security policy remain in [README](../../README.md), [SECURITY.md](../../SECURITY.md), [compatibility guide](../../COMPATIBILITY.md), and the [release checklist](../../RELEASE_CHECKLIST.md). This archive is not included in published runtime distribution metadata.
+Public-facing usage and security policy remain in [README](../../README.md), [SECURITY.md](../../SECURITY.md), [compatibility guide](../../COMPATIBILITY.md), and the [release checklist](../../docs/releases/RELEASE_CHECKLIST.md). This archive is not included in published runtime distribution metadata.
 
 ## Historical GHSA #120 follow-up (stable 0.3.0 published)
 

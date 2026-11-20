@@ -4,18 +4,18 @@
 [`fastapi-cache2`](https://pypi.org/project/fastapi-cache2/). This document defines what
 "drop-in" means for this project and what we promise to keep stable.
 
-This contract describes the documented `0.3.x` line. Use
+This contract describes the documented `0.4.x` line. The `0.3.x` artifacts remain available as the previous migration line. Use
 [PyPI](https://pypi.org/project/fastapi-cache-stable/) and
 [CHANGELOG.md](CHANGELOG.md) for current releases and historical versions.
 
-## Redis client support in the staged 0.4.0 release (not yet published)
+## Redis client support in 0.4.0
 
-The published `0.3.1` release continues to declare redis-py 4.x. The
-staged `0.4.0` release incorporates the merged #47 implementation, changing
+The published `0.4.0` release incorporates the #47 implementation, changing
 only the optional Redis client requirements and verification matrix, not
-the RedisBackend runtime semantics.
+the RedisBackend runtime semantics. The previous `0.3.x` release declared
+redis-py 4.x only.
 
-| CPython | Candidate redis-py versions | Constraint |
+| CPython | redis-py versions | Constraint |
 |---|---|---|
 | 3.8 | redis-py 4.x, 5.x, 6.0–6.1 | `>=4.2.0rc1,<6.2` |
 | 3.9 | redis-py 4.x, 5.x, 6.x, 7.0 | `>=4.2.0rc1,<7.1` |
@@ -23,16 +23,15 @@ the RedisBackend runtime semantics.
 
 These ranges deliberately retain legacy client 4.x and cap every range
 before the first untested/incompatible minor. They are **not** evidence of
-unbounded compatibility with future client releases. This release candidate
-targets standalone Redis with RESP2/RESP3, ACL and binary caching using
+unbounded compatibility with future client releases. This release targets standalone Redis with RESP2/RESP3, ACL and binary caching using
 `decode_responses=False`; Cluster namespace clear remains unsupported and
 TLS/Sentinel/Cluster/failover certification remains out of scope.
 
 The investigation is recorded in
 [audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md](audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md),
 and the implementation PR runs a smaller mandatory wheel/sdist CI matrix.
-Existing `0.3.x` PyPI artifacts remain unchanged. The expanded contract
-applies only after `0.4.0` is explicitly published and verified.
+Existing `0.3.x` PyPI artifacts remain immutable. The expanded contract
+applies to the published `0.4.0` artifact.
 
 ## What "drop-in" means
 
@@ -64,7 +63,7 @@ applies only after `0.4.0` is explicitly published and verified.
 - Pydantic v2 users can opt into `TypedJsonCoder` for typed restoration; the default
   `JsonCoder` keeps the legacy decoded behavior. Pydantic v1 and unsupported annotations
   keep the legacy behavior.
-- Stable `0.3.0` keeps functional compatibility for Python 3.8–3.10 through a pinned legacy
+- Stable `0.4.0` keeps functional compatibility for Python 3.8–3.10 through a pinned legacy
   CI matrix. These EOL runtimes are not part of the security-supported environment.
 
 ## Public surface
@@ -159,7 +158,7 @@ classmethod decode_as_type(value: bytes, *, type_) -> Any
 
 ## Support levels
 
-- **Legacy functional compatibility:** stable `0.3.0` installs on Python 3.8–3.10 and tests
+- **Legacy functional compatibility:** stable `0.4.0` installs on Python 3.8–3.10 and tests
   the documented legacy combinations. Those runtimes and their EOL dependency lines do not
   receive a security-support commitment.
 - **Security-supported environment:** server-side CPython 3.11–3.13 with the resolver-selected
@@ -175,18 +174,18 @@ classmethod decode_as_type(value: bytes, *, type_) -> Any
   mitigations and residual risk before stable.
 
 Python 3.8, 3.9 and 3.10 are end-of-life, and Pydantic v1 is end-of-life with 1.10.27 as its
-final release. Stable `0.3.0` retains the package range `>=3.8,<3.14`; Python 3.8–3.10 are
+final release. Stable `0.4.0` retains the package range `>=3.8,<3.14`; Python 3.8–3.10 are
 tested for legacy functional compatibility but are not security-supported. Pydantic v1 keeps
 its documented legacy decoded behavior, but receives no new upstream security fixes.
 
 ### Security and compatibility are different promises
 
-| Python | Functional compatibility with the fork | Security support for `0.3.x` | Known boundary |
+| Python | Functional compatibility with the fork | Security support for `0.4.x` | Known boundary |
 |---|---|---|---|
 | 3.8–3.9 | Verified legacy matrix, core Redis/InMemory | **No** | Legacy profiles can resolve vulnerable AnyIO 4.5.2 and Starlette 0.44.0 |
 | 3.10 | Verified legacy matrix | **No** | EOL interpreter; security fixes depend on the consuming app and compatible dependencies |
 | **3.11–3.13** | **Verified** | **Best-effort, recommended** | Verified modern runtime wheel profiles; not a claim about all consumer packages |
-| 3.14 | Not verified | No | Not in 0.3.x metadata range |
+| 3.14 | Not verified | No | Not in 0.4.x metadata range |
 
 A legacy Python installation can work correctly and still retain dependency
 vulnerabilities. Neither an installation on EOL Python nor a switch from
@@ -203,9 +202,9 @@ See [Legacy support and known GHSA](audit/security/LEGACY_SUPPORT_AND_RISKS.md)
 and [SECURITY.md](SECURITY.md). **Use Python 3.11–3.13 and patched
 compatible dependencies for production**, not EOL interpreters.
 
-## Supported matrix for `0.3.x`
+## Supported matrix for `0.4.x`
 
-> Stable `0.3.0` metadata is `python = ">=3.8,<3.14"`. Functional compatibility and security
+> Stable `0.4.0` metadata is `python = ">=3.8,<3.14"`. Functional compatibility and security
 > support are separate: Python 3.8–3.10 are legacy-tested only; security support is Python
 > server-side CPython 3.11–3.13. Python 3.14 remains unsupported pending a full matrix.
 
@@ -221,16 +220,16 @@ Status definitions:
 | CPython 3.11–3.13 | Security-supported | Full functional and security-audit matrices |
 | Python 3.10 | Legacy functional compatibility | Main functional CI plus Pydantic v1 compatibility; EOL, no security-support commitment |
 | Python 3.8–3.9 | Legacy functional compatibility | Pinned FastAPI/Pydantic matrix and Python 3.8 wheel smoke; EOL, no security-support commitment |
-| Python 3.14 | Unsupported for `0.3.0` | Requires a full CI matrix before support is announced |
+| Python 3.14 | Unsupported for `0.4.0` | Requires a full CI matrix before support is announced |
 | FastAPI | Verified with 0.111.1 and current 0.x | Older 0.100.x is unverified; no upper pin yet (`fastapi = "*"`) |
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
 | `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
-| Redis standalone | Verified for clear semantics | Redis 7 service in CI with redis-py 4.6.0; key-only clear and namespace boundary tested. redis-py 5/6 are not supported by the current `^4.2.0rc1` constraint and are untested |
+| Redis standalone | Verified for conditional client ranges | Redis 6.2/7.0/7.4/8.0 services; redis-py 4.6.0, 5.2.1, 6.1.x, 7.0.1/7.2.1 and 8.1.0 across the Python-conditional matrix; key-only clear and namespace boundary tested. TLS/Sentinel/Cluster/failover not certified |
 | Redis Cluster | Unsupported for namespace clear | Key-only clear is supported; namespace clear raises `NotImplementedError`; no complete namespace clearing |
 | InMemory | Verified for basic operations, clear semantics, `expire=None` and instance isolation | Unit tests; each instance owns its store and lock; no size cap yet |
 | Memcached | Experimental | Unit tests with a fake client; `get_with_ttl` returns a fixed `3600` instead of the real remaining time; `clear` raises `NotImplementedError` |
-| DynamoDB | Experimental; Python >=3.10 only for target `0.3.0` | `dynamodb` extra requires aiobotocore and aiohttp >=3.14.4; the extra omits those dependencies on Python 3.8/3.9. Unit tests use a fake client; `clear` raises `NotImplementedError`; no real-service integration |
+| DynamoDB | Experimental; Python >=3.10 only for target `0.4.0` | `dynamodb` extra requires aiobotocore and aiohttp >=3.14.4; the extra omits those dependencies on Python 3.8/3.9. Unit tests use a fake client; `clear` raises `NotImplementedError`; no real-service integration |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
 
 > Verified Redis integration covers Redis 7 with redis-py 4.6.0. Other

@@ -180,4 +180,4 @@ A new `--current-snapshot` or live capture requires reviewing and refreshing
 this **separate** release ledger; the fail-closed validation intentionally
 rejects silent drift. The original snapshots and previous releases stay
 immutable. See [SECURITY.md](../../SECURITY.md), [SUPPORT.md](../../SUPPORT.md)
-and [RELEASE_CHECKLIST.md](../../RELEASE_CHECKLIST.md) for scope and gates.
+and [RELEASE_CHECKLIST.md](../../docs/releases/RELEASE_CHECKLIST.md) for scope and gates.

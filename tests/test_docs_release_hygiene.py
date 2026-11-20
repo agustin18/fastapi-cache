@@ -18,13 +18,20 @@ def test_user_guides_do_not_pin_old_prerelease_versions(guide: str) -> None:
 
 
 def test_release_checklist_retains_version_independent_provenance() -> None:
-    contents = (ROOT / "RELEASE_CHECKLIST.md").read_text(encoding="utf-8")
+    contents = (ROOT / "docs" / "releases" / "RELEASE_CHECKLIST.md").read_text(encoding="utf-8")
     for artifact in ("Wheel", "Sdist"):
         assert re.search(
             rf"{artifact} SHA-256:\s*`[0-9a-f]{{64}}`", contents
         ), f"missing verified {artifact} hash"
     assert "pypi.org/project/fastapi-cache-stable/" in contents
     assert "Before stable promotion" in contents
+
+
+def test_release_records_are_archived_outside_root() -> None:
+    assert not list(ROOT.glob("RELEASE_*.md"))
+    releases = ROOT / "docs" / "releases"
+    assert (releases / "RELEASE_NOTES_0.4.0.md").is_file()
+    assert (releases / "RELEASE_STATUS_0.4.0.md").is_file()
 
 
 def test_security_evidence_is_archived_outside_root() -> None:

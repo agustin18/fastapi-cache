@@ -8,7 +8,7 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
-## [0.4.0](https://github.com/agustin18/fastapi-cache/tree/v0.4.0) - Unreleased (candidate)
+## [0.4.0](https://github.com/agustin18/fastapi-cache/tree/v0.4.0) - 2026-11-20
 
 ### Features
 
@@ -32,7 +32,7 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 - Promote the previously tested `0.3.0rc2` runtime to the first stable
   `fastapi-cache-stable` release. The Python module remains `fastapi_cache`
   and documented migration behavior is unchanged since RC2; see
-  [the 0.3.0 release notes](RELEASE_NOTES_0.3.0.md) and
+  [the 0.3.0 release notes](docs/releases/RELEASE_NOTES_0.3.0.md) and
   [the migration guide](MIGRATION.md).
 - Preserve Python 3.8–3.10 as **functional legacy compatibility only**;
   recommend server-side CPython 3.11–3.13 for best-effort security maintenance.
