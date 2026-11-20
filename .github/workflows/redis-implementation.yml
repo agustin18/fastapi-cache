@@ -11,6 +11,7 @@ on:
       - "tests/test_redis_client_matrix.py"
       - "tests/test_redis_clear.py"
       - "tests/redis_consumer_probe.py"
+      - "tests/redis_vary_probe.py"
   workflow_dispatch:
 
 permissions:
@@ -105,6 +106,7 @@ jobs:
           cd /tmp
           /tmp/redis-impl-venv/bin/python -m pytest -q -rs             "$GITHUB_WORKSPACE/tests/test_distribution_metadata.py"             "$GITHUB_WORKSPACE/tests/test_redis_client_matrix.py"             "$GITHUB_WORKSPACE/tests/test_redis_clear.py"
           /tmp/redis-impl-venv/bin/python "$GITHUB_WORKSPACE/tests/redis_consumer_probe.py"
+          /tmp/redis-impl-venv/bin/python "$GITHUB_WORKSPACE/tests/redis_vary_probe.py"
 
   sdist-install:
     name: Sdist metadata / Py ${{ matrix.python }} / redis-py ${{ matrix.client }}

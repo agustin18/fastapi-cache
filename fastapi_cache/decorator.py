@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import re
 import sys
 from functools import wraps
 from inspect import Parameter, Signature, isawaitable, iscoroutinefunction
@@ -9,7 +10,9 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Sequence,
     Set,
+    Tuple,
     Type,
     TypeVar,
     Union,
@@ -38,6 +41,45 @@ from fastapi_cache.types import KeyBuilder
 logger: logging.Logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 P = ParamSpec("P")
+
+_HTTP_FIELD_NAME = re.compile(r"[!#$%&'*+.^_`|~0-9A-Za-z-]+")
+_SENSITIVE_VARY_FIELDS = {"authorization", "cookie", "proxy-authorization"}
+
+
+def _normalize_vary_headers(names: Optional[Sequence[str]]) -> Tuple[str, ...]:
+    """Validate opt-in HTTP field names once; never treat a string as a list."""
+    if names is None:
+        return ()
+    if isinstance(names, (str, bytes)):
+        raise TypeError("vary_headers must be a sequence of header names, not a string")
+    normalized: Set[str] = set()
+    for original in names:
+        if not isinstance(original, str):
+            raise TypeError("vary_headers entries must be strings")
+        name = original.strip().lower()
+        if (
+            not name
+            or name == "*"
+            or len(name) > 128
+            or _HTTP_FIELD_NAME.fullmatch(name) is None
+            or name in _SENSITIVE_VARY_FIELDS
+        ):
+            raise ValueError(
+                "vary_headers contains an invalid or credential-bearing field name"
+            )
+        normalized.add(name)
+        if len(normalized) > 32:
+            raise ValueError("vary_headers must contain no more than 32 fields")
+    return tuple(sorted(normalized))
+
+
+def _vary_is_covered(value: str, declared: Tuple[str, ...]) -> bool:
+    """Only declared request fields can safely back a response Vary value."""
+    fields = [name.strip().lower() for name in value.split(",")]
+    return bool(declared) and bool(fields) and all(
+        bool(name) and name in declared for name in fields
+    )
+
 R = TypeVar("R")
 
 
@@ -208,7 +250,9 @@ def _cache_control_blocks_storage(value: str) -> bool:
     return False
 
 
-def _response_cache_bypass(result: object) -> bool:
+def _response_cache_bypass(
+    result: object, vary_headers: Tuple[str, ...] = ()
+) -> bool:
     """Return true when a response must not be cached for safety reasons."""
     if not isinstance(result, Response):
         return False
@@ -218,19 +262,27 @@ def _response_cache_bypass(result: object) -> bool:
         lower_name = name.lower()
         if lower_name == "set-cookie":
             return True
+        if lower_name == "vary" and not _vary_is_covered(value, vary_headers):
+            return True
         if lower_name == "cache-control" and _cache_control_blocks_storage(value):
             return True
     return False
 
 
-def _injected_response_cache_bypass(response: Optional[Response]) -> bool:
+def _injected_response_cache_bypass(
+    response: Optional[Response], vary_headers: Tuple[str, ...] = ()
+) -> bool:
     """Return true when the injected response carries metadata a cached value cannot reproduce."""
     if response is None:
         return False
     status_code = getattr(response, "status_code", None)
     if status_code is not None and status_code != 200:
         return True
-    if any(name.lower() != "content-length" for name, _ in response.headers.items()):
+    for name, value in response.headers.items():
+        if name.lower() == "content-length":
+            continue
+        if name.lower() == "vary" and _vary_is_covered(value, vary_headers):
+            continue
         return True
     return response.background is not None
 
@@ -305,6 +357,7 @@ def cache(
     injected_dependency_namespace: str = "__fastapi_cache",
     cache_authenticated: Optional[bool] = None,
     infer_response_model: bool = False,
+    vary_headers: Optional[Sequence[str]] = None,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -318,9 +371,14 @@ def cache(
     :param infer_response_model: opt in to FastAPI return-annotation response
         model inference, including FastAPI's output validation. Off by default
         to preserve legacy routes with non-Pydantic-compatible annotations.
+    :param vary_headers: opt-in request field names for cache variation.
+        Explicit Request/default-builder bypass remains in effect. This is
+        not automatic tenant/identity detection or an Authorization override.
 
     :return:
     """
+
+    normalized_vary_headers = _normalize_vary_headers(vary_headers)
 
     injected_request = Parameter(
         name=f"{injected_dependency_namespace}_request",
@@ -379,7 +437,15 @@ def cache(
 
             if _uncacheable(
                 request, request_cache_control
-            ) or _injected_response_cache_bypass(response):
+            ) or _injected_response_cache_bypass(
+                response, normalized_vary_headers
+            ):
+                return await ensure_async_func(*args, **kwargs)
+
+            if normalized_vary_headers and request is None:
+                # Direct @cache() function calls have no HTTP header values.
+                # Do not invoke even a custom builder or construct a shared
+                # fallback key when variation was explicitly requested.
                 return await ensure_async_func(*args, **kwargs)
 
             prefix = FastAPICache.get_prefix()
@@ -442,6 +508,20 @@ def cache(
                     return await ensure_async_func(*args, **kwargs)
                 cache_key = scoped_key
 
+            if normalized_vary_headers:
+                # Guarded earlier, before any key builder was invoked.
+                assert request is not None  # noqa: S101  # type guard
+                variant = tuple(
+                    (name, tuple(request.headers.getlist(name)))
+                    for name in normalized_vary_headers
+                )
+                # Versioned namespace prevents reads of pre-opt-in cache
+                # entries; hash both the original key and all field values.
+                digest = hashlib.sha256(
+                    repr((cache_key, variant)).encode("utf-8")
+                ).hexdigest()
+                cache_key = f"{prefix}:{namespace}:vary-v1:{digest}"
+
             try:
                 ttl, cached = await backend.get_with_ttl(cache_key)
             except Exception as exc:
@@ -461,12 +541,19 @@ def cache(
                 result = await ensure_async_func(*args, **kwargs)
                 if isinstance(result, Response) and result.status_code >= 400:
                     return result
-                if _response_cache_bypass(result):
+                if _response_cache_bypass(result, normalized_vary_headers):
                     return result
-                if _injected_response_cache_bypass(response):
+                if _injected_response_cache_bypass(
+                    response, normalized_vary_headers
+                ):
                     return result
                 if not effective_coder.can_encode(result):
                     return result
+                if normalized_vary_headers and isinstance(result, Response):
+                    # Apply Vary only after can_encode: JsonCoder accepts a
+                    # plain JSONResponse, but rejects its custom headers.
+                    # PickleCoder must also persist Vary on the Response.
+                    result.headers["Vary"] = ", ".join(normalized_vary_headers)
                 to_cache = effective_coder.encode(result)
 
                 try:
@@ -487,6 +574,8 @@ def cache(
                         "ETag": etag,
                         cache_status_header: "MISS",
                     }
+                    if normalized_vary_headers:
+                        headers["Vary"] = ", ".join(normalized_vary_headers)
                     cache_control = _cache_control_header(effective_expire)
                     if cache_control is not None:
                         headers["Cache-Control"] = cache_control
@@ -495,6 +584,11 @@ def cache(
                     if _etag_matches(if_none_match, etag):
                         response.status_code = HTTP_304_NOT_MODIFIED
                         return response
+                if normalized_vary_headers and isinstance(result, Response):
+                    # Starlette sends the returned Response, not FastAPI's
+                    # injected response. Preserve the non-opt-in contract.
+                    if response is not None:
+                        result.headers.update(headers)
 
             else:  # cache hit
                 if response:
@@ -503,6 +597,8 @@ def cache(
                         "ETag": etag,
                         cache_status_header: "HIT",
                     }
+                    if normalized_vary_headers:
+                        headers["Vary"] = ", ".join(normalized_vary_headers)
                     cache_control = _cache_control_header(ttl)
                     if cache_control is not None:
                         headers["Cache-Control"] = cache_control
@@ -515,6 +611,11 @@ def cache(
                 result = cast(
                     R, effective_coder.decode_as_type(cached, type_=return_type)
                 )
+                if normalized_vary_headers and isinstance(result, Response):
+                    # PickleCoder can restore a Response directly. Metadata
+                    # attached only to the injected response is not sent.
+                    if response is not None:
+                        result.headers.update(headers)
 
             return result
 

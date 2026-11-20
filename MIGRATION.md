@@ -161,6 +161,61 @@ bypass cannot detect those inputs in routes that do not declare
 `Request`, and a custom key builder is an explicit application contract,
 not an automatic safety guarantee.
 
+### Explicit header variation (new opt-in for 0.5.0)
+
+The proposed `@cache(vary_headers=("Accept-Language", "X-Region"))` API
+addresses a narrow case: a **public** endpoint's representation depends on
+those named headers, but their values do **not** appear among the function's
+FastAPI-resolved parameters. This includes a declared dependency whose
+value only enters middleware state or a `ContextVar`.
+
+- Names are validated, canonicalized and deduplicated. Header lists preserve
+  their order and distinguish missing from explicitly empty values. The
+  actual header values are hashed, never put verbatim in Redis keys.
+- Opted-in keys use `prefix:namespace:vary-v1:<digest>`, not the legacy
+  key name. The global/default builder is unchanged for all other routes.
+  To migrate, clear or rotate the **affected** namespace before traffic;
+  old entries are not looked up by newly varied routes but remain in Redis
+  until expiry or explicit cleanup. Confirm no other app still uses that
+  namespace before deleting its keys.
+- Configured variants emit HTTP `Vary` on MISS, HIT and 304, including
+  when the endpoint returns a `Response` rather than using the injected
+  response object. For returned `JSONResponse`, the generated `Vary` is
+  added **after** `JsonCoder.can_encode()` and before encoding; a returned
+  plain `Response` may be cached with an opt-in `PickleCoder`. An
+  injected or returned `Vary` response naming undeclared fields causes
+  a bypass rather than an unsafe HIT. A returned `JSONResponse` that
+  already has custom headers, including `Vary`, still bypasses the
+  default JSON coder. `Vary` sent *alone* by a route, proxy or middleware
+  does **not** partition `FastAPICache`'s internal store.
+- The original explicit-`Request`/default-builder bypass remains active
+  even with `vary_headers`. Applications requiring cached `Request`
+  endpoints must use a fully identity/tenant-aware custom `key_builder`.
+  Authenticated requests still bypass unless safe custom opt-in is configured;
+  the decorator does not allow `Authorization`, `Cookie` or
+  `Proxy-Authorization` as simple vary fields.
+- The app must inventory **all** dimensions affecting output. For example,
+  varying `Accept-Language` alone cannot protect an endpoint also reading
+  hidden tenant/role state. Context variables, request state, dependencies,
+  headers added by reverse proxies and non-header context are not inferred.
+- The name validation forbids **only** `Authorization`, `Cookie` and
+  `Proxy-Authorization` as credential-related names. Custom credential
+  fields such as `X-API-Key` are syntactically permitted but are **not**
+  automatically safe and do not trigger the default auth bypass. Use
+  validated identity and permissions in a complete custom key builder,
+  or bypass caching for such endpoints. Never rely on an untrusted client
+  header alone to authorize tenant access.
+- Arbitrary caller-controlled header values can generate many distinct
+  cache keys and exhaust the backend. Validate/normalize accepted values,
+  apply rate limits, suitable TTLs and capacity/eviction safeguards.
+  SHA-256 for key identifiers hides raw header strings but is neither
+  encryption, authentication nor cache-flood protection.
+
+**Prepublication status:** this contract is in PR #81, not in released
+0.4.1. A passing test proves only the listed paths and configurations,
+not complete automatic cross-tenant isolation. Phase A of #69 must be
+rerun after the change; phase B tests the exact 0.5.0 artifacts.
+
 ## Generated FastAPI routes and shared default keys (#68)
 
 **Important for published 0.4.0:** The legacy default builder identifies an
