@@ -5,7 +5,7 @@ fastapi-cache2.
 
 ## Supported lines
 
-- `0.4.x`: `0.4.0` published **2026-11-20**. Best-effort security
+- `0.4.x`: `0.4.0` published **2026-11-20**; `0.4.1` patch prepared for the same line. Best-effort security
   and critical correctness maintenance targets **2027-11-20**
   (12 months), subject to maintainer capacity. This is a target, not
   a contractual guarantee, for server-side CPython 3.11–3.13.

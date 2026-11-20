@@ -1,7 +1,7 @@
-# Quickstart — fastapi-cache-stable 0.4.0
+# Quickstart — fastapi-cache-stable 0.4.1
 
 Five-minute example of response caching with
-[`fastapi-cache-stable`](https://pypi.org/project/fastapi-cache-stable/0.4.0/).
+[`fastapi-cache-stable`](https://pypi.org/project/fastapi-cache-stable/0.4.1/).
 The Python import remains `fastapi_cache`.
 
 ## Install
@@ -12,7 +12,7 @@ environment. Create a clean virtual environment:
 ```sh
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install "fastapi-cache-stable==0.4.0" "uvicorn"
+python -m pip install "fastapi-cache-stable==0.4.1" "uvicorn"
 python -m pip check
 ```
 
@@ -71,7 +71,7 @@ share cached values.
 First install the tested Redis client line:
 
 ```sh
-python -m pip install "fastapi-cache-stable[redis]==0.4.0"
+python -m pip install "fastapi-cache-stable[redis]==0.4.1"
 ```
 
 Use [the complete Redis lifespan example](../README.md#quick-start)
@@ -92,7 +92,7 @@ see [COMPATIBILITY.md](../COMPATIBILITY.md) and the
   `Vary`, locale, tenant or custom-auth headers. Use a suitable
   custom key builder, or bypass caching until variation is proven safe.
   See [the header/Vary investigation](https://github.com/agustin18/fastapi-cache/issues/53).
-  **0.3.1 and 0.4.0** bypass cache reads and writes when an endpoint
+  **0.3.1 and 0.4.1** bypass cache reads and writes when an endpoint
   explicitly declares `Request` and uses the default builder; endpoints
   with a custom, identity-aware key builder still cache. This does not make
   hidden middleware/context variables safe for routes that do not declare

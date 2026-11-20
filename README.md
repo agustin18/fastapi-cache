@@ -4,7 +4,7 @@
 > The Python import stays `fastapi_cache`; intentional safety/behavior changes
 > are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
 >
-> **Latest stable:** [0.4.0 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.4.0/)
+> **Latest stable:** [0.4.1 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.4.1/)
 > (released 2026-11-20) ·
 > [Quickstart](https://github.com/agustin18/fastapi-cache/blob/stable/docs/QUICKSTART.md) ·
 > [Migration](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md) ·
@@ -12,7 +12,7 @@
 > [Security](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) ·
 > [Support](https://github.com/agustin18/fastapi-cache/blob/stable/SUPPORT.md) ·
 > [Changelog](https://github.com/agustin18/fastapi-cache/blob/stable/CHANGELOG.md) ·
-> [Release provenance](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.4.0.md).
+> [Release provenance](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.4.1.md).
 > Pre-releases must be independently evaluated before production deployment.
 >
 > Installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has
@@ -45,7 +45,7 @@ A vulnerability found in a package shared by this fork and the original
 version and invokes the affected code. They do **not** necessarily install
 the same dependency versions. In particular, the **published `fastapi-cache2==0.2.2`** and this fork
 both declared redis-py **4.x** in the published 0.3.x metadata. The upstream repository's later, **unreleased**
-`main` branch changed the Redis extra to **5.x**. `0.4.0` now publishes
+`main` branch changed the Redis extra to **5.x**. `0.4.x` now publishes
 Python-conditional redis-py ranges through 8.1.x; older `0.3.x` artifacts
 remain unchanged.
 See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md),
@@ -84,7 +84,7 @@ in 0.4.x.
 Install the published stable release (pin the version you test):
 
 ```sh
-python -m pip install "fastapi-cache-stable[redis]==0.4.0"
+python -m pip install "fastapi-cache-stable[redis]==0.4.1"
 python -m pip check
 ```
 
@@ -466,7 +466,7 @@ those entries and for `expire=None`.
 
 When using the Redis backend, please make sure you pass in a redis client that does [_not_ decode responses][redis-decode] (`decode_responses` **must** be `False`, which is the default). Cached data is stored as `bytes` (binary), decoding these in the Redis client would break caching.
 
-`0.4.0` publishes Python-conditional Redis client ranges (4.x through 6.1.x
+`0.4.x` publishes Python-conditional Redis client ranges (4.x through 6.1.x
 on Python 3.8, through 7.0.x on 3.9 and through 8.1.x on 3.10–3.13). See
 `COMPATIBILITY.md` and `audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md` for
 real-server evidence. The older `0.3.x` artifacts remain immutable.
