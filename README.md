@@ -47,7 +47,7 @@ the same dependency versions. In particular, the **published `fastapi-cache2==0.
 both declare redis-py **4.x** in their **published 0.3.x** metadata. The upstream repository's later, **unreleased**
 `main` branch changed the Redis extra to **5.x**; that is not a released
 legacy-package guarantee. Broader redis-py 5–8 support is implemented in the
-unreleased #47 candidate, not yet available on PyPI.
+staged `0.4.0` release metadata, not yet available on PyPI.
 See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md),
 [security policy](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) and
 [legacy vulnerability explanation](https://github.com/agustin18/fastapi-cache/blob/stable/audit/security/LEGACY_SUPPORT_AND_RISKS.md).
@@ -466,8 +466,8 @@ those entries and for `expire=None`.
 
 When using the Redis backend, please make sure you pass in a redis client that does [_not_ decode responses][redis-decode] (`decode_responses` **must** be `False`, which is the default). Cached data is stored as `bytes` (binary), decoding these in the Redis client would break caching.
 
-The published `0.3.1` release still declares Redis client 4.x. The unreleased
-#47 implementation proposes Python-conditional Redis client ranges (4.x through
+The published `0.3.1` release still declares Redis client 4.x. Staged
+`0.4.0` metadata includes Python-conditional Redis client ranges (4.x through
 6.1.x on Python 3.8, through 7.0.x on 3.9 and through 8.1.x on 3.10–3.13).
 See `COMPATIBILITY.md` and `audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md` for
 real-server evidence. Do not assume these wider versions are already published.
