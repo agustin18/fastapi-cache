@@ -16,9 +16,10 @@ cache keys and safe default HTTP/private-response behavior.
 - **0.4.x:** backward-compatible maintenance. Keep the published
   Python `>=3.8,<3.14` metadata and documented Redis client ranges;
   security maintenance is best-effort on server-side CPython 3.11–3.13.
-- **0.5.x:** concurrency-heavy and usability features after evidence of
-  user demand: observability, bounded InMemory, cache-stampede protection,
-  tag invalidation, app-scoped configuration and versioned documentation.
+- **0.5.x:** safe modern drop-in: dependency security, reliable CI,
+  key/tenant isolation, reproducible legacy migration and three opt-in
+  capabilities (parameter filtering, bounded InMemory, cache events). Keep
+  distributed locking, tags and app-scoped configurations in research.
 - **1.0.0:** not automatically scheduled; current
   [support policy](SUPPORT.md) requires a co-maintainer before committing
   to a longer `1.x` support window.
@@ -61,19 +62,58 @@ batch a small, regression-tested fix and publish only when there is
 user-facing value. Do not change cache keys or the Python/Redis metadata
 ranges without a verified compatibility lane.
 
-## 0.5.x — capabilities and ergonomics
+## 0.5.0 — secure, tested modern drop-in
 
-| Priority | Issue | Done when |
+**Release tracker: [#70](https://github.com/agustin18/fastapi-cache/issues/70).**
+This is a proposed scope, not a schedule or permission to publish. Keep
+`fastapi_cache` imports, default-key golden fixtures, Python 3.8–3.10
+functional legacy compatibility and the published Redis client 4.x migration
+path. **Do not** preserve unsafe historical response/tenant behavior.
+
+### Required release gates
+
+| Priority | Issue / deliverable | Acceptance |
 |---|---|---|
-| **P1** | [#50: opt-in observability](https://github.com/agustin18/fastapi-cache/issues/50) | HIT/MISS/BYPASS/store/error events usable without mandatory metrics dependencies; no key or payload leakage |
-| **P1** | [#54: bounded InMemory](https://github.com/agustin18/fastapi-cache/issues/54) | Opt-in capacity and eviction policy with expiration, isolation and concurrency tests |
-| **P2** | [#49: safe exclude_params](https://github.com/agustin18/fastapi-cache/issues/49) | Explicit opt-in; deterministic-key/PYTHONHASHSEED tests; never excludes tenant or user identity by default |
-| **P2** | [#48: versioned documentation site](https://github.com/agustin18/fastapi-cache/issues/48) | Build/link checks; Redis, InMemory, safe-auth and migration examples exercised in CI |
-| **Research** | Cache stampede, tag invalidation, app-scoped configuration | Ownership, TTL, cancellation, consistency and rollback semantics proven before defaults change |
+| **P0** | [#66 security/Dependabot](https://github.com/agustin18/fastapi-cache/issues/66) | Authenticated fresh advisory delta, GHSA/version/profile/consumer-path dispositions, tested modern dependency remediation, exact-wheel `pip-audit` and no unreviewed package-reachable critical/high risk. Open legacy alerts are not silently dismissed |
+| **P0** | [#67 CI reliability](https://github.com/agustin18/fastapi-cache/issues/67) | Fix docs-only Towncrier false failures; classify genuine intermediate-HEAD regressions versus same-SHA flakes, no hidden or soft required tests |
+| **P0** | [#53 Vary/hidden context](https://github.com/agustin18/fastapi-cache/issues/53) and [#68 closure/factory key identity](https://github.com/agustin18/fastapi-cache/issues/68) | Reproducible FastAPI/Redis/InMemory isolation tests, privacy first; key golden fixtures unchanged by default, safe opt-in + documented rotation where appropriate. Fix confirmed privacy defects promptly rather than waiting for a feature release |
+| **P0** | [#69 tested legacy migration and rollback](https://github.com/agustin18/fastapi-cache/issues/69) | Clean `fastapi-cache2==0.2.2` uninstall/replacement, immutable old-key fixtures, Python 3.8–3.13, real Redis/HTTP behaviors, wheel/sdist `pip check`, independently runnable consumer |
 
-**Keep the next release bounded:** verified correctness and compatibility
-justify a release on their own. Do not delay a security/correctness fix for
-unrelated feature work.
+### Three focused opt-in additions
+
+| Priority | Issue | Acceptance |
+|---|---|---|
+| **P1** | [#49 exclude_params](https://github.com/agustin18/fastapi-cache/issues/49) | Deterministic named/positional argument handling; never implicitly drop user, tenant or response-defining inputs; old default hash unchanged |
+| **P1** | [#54 bounded InMemory](https://github.com/agustin18/fastapi-cache/issues/54) | Optional `max_entries` with eviction/TTL/concurrency tests and benchmark; default unchanged |
+| **P1** | [#50 cache observability](https://github.com/agustin18/fastapi-cache/issues/50) | Typed HIT/MISS/BYPASS/STORE/ERROR events, no sensitive keys/payloads, callback exceptions isolated, no mandatory telemetry dependencies |
+
+**Parallel, not 0.5.0 blockers:** [#48 versioned docs site](https://github.com/agustin18/fastapi-cache/issues/48)
+and [#51 Python 3.14 research](https://github.com/agustin18/fastapi-cache/issues/51).
+User-facing migration/security documentation *is* required; a separately
+hosted site is optional. [#45 DynamoDB correctness](https://github.com/agustin18/fastapi-cache/issues/45)
+and [#55 MD5/FIPS portability](https://github.com/agustin18/fastapi-cache/issues/55)
+remain targeted maintenance candidates, potentially `0.4.x`, after real
+reproduction. Python 3.14 must not enter published metadata without a
+full compatible matrix.
+
+### Reviewable PR sequence (about nine primary PRs)
+
+1. CI docs-only false-gate fix + roadmap/tests (#67, #70).
+2. Authenticated Dependabot evidence and advisory reachability report (#66).
+3. Separate reproducible modern runtime dependency/lock remediation (#66).
+4. Key/privacy reproduction and narrow fixes or opt-ins (#53, #68).
+5. Safe explicit excluded parameters (#49).
+6. Optional bounded InMemory (#54).
+7. Optional cache events (#50).
+8. Installed legacy-to-candidate migration/rollback and contract docs (#69).
+9. Final `0.5.0` release-preparation-only PR: complete wheel/sdist,
+   security delta, hashes and **separate explicit** manual TestPyPI/PyPI
+   publication signoff.
+
+Additional confirmed security or backend bugs warrant their own focused
+PRs. Do not artificially expand the scope with distributed locks, tags,
+new cluster/failover promises or breaking app-level config. Keep the
+0.5.0 release bounded enough for review by a single maintainer.
 
 ## Defer or research (post-0.4.0)
 
@@ -85,15 +125,9 @@ unrelated feature work.
 - **Backend parity:** Memcached real TTL and `clear` contract; DynamoDB
   real-service tests and key invalidation; precise Redis Cluster
   namespace-clear behavior. Do not advertise unimplemented APIs.
-- [#54: InMemory capacity/eviction](https://github.com/agustin18/fastapi-cache/issues/54):
-  bounded opt-in store with verified expiration, eviction and isolation.
-  Current store has no size cap.
 - **App-scoped configuration:** explore replacing process-global singleton
   only with a compatibility strategy; a breaking API belongs in a major
   version or a deliberately parallel API.
-- **Observability:** [#50](https://github.com/agustin18/fastapi-cache/issues/50)
-  is now **0.5.x preferred**; an isolated opt-in implementation can ship
-  earlier only if it does not delay #47.
 - **Advanced HTTP:** beyond the prioritized header/Vary security
   investigation [#53](https://github.com/agustin18/fastapi-cache/issues/53),
   study POST opt-in, stale-while-revalidate, cache headers and CDN
@@ -138,14 +172,11 @@ for a redis-py client major.
 
 ## Proposed PR order
 
-**0.4.x maintenance:** #55 (FIPS portability if compatible) → #45
-(tested experimental backend fixes) → #53 residual header/variation design.
-Batch small fixes into a patch release only if useful to users.
-
-**0.5.x:** #50 (observability), #54 (bounded InMemory), #49
-(exclude_params), #48 (versioned documentation site), config-per-app,
-cache stampede locks and tag invalidation, subject to user demand and
-concurrency/security tests.
+Follow [the bounded 0.5.0 reviewable PR sequence](#reviewable-pr-sequence-about-nine-primary-prs).
+Handle any proven #53/#68 privacy defect immediately; preserve the
+0.4.x migration contract until a deliberately opt-in key migration is tested.
+Investigate #45/#55 in standalone maintenance PRs; do not block #66
+security remediation waiting for feature work.
 
 A final change log, tested distribution and tagged release are needed
 for **each new published version**, but are **not a reason to re-open
