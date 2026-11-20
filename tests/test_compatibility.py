@@ -68,6 +68,7 @@ def test_cache_signature() -> None:
         "injected_dependency_namespace",
         "cache_authenticated",
         "infer_response_model",
+        "vary_headers",
     ]
     assert params["expire"].default is None
     assert params["coder"].default is None
