@@ -16,3 +16,5 @@ focused on current project documentation.
 
 Older `0.3.x` artifacts remain immutable and are preserved here for audit and
 rollback references.
+
+<!-- Temporary end-to-end docs-only Towncrier gate verification. This PR will be closed without merge. -->
