@@ -187,6 +187,7 @@ Parameter | type | default | description
 `injected_dependency_namespace` | `str` | `__fastapi_cache` | prefix for injected dependency keywords.
 `cache_authenticated` | `bool` | `None` | per-endpoint override for authenticated requests; requires an identity-aware `key_builder`.
 `infer_response_model` | `bool` | `False` | opt into FastAPI's response-model inference from a return annotation; can enable output validation and break invalid union/Response annotations. Disabled by default for drop-in compatibility.
+`vary_headers` | `Sequence[str]` | `None` | opt into an isolated, hashed variant cache key for the **explicitly listed** HTTP request headers; it does not automatically discover tenant/identity/context state.
 
 The `cache_status_header` argument belongs to `FastAPICache.init()`, **not**
 `@cache()`. It controls the `HIT` / `MISS` response header.
@@ -282,8 +283,11 @@ file, and template responses. Responses with `Set-Cookie`, `Cache-Control: no-st
 `Cache-Control: private`, or a background task are never cached, regardless of the coder.
 If the endpoint or a dependency sets `Set-Cookie`, `Cache-Control: no-store`/`private`, a
 background task, a non-`200` status, or any header other than the automatic `content-length`
-on the injected `response` object, the call is not cached. This covers dict/list returns whose
-final HTTP metadata comes from that object.
+on the injected `response` object, the call is not cached. The sole exception is an injected
+`Vary` header whose fields are all covered by explicitly declared `vary_headers`;
+other metadata still bypasses. This covers dict/list returns whose final HTTP metadata
+comes from that object. A returned `JSONResponse` with custom `Vary` remains uncacheable
+under `JsonCoder` because its headers cannot be faithfully restored on a hit.
 User payloads that contain `_spec_type` are preserved as normal data; the internal marker is
 namespaced as `__fastapi_cache_spec_type__`.
 
@@ -363,6 +367,55 @@ builder must include *every* value that affects the response, particularly
 validated identity, tenant and permissions when authenticated caching is
 explicitly enabled. DB session objects with changing `repr()` values can
 otherwise produce perpetual misses; see the migration checklist.
+
+### Explicit request-header variants (new opt-in; not in published 0.4.1)
+
+For anonymous/public endpoints that depend on a **known** header through a
+dependency, middleware, or `contextvars`, opt in to a header-specific key:
+
+```python
+from contextvars import ContextVar
+from fastapi import Depends, Request
+
+locale_context = ContextVar("locale", default="en")
+
+
+async def resolve_locale(request: Request) -> None:
+    locale_context.set(request.headers.get("Accept-Language", "en"))
+
+
+@app.get("/localized", dependencies=[Depends(resolve_locale)])
+@cache(expire=60, namespace="localized-v2",
+       vary_headers=("Accept-Language",))
+async def localized():
+    return {"locale": locale_context.get()}
+```
+
+This is an **explicit allowlist**, not automatic header detection. Names are
+case-normalized and validated; multiple field occurrences, their order, and
+missing versus empty fields have distinct keys. Header values are hashed into
+a `:vary-v1:` key scoped under the normal cache namespace, not written as
+plaintext. The generated HTTP `Vary` header is returned on MISS, HIT and 304
+for configured cacheable requests. **An HTTP `Vary` response header alone
+never partitions the library's internal cache.** If the endpoint emits a
+`Vary` field not present in `vary_headers`, the response bypasses storage.
+
+The caller is responsible for listing **every** representation-defining
+header. Application state derived from hidden `contextvars`, middleware,
+non-header sources or arbitrary dependencies cannot be discovered. Using
+`vary_headers=("Accept-Language",)` **does not** make an endpoint whose
+response also depends on `X-Tenant` safe; include a trustworthy tenant
+dimension or use a reviewed, complete custom `key_builder`. Endpoints
+that explicitly declare `Request` still **bypass** the default key builder
+even with `vary_headers`; use an identity- and tenant-aware custom builder
+there. `Authorization`, `Cookie` and `Proxy-Authorization` cannot be named
+as vary fields, and the existing authenticated-request bypass is unchanged.
+
+New opted-in entries **cannot read pre-opt-in keys**. Clear or rotate affected
+namespaces (and remove potentially unsafe historical entries) before serving
+traffic; do not simply assume they will disappear safely. A shared Redis
+namespace used across deployments must be migrated deliberately. See
+[MIGRATION.md](MIGRATION.md#explicit-header-variation-new-opt-in-for-050).
 
 ### Authenticated requests
 
