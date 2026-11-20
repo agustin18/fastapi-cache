@@ -1,0 +1,46 @@
+name: Redis #47 one-time Poetry lock refresh
+
+on:
+  push:
+    branches:
+      - feat/redis-conditional-compat-47
+    paths:
+      - ".github/workflows/redis47-lock-refresh.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: github.repository == 'agustin18/fastapi-cache' && github.ref == 'refs/heads/feat/redis-conditional-compat-47'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Regenerate with repository-pinned Poetry, preserving unaffected pins
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install "poetry==1.8.3"
+          poetry lock --no-update
+          poetry check --lock
+          git diff --check
+          git diff --stat -- pyproject.toml poetry.lock
+      - name: Commit the generated lock to this branch only
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet -- poetry.lock; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add poetry.lock
+            git commit -m "build(redis): refresh Poetry 1.8.3 lock for conditional clients"
+            git push origin HEAD:refs/heads/feat/redis-conditional-compat-47
+          else
+            echo "No lock change needed; verifying Poetry already considers it current"
+            poetry check --lock
+          fi
