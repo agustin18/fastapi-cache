@@ -94,10 +94,16 @@ first route's result. Treat generated-handler caching on a shared backend
 as a **correctness and potential information-isolation hazard**.
 Use distinct per-route `@cache(namespace=...)` values or a reviewed
 route/identity-aware builder, and expire/rotate old ambiguous entries.
-The prospective #68 correction preserves ordinary route keys while
-separating generated HTTP handlers; it has **not been published** in 0.4.0.
-Do not assume it protects hidden `contextvars`, tenant identity, or
-separate applications sharing a namespace (#53).
+The prospective #68 correction preserves unwrapped module-level route
+keys while separating generated HTTP handlers, including closures
+disguised by `functools.wraps`; it has **not been published** in 0.4.0.
+Closure-wrapped module-level handlers may intentionally rotate to new
+keys; stale shared entries are not read but may persist until expiration.
+The generated-route key includes request Host (case-normalized), so
+untrusted arbitrary Host values can fragment storage and create cache
+resource exhaustion. Validate Host using `TrustedHostMiddleware` or
+equivalent edge rules. Do not assume host isolation protects hidden
+`contextvars`, tenant identity, or separate apps sharing a prefix (#53).
 
 ## Reporting a vulnerability
 
