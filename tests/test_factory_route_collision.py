@@ -1,16 +1,18 @@
 """Regression for generated FastAPI handlers sharing legacy cache identities."""
 
 import asyncio
+from functools import wraps
 from typing import Awaitable, Callable, Dict, Generator
 
 import pytest
 from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from starlette.requests import Request
 from starlette.testclient import TestClient
 
 from fastapi_cache import FastAPICache, JsonCoder, default_key_builder
 from fastapi_cache.backends.inmemory import InMemoryBackend, Value
-from fastapi_cache.decorator import cache
+from fastapi_cache.decorator import _route_scoped_generated_key, cache
 
 
 @pytest.fixture(autouse=True)
@@ -30,6 +32,30 @@ def _factory(value: str) -> Callable[[], Awaitable[Dict[str, str]]]:
 async def module_level_endpoint() -> Dict[str, str]:
     return {"value": "module"}
 
+
+
+
+def _wrapped_factory(value: str) -> Callable[[], Awaitable[Dict[str, str]]]:
+    @wraps(module_level_endpoint)
+    async def endpoint() -> Dict[str, str]:
+        return {"value": value}
+
+    return endpoint
+
+
+def _mock_request(
+    *, host: str = "example.test", method: str = "GET",
+    root_path: str = "", path: str = "/a"
+) -> Request:
+    return Request(
+        {
+            "type": "http",
+            "method": method,
+            "root_path": root_path,
+            "path": path,
+            "headers": [(b"host", host.encode("ascii"))],
+        }
+    )
 
 def test_factory_legacy_key_identity_collides() -> None:
     """Keep the old raw builder contract visible instead of rewriting it."""
@@ -140,3 +166,143 @@ def test_generated_handler_without_stable_http_path_fails_closed() -> None:
     asyncio.run(run())
     assert calls == [2]
     assert not backend._store  # pyright: ignore[reportPrivateUsage]
+
+
+def test_functools_wraps_factory_routes_keep_separate_cached_results() -> None:
+    """functools.wraps masks __name__/__qualname__, not actual closure code."""
+    left, right = _wrapped_factory("A"), _wrapped_factory("B")
+    assert left.__name__ == right.__name__ == module_level_endpoint.__name__
+    assert left.__qualname__ == right.__qualname__ == module_level_endpoint.__qualname__
+    assert "<locals>" not in left.__qualname__
+    assert left.__closure__ is not None
+    assert left.__code__.co_freevars
+    assert default_key_builder(left, "factory:", args=(), kwargs={}) == (
+        default_key_builder(right, "factory:", args=(), kwargs={})
+    )
+
+    backend = InMemoryBackend()
+    FastAPICache.init(backend, prefix="factory")
+    app = FastAPI()
+    app.add_api_route("/a", cache(expire=60)(left), methods=["GET"])
+    app.add_api_route("/b", cache(expire=60)(right), methods=["GET"])
+
+    with TestClient(app) as client:
+        first_a = client.get("/a")
+        first_b = client.get("/b")
+        second_a = client.get("/a")
+        second_b = client.get("/b")
+
+    assert first_a.json() == second_a.json() == {"value": "A"}
+    assert first_b.json() == second_b.json() == {"value": "B"}
+    assert first_a.headers["X-FastAPI-Cache"] == "MISS"
+    assert first_b.headers["X-FastAPI-Cache"] == "MISS"
+    assert second_a.headers["X-FastAPI-Cache"] == "HIT"
+    assert second_b.headers["X-FastAPI-Cache"] == "HIT"
+    assert len(backend._store) == 2  # pyright: ignore[reportPrivateUsage]
+
+
+def test_wrapped_factory_does_not_reuse_poisoned_legacy_entry() -> None:
+    backend = InMemoryBackend()
+    FastAPICache.init(backend, prefix="factory")
+    handler = _wrapped_factory("fresh")
+    legacy_key = default_key_builder(handler, "factory:", args=(), kwargs={})
+    backend._store[legacy_key] = Value(  # pyright: ignore[reportPrivateUsage]
+        JsonCoder.encode({"value": "old-colliding-value"}), None
+    )
+    app = FastAPI()
+    app.add_api_route("/wrapped", cache(expire=60)(handler), methods=["GET"])
+
+    with TestClient(app) as client:
+        first = client.get("/wrapped")
+        second = client.get("/wrapped")
+
+    assert first.json() == second.json() == {"value": "fresh"}
+    assert first.headers["X-FastAPI-Cache"] == "MISS"
+    assert second.headers["X-FastAPI-Cache"] == "HIT"
+    assert legacy_key in backend._store  # pyright: ignore[reportPrivateUsage]
+
+
+def test_scoped_generated_key_separates_method_root_path_and_path() -> None:
+    handler = _wrapped_factory("A")
+    legacy = default_key_builder(handler, "factory:routes", args=(), kwargs={})
+    key = _route_scoped_generated_key(
+        handler, _mock_request(), legacy, "factory:routes"
+    )
+    assert key is not None
+    for other in (
+        _mock_request(method="POST"),
+        _mock_request(root_path="/mounted"),
+        _mock_request(path="/b"),
+        _mock_request(host="other.example.test"),
+    ):
+        assert _route_scoped_generated_key(
+            handler, other, legacy, "factory:routes"
+        ) != key
+    # The full HTTP decorator bypasses non-GET requests; here we separately
+    # exercise the key partition's method component.
+
+
+def test_host_case_normalization_and_distinct_hosts() -> None:
+    backend = InMemoryBackend()
+    FastAPICache.init(backend, prefix="factory")
+    app = FastAPI()
+    app.add_api_route("/host", cache(expire=60)(_wrapped_factory("A")), methods=["GET"])
+
+    with TestClient(app) as client:
+        upper = client.get("/host", headers={"Host": "EXAMPLE.TEST"})
+        lower = client.get("/host", headers={"Host": "example.test"})
+        other = client.get("/host", headers={"Host": "other.example.test"})
+        other_again = client.get("/host", headers={"Host": "other.example.test"})
+
+    assert upper.headers["X-FastAPI-Cache"] == "MISS"
+    assert lower.headers["X-FastAPI-Cache"] == "HIT"
+    assert other.headers["X-FastAPI-Cache"] == "MISS"
+    assert other_again.headers["X-FastAPI-Cache"] == "HIT"
+    assert len(backend._store) == 2  # pyright: ignore[reportPrivateUsage]
+
+
+def test_clear_named_namespace_for_generated_routes() -> None:
+    async def run() -> None:
+        backend = InMemoryBackend()
+        FastAPICache.init(backend, prefix="factory")
+        app = FastAPI()
+        app.add_api_route(
+            "/a", cache(expire=60, namespace="generated")(_wrapped_factory("A")),
+            methods=["GET"],
+        )
+        app.add_api_route(
+            "/b", cache(expire=60, namespace="generated")(_wrapped_factory("B")),
+            methods=["GET"],
+        )
+        app.add_api_route(
+            "/other", cache(expire=60, namespace="other")(_wrapped_factory("C")),
+            methods=["GET"],
+        )
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://testserver"
+        ) as client:
+            first_a = await client.get("/a")
+            first_b = await client.get("/b")
+            first_other = await client.get("/other")
+            assert all(
+                result.headers["X-FastAPI-Cache"] == "MISS"
+                for result in (first_a, first_b, first_other)
+            )
+            assert await FastAPICache.clear(namespace="generated") == 2
+            assert all(
+                key.startswith("factory:other:")
+                for key in backend._store  # pyright: ignore[reportPrivateUsage]
+            )
+            second_a = await client.get("/a")
+            second_b = await client.get("/b")
+            second_other = await client.get("/other")
+
+        assert second_a.headers["X-FastAPI-Cache"] == "MISS"
+        assert second_b.headers["X-FastAPI-Cache"] == "MISS"
+        assert second_other.headers["X-FastAPI-Cache"] == "HIT"
+        assert second_a.json() == {"value": "A"}
+        assert second_b.json() == {"value": "B"}
+        assert second_other.json() == {"value": "C"}
+
+    asyncio.run(run())
