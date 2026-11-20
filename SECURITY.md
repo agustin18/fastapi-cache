@@ -95,9 +95,11 @@ as a **correctness and potential information-isolation hazard**.
 Use distinct per-route `@cache(namespace=...)` values or a reviewed
 route/identity-aware builder, and expire/rotate old ambiguous entries.
 The prospective #68 correction preserves unwrapped module-level route
-keys while separating generated HTTP handlers, including closures
-disguised by `functools.wraps`; it has **not been published** in 0.4.0.
-Closure-wrapped module-level handlers may intentionally rotate to new
+keys while separating generated HTTP handlers, including wrappers
+using `functools.wraps` that capture data as default arguments and have
+no code free variables; it has **not been published** in 0.4.0.
+Module-level handlers wrapped by decorators setting `__wrapped__`
+may intentionally rotate to new
 keys; stale shared entries are not read but may persist until expiration.
 The generated-route key includes request Host (case-normalized), so
 untrusted arbitrary Host values can fragment storage and create cache
