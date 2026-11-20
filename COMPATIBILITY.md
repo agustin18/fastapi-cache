@@ -8,6 +8,31 @@ This contract describes the documented `0.3.x` line. Use
 [PyPI](https://pypi.org/project/fastapi-cache-stable/) and
 [CHANGELOG.md](CHANGELOG.md) for current releases and historical versions.
 
+## Upcoming Redis client support candidate (#47; not published)
+
+The published `0.3.1` release continues to declare redis-py 4.x. The
+unreleased #47 implementation changes only the optional Redis client
+requirements and verification matrix, not the RedisBackend runtime semantics.
+
+| CPython | Candidate redis-py versions | Constraint |
+|---|---|---|
+| 3.8 | redis-py 4.x, 5.x, 6.0–6.1 | `>=4.2.0rc1,<6.2` |
+| 3.9 | redis-py 4.x, 5.x, 6.x, 7.0 | `>=4.2.0rc1,<7.1` |
+| 3.10–3.13 | redis-py 4.x–8.1.x | `>=4.2.0rc1,<8.2` |
+
+These ranges deliberately retain legacy client 4.x and cap every range
+before the first untested/incompatible minor. They are **not** evidence of
+unbounded compatibility with future client releases. This release candidate
+targets standalone Redis with RESP2/RESP3, ACL and binary caching using
+`decode_responses=False`; Cluster namespace clear remains unsupported and
+TLS/Sentinel/Cluster/failover certification remains out of scope.
+
+The investigation is recorded in
+[audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md](audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md),
+and the implementation PR runs a smaller mandatory wheel/sdist CI matrix.
+No Redis compatibility expansion is promised to `0.3.x` consumers until a
+subsequent version is explicitly published.
+
 ## What "drop-in" means
 
 - The distribution is `fastapi-cache-stable`, but the Python import remains `fastapi_cache`.
