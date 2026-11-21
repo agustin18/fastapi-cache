@@ -28,7 +28,7 @@ jobs:
       - name: Build site from committed sources
         run: zensical build --clean
       - name: Validate every local link and HTML anchor
-        run: python scripts/check_docs_links.py --site-dir site
+        run: python scripts/check_docs_links.py --site-dir site --base-path /fastapi-cache
       - name: Validate release and migration entry points
         run: |
           python - <<'PY'
