@@ -23,7 +23,9 @@ def test_exact_release_changelog_gate_is_version_independent() -> None:
     assert "towncrier check --compare-with origin/stable" in workflow
 
 
-def test_candidate_release_has_no_060_changelog_header_yet() -> None:
+def test_historical_release_headers_remain_archived() -> None:
+    # This test must continue passing when the real 0.6.0 CHANGELOG
+    # is generated in a later, separately approved promotion PR.
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "## [0.5.0]" in changelog
-    assert "## [0.6.0]" not in changelog
+    assert "## [0.4.1]" in changelog
