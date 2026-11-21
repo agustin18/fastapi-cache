@@ -480,12 +480,11 @@ the identity:
 ```python
 import hashlib
 import hmac
+import json
 import os
 
-from starlette.requests import Request
-
-from fastapi_cache import FastAPICache
-from fastapi_cache.decorator import cache
+from fastapi import Request
+from starlette.exceptions import HTTPException
 
 CACHE_KEY_SECRET = os.environ["CACHE_KEY_SECRET"].encode()
 
@@ -494,36 +493,68 @@ def identity_key_builder(
     func,
     namespace: str = "",
     *,
-    request: Request = None,
+    request=None,
     response=None,
     args,
     kwargs,
 ):
-    identity = ""
-    if request is not None:
-        identity = "|".join(
-            [
-                request.headers.get("Authorization", ""),
-                request.headers.get("Cookie", ""),
-                request.headers.get("X-Tenant-Id", ""),
-            ]
-        )
-    key_material = f"{identity}|{args}|{kwargs}"
+    # This example is ONLY for the parameterless GET /me route below.
+    if (
+        request is None
+        or request.method != "GET"
+        or request.scope["path"] != "/me"
+        or request.url.query
+        or args
+        or kwargs
+    ):
+        raise HTTPException(status_code=400, detail="Unsupported cache context")
+
+    # Application authentication/authorization must populate this BEFORE
+    # cache lookup, reject ambiguous credentials and check permissions.
+    # Tuple of validated subject, tenant, session context, permission
+    # revision, and representation revision; never raw credential headers.
+    identity = getattr(request.state, "verified_cache_identity", None)
+    if (
+        not isinstance(identity, tuple)
+        or len(identity) != 5
+        or any(not isinstance(part, str) or not part for part in identity)
+    ):
+        raise HTTPException(status_code=403, detail="Missing verified identity")
+
+    material = json.dumps(
+        ["me-v1", namespace, func.__module__, func.__qualname__, identity],
+        ensure_ascii=True,
+        separators=(",", ":"),
+    )
     digest = hmac.new(
-        CACHE_KEY_SECRET,
-        key_material.encode(),
-        hashlib.sha256,
+        CACHE_KEY_SECRET, material.encode("utf-8"), hashlib.sha256
     ).hexdigest()
-    return f"{namespace}:{func.__module__}:{func.__name__}:{digest}"
+    return f"{namespace}:me-v1:{digest}"
+```
 
+Use the builder only on this reviewed route (not globally). Authentication
+and authorization middleware or dependencies must provide the verified tuple,
+including permission and representation changes, before cache lookup.
+This is an illustrative contract, not authentication middleware or a generic
+key builder. Anonymous requests, unsupported parameters and missing identity
+are rejected by this example; use an undecorated endpoint if that is not
+appropriate. Include every additional representation dimension for other
+routes; do not just concatenate raw headers, trust client-provided tenant IDs,
+or hash stored credentials. Use a strong secret and a fresh namespace.
 
-FastAPICache.init(backend, cache_authenticated=True, key_builder=identity_key_builder)
+```python
+from fastapi_cache.decorator import cache
 
 
 @app.get("/me")
-@cache(expire=60)
+@cache(
+    expire=60,
+    namespace="private-me-v1",
+    cache_authenticated=True,
+    key_builder=identity_key_builder,
+)
 async def me(request: Request):
-    ...
+    ...  # Return only data authorized for the verified identity.
 ```
 
 The key builder must include every dimension that affects the response: token, session,
@@ -539,8 +570,14 @@ The automatic bypass only detects `Authorization` and `Cookie`. If your app uses
 proxy-injected headers, `request.state`, or internal dependencies, review your cache strategy.
 `cache_authenticated=True` does not make an unsafe key builder safe.
 
-This protects the application cache. It does not configure CDN, reverse-proxy, or browser
-caching.
+The published 0.5.0 behavior protects the application cache; it does not
+configure CDN, reverse-proxy, or browser caching. The unreleased 0.6.0
+candidate additionally checks every Authorization/Cookie field occurrence
+and generates `Cache-Control: private, no-store` for cached HTTP responses
+on authenticated-cache opt-in routes (including anonymous requests to
+those routes). This does not replace application authorization or cache
+policy on bypassed responses, nor purge previously stored intermediary
+responses. Invalidate affected intermediary caches before migration.
 
 **Upgrading from the legacy package or early prereleases:** old entries written for authenticated requests may
 remain under the default key. Clear or rotate the cache namespace before deploying, including

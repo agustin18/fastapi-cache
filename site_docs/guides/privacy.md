@@ -52,4 +52,22 @@ A client can send many distinct values and multiply entries. Validate and canoni
 
 For private/tenant-sensitive caching, prefer an application-reviewed custom key builder incorporating **validated identity, permissions and all response dimensions**, or bypass caching.
 
+## Candidate 0.6.0 authentication and HTTP cache boundaries
+
+The proposed 0.6.0 correction checks all Authorization/Cookie header
+occurrences and keeps generated Cache-Control private, no-store on
+cached HTTP responses from routes with authenticated caching enabled
+(including MISS/HIT/304). This is an HTTP intermediary policy, not a
+replacement for an identity-aware server-side cache key. It is not
+available in the published 0.5.0 artifact. Applications must reject
+ambiguous credentials and authorize before cache lookup. For bypassed
+responses, the application remains responsible for HTTP cache headers.
+
+Do not rely on dynamic response headers evaluated after a cache lookup
+to prevent replay of an older shared entry. Bypass private caching unless
+the identity and permissions are explicitly captured in an appropriate
+key. Rotate or purge historical affected namespaces and intermediary
+entries before migration. Cache configuration is process-global; do not
+share/reinitialize it between unrelated applications that require isolation.
+
 **Full contract:** [SECURITY.md](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) · [#53 residual investigation](https://github.com/agustin18/fastapi-cache/issues/53).

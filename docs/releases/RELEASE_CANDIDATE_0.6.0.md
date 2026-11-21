@@ -26,23 +26,29 @@
 ## Candidate build and tests — every checkbox requires actual evidence
 
 - [ ] Record PR HEAD SHA and merge SHA. Bump metadata to `0.6.0` on this
-  **unmerged candidate branch**; do not create `v0.6.0` tag yet.
+  candidate source (merged in #94, with corrective PR pending); do not
+  create `v0.6.0` tag yet.
 - [ ] Exact HEAD CI on Python 3.8–3.13, lint/types, Redis, benchmarks,
   CodeQL, installed-runtime security, release changelog gate and docs
   link validator all **green**. Log run URLs and failing-retry disposition.
 - [ ] [Phase B workflow](../../.github/workflows/migration-candidate-phase-b.yml):
   build a SINGLE 0.6.0 wheel/sdist pair, record **actual SHA-256** values,
   verify wheel METADATA and sdist pyproject, artifact provenance, and
-  `twine check`; no re-build inside consumer lanes.
+  `twine check`; no re-build inside consumer lanes. Require all 12
+  migration lanes AND seven exact-bundle security profiles (20 jobs total,
+  including build) in one successful initial manual dispatch on final stable.
+  Reruns are not promotion evidence; dispatch a new full run instead.
+  Source-only diagnostic security builds are not final
+  binary evidence.
 - [ ] 12 Python 3.8–3.13 × wheel/sdist runs on dedicated Redis 7.4:
   published legacy writer → exact 0.6.0 candidate reader →
   restricted ordinary-data rollback; verify `pip check` and targeted
   namespace cleanup, retain golden keys. Never resume unsafe private
   caching after rollback.
-- [ ] Installed independent *in-repo CI fixture* verifies ordinary
+- [ ] Installed *in-repo CI fixture* verifies ordinary
   MISS/HIT/304, protected-request bypass, opt-in `Vary`,
   `max_entries=2` LRU eviction, public capacity immutability,
-  default unbounded behavior. This is **not** consumer #91.
+  default unbounded behavior. This is controlled installed-package verification.
 - [ ] Verify locked main-only Poetry profiles and installed wheel/sdist
   `Requires-Python >=3.8,<3.14`. CPython 3.8–3.10 remains
   **legacy functional only**; recommended security-supported servers
@@ -54,17 +60,18 @@
   decisions individually. A passing prior-release audit is not a
   surrogate for candidate package evidence.
 
-## Real independent consumers — release blocker
+## Release validation policy
 
-- [ ] [#91 Consumer A](https://github.com/agustin18/fastapi-cache/issues/91):
-  independently maintained new app exercises standalone Redis, InMemory,
-  private/tenant safeguards, install metadata, lifecycle and error cases.
-- [ ] [#91 Consumer B](https://github.com/agustin18/fastapi-cache/issues/91):
-  independently maintained legacy user migrates real app from released
-  0.2.2, with clean install, selective Redis cleanup and safe rollback.
-- [ ] Attach evidence, versions, permissioned identifiers and actual
-  package digests. Fork examples, owner-run fixture and CI jobs count
-  **0/2**, even if all internal checks pass.
+Release readiness is determined by reproducible technical evidence and
+maintainer approval, under [CONTRIBUTING.md](../../CONTRIBUTING.md).
+Project-authored fixtures, installed-distribution tests, integration
+services and maintainer-run checks are valid technical evidence.
+Application feedback can strengthen coverage but is voluntary.
+
+No minimum number of users, external applications, deployments, or
+testimonials is required for any release or announcement. Do not invent
+or solicit evidence merely to meet a quota. Public claims must reflect
+what was actually tested; private application details are not required.
 
 ## Promotion — distinct manual authorizations
 
@@ -81,19 +88,27 @@
   `stable` only. Do not treat `workflow_dispatch` alone as a
   sufficient release-authorization control.
 - [ ] Prepare `0.6.0rc1` only if a separately approved prerelease
-  is useful for independent external exercises. A final-version
+  is useful for additional technical verification, after separately adapting
+  and testing the version-specific Phase B/publish gates. A final-version
   candidate wheel **must not be uploaded** under an RC tag.
 - [ ] Explicit maintainer GO for a final immutable tag, TestPyPI
   publish and smoke install; record tag/commit and both exact hashes.
-- [ ] Re-check dependencies, risk decisions and consumers, then obtain
-  **separate** maintainer GO for production PyPI; use manual publish
-  workflows, observe results and preserve provenance.
+- [ ] Re-check dependencies and risk decisions, then obtain
+  **separate** maintainer GO for production PyPI. Both manual workflows
+  require the annotated version tag, the successful manual Phase B run
+  on that exact stable commit (initial attempt and all 20 named jobs), and
+  explicitly approved wheel/sdist hashes.
+  They retrieve/verify the same pair instead of rebuilding. Production
+  requires matching TestPyPI index digests and fresh authenticated
+  Dependabot delta. Smoke-install from TestPyPI before production approval;
+  after publication download both files and verify hashes.
 - [ ] After release, repin the in-repo migration demo from 0.5.0 to
   **the exact published 0.6.0 distribution** and rerun it.
 - [ ] Publish version-accurate public documentation through restricted
   `github-pages` environment on `stable` only; verify live URL,
   links/search/mobile and preservation of historical v0.5.0 docs
-  before adding an external website link or advertising #88.
+  before adding a link to the hosted site. This is a separate docs task,
+  not a release or ordinary announcement gate.
 
 ## Evidence ledger
 
@@ -102,11 +117,9 @@
 | CI, security, docs | TBD | TBD | PENDING |
 | Exact wheel SHA-256 | TBD | TBD | PENDING |
 | Exact sdist SHA-256 | TBD | TBD | PENDING |
-| Phase B 13/13 | TBD | TBD | PENDING |
+| Phase B build + 12 migration + 7 exact security | TBD | TBD | PENDING |
 | Fresh Dependabot delta | TBD | TBD | PENDING |
 | #53 privacy disposition | TBD | TBD | PENDING |
-| #91 consumer A | TBD | TBD | PENDING |
-| #91 consumer B | TBD | TBD | PENDING |
 | Final GO / tag / TestPyPI / PyPI | TBD | TBD | **NOT AUTHORIZED** |
 
 The scope and status in [#92](https://github.com/agustin18/fastapi-cache/issues/92)

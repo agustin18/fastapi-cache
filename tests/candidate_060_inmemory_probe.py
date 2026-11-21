@@ -5,11 +5,12 @@ This is not an application-specific production certification.
 """
 
 import asyncio
+import hashlib
 import importlib.metadata as metadata
 import json
 from contextvars import ContextVar
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, Optional
 
 from fastapi import Depends, FastAPI, Response
 from starlette.requests import Request
@@ -55,10 +56,66 @@ def check_bounded_inmemory() -> None:
     asyncio.run(verify())
 
 
+def check_auth_privacy() -> None:
+    """Exercise installed auth/HTTP policy, not source checkout tests."""
+    FastAPICache.reset()
+    FastAPICache.init(InMemoryBackend(), prefix="candidate-auth")
+    app = FastAPI()
+    principal: ContextVar[str] = ContextVar("candidate-principal", default="anon")
+
+    async def resolve(request: Request) -> None:
+        values = request.headers.getlist("Cookie")
+        principal.set(next((v for v in reversed(values) if v), "anon"))
+
+    @app.get("/default", dependencies=[Depends(resolve)])
+    @cache(expire=60, namespace="default")
+    async def public_or_private() -> Dict[str, str]:
+        return {"principal": principal.get()}
+
+    def identity_key(
+        func: Any, namespace: str, *, request: Optional[Request] = None,
+        **_: Any
+    ) -> str:
+        # Synthetic fixture only; actual apps key on verified principal state.
+        identity = tuple(request.headers.getlist("Cookie")) if request is not None else ()
+        return f"{namespace}:{func.__name__}:{hashlib.sha256(repr(identity).encode()).hexdigest()}"
+
+    @app.get("/opt-in")
+    @cache(expire=60, namespace="private", cache_authenticated=True,
+           key_builder=identity_key)
+    async def opt_in(request: Request) -> Dict[str, str]:
+        return {"principal": request.headers.get("Cookie", "anon")}
+
+    with TestClient(app) as client:
+        public = client.get("/default")
+        duplicate = client.get("/default", headers=[("Cookie", ""), ("Cookie", "alice")])
+        assert public.json() == {"principal": "anon"}
+        assert duplicate.json() == {"principal": "alice"}
+        assert "X-FastAPI-Cache" not in duplicate.headers
+
+        a = client.get("/opt-in", headers={"Cookie": "alice"})
+        again = client.get("/opt-in", headers={"Cookie": "alice"})
+        b = client.get("/opt-in", headers={"Cookie": "bob"})
+        conditional = client.get(
+            "/opt-in", headers={"Cookie": "alice", "If-None-Match": a.headers["etag"]}
+        )
+        anon = client.get("/opt-in")
+        assert a.json() == again.json() == {"principal": "alice"}
+        assert b.json() == {"principal": "bob"}
+        assert anon.json() == {"principal": "anon"}
+        assert conditional.status_code == 304
+        assert conditional.content == b""
+        assert again.headers["X-FastAPI-Cache"] == "HIT"
+        assert all(r.headers["cache-control"] == "private, no-store"
+                   for r in (a, again, b, conditional, anon))
+    FastAPICache.reset()
+
+
 def main() -> None:
     assert metadata.version("fastapi-cache-stable") == "0.6.0"
     assert fastapi_cache.__version__ == "0.6.0"
     check_bounded_inmemory()
+    check_auth_privacy()
     try:
         metadata.version("fastapi-cache2")
     except metadata.PackageNotFoundError:
@@ -164,6 +221,8 @@ def main() -> None:
         "ordinary": "MISS/HIT/304",
         "locale_variants": "MISS/HIT/304/MISS",
         "request_explicit": "bypass",
+        "credential_duplicates": "bypass",
+        "authenticated_http": "private, no-store (MISS/HIT/304)",
         "error_status": "not_cached",
         "result": "PASS",
     }, sort_keys=True))

@@ -229,8 +229,10 @@ def _has_auth_headers(request: Optional[Request]) -> bool:
     """Return true when the request carries an authentication header."""
     if request is None:
         return False
-    return bool(request.headers.get("Authorization")) or bool(
-        request.headers.get("Cookie")
+    return any(
+        value
+        for name in ("authorization", "cookie")
+        for value in request.headers.getlist(name)
     )
 
 
@@ -458,6 +460,10 @@ def cache(
             if has_auth_headers and not cache_authenticated_enabled:
                 return await ensure_async_func(*args, **kwargs)
 
+            # An opt-in identity-aware server-side cache must not imply that
+            # HTTP intermediaries can reuse its responses. Even anonymous
+            # requests to an opt-in endpoint may share its URL with private ones.
+            private_http_cache = request is not None and cache_authenticated_enabled
             effective_coder = coder or FastAPICache.get_coder()
             effective_expire = expire or FastAPICache.get_expire()
             effective_key_builder = key_builder or FastAPICache.get_key_builder()
@@ -576,7 +582,10 @@ def cache(
                     }
                     if normalized_vary_headers:
                         headers["Vary"] = ", ".join(normalized_vary_headers)
-                    cache_control = _cache_control_header(effective_expire)
+                    cache_control = (
+                        "private, no-store" if private_http_cache
+                        else _cache_control_header(effective_expire)
+                    )
                     if cache_control is not None:
                         headers["Cache-Control"] = cache_control
                     response.headers.update(headers)
@@ -584,7 +593,9 @@ def cache(
                     if _etag_matches(if_none_match, etag):
                         response.status_code = HTTP_304_NOT_MODIFIED
                         return response
-                if normalized_vary_headers and isinstance(result, Response):
+                if (
+                    normalized_vary_headers or private_http_cache
+                ) and isinstance(result, Response):
                     # Starlette sends the returned Response, not FastAPI's
                     # injected response. Preserve the non-opt-in contract.
                     if response is not None:
@@ -599,7 +610,10 @@ def cache(
                     }
                     if normalized_vary_headers:
                         headers["Vary"] = ", ".join(normalized_vary_headers)
-                    cache_control = _cache_control_header(ttl)
+                    cache_control = (
+                        "private, no-store" if private_http_cache
+                        else _cache_control_header(ttl)
+                    )
                     if cache_control is not None:
                         headers["Cache-Control"] = cache_control
                     response.headers.update(headers)
@@ -611,7 +625,9 @@ def cache(
                 result = cast(
                     R, effective_coder.decode_as_type(cached, type_=return_type)
                 )
-                if normalized_vary_headers and isinstance(result, Response):
+                if (
+                    normalized_vary_headers or private_http_cache
+                ) and isinstance(result, Response):
                     # PickleCoder can restore a Response directly. Metadata
                     # attached only to the injected response is not sent.
                     if response is not None:

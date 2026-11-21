@@ -140,6 +140,26 @@ resource exhaustion. Validate Host using `TrustedHostMiddleware` or
 equivalent edge rules. Do not assume host isolation protects hidden
 `contextvars`, tenant identity, or separate apps sharing a prefix (#53).
 
+## Candidate 0.6.0 authentication and HTTP cache boundaries
+
+The proposed 0.6.0 correction checks all Authorization/Cookie header
+occurrences and keeps generated Cache-Control private, no-store on
+cached HTTP responses from routes with authenticated caching enabled
+(including MISS/HIT/304). This is an HTTP intermediary policy, not a
+replacement for an identity-aware server-side cache key. It is not
+available in the published 0.5.0 artifact. Applications must reject
+ambiguous credentials and authorize before cache lookup. For bypassed
+responses, the application remains responsible for HTTP cache headers.
+
+Do not rely on dynamic response headers evaluated after a cache lookup
+to prevent replay of an older shared entry. Bypass private caching unless
+the identity and permissions are explicitly captured in an appropriate
+key. Rotate or purge historical affected namespaces and intermediary
+entries before migration. Cache configuration is process-global; do not
+share/reinitialize it between unrelated applications that require isolation.
+
+See [0.6.0 draft risk disposition](audit/security/RELEASE_RISK_DISPOSITION_0.6.0.md).
+
 ## Reporting a vulnerability
 
 Use GitHub private vulnerability reporting:

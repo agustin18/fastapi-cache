@@ -5,6 +5,10 @@ on:
     branches: [stable]
     paths:
       - ".github/workflows/migration-candidate-phase-b.yml"
+      - ".github/workflows/security-installed-profiles.yml"
+      - "scripts/validate_security_audit.py"
+      - "scripts/verify_release_bundle.py"
+      - "tests/test_release_bundle.py"
       - "pyproject.toml"
       - "poetry.lock"
       - "fastapi_cache/**"
@@ -155,6 +159,8 @@ jobs:
               (Path(os.environ["RUNNER_TEMP"]) / "phase-b-dist" / "provenance.json").read_text()
           )
           assert data["source_sha"] == os.environ["EXPECTED_SHA"]
+          assert str(data["workflow_run_id"]) == os.environ["GITHUB_RUN_ID"]
+          assert str(data["workflow_attempt"]) == os.environ["GITHUB_RUN_ATTEMPT"]
           assert data["candidate_version"] == "0.6.0"
           assert data["published"] is False
           for key in ("wheel", "sdist"):
@@ -302,3 +308,12 @@ jobs:
           path: ${{ runner.temp }}/phase-b-evidence/
           if-no-files-found: warn
           retention-days: 90
+
+
+  exact-installed-security:
+    name: Exact artifact security
+    needs: build-exact-artifacts
+    uses: ./.github/workflows/security-installed-profiles.yml
+    with:
+      artifact_name: migration-phase-b-060-distributions
+      source_sha: ${{ github.event.pull_request.head.sha || github.sha }}

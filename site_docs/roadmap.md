@@ -8,7 +8,7 @@
 |---|---|---|---|
 | P0 when reproducible | [#53 — hidden identity/tenant inputs](https://github.com/agustin18/fastapi-cache/issues/53) | Correct private-response behavior | No promise of generic autodetection |
 | P1 / code merged, release pending | [#54 — bounded InMemory](https://github.com/agustin18/fastapi-cache/issues/54) | Optional read-only per-instance `max_entries` with LRU/TTL | **Not in 0.5.0**; no byte or multiworker cap |
-| P2 / defer by default | [#50 — typed events](https://github.com/agustin18/fastapi-cache/issues/50) | Optional HIT/MISS/BYPASS/error events | **Not implemented/published**; defer to 0.7.0 unless independently audited before freeze |
+| P2 / defer by default | [#50 — typed events](https://github.com/agustin18/fastapi-cache/issues/50) | Optional HIT/MISS/BYPASS/error events | **Not implemented/published**; target 0.7.0 outside the scope of 0.6.0 |
 | Research | Single-flight | Avoid duplicated same-key computations | Needs cancellation/race tests |
 | Design first | [#49 — parameter exclusion](https://github.com/agustin18/fastapi-cache/issues/49) | Stable keys for irrelevant dependencies | No implicit removal of user/tenant/locale |
 | Maintenance | [#45 DynamoDB](https://github.com/agustin18/fastapi-cache/issues/45), [#55 FIPS](https://github.com/agustin18/fastapi-cache/issues/55) | Real defect fixes | Isolated from new minor features |
@@ -23,3 +23,21 @@ The [capability gaps and acceptance criteria](https://github.com/agustin18/fasta
 **Not planned for 0.6.0 without a separate design:** general tag invalidation, distributed locks, rate limiting, circuit breaking, a second public API.
 
 The full [GitHub roadmap](https://github.com/agustin18/fastapi-cache/blob/stable/ROADMAP.md) includes research, historical PRs and release evidence. [Browse issues](https://github.com/agustin18/fastapi-cache/issues).
+
+
+## Proposed future releases
+
+- **0.7.0:** optional privacy-safe events (#50), local single-flight (#96)
+  and installed-distribution benchmarks (#100). Begin support qualification
+  for modern Python (#51) and FIPS portability (#55).
+- **0.8.0:** bounded, explicitly reviewed tag invalidation (#97) and
+  stale-response policies (#98).
+- **0.9.0:** independently scoped app/lifespan configuration (#99);
+  start design earlier without promising a new public API.
+
+The [quality and adoption tracker](https://github.com/agustin18/fastapi-cache/issues/95)
+defines acceptance evidence, not delivery dates. Release approval
+requires applicable final artifact/security/migration evidence and
+explicit maintainer approval. User feedback is welcome through the
+issue tracker, but there is no adoption quota or external-test
+requirement for releases or announcements.

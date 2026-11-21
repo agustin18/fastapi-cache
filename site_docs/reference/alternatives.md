@@ -35,8 +35,8 @@ other projects.
   a real Redis migration and narrowly scoped rollback using exact installed
   distribution files.
 - **Safety and transparency:** keep private-response guards, document
-  the library/application responsibility boundary and validate real
-  consumer behavior with independent evidence.
+  the library/application responsibility boundary and validate installed
+  package behavior with reproducible integration and security evidence.
 - **Bounded local caching:** [#85](https://github.com/agustin18/fastapi-cache/pull/85)
   adds an optional read-only constructor cap with indexed expiry tracking
   and least-recently-used eviction. **No published 0.6.0 artifact exists yet.**

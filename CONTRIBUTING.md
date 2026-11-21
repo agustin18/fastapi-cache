@@ -195,7 +195,21 @@ Infrastructure-only pull requests can use the `skip-changelog` label.
 
 - Releases are cut from `stable` only.
 - The release commit must pass the full test matrix.
-- The tag must match the version in `pyproject.toml`.
+- Release readiness is based on correctness, supported-runtime compatibility,
+  applicable installed-distribution/integration tests, security review,
+  version-accurate documentation, provenance and explicit maintainer approval.
+- Maintainer-authored tests, synthetic integration fixtures and optional private
+  application tests are valid technical evidence within their scope. Describe
+  evidence accurately; do not expose private application details.
+- **No minimum number of external consumers, deployments, testimonials or
+  third-party application validations is required for releases or announcements.**
+  User reports and feedback are welcome but voluntary. Do not imply independent
+  adoption, production certification or universal security without evidence.
+- The annotated release tag must match the version in `pyproject.toml`.
+- For the 0.6.0 train, use the same reviewed wheel/sdist pair from the final
+  stable Phase B run for installed security, TestPyPI and PyPI; verify exact
+  source/run provenance and individual hashes. Requalify any changed artifact.
+  See [the candidate checklist](docs/releases/RELEASE_CANDIDATE_0.6.0.md).
 - TestPyPI publishing uses the manual `publish-testpypi.yml` workflow and the `testpypi`
   environment. It never runs on `release: published`.
 - PyPI publishing is manual-only via `workflow_dispatch`; it never runs on

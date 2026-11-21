@@ -35,9 +35,28 @@ from the merged source that is being prepared as 0.6.0
 ([PR #93](https://github.com/agustin18/fastapi-cache/pull/93)).
 Full candidate readiness requires new installed wheel/sdist
 checks, real Redis 7.4 migration and rollback verification,
-modern security scans, the exact candidate SHA and two
-independent external consumer exercises. Until recorded, those
-checks are **not completed release evidence**.
+modern security scans of the same files and the exact final source SHA.
+Until recorded, these checks are **not completed release evidence**.
+
+Validation is based on reproducible project tests, installed-package
+checks and reviewed integration evidence. The support matrix and
+documented limitations define the scope of these results. Report
+reproducible defects through the issue tracker; use private vulnerability
+reporting for security issues.
+
+### Privacy and promotion safeguards
+
+The corrective candidate checks every Authorization/Cookie occurrence
+and applies private, no-store HTTP policy to cached results from routes
+with authentication caching enabled. These are not substitutes for
+validated identity-aware keys or authorization checks. Existing cache
+entries in HTTP intermediaries may require invalidation. See the
+[security contract](../../SECURITY.md) and
+[proposed risk disposition](../../audit/security/RELEASE_RISK_DISPOSITION_0.6.0.md).
+
+The release workflow requires a reviewed, single wheel/sdist pair used
+in migration and installed security profiles and in both index uploads.
+No release artifact has been authorized yet.
 
 ## Compatibility and limitations
 
@@ -64,6 +83,5 @@ checks are **not completed release evidence**.
 
 **NO-GO pending** [#92](https://github.com/agustin18/fastapi-cache/issues/92),
 [#53 privacy signoff](https://github.com/agustin18/fastapi-cache/issues/53),
-[#91 two external consumers](https://github.com/agustin18/fastapi-cache/issues/91),
 exact final-artifact evidence and explicit manual approval.
 Do not treat these draft notes as a PyPI availability statement.
