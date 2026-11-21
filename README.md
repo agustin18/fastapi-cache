@@ -4,19 +4,16 @@
 > The Python import stays `fastapi_cache`; intentional safety/behavior changes
 > are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
 >
-> **Published releases and availability:** [fastapi-cache-stable on PyPI](https://pypi.org/project/fastapi-cache-stable/).
-> Version 0.5.0 introduces opt-in HTTP header variants; check its actual
-> availability on PyPI before installing. Its migration/security evidence is
-> tracked in [#69](https://github.com/agustin18/fastapi-cache/issues/69)
-> and [#66](https://github.com/agustin18/fastapi-cache/issues/66). ·
+> **Latest published stable:** [0.5.0 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.5.0/)
+> (released 2026-11-21) ·
+> [Release notes](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_NOTES_0.5.0.md) ·
+> [Release evidence](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.5.0.md) ·
 > [Quickstart](https://github.com/agustin18/fastapi-cache/blob/stable/docs/QUICKSTART.md) ·
 > [Migration](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md) ·
 > [Compatibility](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md) ·
 > [Security](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) ·
 > [Support](https://github.com/agustin18/fastapi-cache/blob/stable/SUPPORT.md) ·
-> [Changelog](https://github.com/agustin18/fastapi-cache/blob/stable/CHANGELOG.md) ·
-> [Release notes](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_NOTES_0.5.0.md) ·
-> [Published 0.4.1 provenance](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.4.1.md).
+> [Changelog](https://github.com/agustin18/fastapi-cache/blob/stable/CHANGELOG.md).
 > Pre-releases must be independently evaluated before production deployment.
 >
 > Installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has
@@ -63,16 +60,17 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 ## Development roadmap
 
-The published 0.4.x line prioritizes safe, low-friction migration over feature
+The published 0.5.0 line prioritizes safe, low-friction migration over feature
 count. See [the roadmap](https://github.com/agustin18/fastapi-cache/blob/stable/ROADMAP.md) and its linked issues for
-0.4.x maintenance and 0.5.x work. Features in the roadmap are **not** included
-in 0.4.x.
+maintenance and later opt-in work. Roadmap items are **not** included in 0.5.0
+and are not delivery commitments.
 
 ## Features
 
 - Same `fastapi_cache` imports and legacy default cache-key algorithm.
 - Correctness fixes for cache invalidation, error responses and HTTP cache headers.
 - Auth/Cookie privacy bypass by default; opt-in typed JSON decoding for Pydantic v2.
+- Opt-in `vary_headers` for explicitly declared public header dimensions, with versioned hashed keys.
 - Redis and InMemory backends; Memcached and DynamoDB remain experimental.
 - CI across Python versions, security profiles and published-wheel Redis migration.
 
@@ -85,8 +83,7 @@ in 0.4.x.
 
 ## Install
 
-Install a **version confirmed available on PyPI**, pinned to the
-exact distribution you test. For 0.5.0, once listed on PyPI:
+Install the **published version** you have tested, pinned exactly:
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
@@ -94,9 +91,9 @@ python -m pip install "fastapi-cache-stable[redis]==0.5.0"
 python -m pip check
 ```
 
-If 0.5.0 is not listed yet, keep using a verified published version
-(such as [0.4.1](https://pypi.org/project/fastapi-cache-stable/0.4.1/)).
-Do not treat the repository version alone as publication evidence.
+The [0.5.0 release evidence](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.5.0.md)
+records the published wheel/sdist hashes and workflows. Do not treat the
+repository version alone as publication evidence.
 
 For process-local InMemory caching, omit `[redis]`. See the
 [5-minute quickstart](https://github.com/agustin18/fastapi-cache/blob/stable/docs/QUICKSTART.md) for a complete example.
@@ -185,7 +182,7 @@ close the old connection pool or isolate multiple FastAPI apps in one process.
 
 ### Use the `@cache` decorator
 
-If you want cache a FastAPI response transparently, you can use the `@cache`
+If you want to cache a FastAPI response transparently, use the `@cache`
 decorator between the router decorator and the view function.
 
 Parameter | type | default | description
@@ -378,12 +375,11 @@ validated identity, tenant and permissions when authenticated caching is
 explicitly enabled. DB session objects with changing `repr()` values can
 otherwise produce perpetual misses; see the migration checklist.
 
-### Explicit request-header variants (0.5.0; unavailable in 0.4.1)
+### Explicit request-header variants (0.5.0)
 
-**Versioned API:** `vary_headers` was introduced for the 0.5.0 release
-line. It is **not part of published 0.4.1**. Before using this example,
-verify that 0.5.0 is listed on PyPI, install the exact version and review
-your application-specific cache-key/identity and namespace-migration
+**Versioned API:** `vary_headers` was introduced in published 0.5.0.
+It is **not part of published 0.4.1**. Pin the tested 0.5.0 distribution and
+review your application-specific cache-key/identity and namespace-migration
 requirements below.
 
 For anonymous/public endpoints that depend on a **known** header through a
