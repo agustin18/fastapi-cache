@@ -66,6 +66,8 @@ jobs:
           assert "fastapi-cache-stable==0.5.0" in quickstart
           assert "fastapi-cache-stable==0.4.1" not in quickstart
           PY
+      - name: Validate every built HTML link, target file and page fragment
+        run: python scripts/check_docs_links.py --site-dir site
       - name: Upload preview without publishing a website
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
