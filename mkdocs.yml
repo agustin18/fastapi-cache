@@ -1,0 +1,80 @@
+site_name: fastapi-cache-stable
+site_description: Drop-in FastAPI response caching with safe migration from fastapi-cache2.
+repo_url: https://github.com/agustin18/fastapi-cache
+repo_name: agustin18/fastapi-cache
+edit_uri: edit/stable/site_docs/
+docs_dir: site_docs
+site_dir: site
+use_directory_urls: true
+
+nav:
+  - Overview: index.md
+  - Get started:
+      - Install from scratch: getting-started.md
+      - Migrate from fastapi-cache2: migration.md
+      - Choose a backend: backends.md
+  - Guides:
+      - Redis standalone: guides/redis.md
+      - InMemory: guides/inmemory.md
+      - Privacy and tenant safety: guides/privacy.md
+      - Troubleshooting: guides/troubleshooting.md
+  - Reference:
+      - Capabilities: reference/features.md
+      - Compatibility: reference/compatibility.md
+      - Version history: reference/releases.md
+      - Roadmap: roadmap.md
+
+theme:
+  name: material
+  variant: modern
+  language: en
+  font: false
+  icon:
+    logo: material/database-check-outline
+    repo: fontawesome/brands/github
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - content.code.copy
+    - content.tabs.link
+    - search.suggest
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+extra_css:
+  - assets/stylesheets/extra.css
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/agustin18/fastapi-cache
+copyright: Apache-2.0 · Community-maintained, independent from upstream.

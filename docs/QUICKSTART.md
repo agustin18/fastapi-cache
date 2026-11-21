@@ -1,7 +1,7 @@
-# Quickstart — fastapi-cache-stable 0.4.1
+# Quickstart — fastapi-cache-stable 0.5.0
 
 Five-minute example of response caching with
-[`fastapi-cache-stable`](https://pypi.org/project/fastapi-cache-stable/0.4.1/).
+[`fastapi-cache-stable`](https://pypi.org/project/fastapi-cache-stable/0.5.0/).
 The Python import remains `fastapi_cache`.
 
 ## Install
@@ -12,7 +12,7 @@ environment. Create a clean virtual environment:
 ```sh
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install "fastapi-cache-stable==0.4.1" "uvicorn"
+python -m pip install "fastapi-cache-stable==0.5.0" "uvicorn"
 python -m pip check
 ```
 
@@ -63,7 +63,7 @@ next identical request within the TTL should show `HIT`.
 The decorator order matters: `@app.get` is **above** `@cache`.
 
 **InMemory is per Python process**, not shared between workers; it
-has no size cap in 0.4.x. Use Redis standalone when workers must
+has no size cap in 0.5.0. Use Redis standalone when workers must
 share cached values.
 
 ## Redis standalone
@@ -71,14 +71,30 @@ share cached values.
 First install the tested Redis client line:
 
 ```sh
-python -m pip install "fastapi-cache-stable[redis]==0.4.1"
+python -m pip install "fastapi-cache-stable[redis]==0.5.0"
 ```
 
 Use [the complete Redis lifespan example](../README.md#quick-start)
-and a **test Redis instance**. The 0.4.x compatibility matrix covers
+and a **test Redis instance**. The 0.5.0 compatibility matrix covers
 Python-conditional redis-py 4.6–8.1 clients and Redis servers 6.2/7.0/7.4/8.0;
 see [COMPATIBILITY.md](../COMPATIBILITY.md) and the
 [Redis research evidence](../audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md).
+
+## Header variations in 0.5.0
+
+Public responses that vary on a known header can opt in with
+`@cache(expire=60, vary_headers=("Accept-Language",))`. Declare
+**every** representation-defining dimension and validate untrusted
+header values to avoid cache flooding. An HTTP `Vary` header by
+itself does not partition the library's internal store. The feature
+is not automatic tenant isolation, and it does not make hidden
+authentication or role state safe. See
+[the privacy guide](../site_docs/guides/privacy.md) and
+[#53](https://github.com/agustin18/fastapi-cache/issues/53).
+
+Published 0.5.0 InMemory is **unbounded per process**. The separate
+[#54 proposal](https://github.com/agustin18/fastapi-cache/issues/54)
+adds optional capacity only in a future release if reviewed and shipped.
 
 ## Privacy and migration rules
 
@@ -92,7 +108,7 @@ see [COMPATIBILITY.md](../COMPATIBILITY.md) and the
   `Vary`, locale, tenant or custom-auth headers. Use a suitable
   custom key builder, or bypass caching until variation is proven safe.
   See [the header/Vary investigation](https://github.com/agustin18/fastapi-cache/issues/53).
-  **0.3.1 and 0.4.1** bypass cache reads and writes when an endpoint
+  **0.3.1, 0.4.1 and 0.5.0** bypass cache reads and writes when an endpoint
   explicitly declares `Request` and uses the default builder; endpoints
   with a custom, identity-aware key builder still cache. This does not make
   hidden middleware/context variables safe for routes that do not declare
@@ -110,6 +126,7 @@ see [COMPATIBILITY.md](../COMPATIBILITY.md) and the
 
 ## Continue
 
+- [New searchable documentation source](../site_docs/index.md) (web publishing is separate)
 - [Migration and rollback](../MIGRATION.md)
 - [Precise compatibility matrix](../COMPATIBILITY.md)
 - [Security limitations](../SECURITY.md)

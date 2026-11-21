@@ -1,0 +1,64 @@
+:root {
+  --fc-accent: #0f9f92;
+  --fc-accent-soft: rgba(15, 159, 146, .10);
+  --fc-ink: #14283f;
+}
+.md-typeset .landing-kicker {
+  color: var(--fc-accent);
+  font-size: .73rem;
+  font-weight: 800;
+  letter-spacing: .13em;
+  margin: 1.9rem 0 .75rem;
+}
+.md-typeset h1 {
+  font-weight: 770;
+  letter-spacing: -.04em;
+  line-height: 1.17;
+}
+.md-typeset .landing-actions {
+  display: flex;
+  gap: .65rem;
+  flex-wrap: wrap;
+  margin: 1.8rem 0 2rem;
+}
+.md-typeset .landing-actions .md-button {
+  border-radius: .6rem;
+  padding: .7rem 1.1rem;
+  font-weight: 700;
+}
+.md-typeset .grid.cards > ul > li {
+  border-radius: .9rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  box-shadow: 0 7px 26px rgba(13, 36, 60, .035);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.md-typeset .grid.cards > ul > li:hover {
+  border-color: var(--fc-accent);
+  box-shadow: 0 12px 30px rgba(13, 36, 60, .08);
+  transform: translateY(-2px);
+}
+.md-typeset .grid.cards .twemoji,
+.md-typeset .grid.cards .emojione {
+  color: var(--fc-accent);
+}
+.md-typeset .landing-rail {
+  margin-top: 2.2rem;
+  border-left: 3px solid var(--fc-accent);
+  border-radius: 0 .5rem .5rem 0;
+  background: var(--fc-accent-soft);
+  padding: .85rem 1rem;
+  font-size: .88rem;
+}
+[data-md-color-scheme="slate"] {
+  --fc-accent: #4fdbca;
+  --fc-accent-soft: rgba(79, 219, 202, .09);
+}
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .grid.cards > ul > li {
+    transition: none;
+  }
+}
+@media (max-width: 44rem) {
+  .md-typeset .landing-actions { flex-direction: column; }
+  .md-typeset .landing-actions .md-button { text-align: center; }
+}
