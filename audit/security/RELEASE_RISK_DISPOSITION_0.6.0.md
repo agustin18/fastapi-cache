@@ -1,16 +1,17 @@
-# 0.6.0 privacy risk disposition — review draft
+# 0.6.0 privacy risk disposition — promotion acceptance record
 
 **NOT a release approval.** 0.5.0 remains published. This document
-records proposed scope and required evidence for #53/#92. Review the
-exact corrective PR and then the final promotion SHA and distributions.
-Do not infer an accepted final risk decision from this draft.
+records scope and required evidence for [#53](https://github.com/agustin18/fastapi-cache/issues/53)
+and [#92](https://github.com/agustin18/fastapi-cache/issues/92). The corrective
+PR #104 is merged. Final acceptance belongs to the maintainer after
+verification of the exact final stable SHA and distributions.
 
 ## Package-controlled gates
 
 | ID | Ownership / impact | Proposed action and verification | Disposition |
 |---|---|---|---|
-| P1 | Package; credential-header classification, confidentiality | Inspect every Authorization/Cookie occurrence; retain default bypass before backend reads/writes. Test synthetic duplicate headers, including one empty and one nonempty. Existing normal/empty-header tests remain. | Fix staged; exact-head and independent review pending |
-| P2 | Package; HTTP intermediary policy, confidentiality | For cached HTTP results on authentication-opt-in routes, generate private, no-store on MISS/HIT/304, including anonymous requests to those routes and returned Response objects. Server-side storage remains governed by the explicit identity-aware builder. | Fix staged; exact-head and independent review pending |
+| P1 | Package; credential-header classification, confidentiality | Inspect every Authorization/Cookie occurrence; retain default bypass before backend reads/writes. Test synthetic duplicate headers, including one empty and one nonempty. Existing normal/empty-header tests remain. | Corrected in #104; review and candidate CI passed; verify final artifact |
+| P2 | Package; HTTP intermediary policy, confidentiality | For cached HTTP results on authentication-opt-in routes, generate private, no-store on MISS/HIT/304, including anonymous requests to those routes and returned Response objects. Server-side storage remains governed by the explicit identity-aware builder. | Corrected in #104; review and candidate CI passed; verify final artifact |
 | P3 | Package; explicit Request with default builder and explicit header variations | Preserve read/write bypass, versioned hashed Vary keys, all declared field values and no storage of uncovered Vary/private/no-store on evaluated responses. Regression tests and Redis fixtures. | Verify final artifact; no blanket safety claim |
 | P4 | Package; legacy key/namespace migration | Preserve ordinary keys; ensure protected requests do not access previous unsafe entries. Verify selective cleanup, unrelated entries and ordinary-data rollback. | Final artifact proof required |
 
@@ -24,7 +25,7 @@ responses; invalidate those caches when migrating affected routes.
 
 | ID | Ownership / impact | Required consumer action | Proposed disposition |
 |---|---|---|---|
-| A1 | Application; hidden context, custom authentication and role/tenant state, confidentiality | Authenticate/authorize before cache lookup. Use validated identity, role, tenant and every representation dimension in a reviewed key, or do not decorate the endpoint. The synthetic hidden-context test characterizes the unsafe configuration and explicit no-cache alternative. | Accept only with documented action and independent review |
+| A1 | Application; hidden context, custom authentication and role/tenant state, confidentiality | Authenticate/authorize before cache lookup. Use validated identity, role, tenant and every representation dimension in a reviewed key, or do not decorate the endpoint. The synthetic hidden-context test characterizes the unsafe configuration and explicit no-cache alternative. | Proposed scoped maintainer acceptance, pending final evidence |
 | A2 | Application/infrastructure; forwarded identity, Host and proxy trust | Strip untrusted forwarding headers; trust only configured intermediaries; validate host, identity and tenant. Never infer authorization from Vary. | Same |
 | A3 | Shared; attacker-controlled cardinality, availability | Normalize/limit header values, request size and rates; use bounded TTLs, memory quotas/eviction and optional local entry cap. Hashing does not authenticate or bound entry count. | Same |
 | A4 | Shared; stale/legacy private Redis or intermediary entries, confidentiality | Rotate affected prefixes or perform selective purge before serving; invalidate intermediary caches; do not restore unsafe historical caching on rollback. Never flush unrelated data. | Same; block if protected path reads unsafe data |
@@ -45,15 +46,15 @@ response inputs are detectable.
 - Candidate CI and synthetic fixtures are not third-party adoption.
 - The final record must include exact source SHA, both artifact SHA-256
   values, successful run IDs, new/reopened advisory disposition, reviewer
-  decision and independent review of the scoped residuals. Historical
+  decision and explicit maintainer acceptance of the scoped residuals. Historical
   0.5.0 risk acceptance is not consent for 0.6.0.
 - Any demonstrable unmitigated package-controlled private replay is
   NO-GO. Fix it instead of labeling it application-owned.
 - Reconsider upon new auth/cache behavior, configuration redesign,
   reproduced cross-tenant issue or relevant vulnerability.
 
-**Current decision: pending independent counteraudit and final-artifact
-acceptance.** No tag or publication is authorized by this document.
+**Current decision: GO to prepare final promotion; final risk acceptance
+and publication approval pending.** No tag or publication is authorized.
 
 
 ## Contraauditoría de release — 2026-11-21
@@ -186,7 +187,7 @@ del mantenedor, promoción final y verificaciones exactas recién descritas.
 Esta revisión no autoriza el merge, tag ni publicación.
 
 
-### Remediation follow-up (pending verification)
+### Remediation follow-up (completed on corrective candidate; final SHA pending)
 
 CA1: replace the ambiguous raw-header examples with a narrowly scoped
 structured HMAC over validated identity dimensions, fail closed for missing
@@ -200,3 +201,41 @@ bundle download/tag preflight, environment settings, security freshness,
 maintainer acceptance and publication remain separate final gates.
 CA4/CA5: clarify RC scope and candidate HTTP policy in migration guides.
 No release authorization; run new HEAD checks and incremental review.
+
+## Current promotion decision — 2026-11-21
+
+#104 exact reviewed HEAD `8ff49aa28632e87db0586bec771483910ebf5554`
+passed 80/80 jobs; merged stable base for promotion
+`b5d9e125e49ae54b578c1e2b98f33bb9b5f452c0`.
+See [incremental review](https://github.com/agustin18/fastapi-cache/pull/104#issuecomment-7067089035),
+[CI](https://github.com/agustin18/fastapi-cache/actions/runs/44933031194) and
+[Phase B](https://github.com/agustin18/fastapi-cache/actions/runs/44933031159).
+CA1–CA5 corrected or documented on that candidate. No new reproduced
+unmitigated package-owned private replay was identified in that review.
+These are scoped results, not universal security or external certification.
+The maintainer requested promotion preparation, not final acceptance or upload.
+
+### Maintainer signoff on final immutable evidence
+
+| Field | Record |
+|---|---|
+| Authority | Repository maintainer (explicit acceptance required) |
+| Decision date | Pending actual acceptance |
+| Final stable SHA | Pending promotion merge |
+| Exact wheel / sdist SHA-256 | Pending final manual Phase B and byte verification |
+| Residuals | A1–A6 only with documented mitigations; pending explicit decision |
+| Package gates | P1–P4 must pass; unmitigated package-owned disclosure is NO-GO |
+| Dependency risks | Fresh authenticated delta and disposition of material findings |
+| Publication | Not authorized; separate tag, TestPyPI and PyPI decisions |
+
+Proposed attestation, **not a signed decision**:
+"I accept the documented bounded application/infrastructure/shared residuals
+A1–A6 for the exact reviewed 0.6.0 stable commit and artifact hashes, subject
+to documented mitigations, passing P1–P4 and security evidence. I do not
+accept known unmitigated package-controlled private replay. This is maintainer
+risk acceptance, not external certification or adoption evidence."
+
+Record the actual decision, date, final SHA and hashes in a maintainer-authorized
+comment on #53 and link from #92 and [the status ledger](../../docs/releases/RELEASE_STATUS_0.6.0.md).
+Do not change the verified commit merely to insert its own SHA or artifact
+hashes. Append verified links in a post-publication documentation follow-up.

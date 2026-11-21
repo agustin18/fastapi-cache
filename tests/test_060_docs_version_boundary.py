@@ -44,3 +44,17 @@ def test_readme_and_roadmap_do_not_claim_060_was_published() -> None:
     assert "#50" in roadmap
     assert "0.7.0" in roadmap
     assert "190d105915972d436ddbf4ad152ad654a4db392a" in roadmap
+
+
+def test_promotion_keeps_public_install_pins_and_unpublished_status() -> None:
+    changelog = _read("CHANGELOG.md")
+    status = _read("docs/releases/RELEASE_STATUS_0.6.0.md")
+    assert "## [0.6.0]" in changelog
+    assert changelog.index("## [0.6.0]") < changelog.index("## [0.5.0]")
+    assert "Promotion prepared, not published" in status
+    assert "Exact wheel SHA-256 | Pending" in status
+    assert "Exact sdist SHA-256 | Pending" in status
+    assert "Not authorized" in status
+    assert "fastapi-cache-stable[redis]==0.5.0" in _read("README.md")
+    assert "fastapi-cache-stable==0.5.0" in _read("docs/QUICKSTART.md")
+    assert not list((ROOT / "changelog.d").glob("[0-9]*.md"))
