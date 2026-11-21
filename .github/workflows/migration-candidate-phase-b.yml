@@ -5,6 +5,8 @@ on:
     branches: [stable]
     paths:
       - ".github/workflows/migration-candidate-phase-b.yml"
+      - ".github/workflows/security-installed-profiles.yml"
+      - "scripts/validate_security_audit.py"
       - "pyproject.toml"
       - "poetry.lock"
       - "fastapi_cache/**"
@@ -302,3 +304,12 @@ jobs:
           path: ${{ runner.temp }}/phase-b-evidence/
           if-no-files-found: warn
           retention-days: 90
+
+
+  exact-installed-security:
+    name: Exact artifact security
+    needs: build-exact-artifacts
+    uses: ./.github/workflows/security-installed-profiles.yml
+    with:
+      artifact_name: migration-phase-b-060-distributions
+      source_sha: ${{ github.event.pull_request.head.sha || github.sha }}
