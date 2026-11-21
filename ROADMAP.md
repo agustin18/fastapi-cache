@@ -39,9 +39,9 @@ explicit approval and URL verification.
 
 0.6.0 should focus on the merged opt-in bounded InMemory feature,
 release validation and the remaining #53 privacy/security disposition.
-**Defer #50 observability to 0.7.0 by default** unless fully implemented,
-audited and explicitly accepted before freeze. Single-flight is
-**research**, and #49 argument filtering requires a separate safety contract.
+**Defer #50 observability, #96 single-flight and #49 argument filtering**
+outside 0.6.0. The frozen technical release excludes new caching features;
+#53 package-controlled fixes are release gates.
 Proven #53 privacy defects outrank the feature roadmap. Never inherit
 0.5.0's release-specific security acceptance for a different SHA.
 
@@ -65,9 +65,10 @@ Proven #53 privacy defects outrank the feature roadmap. Never inherit
 - **Feature freeze:** #54/#85 passed independent counteraudit and exact-head
   CI before merge; **final 0.6.0 artifacts require new security and
   migration evidence**. #50 is deferred to 0.7.0 unless separately approved.
-  #53 residual remains a security risk-disposition gate; #91 requires two
-  independent consumers; #92 tracks final candidate checks and manual
-  release approval. #49, tags and single-flight remain future research.
+  #53 residual remains a security risk-disposition gate; #91 remains at
+  0/2 real consumers and gates broad promotion, not the scoped 0.6.0
+  technical release (explicit exception in the candidate checklist).
+  #92 tracks final candidate checks and manual release approval.
 
 ## Version strategy
 
@@ -85,6 +86,20 @@ Proven #53 privacy defects outrank the feature roadmap. Never inherit
 - **1.0.0:** not automatically scheduled; current
   [support policy](SUPPORT.md) requires a co-maintainer before committing
   to a longer `1.x` support window.
+
+## Post-0.6 capability and quality milestones (proposals, not promises)
+
+| Target | Scope | Acceptance boundary |
+|---|---|---|
+| 0.7.0 | #50 privacy-safe events, #96 local single-flight, #100 installed-package benchmarks | Establish baseline first; opt-in features, bounded concurrency, cancellation, privacy regressions and measured default-off budgets. Qualify Python 3.14 (#51) and FIPS (#55) as separately gated work; do not block a completed security fix on feature scheduling. |
+| 0.8.0 | #97 tags, #98 bounded stale/error policy | Separate reviewed index/TTL/race and lifetime contracts; no revival after invalidation, unbounded background work or accidental private replay. |
+| 0.9.0 | #99 application-scoped configuration | Design earlier; prove independent lifespans, backend ownership and isolation without breaking singleton users. |
+| Later | #49 safe argument filtering, backend resilience, non-HTTP API ergonomics; distributed coordination | Review demonstrated need, compatible opt-in design and backend support matrix. |
+
+[#95](https://github.com/agustin18/fastapi-cache/issues/95) tracks
+measurable quality, support and adoption. These are not schedule
+commitments or claims of complete feature parity. Keep the released
+legacy functional support contract distinct from modern security support.
 
 ## 0.4.0 — delivered Redis compatibility (2026-11-20)
 
@@ -108,8 +123,8 @@ Shipped:
 [docs/releases](docs/releases/). Published 0.4.1 resolved #68's generated route replay; published 0.5.0
 adds explicit opt-in HTTP `Vary` for known header dimensions.
 [#53](https://github.com/agustin18/fastapi-cache/issues/53)
-stays open **only for residual arbitrary hidden context/tenant identity,
-proxy trust and header cardinality**. Neither explicit-`Request`
+stays open for residual hidden context/tenant identity, proxy trust,
+header cardinality and authentication/HTTP-cache safety review. Neither explicit-`Request`
 bypass nor `vary_headers` automatically makes an application's
 unknown identity dimensions safe.
 
