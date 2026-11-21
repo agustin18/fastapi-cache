@@ -1,89 +1,75 @@
-# fastapi-cache-stable 0.6.0 — prepared release notes
+# fastapi-cache-stable 0.6.0 — published release notes
 
-> **PROMOTION PREPARED / NOT PUBLISHED — 2026-11-21.** #104 is merged;
-> the final stable source and exact artifact evidence require acceptance.
-> Current public install
-> remains `fastapi-cache-stable==0.5.0`. These notes become release
-> notes only after the [exact-artifact release gate](RELEASE_CANDIDATE_0.6.0.md)
-> is satisfied and publication is explicitly authorized.
+**Published to PyPI on 2026-11-21.** This is a technical release based on
+project tests and exact-artifact evidence; it does not claim independent
+certification or external adoption.
 
 ## What changes since published 0.5.0
 
 ### Optional bounded InMemory
 
-`InMemoryBackend(max_entries=N)` puts a per-instance, entry-count limit
-on the in-process backend. When full, a new key first reclaims a single
-expired entry when available; otherwise it evicts the least-recently-used
-entry. An indexed heap tracks TTL expiry so ordinary bounded writes do
-not require sweeping the entire store. Reads refresh recency.
+`InMemoryBackend(max_entries=N)` adds an optional per-instance entry
+cap. When full, a new key first reclaims one expired entry when
+available; otherwise it evicts the least-recently-used entry. An indexed
+heap tracks TTL expiry, so ordinary bounded writes do not sweep the
+whole store. Reads refresh recency.
 
-The cap is validated once at construction: positive integer or
-`None` (unbounded default), with booleans disallowed.
-`backend.max_entries` is **read-only**. Assignments raise
-`AttributeError`; dynamic resizing is not supported.
+The cap is validated once at construction: positive integer or `None`
+(unbounded default), with booleans disallowed. `backend.max_entries` is
+read-only; assignments raise `AttributeError`. The cap is not a
+memory-byte limit and does not synchronize multiple workers or
+thread/event-loop instances. See [PR #85](https://github.com/agustin18/fastapi-cache/pull/85).
 
-The cap is **not a memory-byte limit** and does not cap or synchronize
-multiple Uvicorn workers or thread/event-loop instances. Individual
-values can be large; explicit namespace clear can still scan local keys
-under a lock; there is no background sweeper or rate limiter.
-Omitting `max_entries` preserves the legacy unbounded behavior.
-See [PR #85](https://github.com/agustin18/fastapi-cache/pull/85).
+### Privacy and HTTP cache boundaries
 
-### Documentation and validation
+The 0.6.0 source checks all Authorization/Cookie header occurrences and
+keeps generated `Cache-Control: private, no-store` on cached HTTP
+responses from routes with authenticated caching enabled, including
+MISS/HIT/304. This is an HTTP intermediary policy, not a replacement for
+an identity-aware server-side cache key or authorization checks. Existing
+private entries in intermediaries may need deliberate invalidation. See
+[SECURITY.md](../../SECURITY.md) and [#53](https://github.com/agustin18/fastapi-cache/issues/53).
 
-A version-aware API guide distinguishes the **published 0.5.0 wheel**
-from the merged source that is being prepared as 0.6.0
-([PR #93](https://github.com/agustin18/fastapi-cache/pull/93)).
-Full candidate readiness requires new installed wheel/sdist
-checks, real Redis 7.4 migration and rollback verification,
-modern security scans of the same files and the exact final source SHA.
-Until recorded, these checks are **not completed release evidence**.
+### Release validation
 
-Validation is based on reproducible project tests, installed-package
-checks and reviewed integration evidence. The support matrix and
-documented limitations define the scope of these results. Report
-reproducible defects through the issue tracker; use private vulnerability
-reporting for security issues.
+The release workflow requires one reviewed wheel/sdist pair from a
+successful final Phase B run. TestPyPI and PyPI then retrieve that exact
+pair; neither upload rebuilds the package.
 
-### Privacy and promotion safeguards
+## Install
 
-The merged 0.6.0 source checks every Authorization/Cookie occurrence
-and applies private, no-store HTTP policy to cached results from routes
-with authentication caching enabled. These are not substitutes for
-validated identity-aware keys or authorization checks. Existing cache
-entries in HTTP intermediaries may require invalidation. See the
-[security contract](../../SECURITY.md) and
-[proposed risk disposition](../../audit/security/RELEASE_RISK_DISPOSITION_0.6.0.md).
+```console
+python -m pip install "fastapi-cache-stable==0.6.0"
+python -m pip check
+```
 
-The release workflow requires a reviewed, single wheel/sdist pair used
-in migration and installed security profiles and in both index uploads.
-No release artifact has been authorized yet. The [status ledger](RELEASE_STATUS_0.6.0.md)
-separates candidate evidence from final stable and index verification.
+Redis: `fastapi-cache-stable[redis]==0.6.0`.
 
 ## Compatibility and limitations
 
 - Distribution `fastapi-cache-stable`; import remains `fastapi_cache`.
   Ordinary legacy cache keys and the default `@cache` contract remain
-  unchanged; non-default or sensitive legacy keys may need explicit migration.
-- Metadata range `>=3.8,<3.14` retains Python 3.8–3.10 as **functional
-  legacy compatibility**, not security-supported deployments.
-  Production security work targets CPython 3.11–3.13.
-- Redis standalone is the supported shared-backend path, with
-  interpreter-conditional redis-py ranges. Redis Cluster namespace-wide
-  `clear()` is unsupported; Memcached and DynamoDB remain experimental.
-- Authorization/Cookie requests bypass caching by default.
-  Identity from custom headers, middleware, dependency/context state,
-  proxies, or app-defined tenants is not automatically isolated.
-  Private responses require a reviewed key strategy or caching bypass.
-  Historic private stored keys need deliberate cleanup before migration.
+  unchanged; non-default or sensitive legacy keys may need migration.
+- Metadata range `>=3.8,<3.14` retains Python 3.8–3.10 as functional
+  legacy compatibility, not security-supported deployments. Production
+  security work targets CPython 3.11–3.13.
+- Redis standalone is the supported shared-backend path. Redis Cluster
+  namespace-wide `clear()` is unsupported; Memcached and DynamoDB remain
+  experimental.
+- Hidden identity in ContextVar/middleware/tenant state, custom auth
+  headers, proxies, unbounded cardinality, legacy private Redis data and
+  process-global configuration remain application/infrastructure
+  responsibilities.
 - Cache event hooks, argument omission, distributed locks, stale serving,
-  tag invalidation, automatic per-app config and new Python 3.14 support
-  are **not part of this candidate**. No superiority, complete feature
-  parity or benchmark win is implied.
+  tag invalidation, automatic per-app configuration and Python 3.14
+  support are not part of 0.6.0.
 
-## Publication decision
+## Release evidence
 
-**NO-GO pending** [#92](https://github.com/agustin18/fastapi-cache/issues/92),
-[#53 privacy signoff](https://github.com/agustin18/fastapi-cache/issues/53),
-exact final-artifact evidence and explicit manual approval.
-Do not treat these draft notes as a PyPI availability statement.
+- Final source: `6b6924a61bbcc0ba602da514accb4c563806742f`
+- Phase B: run `44944620217`, attempt 1, 20 of 20 jobs
+- Wheel SHA-256: `60be61f68908bb8621a53c902baed2b61c9e894cffa95d8df0e9dd71c5bc4b5e`
+- Sdist SHA-256: `c0f8f8b872d337b432afd1340dbe8b9b1800933dfed9c3f3c14ad232153408f2`
+- TestPyPI: run `44944911074`
+- PyPI: run `44945090377`
+- [Status and provenance](RELEASE_STATUS_0.6.0.md)

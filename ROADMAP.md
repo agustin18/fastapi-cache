@@ -1,10 +1,10 @@
 # Roadmap — fastapi-cache-stable
 
-**Current published release:** [0.5.0](https://pypi.org/project/fastapi-cache-stable/0.5.0/)
-on **2026-11-21**. It includes the factory/wrapped-handler key isolation
-from 0.4.1 and opt-in `vary_headers`. See
-[0.5.0 release evidence](docs/releases/RELEASE_STATUS_0.5.0.md).
-**0.4.1** remains the previous published patch line. Source version and
+**Current published release:** [0.6.0](https://pypi.org/project/fastapi-cache-stable/0.6.0/)
+on **2026-11-21**. It adds opt-in bounded InMemory and the 0.6.0
+authentication/HTTP privacy corrections. See
+[0.6.0 release evidence](docs/releases/RELEASE_STATUS_0.6.0.md).
+**0.5.0** remains the previous published line. Source version and
 merged PRs alone do not imply publication.
 **Do not reopen a completed publication gate without new material evidence.**
 
@@ -22,13 +22,12 @@ The primary product advantage remains conservative migration from
 cache keys and safe default HTTP/private-response behavior.
 
 
-## 0.6.0 — final promotion, not published
+## 0.6.0 — published
 
 The corrective [#104](https://github.com/agustin18/fastapi-cache/pull/104) merged
-at `b5d9e125e49ae54b578c1e2b98f33bb9b5f452c0` after 80/80 checks. The frozen
-scope is ready for promotion preparation under #92; new features are
-excluded. Final verification and explicit approval remain necessary.
-[Candidate status ledger](docs/releases/RELEASE_STATUS_0.6.0.md).
+at `b5d9e125e49ae54b578c1e2b98f33bb9b5f452c0` after 80/80 checks. The final
+release passed Phase B and was published on 2026-11-21. See
+[release status](docs/releases/RELEASE_STATUS_0.6.0.md).
 
 The active [0.6.0 tracker #86](https://github.com/agustin18/fastapi-cache/issues/86)
 supersedes the **completed** [0.5.0 train #70](https://github.com/agustin18/fastapi-cache/issues/70).
@@ -37,14 +36,14 @@ for opt-in bounded InMemory (#54) **merged into `stable`** at commit
 `190d105915972d436ddbf4ad152ad654a4db392a`. Its positive integer
 `max_entries` cap is **read-only after construction**, counts entries
 per instance (not bytes), and retains the default unbounded behavior.
-**Not available in the immutable published 0.5.0 wheel.**
+**Published in 0.6.0; not available in the immutable 0.5.0 wheel.**
 The [quickstart](docs/QUICKSTART.md) and
 [navigable site source](site_docs/index.md) describe the published release
 separately. Pages activation and versioned historical hosting still need
 explicit approval and URL verification.
 
-0.6.0 should focus on the merged opt-in bounded InMemory feature,
-release validation and the remaining #53 privacy/security disposition.
+0.6.0 shipped the merged opt-in bounded InMemory feature, release
+validation and the #53 package-owned privacy disposition.
 **Defer #50 observability, #96 single-flight and #49 argument filtering**
 outside 0.6.0. The frozen technical release excludes new caching features;
 #53 package-controlled fixes are release gates.
@@ -56,7 +55,7 @@ Proven #53 privacy defects outrank the feature roadmap. Never inherit
 
 - [#88](https://github.com/agustin18/fastapi-cache/issues/88):
   **first coordinated public promotion**, not the first PyPI release;
-  published 0.5.0 stays the baseline until a separate reviewed 0.6.0.
+  0.6.0 is now the published baseline.
 - [#48](https://github.com/agustin18/fastapi-cache/issues/48):
   navigable Zensical docs shipped in #87 and manual-only GitHub Pages
   workflow, API reference and comparison guide merged in #89. Public
@@ -77,12 +76,13 @@ Proven #53 privacy defects outrank the feature roadmap. Never inherit
 
 ## Version strategy
 
-- **0.5.x:** current published line. Keep the published Python
+- **0.6.x:** current published line. Keep the published Python
   `>=3.8,<3.14` metadata and documented Redis client ranges; security
   maintenance is best-effort on server-side CPython 3.11–3.13.
-- **0.4.x:** previous published patch line, retained for migration.
-- **0.6.0 candidate:** bounded InMemory is merged in source only, not
-  in the published 0.5.0 distribution. Argument filtering (#49) and
+- **0.5.x:** previous published line, retained for migration.
+- **0.4.x:** older published patch line, retained for migration.
+- **0.6.0:** published line; bounded InMemory is in the released wheel
+  and sdist. Argument filtering (#49) and
   privacy-safe event callbacks (#50) remain separate possible future work.
   A new minor release needs a reviewed wheel/sdist, not a retroactive
   rewrite of 0.5.0.
