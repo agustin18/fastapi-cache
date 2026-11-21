@@ -1,10 +1,15 @@
 # 0.5.0 candidate — release readiness and approval gates
 
-**Status: NOT RELEASED.** The latest published version remains
-[0.4.1](https://pypi.org/project/fastapi-cache-stable/0.4.1/).
-This checklist belongs to the **0.5.0** release train and does not
-reopen or overwrite [historical 0.3.0 checklist](RELEASE_CHECKLIST.md)
-or [0.4.1 signed provenance](RELEASE_STATUS_0.4.1.md).
+**Candidate verification snapshot (2026-11-20):** [PR #82](https://github.com/agustin18/fastapi-cache/pull/82)
+merged as `6a557eb3f28b617038ac1e3c8fd3af163db7ea22` after
+**71/71 PR checks and Phase B 13/13 jobs** passed on PR HEAD
+`bf0596fa44a0488d020d0268eb048e01d7918b3d`.
+This is not approval of a later, different release SHA.
+For up-to-date publication status consult
+[PyPI](https://pypi.org/project/fastapi-cache-stable/).
+This record does not reopen or overwrite the
+[historical 0.3.0 checklist](RELEASE_CHECKLIST.md)
+or [published 0.4.1 provenance](RELEASE_STATUS_0.4.1.md).
 
 ## Completed prerequisites — historical, not candidate signoff
 
@@ -22,29 +27,29 @@ or [0.4.1 signed provenance](RELEASE_STATUS_0.4.1.md).
   `0.4.1`, golden keys, isolated venvs and Redis 7.4 rollback.
   This historical check does **not** audit 0.5.0.
 
-## Candidate PR (#82) — must be green before merge consideration
+## Completed candidate PR #82 — PR-HEAD evidence only
 
-- [ ] One `pyproject.toml` candidate version `0.5.0`; no new tag,
+- [x] One `pyproject.toml` candidate version `0.5.0`; no new tag,
   distribution publication or dependency/lock metadata change.
-- [ ] [Phase-B workflow](../../.github/workflows/migration-candidate-phase-b.yml)
+- [x] [Phase-B workflow](../../.github/workflows/migration-candidate-phase-b.yml)
   builds **one wheel and one sdist from the PR HEAD**, attaches exact
   SHA-256 and SHA-linked provenance, validates wheel METADATA, sdist
   pyproject version and both files' integrity in downstream jobs.
-- [ ] Every **Python 3.8–3.13 × wheel/sdist** lane clean-installs
+- [x] Every **Python 3.8–3.13 × wheel/sdist** lane clean-installs
   published upstream 0.2.2 separately from the version-stamped
   0.5.0 file; passes `pip check` and real Redis 7.4 migration.
-- [ ] **Actual package rollback:** uninstall candidate and install
+- [x] **Actual package rollback:** uninstall candidate and install
   upstream 0.2.2 in the candidate venv, verify compatible ordinary
   persisted entry and `pip check`; do not claim private rollback safe.
-- [ ] Independent consumer clean-installs the **same exact candidate**
+- [x] Independent consumer clean-installs the **same exact candidate**
   file, verifies module comes from site-packages, golden default key,
   InMemory HTTP MISS/HIT/304/error/auth and Redis/Vary MISS/HIT/304.
   Modern redis-py 8.1 on supported newer Python, redis-py 4.6 on
   legacy interpreters, with exact installed versions in evidence.
-- [ ] Full PR CI, modern security profiles, CodeQL, Redis, changelog,
+- [x] Full PR CI, modern security profiles, CodeQL, Redis, changelog,
   docs hygiene and wheel/sdist build green on the PR's **exact SHA**.
 
-## After candidate merge — exact final release SHA required
+## Final release SHA gates — not fulfilled by the #82 PR matrix
 
 - [ ] Repeat the Phase-B workflow **via workflow_dispatch on the
   final `stable` SHA**, or its exact release-intended SHA. **Any
@@ -67,13 +72,13 @@ or [0.4.1 signed provenance](RELEASE_STATUS_0.4.1.md).
 - [ ] Reconfirm no broken historical default key goldens, unintended
   downgrade in private/default auth semantics, or consumer-installed
   `fastapi_cache` namespace collisions.
-- [ ] **Promotion documentation:** replace provisional `0.5.0 is not on
-  PyPI` wording in README/long-description, SUPPORT, release notes,
-  migration and version-specific guard tests with accurate release-stage
-  wording **before publishing**. Ensure the package metadata contains no
-  false availability claim. This creates a new source SHA: rebuild both
-  artifacts, recompute SHA-256 and repeat #69 phase B and #66 exact-final-
-  artifact checks. Never reuse a previously approved candidate hash.
+- [ ] **Promotion documentation and changelog:** verify the final
+  README/long-description, SUPPORT, SECURITY, MIGRATION, COMPATIBILITY,
+  ROADMAP, release notes and tests contain no false time-sensitive
+  publication claim; generate 0.5.0 CHANGELOG using Towncrier, consume
+  release fragments, and confirm final installed wheel/sdist includes it.
+  A new source SHA invalidates prior candidate hash approval: rebuild
+  both distributions and repeat #69/#66 exact-artifact checks.
 - [ ] Explicit manual signoff to create an annotated `v0.5.0` tag,
   TestPyPI testing, production PyPI publish and GitHub release.
   Verify publishing workflows against the same approved source SHA.
