@@ -26,10 +26,14 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install towncrier
+      - name: Install pinned Towncrier and release project dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install "towncrier>=26,<27"
+          python -m pip install "towncrier==26.9.0"
+          # Towncrier imports the configured fastapi_cache package while
+          # building; the base worktree must have runtime deps available.
+          # This is build tooling, not a published dependency change.
+          python -m pip install -e .
       # A release-status/README-only edit must not need a fictional news
       # fragment. Fail closed for any Python, metadata, workflow, test or
       # other non-Markdown change, including rename/delete paths.
