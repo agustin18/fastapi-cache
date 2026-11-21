@@ -70,7 +70,7 @@ The package name is **`fastapi-cache-stable`**; imports remain **`fastapi_cache`
 | Standalone Redis and process-local InMemory | Single-flight and tag-based invalidation |
 | Safe default Authorization/Cookie bypass | Arbitrary hidden tenant/context autodetection (#53 residual) |
 | Opt-in `vary_headers`, ETag and HTTP 304 | Python 3.14 certification |
-| Python 3.8–3.13 functional compatibility; opt-in bounded InMemory | Python 3.14 certification |
+| Python 3.8–3.13 functional compatibility; opt-in bounded InMemory | — |
 
 **Security-maintained target:** server-side CPython **3.11–3.13**. Python 3.8–3.10 are legacy **functional migration** targets, not security-supported runtimes. DynamoDB and Memcached remain experimental.
 
