@@ -48,7 +48,7 @@ async def greeting():
 
 ## Protect against cardinality attacks
 
-A client can send many distinct values and multiply entries. Validate and canonicalize externally supplied values, enforce limits and request rate controls, keep TTLs bounded and use backend capacity controls. The future [bounded InMemory proposal](https://github.com/agustin18/fastapi-cache/issues/54) is not in 0.5.0.
+A client can send many distinct values and multiply entries. Validate and canonicalize externally supplied values, enforce limits and request rate controls, keep TTLs bounded and use backend capacity controls. The [bounded InMemory implementation](https://github.com/agustin18/fastapi-cache/pull/85) is merged in **unreleased `stable`** but **not in published 0.5.0**. Its entry-count limit does not replace header normalization, identity-aware cache keys, authorization checks or rate limiting.
 
 For private/tenant-sensitive caching, prefer an application-reviewed custom key builder incorporating **validated identity, permissions and all response dimensions**, or bypass caching.
 
