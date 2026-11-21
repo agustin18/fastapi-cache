@@ -32,6 +32,6 @@ def test_manual_pages_build_cannot_request_deploy_tokens() -> None:
 def test_environment_branch_protection_is_required_in_manual_runbook() -> None:
     text = HOSTING.read_text(encoding="utf-8")
     assert "Settings → Environments → github-pages" in text
-    assert "only \`stable\`" in text
+    assert "only `stable`" in text
     assert "environment branch restriction is a security requirement" in text
-    assert "workflow that changes its own \`if\` guard" in text
+    assert "workflow that changes its own `if` guard" in text
