@@ -84,7 +84,7 @@ The first response has `X-FastAPI-Cache: MISS`; the second identical request wit
 | Several workers / processes | [RedisBackend](guides/redis.md) |
 | DynamoDB or Memcached | Experimental: read [compatibility](reference/compatibility.md) first |
 
-The 0.5.0 InMemory backend has **no entry-count limit**. A future, opt-in bounded mode is being reviewed under [#54](https://github.com/agustin18/fastapi-cache/issues/54).
+Published 0.5.0 InMemory has **no entry-count limit**. [#85](https://github.com/agustin18/fastapi-cache/pull/85) merged an opt-in fixed-at-construction cap into **unreleased `stable`**. See the [version-separated guide](guides/inmemory.md), but **do not pass `max_entries` with the 0.5.0 install command above**.
 
 ## 5. Before production
 
