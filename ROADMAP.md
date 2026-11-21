@@ -56,10 +56,9 @@ Proven #53 privacy defects outrank the feature roadmap. Never inherit
   workflow, API reference and comparison guide merged in #89. Public
   activation, stable-only environment restriction and live URL verification
   require separate approval.
-- [Alternatives guide](site_docs/reference/alternatives.md):
-  compare FastAPI-CacheX, Cashews, aiocache and Redis SDK by application
-  fit, not unsupported performance multipliers. **No universal feature
-  parity goal** for 0.6.0.
+- [Capability selection guide](site_docs/reference/alternatives.md):
+  explain the shipped contract, unmet needs and acceptance evidence
+  without nominal comparisons or unverified superiority claims.
 - [Public API guide](site_docs/reference/api.md):
   distinguish *published 0.5.0* from merged-but-unreleased
   `max_entries` in the next-release source.
@@ -234,33 +233,34 @@ Do not reuse their approvals for a different source SHA.
   study POST opt-in, stale-while-revalidate, cache headers and CDN
   interactions only after explicit threat modeling.
 
-## Competitor feature map (docs snapshot 2026-11-21)
+## Capability gaps and objective adoption criteria (2026-11-21)
 
-This is **not** a performance ranking; advertised features are not
-independently benchmarked here. It is a source of ideas, not a commitment
-to API parity.
+Assess the library against **application needs and measured behavior**,
+not named third-party projects, marketing comparisons or unverifiable
+claims of feature/performance/security parity.
 
-| Library | Verified positioning | Candidate for us |
-|---|---|---|
-| [Cashews](https://github.com/Krukov/cashews) | Async cache toolkit with early refresh, locked/single-flight, tags/pattern invalidation, rate-limit and circuit-breaker strategies; current release targets Python >=3.10 | Single-flight/stampede and early refresh are the highest-value ideas; tags need backend-specific tests. Do not copy the rate-limit/circuit-breaker scope |
-| [aiocache](https://aiocache.aio-libs.org/en/stable/) | Multi-backend async cache with serializers and pre/post command plugins; no FastAPI dependency key model | Metrics/plugin hooks and serializer ergonomics inform #50; not a replacement for route-aware keys |
-| [dogpile.cache](https://dogpilecache.sqlalchemy.org/en/latest/) | Region API with dogpile lock, soft/hard invalidation and a single creator for concurrent misses | Study lock ownership, timeout, cancellation and soft invalidation before any stampede feature |
-| [FastAPI-CacheX](https://github.com/allen0099/FastAPI-CacheX) | Separate `fastapi_cachex` API with HTTP/app cache, tags, stale responses, locks, metrics and structured docs | Borrow documentation clarity and opt-in ergonomics, not an incompatible rewrite |
-| [Yolley/fastapi-cache](https://github.com/Yolley/fastapi-cache) (`fastapi-cache2-fork`) | Same `fastapi_cache` import, Python 3.11+, Redis client `>=5,<8`, optional `with_lock` | Lock support may follow after concurrency tests; our 0.5.0 keeps the broader legacy migration contract |
-| [Redis FastAPI SDK](https://github.com/redis/fastapi-redis-sdk) | Redis-maintained SDK, redis-py `>=6`, session/rate-limit/telemetry helpers | Compete on low-friction migration, not on every Redis integration |
+| Capability / application need | Current contract | Evidence required to claim readiness | Target |
+|---|---|---|---|
+| Legacy migration and stable response identity | Published 0.5.0, pinned CI; release candidate in progress | Real app installations, ordinary key goldens, selective rollback and secret-safe key changes | 0.6.0 |
+| Entry-count limit for one InMemory instance | Source merged in #85, not shipped in 0.5.0 | Real installed 0.6 artifact, TTL/LRU/fuzz/concurrency, 10k/100k scaling and byte-memory caveat | 0.6.0 |
+| Auth/private-request isolation | Conservative defaults and opt-in header variation | #53 library vs app ownership decision; independent negative privacy cases | 0.6.0 gate |
+| Privacy-safe callbacks | Not implemented | Typed opt-in signal, data minimization, callback isolation and overhead profile | Next feature train |
+| Local single-flight on same key | Not implemented | Independent callers, cancellation, exception propagation, nonblocking behavior and cache miss bounds | Next feature train |
+| Invalidating related entries | Key/namespace only | Strict tag/index consistency, TTL cleanup, Redis and local parity, races and bounded work | Later feature train |
+| Stale response recovery | Not implemented | Stale bounds, failure/cancellation behavior and HTTP cache-control semantics | Later feature train |
+| Multi-app configuration | Process-global settings | Data isolation with independent FastAPI instances, lifespan/reset/concurrency semantics | Design before commitment |
+| New Python / Redis client versions | 3.8–3.13 functional, Redis client matrix | New-language CI, typed metadata and installed-distribution vulnerability review | Independently gated |
 
-Possible 0.6 candidates, ordered only for investigation: #49 argument
-filtering, #54 bounded InMemory, #50 typed events, single-flight/early
-refresh, then tag/pattern invalidation. Each needs an issue, compatibility
-plan, concurrency/failure tests and a privacy review before implementation.
-Rate limiting, circuit breaking and a second public API are out of scope
-unless a concrete user problem justifies them.
+The next feature train is not part of 0.6.0. Prioritize demonstrable
+safety and usefulness on both newly created and migrated services;
+exclude broad distributed locking, arbitrary parameter omission,
+stale serving, tag invalidation and automatic tenant inference from
+a release until their specific tests and threat models pass.
 
-The released upstream [`fastapi-cache2==0.2.2`](https://pypi.org/project/fastapi-cache2/0.2.2/)
-used redis-py **4.x**; the published `fastapi-cache-stable` 0.4.x line extends client support conditionally.
-An upstream **unreleased** main branch used redis-py 5.x; neither
-unreleased source nor Redis **server** major versions prove support
-for a redis-py client major.
+The released upstream `fastapi-cache2==0.2.2` used redis-py 4.x.
+This fork's published 0.4.x/0.5.0 artifacts support a broader
+Python-conditional Redis client range; unshipped source and Redis
+**server** versions alone do not prove redis-py **client** compatibility.
 
 ## Continuous security, compatibility and release rules
 
