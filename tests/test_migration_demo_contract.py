@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
 from examples.migration.compare import verify
 
 
-def _reports() -> tuple[Dict[str, Any], Dict[str, Any]]:
+def _reports() -> tuple[dict[str, Any], dict[str, Any]]:
     return (
         {
             "distribution": "fastapi-cache2",
