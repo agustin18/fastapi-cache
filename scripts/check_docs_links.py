@@ -34,13 +34,22 @@ class LinkParser(HTMLParser):
                 self.links.append(value)
 
 
-def _target(source: Path, href: str, site: Path):
+def _target(source: Path, href: str, site: Path, base_path: str = ""):
     parts = urlsplit(href)
     if parts.scheme or parts.netloc or href.startswith("//"):
         return None
     path = unquote(parts.path)
     rel = source.relative_to(site).as_posix()
     if path.startswith("/"):
+        # Project Pages URLs start with /<repo>/. Remove only the
+        # explicitly configured deployment prefix, not arbitrary paths.
+        base = base_path.rstrip("/")
+        if base and path == base:
+            path = "/"
+        elif base and path.startswith(base + "/"):
+            path = path[len(base):]
+        elif base:
+            return ("INVALID", parts.fragment)
         target_path = path.lstrip("/")
     elif path:
         target_path = posixpath.join(posixpath.dirname(rel), path)
@@ -57,7 +66,7 @@ def _target(source: Path, href: str, site: Path):
     return (location, unquote(parts.fragment))
 
 
-def check_site(site: Path) -> tuple:
+def check_site(site: Path, base_path: str = "") -> tuple:
     site = site.resolve()
     pages = sorted(site.rglob("*.html"))
     if not pages:
@@ -74,7 +83,7 @@ def check_site(site: Path) -> tuple:
         for href in doc.links:
             if not href.strip():
                 continue
-            result = _target(source, href, site)
+            result = _target(source, href, site, base_path)
             if result is None:
                 continue
             checked += 1
@@ -96,8 +105,9 @@ def check_site(site: Path) -> tuple:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--site-dir", type=Path, default=Path("site"))
+    parser.add_argument("--base-path", default="", help="Deployment URI prefix, e.g. /fastapi-cache")
     args = parser.parse_args()
-    pages, links, errors = check_site(args.site_dir)
+    pages, links, errors = check_site(args.site_dir, base_path=args.base_path)
     print(f"Documentation: {pages} pages, {links} local links verified")
     if errors:
         for error in errors:
