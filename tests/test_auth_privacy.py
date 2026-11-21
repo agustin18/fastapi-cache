@@ -760,3 +760,36 @@ def test_authenticated_opt_in_keeps_http_cache_private(
         "MISS", "HIT", "HIT", "MISS", "MISS", "HIT",
     ]
     assert all(r.headers["cache-control"] == "private, no-store" for r in responses)
+
+
+def test_hidden_context_requires_explicit_key_or_bypass() -> None:
+    principal: ContextVar[str] = ContextVar("hidden-principal", default="anon")
+    app = FastAPI()
+    FastAPICache.init(InMemoryBackend(), prefix="hidden-context")
+
+    async def resolve(request: Request) -> None:
+        # Synthetic fixture only; real authentication must validate the identity.
+        principal.set(request.headers.get("X-Synthetic-Identity", "anon"))
+
+    @app.get("/unsafe", dependencies=[Depends(resolve)])
+    @cache(expire=60)
+    async def unsafe() -> Dict[str, str]:
+        return {"principal": principal.get()}
+
+    @app.get("/safe", dependencies=[Depends(resolve)])
+    async def safe() -> Dict[str, str]:
+        return {"principal": principal.get()}
+
+    with TestClient(app) as client:
+        a = client.get("/unsafe", headers={"X-Synthetic-Identity": "a"})
+        b = client.get("/unsafe", headers={"X-Synthetic-Identity": "b"})
+        safe_a = client.get("/safe", headers={"X-Synthetic-Identity": "a"})
+        safe_b = client.get("/safe", headers={"X-Synthetic-Identity": "b"})
+
+    # Characterize a known application-owned limitation, not a desired feature.
+    assert a.json() == b.json() == {"principal": "a"}
+    assert b.headers["X-FastAPI-Cache"] == "HIT"
+    assert safe_a.json() == {"principal": "a"}
+    assert safe_b.json() == {"principal": "b"}
+    assert "X-FastAPI-Cache" not in safe_a.headers
+    assert "X-FastAPI-Cache" not in safe_b.headers
