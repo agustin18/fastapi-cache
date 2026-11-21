@@ -13,8 +13,8 @@ The published package remains [fastapi-cache-stable 0.5.0](https://pypi.org/proj
 ## Deployment steps (maintainer approval required)
 
 1. Review [#48](https://github.com/agustin18/fastapi-cache/issues/48) and the docs deployment PR. The workflow `.github/workflows/docs-pages.yml` has **only** a `workflow_dispatch` trigger; it does not deploy on a merge or other repository push.
-2. In the GitHub repository settings, enable **Pages → Build and deployment → Source: GitHub Actions**. Configure the `github-pages` environment to require manual approval if desired.
-3. Trigger the workflow explicitly on the reviewed `stable` branch. Its build step installs pinned Zensical, generates static HTML, checks **all local links/anchors**, verifies the install/migration/reference entry points, and uploads the Pages artifact. A separate job performs deployment after those gates.
+2. In the GitHub repository settings, enable **Pages → Build and deployment → Source: GitHub Actions**. In **Settings → Environments → github-pages**, restrict deployment branches to **only `stable`** (selected branches), and optionally require reviewer approval. **The environment branch restriction is a security requirement**, not merely an optional approval: a maintainer with write access can dispatch a workflow from another branch, including a workflow that changes its own `if` guard.
+3. Trigger the workflow explicitly on the reviewed `stable` branch. Both jobs refuse to run unless `github.ref == 'refs/heads/stable'`. The **read-only** build job installs pinned Zensical, generates static HTML, checks **all local links/anchors**, verifies the install/migration/reference entry points, and uploads the Pages artifact. Only the separate deploy job can request `pages: write` and `id-token: write`; it runs after the build and any required environment approval.
 4. Inspect the GitHub Actions published deployment URL and open the actual website. Do **not** assume the expected URL is reachable: Pages' unique-domain setting can affect the final address.
 5. Independently check the home page, `getting-started/`, `migration/`, `reference/api/`, `reference/alternatives/`, site search, mobile dark mode, and links to the real 0.5.0 PyPI artifact and GitHub release. Verify navigation from a phone-sized viewport; confirm the information in every page matches the released artifact.
 6. **Only after successful publication**, add the verified website URL to the root README, PyPI metadata on a future release (do not republish an immutable old version), social posts, and launch tracker [#88](https://github.com/agustin18/fastapi-cache/issues/88). Keep issue #48 open until verification is recorded.
@@ -30,7 +30,7 @@ Zensical currently supports a **transitional fork of `mike`** for versioned MkDo
 ## Repository and package boundaries
 
 - Static docs tooling and GitHub Pages tokens are **not runtime dependencies**.
-- Deployment credentials are limited to the documented GitHub Actions `pages: write`, `id-token: write` environment; the codebase and PyPI release jobs stay separate.
+- Workflow permissions default to none. The build job has `contents: read` only, checkout persists no credentials, and only the deploy job obtains `pages: write` and `id-token: write`. Protect the `github-pages` environment by limiting deployments to branch `stable`; the codebase and PyPI release jobs stay separate.
 - Do not automatically deploy from feature PRs or unsafe forks. Existing PR workflows only upload short-lived preview artifacts.
 - Documentation must never promise universal tenant isolation, Redis Cluster namespace clearing, automatic private-response migration or Python 3.14 support in 0.5.0.
 
