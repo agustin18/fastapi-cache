@@ -1,4 +1,4 @@
-name: 0.5.0 candidate migration phase B
+name: 0.6.0 candidate migration phase B
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ on:
       - "pyproject.toml"
       - "poetry.lock"
       - "fastapi_cache/**"
-      - "tests/candidate_050_inmemory_probe.py"
+      - "tests/candidate_060_inmemory_probe.py"
       - "tests/migration_redis_e2e.py"
       - "tests/redis_vary_probe.py"
       - "tests/test_candidate_migration_workflow.py"
@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   build-exact-artifacts:
-    name: Build exact 0.5.0 wheel + sdist once, record hashes
+    name: Build exact 0.6.0 wheel + sdist once, record hashes
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -58,8 +58,8 @@ jobs:
           import zipfile
 
           dist = Path(os.environ["RUNNER_TEMP"]) / "phase-b-dist"
-          wheels = sorted(dist.glob("fastapi_cache_stable-0.5.0-*.whl"))
-          sdists = sorted(dist.glob("fastapi_cache_stable-0.5.0.tar.gz"))
+          wheels = sorted(dist.glob("fastapi_cache_stable-0.6.0-*.whl"))
+          sdists = sorted(dist.glob("fastapi_cache_stable-0.6.0.tar.gz"))
           assert len(wheels) == 1 and len(sdists) == 1
           assert len(list(dist.iterdir())) == 2, "unexpected build artifacts"
           with zipfile.ZipFile(wheels[0]) as archive:
@@ -67,7 +67,7 @@ jobs:
               metadata_file = next(p for p in names if p.endswith(".dist-info/METADATA"))
               metadata = Parser().parsestr(archive.read(metadata_file).decode())
               assert metadata["Name"] == "fastapi-cache-stable"
-              assert metadata["Version"] == "0.5.0"
+              assert metadata["Version"] == "0.6.0"
               assert "fastapi_cache/__init__.py" in names
           with tarfile.open(sdists[0], "r:gz") as archive:
               member = next(
@@ -77,13 +77,13 @@ jobs:
               payload = archive.extractfile(member)
               assert payload is not None
               source_meta = tomllib.loads(payload.read().decode())
-              assert source_meta["tool"]["poetry"]["version"] == "0.5.0"
+              assert source_meta["tool"]["poetry"]["version"] == "0.6.0"
           (dist / "provenance.json").write_text(
               json.dumps({
                   "source_sha": os.environ["EXPECTED_SHA"],
                   "workflow_run_id": os.environ["GITHUB_RUN_ID"],
                   "workflow_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
-                  "candidate_version": "0.5.0",
+                  "candidate_version": "0.6.0",
                   "wheel": wheels[0].name,
                   "sdist": sdists[0].name,
                   "source_type": "PR_HEAD_or_stable_SHA",
@@ -93,15 +93,15 @@ jobs:
           PY
           (
             cd "$RUNNER_TEMP/phase-b-dist"
-            sha256sum fastapi_cache_stable-0.5.0-*.whl \
-              fastapi_cache_stable-0.5.0.tar.gz > SHA256SUMS
+            sha256sum fastapi_cache_stable-0.6.0-*.whl \
+              fastapi_cache_stable-0.6.0.tar.gz > SHA256SUMS
             sha256sum --check SHA256SUMS
           )
       - name: Keep exact candidate files and provenance, even if build fails
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: migration-phase-b-050-distributions
+          name: migration-phase-b-060-distributions
           path: ${{ runner.temp }}/phase-b-dist/
           if-no-files-found: warn
           retention-days: 90
@@ -136,7 +136,7 @@ jobs:
       - name: Retrieve exact build, verify SHA256 and commit provenance
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: migration-phase-b-050-distributions
+          name: migration-phase-b-060-distributions
           path: ${{ runner.temp }}/phase-b-dist
       - name: Verify artifact bytes and select isolated framework profile
         env:
@@ -155,15 +155,15 @@ jobs:
               (Path(os.environ["RUNNER_TEMP"]) / "phase-b-dist" / "provenance.json").read_text()
           )
           assert data["source_sha"] == os.environ["EXPECTED_SHA"]
-          assert data["candidate_version"] == "0.5.0"
+          assert data["candidate_version"] == "0.6.0"
           assert data["published"] is False
           for key in ("wheel", "sdist"):
               assert (Path(os.environ["RUNNER_TEMP"]) / "phase-b-dist" / data[key]).is_file()
           PY
           if [[ "$FORMAT" == wheel ]]; then
-            candidate=$(find . -maxdepth 1 -name 'fastapi_cache_stable-0.5.0-*.whl' -print -quit)
+            candidate=$(find . -maxdepth 1 -name 'fastapi_cache_stable-0.6.0-*.whl' -print -quit)
           else
-            candidate=$(find . -maxdepth 1 -name 'fastapi_cache_stable-0.5.0.tar.gz' -print -quit)
+            candidate=$(find . -maxdepth 1 -name 'fastapi_cache_stable-0.6.0.tar.gz' -print -quit)
           fi
           test -n "$candidate"
           echo "CANDIDATE_ARTIFACT=$RUNNER_TEMP/phase-b-dist/${candidate#./}" >> "$GITHUB_ENV"
@@ -210,7 +210,7 @@ jobs:
         env:
           REDIS_URL: redis://localhost:6379/0
           MIGRATION_E2E_CONFIRM_ISOLATED_REDIS: "YES"
-          MIGRATION_E2E_CANDIDATE_VERSION: "0.5.0"
+          MIGRATION_E2E_CANDIDATE_VERSION: "0.6.0"
           PY_VERSION: ${{ matrix.python }}
           FORMAT: ${{ matrix.format }}
         run: |
@@ -260,7 +260,7 @@ jobs:
             > "$RUNNER_TEMP/phase-b-evidence/consumer-pip-freeze.txt"
           cd /tmp
           "$RUNNER_TEMP/consumer/bin/python" -I \
-            "$GITHUB_WORKSPACE/tests/candidate_050_inmemory_probe.py" \
+            "$GITHUB_WORKSPACE/tests/candidate_060_inmemory_probe.py" \
             | tee "$RUNNER_TEMP/phase-b-evidence/consumer-inmemory.log"
           "$RUNNER_TEMP/consumer/bin/python" -I \
             "$GITHUB_WORKSPACE/tests/redis_vary_probe.py" \
@@ -284,7 +284,7 @@ jobs:
               "source_sha": os.environ["SOURCE_SHA"],
               "workflow_run_id": os.environ["GITHUB_RUN_ID"],
               "workflow_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
-              "candidate_version": "0.5.0",
+              "candidate_version": "0.6.0",
               "artifact_type": os.environ["FORMAT"],
               "python": os.environ["PY_VERSION"],
               "redis_server": "redis:7.4",
@@ -298,7 +298,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: migration-phase-b-050-py${{ matrix.python }}-${{ matrix.format }}
+          name: migration-phase-b-060-py${{ matrix.python }}-${{ matrix.format }}
           path: ${{ runner.temp }}/phase-b-evidence/
           if-no-files-found: warn
           retention-days: 90

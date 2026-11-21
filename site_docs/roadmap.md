@@ -18,7 +18,7 @@
 
 Our strongest promise is **a safe, low-friction migration from `fastapi-cache2`** with familiar keys and imports. We prioritize bounded memory, diagnostics and demonstrated correctness issues ahead of copying a broad caching strategy API.
 
-Cashews, aiocache, dogpile.cache, FastAPI-CacheX, Yolley/fastapi-cache and Redis FastAPI SDK are useful references. The [technical feature map](https://github.com/agustin18/fastapi-cache/blob/stable/ROADMAP.md#competitor-feature-map-docs-snapshot-2026-11-21) is qualitative; it is **not** an independently measured performance ranking.
+The [capability gaps and acceptance criteria](https://github.com/agustin18/fastapi-cache/blob/stable/ROADMAP.md#capability-gaps-and-objective-adoption-criteria-2026-11-21) describe future design needs without named vendor comparisons or unverified performance claims.
 
 **Not planned for 0.6.0 without a separate design:** general tag invalidation, distributed locks, rate limiting, circuit breaking, a second public API.
 

@@ -1,62 +1,74 @@
-# Compare caching alternatives
+# Choose a caching approach
 
-Choosing a library is a question of **migration cost, HTTP semantics, operational needs and maintenance**, not which project has the longest feature list.
+Caching choices depend on application requirements, migration cost,
+operational maturity, HTTP semantics, security and actual test evidence.
+A feature count or an unverified speed comparison is **not** a reason
+to claim a library is better. The capability matrix here is our own
+project's published contract, not a comparison or endorsement of
+other projects.
 
-!!! info "Scope and verification"
-    This snapshot uses upstream project documentation checked on **2026-11-21**. Our capability column refers to the **published 0.5.0** distribution, not draft PRs. Feature support and releases change; always verify a dependency before adopting it. No third-party performance rankings are implied.
+!!! info "Published vs candidate"
+    **0.5.0** is the latest publicly available `fastapi-cache-stable`
+    distribution. Optional bounded InMemory exists in merged source
+    and in the proposed **0.6.0 candidate** only; it is not available
+    in the published 0.5.0 wheel.
 
 ## At a glance
 
-| Library | Best fit | Meaningful difference |
-|---|---|---|
-| **fastapi-cache-stable 0.5.0** | Existing `fastapi-cache2==0.2.2` apps prioritizing low-friction migration | Preserves `fastapi_cache` imports and ordinary default-key contract; modern Redis client profiles, opt-in `vary_headers`, conservative privacy safeguards, published migration/rollback evidence |
-| [FastAPI-CacheX](https://fastapi-cachex.readthedocs.io/en/stable/) | Teams wanting a broader HTTP caching and app-cache API | Separate `fastapi_cachex` import and API; documented tags, stale serving, event hooks, application caching, local/distributed coalescing and locks |
-| [Cashews](https://github.com/Krukov/cashews) | General async function caching strategies | Tags, locking, early/soft expiration, Redis and in-memory strategies; different programming model |
-| [aiocache](https://github.com/aio-libs/aiocache) | Async function/value caching with plugins | Custom serializers and instrumentation plugins; not a drop-in FastAPI HTTP response cache |
-| [dogpile.cache](https://github.com/sqlalchemy/dogpile.cache) | Regeneration coordination and backend abstraction | Mature locking/invalidation concepts; not primarily a FastAPI decorator |
-| [Redis FastAPI SDK](https://github.com/redis/fastapi-redis-sdk) | New Redis-specific FastAPI integrations | Redis-native integration and observability; different API and installation contract |
-| [Yolley/fastapi-cache](https://github.com/Yolley/fastapi-cache) | Evaluating another maintained `fastapi_cache` project | **Import name collision** with our fork; review behavior/migration rather than co-installing either distribution |
+| Application requirement | Available in published 0.5.0 | Proposed 0.6.0 | Limits to check |
+|---|---|---|---|
+| Low-friction migration from an existing installation | Yes, for verified ordinary keys/API | Preserve | Test auth, special encodings and private namespaces before live traffic |
+| HTTP GET response caching with TTL/ETag/304 | Yes | Preserve | Response types, conditional headers and custom coders require testing |
+| Real standalone Redis shared across workers | Yes | Preserve | Configure client/server memory, access and failure handling |
+| Simple process-local InMemory | Yes, unbounded | Preserve | No shared state across workers |
+| Bounded process-local InMemory | No | Yes, opt-in `max_entries`, merged code | Counts entries, not payload bytes; readonly after construction |
+| Header-based public variants | Yes, opt-in `vary_headers` | Preserve | Only declared headers; no automatic tenant/role discovery |
+| Authenticated requests and private data | Default Authorization/Cookie bypass | Preserve | Other auth schemes need a reviewed identity-aware key or bypass |
+| Observability callbacks | Not shipped | Out of scope | No automatic metrics/event export |
+| Tag-based invalidation / stale serving / single-flight | Not shipped | Out of scope | Requires independent correctness and concurrency design |
+| Redis Cluster-wide namespace invalidation | Unsupported | Unsupported | Never confuse with individual key clearing |
+| Python 3.14 and later | Unsupported | Unsupported pending qualification | Legacy 3.8–3.10 functional only, not security-maintained |
 
 ## What we prioritize for 0.6.0
 
-<div class="grid cards" markdown>
-
--   :material-shield-check-outline: **Migration correctness**
-
-    ---
-
-    Retain ordinary key goldens, separate historical private cache entries, preserve verified Redis migration and rollback, and test independent consumers.
-
--   :material-database-lock-outline: **Bounded in-process caching**
-
-    ---
-
-    [PR #85](https://github.com/agustin18/fastapi-cache/pull/85) merged the opt-in entry-count-limited LRU/TTL backend and read-only capacity, with full-capacity 10k/100k CI benchmarks. It is **implemented in unreleased `stable` but not shipped in 0.5.0**.
-
--   :material-chart-timeline-variant: **Optional diagnostics**
-
-    ---
-
-    [#50](https://github.com/agustin18/fastapi-cache/issues/50) proposes typed HIT/MISS/BYPASS/STORE/error signals without exporting keys, credentials or payloads by default. Only include if independently audited.
-
--   :material-file-document-check-outline: **Documentation people can use**
-
-    ---
-
-    Separate fresh installation from `fastapi-cache2` migration; provide backend, troubleshooting and privacy guidance, a tested example and API reference.
-
-</div>
+- **Predictable migration:** preserve ordinary keys and imports, verify
+  a real Redis migration and narrowly scoped rollback using exact installed
+  distribution files.
+- **Safety and transparency:** keep private-response guards, document
+  the library/application responsibility boundary and validate real
+  consumer behavior with independent evidence.
+- **Bounded local caching:** [#85](https://github.com/agustin18/fastapi-cache/pull/85)
+  adds an optional read-only constructor cap with indexed expiry tracking
+  and least-recently-used eviction. **No published 0.6.0 artifact exists yet.**
+- **Release-quality docs:** show version-accurate usage, package metadata
+  and working install/migration examples instead of promising unshipped APIs.
 
 ## Deliberately not promised
 
-A library that offers **tags, distributed coalescing, stale-while-revalidate, locks and a general application cache** may be a better choice for a new app than this compatibility-focused fork. We will not add all of those to claim feature parity in 0.6.0. Likewise, `vary_headers` does not automatically isolate hidden tenant/role state.
-
-Other important limits: Redis Cluster namespace-wide clear is unsupported; DynamoDB/Memcached are experimental; the 0.5.0 InMemory backend is unbounded; Python 3.8–3.10 have functional legacy coverage only.
+A local entry limit is not a memory-byte or total distributed-memory cap.
+A `Vary` header does not magically create application tenant isolation.
+There is no general tag invalidation, coalescing, distributed lock, stale
+serving or monitoring export contract today. A project needing those
+capabilities should evaluate its architectural requirements separately
+rather than assuming this library implements them.
 
 ## How to decide
 
-**Already using `fastapi-cache2`?** Start with the [migration guide](../migration.md) and compare the documented behavior changes. **Starting fresh?** Try the [five-minute install](../getting-started.md) and choose a backend. If you need a broader abstraction and are willing to migrate APIs, look at the alternatives above.
+**Maintaining an existing app?** Follow the
+[migration guide](../migration.md) and run its explicit privacy, key,
+Redis and rollback checks.
 
-**Sources:** [FastAPI-CacheX feature overview](https://fastapi-cachex.readthedocs.io/en/stable/) · [CacheX technical comparison](https://fastapi-cachex.readthedocs.io/en/stable/COMPARISON/) · [Cashews](https://github.com/Krukov/cashews) · [aiocache](https://github.com/aio-libs/aiocache) · [Redis SDK](https://github.com/redis/fastapi-redis-sdk).
+**Starting a new app?** Start with the
+[five-minute install](../getting-started.md), check
+[the public API](api.md), [privacy boundaries](../guides/privacy.md)
+and [backend comparison](../backends.md). Prefer standalone Redis when
+multiple workers need shared data. Use a process-local backend for tests,
+development and explicitly accepted single-worker scenarios.
 
-**Our release evidence:** [0.5.0 provenance](releases.md) · [0.6.0 tracker #86](https://github.com/agustin18/fastapi-cache/issues/86).
+**Need a currently unsupported capability?** Consult the
+[roadmap](../roadmap.md) and open a use-case-specific issue with
+reproduction, security constraints and expected compatibility rather
+than relying on tentative plans.
+
+**Evidence:** [published package provenance](releases.md) and
+[0.6.0 release acceptance](https://github.com/agustin18/fastapi-cache/issues/92).

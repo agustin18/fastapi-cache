@@ -50,17 +50,37 @@ jobs:
           if git diff --name-only origin/stable...HEAD | grep -Fxq CHANGELOG.md &&
              git diff --name-status --no-renames origin/stable...HEAD |
                grep -Eq '^D[[:space:]]+changelog[.]d/[0-9]+[.](feature|bugfix|doc|removal|misc)[.]md$'; then
-            python - <<'PY'
+            version_date=$(python - <<'PY'
+          import datetime
           import subprocess
           import tomllib
           from pathlib import Path
+
           base = subprocess.check_output(
               ["git", "show", "origin/stable:pyproject.toml"], text=False
           )
           previous = tomllib.loads(base.decode())["tool"]["poetry"]["version"]
           current = tomllib.loads(Path("pyproject.toml").read_text())["tool"]["poetry"]["version"]
-          assert previous == current == "0.5.0", (previous, current)
+          assert previous == current, (previous, current)
+          parts = current.split(".")
+          assert len(parts) == 3 and all(p.isdigit() for p in parts), current
+
+          changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
+          label = f"## [{current}](https://github.com/agustin18/fastapi-cache/tree/v{current}) - "
+          lines = [line for line in changelog.splitlines() if line.startswith(label)]
+          assert len(lines) == 1, ("expected exact release changelog header", current)
+          release_date = lines[0][len(label):]
+          assert datetime.date.fromisoformat(release_date).isoformat() == release_date
+
+          base_changelog = subprocess.check_output(
+              ["git", "show", "origin/stable:CHANGELOG.md"], text=True
+          )
+          assert f"## [{current}]" not in base_changelog, "release already in base"
+          print(f"{current}|{release_date}")
           PY
+            )
+            IFS='|' read -r release_version release_date <<< "$version_date"
+            test -n "$release_version" && test -n "$release_date"
             mapfile -t fragments < <(
               git ls-tree -r --name-only origin/stable changelog.d |
                 grep -E '^changelog[.]d/[0-9]+[.](feature|bugfix|doc|removal|misc)[.]md$'
@@ -78,15 +98,15 @@ jobs:
               echo "::error::Unexpected new release fragment in promotion PR"
               exit 1
             fi
-            worktree="$RUNNER_TEMP/verify-050-changelog-base"
+            worktree="$RUNNER_TEMP/verify-$release_version-changelog-base"
             git worktree add --detach "$worktree" origin/stable
             (
               cd "$worktree"
               towncrier --version
-              towncrier build --yes --version 0.5.0 --date 2026-11-21
+              towncrier build --yes --version "$release_version" --date "$release_date"
             )
             diff -u "$worktree/CHANGELOG.md" "$GITHUB_WORKSPACE/CHANGELOG.md"
-            echo "Generated Towncrier 0.5.0 release entry matches byte-for-byte."
+            echo "Generated Towncrier $release_version release entry matches byte-for-byte."
           else
             if [[ "${{ contains(github.event.pull_request.labels.*.name, 'skip-changelog') }}" == "true" ]]; then
               echo "skip-changelog label present"

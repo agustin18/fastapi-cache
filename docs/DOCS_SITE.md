@@ -52,8 +52,7 @@ Compare the installed API, unshipped features and alternatives in
 [site_docs/reference/](../site_docs/reference/). Do **not** claim a
 publicly accessible URL until the manual deployment and smoke tests pass.
 
-CacheX publishes a Zensical-built site on Read the Docs. That does not require
-us to change generator: GitHub Pages can publish our generated HTML without
-a second documentation SaaS. Zensical's versioned `mike` integration
+GitHub Pages can publish our generated Zensical HTML without a separate
+documentation hosting service. Zensical's versioned `mike` integration
 remains transitional; pin and test it independently before offering a
 historical version selector.
