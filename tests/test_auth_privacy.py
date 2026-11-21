@@ -1,12 +1,13 @@
 import asyncio
 import hashlib
 import logging
+from contextvars import ContextVar
 from typing import Any, Callable, Dict, Generator, Optional, Tuple
 
 import pytest
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 from starlette.testclient import TestClient
 
 from fastapi_cache import (
@@ -16,6 +17,7 @@ from fastapi_cache import (
     default_key_builder,
 )
 from fastapi_cache.backends.inmemory import InMemoryBackend, Value
+from fastapi_cache.coder import PickleCoder
 from fastapi_cache.decorator import cache
 
 
@@ -680,3 +682,81 @@ def test_explicit_request_does_not_serve_legacy_shared_entry() -> None:
     assert after_clear.json()["authorization"] is None
     assert "X-FastAPI-Cache" not in after_clear.headers
     assert calls["n"] == 2
+
+
+@pytest.mark.parametrize("field", ["Authorization", "Cookie"])
+def test_duplicate_credential_fields_bypass_default_cache(field: str) -> None:
+    backend = SpyBackend()
+    FastAPICache.init(backend, prefix="duplicate-auth")
+    principal: ContextVar[str] = ContextVar("synthetic-principal", default="anon")
+    app = FastAPI()
+
+    async def authenticate(request: Request) -> None:
+        values = request.headers.getlist(field)
+        # Model an upstream parser that uses the last non-empty value.
+        principal.set(next((v for v in reversed(values) if v), "anon"))
+
+    @app.get("/me", dependencies=[Depends(authenticate)])
+    @cache(expire=60)
+    async def me() -> Dict[str, str]:
+        return {"principal": principal.get()}
+
+    with TestClient(app) as client:
+        public = client.get("/me")
+        alice = client.get("/me", headers=[(field, ""), (field, "alice")])
+        bob = client.get("/me", headers=[(field, "bob"), (field, "")])
+        again = client.get("/me")
+
+    assert public.json() == again.json() == {"principal": "anon"}
+    assert alice.json() == {"principal": "alice"}
+    assert bob.json() == {"principal": "bob"}
+    assert "X-FastAPI-Cache" not in alice.headers
+    assert "X-FastAPI-Cache" not in bob.headers
+    assert backend.get_with_ttl_calls == 2
+    assert backend.set_calls == 1
+
+
+@pytest.mark.parametrize("field", ["Authorization", "Cookie"])
+@pytest.mark.parametrize("returned_response", [False, True])
+def test_authenticated_opt_in_keeps_http_cache_private(
+    field: str, returned_response: bool
+) -> None:
+    init_cache()
+    app = FastAPI()
+    calls = {"n": 0}
+
+    @app.get("/me")
+    @cache(
+        expire=60,
+        cache_authenticated=True,
+        key_builder=auth_key_builder,
+        coder=PickleCoder if returned_response else JsonCoder,
+    )
+    async def me(request: Request) -> Any:
+        calls["n"] += 1
+        payload = {"principal": request.headers.get(field, "anon")}
+        if returned_response:
+            return JSONResponse(payload)
+        return payload
+
+    with TestClient(app) as client:
+        first = client.get("/me", headers={field: "alice"})
+        hit = client.get("/me", headers={field: "alice"})
+        conditional = client.get(
+            "/me", headers={field: "alice", "If-None-Match": first.headers["etag"]}
+        )
+        other = client.get("/me", headers={field: "bob"})
+        anon = client.get("/me")
+        anon_hit = client.get("/me")
+
+    assert first.json() == hit.json() == {"principal": "alice"}
+    assert other.json() == {"principal": "bob"}
+    assert anon.json() == anon_hit.json() == {"principal": "anon"}
+    assert conditional.status_code == 304
+    assert conditional.content == b""
+    assert calls["n"] == 3
+    responses = (first, hit, conditional, other, anon, anon_hit)
+    assert [r.headers["X-FastAPI-Cache"] for r in responses] == [
+        "MISS", "HIT", "HIT", "MISS", "MISS", "HIT",
+    ]
+    assert all(r.headers["cache-control"] == "private, no-store" for r in responses)
