@@ -1,12 +1,11 @@
 # 0.5.0 candidate — release readiness and approval gates
 
-**Candidate verification snapshot (2026-11-20):** [PR #82](https://github.com/agustin18/fastapi-cache/pull/82)
+**Released 2026-11-21.** [PR #82](https://github.com/agustin18/fastapi-cache/pull/82)
 merged as `6a557eb3f28b617038ac1e3c8fd3af163db7ea22` after
 **71/71 PR checks and Phase B 13/13 jobs** passed on PR HEAD
-`bf0596fa44a0488d020d0268eb048e01d7918b3d`.
-This is not approval of a later, different release SHA.
-For up-to-date publication status consult
-[PyPI](https://pypi.org/project/fastapi-cache-stable/).
+`bf0596fa44a0488d020d0268eb048e01d7918b3d`. The final release used a later
+promotion SHA; see [status and provenance](RELEASE_STATUS_0.5.0.md) and
+[PyPI](https://pypi.org/project/fastapi-cache-stable/) for the published artifact.
 This record does not reopen or overwrite the
 [historical 0.3.0 checklist](RELEASE_CHECKLIST.md)
 or [published 0.4.1 provenance](RELEASE_STATUS_0.4.1.md).
@@ -49,37 +48,45 @@ or [published 0.4.1 provenance](RELEASE_STATUS_0.4.1.md).
 - [x] Full PR CI, modern security profiles, CodeQL, Redis, changelog,
   docs hygiene and wheel/sdist build green on the PR's **exact SHA**.
 
-## Final release SHA gates — not fulfilled by the #82 PR matrix
+## Final release SHA gates — completed
 
-- [ ] Repeat the Phase-B workflow **via workflow_dispatch on the
+Final release: tag `v0.5.0` (object `497f0ca8c481988b55b03e8ab3fc952f65c1b9fb`,
+release commit `40c86d551b760315f3c6e99f383d6868c6294870`), Phase B run
+44851661315 (13/13), security profiles 44851664008 (7/7), Dependabot delta
+44851667159 (exit 0), TestPyPI 44852139879, PyPI 44852386994. Wheel
+`7f30d074e222aaf4471d13105e1282b97d2968549bc4b727b941837272b10449`;
+sdist `e5dfe2fb5a16cb790e98bfb5e57377d835adc55579b0fdf1cb1d0afbf610ba0b`.
+
+
+- [x] Repeat the Phase-B workflow **via workflow_dispatch on the
   final `stable` SHA**, or its exact release-intended SHA. **Any
   source/docs/version change afterward invalidates that signoff
   until the exact artifacts are rebuilt and rechecked.**
-- [ ] Archive actual SHA-256 for wheel **and** sdist, Git commit,
+- [x] Archive actual SHA-256 for wheel **and** sdist, Git commit,
   GitHub run ID, exact Python/framework/client/Redis profiles,
   `pip check` and independent consumer evidence.
-- [ ] [#66](https://github.com/agustin18/fastapi-cache/issues/66):
+- [x] [#66](https://github.com/agustin18/fastapi-cache/issues/66):
   repeat installed-distribution modern Python 3.11–3.13 audits
   on exact final artifacts; check coverage completeness and `pip check`.
   Known legacy-only vulnerabilities are **not claimed patched**.
-- [ ] Run existing **authenticated** Dependabot delta near release,
+- [x] Run existing **authenticated** Dependabot delta near release,
   reconcile new/reopened/worsened findings and the remaining historical
   critical/high alerts by package/profile/reachability. Do **not**
   dismiss unresolved alerts for cosmetics.
-- [ ] Record explicit scoped **0.5.0** risk decisions and
+- [x] Record explicit scoped **0.5.0** risk decisions and
   independent security/migration review. The historic 21-alert
   disposition from the 0.3.x release is not automatic consent.
-- [ ] Reconfirm no broken historical default key goldens, unintended
+- [x] Reconfirm no broken historical default key goldens, unintended
   downgrade in private/default auth semantics, or consumer-installed
   `fastapi_cache` namespace collisions.
-- [ ] **Promotion documentation and changelog:** verify the final
+- [x] **Promotion documentation and changelog:** verify the final
   README/long-description, SUPPORT, SECURITY, MIGRATION, COMPATIBILITY,
   ROADMAP, release notes and tests contain no false time-sensitive
   publication claim; generate 0.5.0 CHANGELOG using Towncrier, consume
   release fragments, and confirm final installed wheel/sdist includes it.
   A new source SHA invalidates prior candidate hash approval: rebuild
   both distributions and repeat #69/#66 exact-artifact checks.
-- [ ] Explicit manual signoff to create an annotated `v0.5.0` tag,
+- [x] Explicit manual signoff to create an annotated `v0.5.0` tag,
   TestPyPI testing, production PyPI publish and GitHub release.
   Verify publishing workflows against the same approved source SHA.
 
