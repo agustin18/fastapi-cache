@@ -4,9 +4,10 @@
 [`fastapi-cache2`](https://pypi.org/project/fastapi-cache2/). This document defines what
 "drop-in" means for this project and what we promise to keep stable.
 
-This contract describes the published `0.4.x` line and the pending
-0.5.0 source candidate. **0.5.0 is not yet published.** The `0.3.x`
-artifacts remain available as the previous migration line. Use
+This contract describes the published `0.4.x` line and the
+versioned `0.5.0` behavior. **Source version is not proof of PyPI
+availability:** inspect the installed distribution and its source
+provenance. The `0.3.x` artifacts remain an earlier migration line. Use
 [PyPI](https://pypi.org/project/fastapi-cache-stable/) and
 [CHANGELOG.md](CHANGELOG.md) for current releases and historical versions.
 
@@ -162,7 +163,7 @@ cache(
     injected_dependency_namespace="__fastapi_cache",
     cache_authenticated=None,
     infer_response_model=False,
-    vary_headers=None,  # opt-in Sequence[str], in 0.5.0 source candidate only
+    vary_headers=None,  # opt-in Sequence[str], introduced in 0.5.0
 )
 ```
 
@@ -322,7 +323,7 @@ Historical introduction versions belong in [CHANGELOG.md](CHANGELOG.md).
 | Injected `response` metadata is checked before cache reads and writes | Dict/list responses could cache cookies, private data, custom statuses, or custom headers |
 | A second `FastAPICache.init(...)` is not a silent no-op | Configuration was impossible to change |
 
-## Explicit HTTP header variants (merged for 0.5.0; not in published 0.4.1)
+## Explicit HTTP header variants (0.5.0; not in 0.4.1)
 
 The optional `vary_headers` decorator argument isolates only explicitly
 declared, validated HTTP request field names; it does not infer hidden state.
