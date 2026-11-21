@@ -66,10 +66,10 @@ def test_060_candidate_preserves_published_050_evidence() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
     assert 'version = "0.6.0"' in pyproject
-    assert 'fastapi-cache-stable[redis]==0.5.0' in readme
+    assert 'fastapi-cache-stable[redis]==0.6.0' in readme
     assert "pypi.org/project/fastapi-cache-stable/" in readme
     assert "0.5.0 is a source candidate, not on PyPI" not in readme
-    assert "**Latest published stable:** [0.4.1" not in readme
+    assert "**Latest published stable:** [0.6.0" in readme
     assert "candidate only, not published" not in support
     assert "PREPUBLICATION DRAFT" not in notes
     assert "NOT RELEASED" not in checklist

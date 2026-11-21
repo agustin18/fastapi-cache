@@ -25,17 +25,10 @@ await FastAPICache.clear(namespace="public")
 
 The namespace is scoped under your configured prefix, not a command to clear every backend key. `expire=None` preserves entries until explicit clear or process exit; finite TTL entries are discarded on access after expiration.
 
-## Capacity limitations in published 0.5.0
+## Capacity in published 0.6.0
 
-!!! warning "Unbounded dictionary"
-    Published 0.5.0 has **no `max_entries` constructor argument**. Expired entries are removed lazily, which means a stream of never-revisited unique keys can grow memory. For high-cardinality traffic, use Redis and configure capacity appropriately.
-
-[PR #85](https://github.com/agustin18/fastapi-cache/pull/85) is **merged into `stable` but not published**. The following capacity API is **not supported by 0.5.0**.
-
-## Next-release source: bounded InMemory (not yet published)
-
-!!! warning "Source-only example, NOT for fastapi-cache-stable==0.5.0"
-    No 0.6.0 wheel, sdist or tag has been published. Use this example only when independently evaluating a reviewed source checkout or candidate; normal users must stay with the published 0.5.0 snippet above.
+!!! warning "Unbounded when omitted"
+    Published 0.6.0 keeps the historical unbounded default; expired entries are removed lazily. A stream of never-revisited unique keys can grow memory. Set `max_entries` when you need a hard per-process bound, and use Redis for high-cardinality shared traffic.
 
 ```python
 from fastapi_cache import FastAPICache

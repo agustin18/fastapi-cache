@@ -4,26 +4,26 @@
 [`fastapi-cache2`](https://pypi.org/project/fastapi-cache2/). This document defines what
 "drop-in" means for this project and what we promise to keep stable.
 
-This contract describes the published `0.5.0` release and the retained
+This contract describes the published `0.6.0` release and the retained
 `0.4.x` compatibility behavior. Inspect the installed distribution and its
 source provenance; a source checkout alone is not publication evidence. The
 `0.3.x` artifacts remain an earlier migration line. Use
 [PyPI](https://pypi.org/project/fastapi-cache-stable/) and
 [CHANGELOG.md](CHANGELOG.md) for current releases and historical versions.
 
-## 0.6.0 promotion compatibility
+## 0.6.0 compatibility
 
-The staged 0.6.0 package retains `Requires-Python >=3.8,<3.14`, documented
+The published 0.6.0 package retains `Requires-Python >=3.8,<3.14`, documented
 Python-conditional Redis client bounds, imports and ordinary default keys.
 It adds optional bounded InMemory and targeted private HTTP response
 corrections. Final installed-artifact verification is pending under
 [#92](https://github.com/agustin18/fastapi-cache/issues/92); the matrix
-below remains the published 0.5.0 contract. No new backend or Python
+below is the published 0.6.0 contract. No new backend or Python
 version is qualified by this promotion.
 
-## Redis client support in 0.5.0
+## Redis client support in 0.6.0
 
-Published `0.5.0` inherits the `0.4.0` Redis support and incorporates the #47 implementation, changing
+Published `0.6.0` inherits the `0.4.0` Redis support and incorporates the #47 implementation, changing
 only the optional Redis client requirements and verification matrix, not
 the RedisBackend runtime semantics. The previous `0.3.x` release declared
 redis-py 4.x only.
@@ -44,7 +44,7 @@ The investigation is recorded in
 [audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md](audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md),
 and the implementation PR runs a smaller mandatory wheel/sdist CI matrix.
 Existing `0.3.x` PyPI artifacts remain immutable. The expanded contract
-applies to the published `0.5.0` artifact.
+applies to the published `0.6.0` artifact.
 
 ## Factory-generated HTTP handlers (#68, fixed in published 0.4.1)
 
@@ -115,7 +115,7 @@ outside its guarantee.
 - Pydantic v2 users can opt into `TypedJsonCoder` for typed restoration; the default
   `JsonCoder` keeps the legacy decoded behavior. Pydantic v1 and unsupported annotations
   keep the legacy behavior.
-- Stable `0.5.0` keeps functional compatibility for Python 3.8–3.10 through a pinned legacy
+- Stable `0.6.0` keeps functional compatibility for Python 3.8–3.10 through a pinned legacy
   CI matrix. These EOL runtimes are not part of the security-supported environment.
 
 ## Public surface
@@ -227,7 +227,7 @@ classmethod decode_as_type(value: bytes, *, type_) -> Any
   mitigations and residual risk before stable.
 
 Python 3.8, 3.9 and 3.10 are end-of-life, and Pydantic v1 is end-of-life with 1.10.27 as its
-final release. Stable `0.5.0` retains the package range `>=3.8,<3.14`; Python 3.8–3.10 are
+final release. Stable `0.6.0` retains the package range `>=3.8,<3.14`; Python 3.8–3.10 are
 tested for legacy functional compatibility but are not security-supported. Pydantic v1 keeps
 its documented legacy decoded behavior, but receives no new upstream security fixes.
 
@@ -238,7 +238,7 @@ its documented legacy decoded behavior, but receives no new upstream security fi
 | 3.8–3.9 | Verified legacy matrix, core Redis/InMemory | **No** | Legacy profiles can resolve vulnerable AnyIO 4.5.2 and Starlette 0.44.0 |
 | 3.10 | Verified legacy matrix | **No** | EOL interpreter; security fixes depend on the consuming app and compatible dependencies |
 | **3.11–3.13** | **Verified** | **Best-effort, recommended** | Verified modern runtime wheel profiles; not a claim about all consumer packages |
-| 3.14 | Not verified | No | Not in 0.5.0 metadata range |
+| 3.14 | Not verified | No | Not in 0.6.0 metadata range |
 
 A legacy Python installation can work correctly and still retain dependency
 vulnerabilities. Neither an installation on EOL Python nor a switch from
@@ -248,16 +248,16 @@ dependency graphs; only individual installed versions and reachable code
 paths establish exposure. The **released** upstream `fastapi-cache2==0.2.2` and this fork
 both declare `redis ^4.2.0rc1` (redis-py 4.x), and this fork verifies
 redis-py 4.6.0. Upstream `main` was later updated to `redis ^5.0.8`, but
-those unreleased source changes do not constitute published compatibility.
+those source changes do not constitute published compatibility beyond their release notes.
 Projects requiring redis-py 5/6 must not assume they are supported yet.
 
 See [Legacy support and known GHSA](audit/security/LEGACY_SUPPORT_AND_RISKS.md)
 and [SECURITY.md](SECURITY.md). **Use Python 3.11–3.13 and patched
 compatible dependencies for production**, not EOL interpreters.
 
-## Supported matrix for `0.5.0`
+## Supported matrix for `0.6.0`
 
-> Stable `0.5.0` metadata is `python = ">=3.8,<3.14"`. Functional compatibility and security
+> Stable `0.6.0` metadata is `python = ">=3.8,<3.14"`. Functional compatibility and security
 > support are separate: Python 3.8–3.10 are legacy-tested only; security support is Python
 > server-side CPython 3.11–3.13. Python 3.14 remains unsupported pending a full matrix.
 
@@ -273,7 +273,7 @@ Status definitions:
 | CPython 3.11–3.13 | Security-supported | Full functional and security-audit matrices |
 | Python 3.10 | Legacy functional compatibility | Main functional CI plus Pydantic v1 compatibility; EOL, no security-support commitment |
 | Python 3.8–3.9 | Legacy functional compatibility | Pinned FastAPI/Pydantic matrix and Python 3.8 wheel smoke; EOL, no security-support commitment |
-| Python 3.14 | Unsupported for `0.5.0` | Requires a full CI matrix before support is announced |
+| Python 3.14 | Unsupported for `0.6.0` | Requires a full CI matrix before support is announced |
 | FastAPI | Verified with 0.111.1 and current 0.x | Older 0.100.x is unverified; no upper pin yet (`fastapi = "*"`) |
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
@@ -282,18 +282,15 @@ Status definitions:
 | Redis Cluster | Unsupported for namespace clear | Key-only clear is supported; namespace clear raises `NotImplementedError`; no complete namespace clearing |
 | InMemory | Verified for basic operations, clear semantics, `expire=None` and instance isolation | Unit tests; each instance owns its store and lock; no size cap yet |
 | Memcached | Experimental | Unit tests with a fake client; `get_with_ttl` returns a fixed `3600` instead of the real remaining time; `clear` raises `NotImplementedError` |
-| DynamoDB | Experimental; Python >=3.10 only for target `0.5.0` | `dynamodb` extra requires aiobotocore and aiohttp >=3.14.4; the extra omits those dependencies on Python 3.8/3.9. Unit tests use a fake client; `clear` raises `NotImplementedError`; no real-service integration |
+| DynamoDB | Experimental; Python >=3.10 only for target `0.6.0` | `dynamodb` extra requires aiobotocore and aiohttp >=3.14.4; the extra omits those dependencies on Python 3.8/3.9. Unit tests use a fake client; `clear` raises `NotImplementedError`; no real-service integration |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
 
-### Bounded InMemory in unreleased `stable` (not a 0.5.0 guarantee)
+### Bounded InMemory in published 0.6.0
 
-The **published 0.5.0 matrix above remains unchanged**: its InMemory
-backend is unbounded. [PR #85](https://github.com/agustin18/fastapi-cache/pull/85)
-merged the planned next-release constructor
-`InMemoryBackend(max_entries: Optional[int] = None)` into `stable`.
-**No 0.6.0 distribution has been published.**
+`InMemoryBackend(max_entries: Optional[int] = None)` is available in
+published 0.6.0. The published 0.5.0 backend remains unbounded.
 
-- `None` retains unbounded legacy behavior. A positive integer caps
+- `None` retains unbounded legacy behavior in 0.6.0. A positive integer caps
   **entry count per instance**, not payload bytes or total cache capacity
   across processes. `bool`, zero, negative and non-integer values fail
   construction validation.
@@ -307,9 +304,8 @@ merged the planned next-release constructor
 - There is no background sweeper, bytes-based cap or thread/cross-event-loop
   sharing guarantee. Existing cache privacy/tenant boundaries remain
   application responsibilities, and the feature cannot be installed with
-  `fastapi-cache-stable==0.5.0`.
-- Verified source and CI checks for #85 do **not** replace the final
-  package-specific checks in [#92](https://github.com/agustin18/fastapi-cache/issues/92).
+  `fastapi-cache-stable==0.6.0`.
+- The cap is per instance and counts entries, not bytes or workers.
 
 > Verified Redis integration covers Redis 7 with redis-py 4.6.0. Other
 > versions are not verified by that job alone.
