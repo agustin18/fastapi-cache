@@ -39,4 +39,4 @@ Zensical currently supports a **transitional fork of `mike`** for versioned MkDo
 - [Zensical publication guide](https://zensical.org/docs/publish-your-site/)
 - [Zensical versioning with mike](https://zensical.org/docs/compatibility/mkdocs/mike/)
 - [fastapi-stream-lease Pages workflow](https://github.com/agustin18/fastapi-stream-lease/blob/main/.github/workflows/docs.yml)
-- [FastAPI-CacheX hosted documentation](https://fastapi-cachex.readthedocs.io/en/stable/)
+- [GitHub Pages documentation](https://docs.github.com/en/pages)
