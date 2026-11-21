@@ -21,6 +21,23 @@ contract.
 > security validation covers server-side CPython 3.11–3.13, while 3.8–3.10
 > are legacy functional-compatibility targets only.
 
+## Upgrade from 0.5.0 to the reviewed 0.6.0 artifact
+
+0.6.0 promotion is prepared but not published. Keep public installation pins
+at 0.5.0 until PyPI confirms the new version. See [#92](https://github.com/agustin18/fastapi-cache/issues/92).
+
+- Keep imports, ordinary default keys and Redis/Python bounds unchanged.
+  Review opt-in private routes and their validated identity-aware key builders.
+- Before traffic, rotate or selectively clear unsafe legacy namespaces and
+  invalidate affected HTTP intermediary entries. Never restore unsafe private
+  caching during rollback.
+- Optional `InMemoryBackend(max_entries=N)` is new in 0.6.0; omit it to
+  preserve unbounded behavior. It is not supported in 0.5.0.
+- In a clean environment, verify the approved 0.6.0 wheel hash, install the
+  local wheel by path, run `pip check` and verify distribution/import versions,
+  MISS/HIT/304, authorization, variation and ordinary rollback. After actual
+  PyPI verification use the exact 0.6.0 pin instead of the local path.
+
 ## Quick migration for GET, JSON and Redis/InMemory
 
 For ordinary GET/JSON endpoints with standalone Redis or InMemory and one

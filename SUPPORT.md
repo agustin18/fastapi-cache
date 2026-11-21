@@ -5,6 +5,13 @@ fastapi-cache2.
 
 ## Supported lines
 
+- `0.6.x`: source promotion prepared, **not yet published**. The proposed
+  support scope is unchanged: best-effort server-side CPython 3.11–3.13
+  security/critical correctness maintenance, 3.8–3.10 functional legacy only.
+  The maintenance target is 12 months from actual publication, subject to
+  capacity; no additional runtime or backend support is implied. See
+  [release acceptance #92](https://github.com/agustin18/fastapi-cache/issues/92).
+
 - `0.5.x`: `0.5.0` published **2026-11-21**. Best-effort security and
   critical correctness maintenance targets **2027-11-21** (12 months),
   subject to maintainer capacity. This applies to server-side CPython

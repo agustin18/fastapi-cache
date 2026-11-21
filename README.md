@@ -14,6 +14,9 @@
 > [Security](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) ·
 > [Support](https://github.com/agustin18/fastapi-cache/blob/stable/SUPPORT.md) ·
 > [Changelog](https://github.com/agustin18/fastapi-cache/blob/stable/CHANGELOG.md).
+> **0.6.0:** final promotion prepared, not tagged or published. See
+> [0.6.0 release notes](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_NOTES_0.6.0.md) and
+> [release acceptance #92](https://github.com/agustin18/fastapi-cache/issues/92).
 > Pre-releases must be independently evaluated before production deployment.
 >
 > Installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has
@@ -600,7 +603,7 @@ cross-process sharing. `expire=0` keeps the legacy fallback to the global `expir
 `get_with_ttl` returns `-1` for no-expiration entries; the decorator omits `max-age` for
 those entries and for `expire=None`.
 
-**Implemented in `stable` for the next release (not in published 0.5.0):**
+**0.6.0 candidate API (not in published 0.5.0):**
 [PR #85](https://github.com/agustin18/fastapi-cache/pull/85) adds
 `InMemoryBackend(max_entries=1_000)`. This positive-integer, opt-in cap
 counts **entries per backend instance**, not bytes, processes or all workers;
@@ -609,8 +612,9 @@ property**, fixed at construction: assignments afterward raise
 `AttributeError`. When full, bounded mode evicts the LRU item, reclaiming
 an expired item first when available; no background sweeper is started.
 Explicit namespace clearing still scans local entries under the async lock.
-The next-release API is not an installed feature until a separately reviewed
-version ships. See [InMemory version guide](site_docs/guides/inmemory.md)
+Evaluate this API only against a reviewed local 0.6.0 wheel/sdist or source
+checkout until the new version is published. After publication verification,
+install the exact 0.6.0 pin and validate your application's migration. See [InMemory version guide](site_docs/guides/inmemory.md)
 and [release acceptance #92](https://github.com/agustin18/fastapi-cache/issues/92).
 
 ### RedisBackend
