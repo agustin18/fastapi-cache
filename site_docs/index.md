@@ -66,7 +66,7 @@ The package name is **`fastapi-cache-stable`**; imports remain **`fastapi_cache`
 
 | Included in published 0.5.0 | Future / not shipped |
 |---|---|
-| Default-key-compatible GET/JSON caching | Optional bounded InMemory (#54) |
+| Default-key-compatible GET/JSON caching | Bounded InMemory [merged in unreleased source (#85)](https://github.com/agustin18/fastapi-cache/pull/85), **not in 0.5.0** |
 | Standalone Redis and process-local InMemory | Typed cache lifecycle events (#50) |
 | Safe default Authorization/Cookie bypass | Arbitrary hidden tenant/context autodetection (#53 residual) |
 | Opt-in `vary_headers`, ETag and HTTP 304 | Single-flight and tag-based invalidation |
