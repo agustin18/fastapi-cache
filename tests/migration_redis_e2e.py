@@ -12,7 +12,7 @@ import sys
 from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Dict
 
 import redis
 import redis.asyncio as redis_async
@@ -56,7 +56,7 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/ordinary")
 @cache(namespace="ordinary", expire=TTL_SECONDS)
-async def ordinary(response: Response) -> dict[str, str]:
+async def ordinary(response: Response) -> Dict[str, str]:
     global ordinary_calls
     ordinary_calls += 1
     return {"generation": GENERATION, "kind": "ordinary"}
@@ -64,7 +64,7 @@ async def ordinary(response: Response) -> dict[str, str]:
 
 @app.get("/private")
 @cache(namespace="private", expire=TTL_SECONDS)
-async def private(request: Request, response: Response) -> dict[str, str]:
+async def private(request: Request, response: Response) -> Dict[str, str]:
     global private_calls
     private_calls += 1
     return {
@@ -83,14 +83,14 @@ async def special(response: Response) -> date:
 
 @app.get("/unrelated")
 @cache(namespace="unrelated", expire=TTL_SECONDS)
-async def unrelated(response: Response) -> dict[str, str]:
+async def unrelated(response: Response) -> Dict[str, str]:
     global unrelated_calls
     unrelated_calls += 1
     return {"kind": "unrelated", "value": "must-survive-targeted-clear"}
 
 
 @app.post("/migration/cleanup")
-async def cleanup_legacy_incompatible_namespaces() -> dict[str, int]:
+async def cleanup_legacy_incompatible_namespaces() -> Dict[str, int]:
     return {
         "private": await FastAPICache.clear(namespace="private"),
         "special": await FastAPICache.clear(namespace="special"),
