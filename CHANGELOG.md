@@ -8,6 +8,22 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.5.0](https://github.com/agustin18/fastapi-cache/tree/v0.5.0) - 2026-11-21
+
+### Features
+
+- Add opt-in `@cache(vary_headers=...)` to isolate explicitly listed request-header variants using versioned hashed keys, while preserving the default key format and Request/authentication bypasses. [#53](https://github.com/agustin18/fastapi-cache/issues/53)
+
+### Improved Documentation
+
+- Add a reproducible isolated installation and security-audit matrix for bare, Redis-extra and source-distribution runtime profiles on supported modern Python versions. [#66](https://github.com/agustin18/fastapi-cache/issues/66)
+- Add a reproducible PyPI-to-PyPI migration comparison with immutable default-key goldens, independent InMemory/Redis consumers, scoped cache cleanup, and rollback evidence for the published 0.2.2 to 0.4.1 transition. [#69](https://github.com/agustin18/fastapi-cache/issues/69)
+
+### Misc
+
+- Require a fresh authenticated Dependabot delta before production PyPI publication; fail closed on new high/critical risk, review-required changes or incomplete data without blocking TestPyPI. [#66](https://github.com/agustin18/fastapi-cache/issues/66)
+- Add reproducible 0.5.0 candidate wheel/sdist migration-and-rollback verification across supported Python profiles, with exact commit/artifact hashes, an independent clean consumer and a separate manual release gate. [#69](https://github.com/agustin18/fastapi-cache/issues/69)
+
 ## [0.4.1](https://github.com/agustin18/fastapi-cache/tree/v0.4.1) - 2026-11-20
 
 ### Bugfixes

@@ -2,14 +2,14 @@
 
 ## Supported versions
 
-- `0.4.1` is the current published patch for the `0.4.x` line
+- `0.4.1` is the most recent published patch for the `0.4.x` line
   (released **2026-11-20**). The line targets best-effort security and critical correctness fixes on
   server-side **CPython 3.11–3.13**, within the 12-month target in
   [SUPPORT.md](SUPPORT.md) (until 2027-11-20, capacity permitting).
 - `0.3.0` and `0.3.1` remain the previous migration line, with the
   best-effort security/critical target recorded in
   [SUPPORT.md](SUPPORT.md) (until 2027-11-19).
-- Stable `0.4.x` installs on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy
+- The `0.4.x` and versioned `0.5.0` metadata install on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy
   functional-compatibility targets only and have no security-support commitment
   for EOL runtimes or dependencies. Python 3.14 is not included until its full
   matrix passes.
@@ -85,11 +85,13 @@ can reduce cache hit rates for existing Request-taking endpoints. HTTP
 Redis/InMemory cache. **0.3.0 users must upgrade to 0.3.1 or avoid caching
 such endpoints**; the published `0.3.0` wheel itself is immutable.
 
-## Explicit Vary and hidden-context residual scope (0.5.0 candidate)
+## Explicit Vary and hidden-context residual scope (0.5.0)
 
-PR #81 merged `@cache(vary_headers=(...))` into source `stable`, but
-**published 0.4.1 does not expose this API**. It is staged for 0.5.0
-and is opt-in: an application must explicitly list every
+`@cache(vary_headers=(...))` was introduced in the 0.5.0 release line
+(after PR #81). **Published 0.4.1 does not expose this API.**
+Check [PyPI](https://pypi.org/project/fastapi-cache-stable/) and the
+installed version before relying on it. The feature is opt-in:
+an application must explicitly list every
 representation-determining request header. The default key format and
 the explicit-`Request`/default-builder bypass remain unchanged.
 A returned `Response` receives generated `Vary` on MISS/HIT and the
@@ -107,10 +109,14 @@ caching. Hashing does not authenticate, encrypt or prevent cardinality
 attacks. Rotate/clear pre-opt-in namespaces as documented in
 [MIGRATION.md](MIGRATION.md).
 
-**0.5.0 release security is not yet signed off:** modern Python 3.11–3.13
-installed wheel/sdist evidence, fresh authenticated Dependabot delta
-and an explicit release-scoped residual-risk review remain mandatory
-under [#66](https://github.com/agustin18/fastapi-cache/issues/66).
+**Release-specific security evidence:** every 0.5.0 promotion must be
+preceded by exact-artifact installed audits on modern Python 3.11–3.13,
+a fresh authenticated Dependabot delta and an explicit scoped risk
+decision under [#66](https://github.com/agustin18/fastapi-cache/issues/66).
+The source-only candidate and historical 0.3.x acceptance are not a
+substitute for that decision; consult
+[release provenance](docs/releases/RELEASE_CANDIDATE_0.5.0.md)
+and [PyPI](https://pypi.org/project/fastapi-cache-stable/) for status.
 
 ## Factory-generated route key collisions (affected 0.4.0; fixed 0.4.1)
 

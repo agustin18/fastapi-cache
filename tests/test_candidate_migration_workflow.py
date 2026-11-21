@@ -53,7 +53,7 @@ def test_phase_b_uses_isolated_old_new_consumers_and_scoped_redis() -> None:
     assert "flushdb()" not in workflow
 
 
-def test_released_041_remains_latest_user_install_and_050_is_not_live() -> None:
+def test_050_promotion_docs_do_not_assert_false_pypi_availability() -> None:
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     support = (ROOT / "SUPPORT.md").read_text(encoding="utf-8")
@@ -63,14 +63,29 @@ def test_released_041_remains_latest_user_install_and_050_is_not_live() -> None:
     checklist = (
         ROOT / "docs" / "releases" / "RELEASE_CANDIDATE_0.5.0.md"
     ).read_text(encoding="utf-8")
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+
     assert 'version = "0.5.0"' in pyproject
-    assert 'fastapi-cache-stable[redis]==0.4.1' in readme
-    assert "not on PyPI" in readme
-    assert "0.5.0" in support
-    assert "candidate" in support
-    assert "PREPUBLICATION DRAFT" in notes
-    assert "NOT RELEASED" in checklist
+    assert 'fastapi-cache-stable[redis]==0.5.0' in readme
+    assert "pypi.org/project/fastapi-cache-stable/" in readme
+    assert "0.5.0 is a source candidate, not on PyPI" not in readme
+    assert "**Latest published stable:** [0.4.1" not in readme
+    assert "candidate only, not published" not in support
+    assert "PREPUBLICATION DRAFT" not in notes
+    assert "NOT RELEASED" not in checklist
+    assert "71/71" in checklist
+    assert "13/13" in checklist
     assert "phase-b" in checklist.lower()
+    assert "## [0.5.0]" in changelog
+    assert changelog.index("## [0.5.0]") < changelog.index("## [0.4.1]")
+    for fragment in (
+        "53.feature.md",
+        "66.doc.md",
+        "66.misc.md",
+        "69.doc.md",
+        "69.misc.md",
+    ):
+        assert not (ROOT / "changelog.d" / fragment).exists(), fragment
 
 
 def test_phase_b_reuses_migration_golden_without_modifying_phase_a() -> None:

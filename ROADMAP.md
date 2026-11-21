@@ -1,21 +1,26 @@
 # Roadmap — fastapi-cache-stable
 
-**Published baseline:** [0.4.1](https://pypi.org/project/fastapi-cache-stable/0.4.1/)
-on **2026-11-20**. The 0.4.1 patch includes the factory/wrapped-handler key
-isolation; see [0.4.1 release status](docs/releases/RELEASE_STATUS_0.4.1.md)
-for publication evidence. The 0.4.0 release remains the previous baseline. The `0.3.x` artifacts remain the previous migration line.
+**Historical published baseline:** [0.4.1](https://pypi.org/project/fastapi-cache-stable/0.4.1/)
+on **2026-11-20**. The 0.4.1 patch includes the factory/wrapped-handler
+key isolation; see [0.4.1 release evidence](docs/releases/RELEASE_STATUS_0.4.1.md).
+Consult [PyPI](https://pypi.org/project/fastapi-cache-stable/) for
+currently published releases; source version and merged PRs alone do
+not imply publication.
 **Do not reopen a completed publication gate without new material evidence.**
 
-**Current 0.5.0 train (prepublication):** #67 and #68 closed; #69 Phase A
-completed with [PR #80](https://github.com/agustin18/fastapi-cache/pull/80);
-#53's explicit `vary_headers` contract merged with
-[PR #81](https://github.com/agustin18/fastapi-cache/pull/81)
-(commit `58fd446f`), while residual arbitrary hidden tenant/context risks remain open.
-[PR #82](https://github.com/agustin18/fastapi-cache/pull/82) stages the
-**0.5.0 candidate and Phase B exact wheel/sdist migration tests**, not
-an authorized release. The final security review [#66](https://github.com/agustin18/fastapi-cache/issues/66)
-and **post-merge exact-artifact Phase B rerun** remain release gates.
-Latest published PyPI distribution: **0.4.1**.
+**0.5.0 preparation record (2026-11-20):** #67 and #68 closed;
+#69 Phase A completed in [#80](https://github.com/agustin18/fastapi-cache/pull/80).
+#53's explicit `vary_headers` contract merged in
+[#81](https://github.com/agustin18/fastapi-cache/pull/81), with residual
+hidden tenant/context risks tracked separately. Candidate
+[#82](https://github.com/agustin18/fastapi-cache/pull/82) merged as
+`6a557eb3` after a 71-check green PR and 13/13 Phase B build/migration jobs.
+**Those PR-HEAD tests are historical candidate evidence, not approval
+of the final published artifacts.** Final promotion SHA revalidation,
+release-specific security [#66](https://github.com/agustin18/fastapi-cache/issues/66)
+and [#69](https://github.com/agustin18/fastapi-cache/issues/69) exact wheel/sdist
+signoff remain mandatory for publication. See the
+[release gate record](docs/releases/RELEASE_CANDIDATE_0.5.0.md).
 
 Everything below is a **candidate plan, not a delivery promise**.
 The primary product advantage remains conservative migration from
@@ -98,7 +103,7 @@ path. **Do not** preserve unsafe historical response/tenant behavior.
 | **P0** | [#66 security/Dependabot](https://github.com/agustin18/fastapi-cache/issues/66) | **Reuse** authenticated 0.4.0 baseline: 120 historical/current records, 21 unchanged open, no new material findings. Run existing scheduled/manual delta closer to 0.5.0; triage changed alerts, patch reachable modern profiles and exact-wheel `pip-audit`. Legacy-only alerts not silently dismissed |
 | **Completed** | [#67 CI reliability](https://github.com/agustin18/fastapi-cache/issues/67) | Closed: docs-only Towncrier positive/negative verification (#71/#76/#77). No softened mandatory tests |
 | **Completed / bounded residual** | [#68 generated keys](https://github.com/agustin18/fastapi-cache/issues/68) and [#53 Vary](https://github.com/agustin18/fastapi-cache/issues/53) | #68 closed and published in 0.4.1; #53 opt-in `vary_headers` merged in #81 with returned-Response Vary tests. #53 remains open for application-specific hidden identity/tenant and resource limits |
-| **P0 — pending final SHA** | [#69 published migration + rollback](https://github.com/agustin18/fastapi-cache/issues/69) | Part A #80 merged and verified with immutable published upstream 0.2.2→fork 0.4.1; Part B #82 proposes **one exact wheel/sdist** per source SHA and independently installed rollback/consumer matrix. Re-run on final merged release SHA |
+| **P0 — pending final SHA** | [#69 published migration + rollback](https://github.com/agustin18/fastapi-cache/issues/69) | Part A #80 and candidate Part B #82 merged; **13/13** Phase B candidate jobs passed, including both distributions and legacy rollback. Re-run on final release-intended stable SHA after promotion and archive exact wheel/sdist hashes |
 | **P0 — pending final signoff** | [#66 security](https://github.com/agustin18/fastapi-cache/issues/66) | A historical 120-record/21-open baseline is not consent for 0.5.0. Fresh authenticated delta, final modern installed wheel/sdist scan, scope-by-scope risk acceptance and explicit release decision |
 
 ### Optional opt-in additions (NOT 0.5.0 release gates)
@@ -127,16 +132,23 @@ full compatible matrix.
 3. **Completed in source:** #53 [PR #81](https://github.com/agustin18/fastapi-cache/pull/81):
    explicit header variation and returned-Response Vary; independent security
    limitations stay open. Not yet in a published 0.5.0 package.
-4. **Current PR:** [#82](https://github.com/agustin18/fastapi-cache/pull/82)
-   candidate version `0.5.0`, exact wheel/sdist Phase-B build, Python
-   3.8–3.13 installed consumers, real Redis and package rollback, plus
-   dated documentation cleanup. **No tag or publication.**
-5. **After merge:** rerun #69 Phase B and modern installed security scans
-   on the **exact final stable commit**, retain wheel and sdist hashes.
-6. **Before publication:** #66 fresh authenticated Dependabot delta,
-   individually scoped modern and residual legacy/consumer risk decisions,
-   independent signoff, then a **separately authorized manual** tag,
-   TestPyPI/PyPI and release record.
+4. **Merged candidate:** [#82](https://github.com/agustin18/fastapi-cache/pull/82)
+   staged version `0.5.0` and the exact wheel/sdist Phase-B migration matrix
+   on Python 3.8–3.13, including a real Redis package rollback; all
+   candidate checks passed. Merge SHA `6a557eb3`; no tag or publication
+   was created by the merge.
+5. **Promotion:** complete version-neutral installation, support,
+   migration and security text, generate 0.5.0 Towncrier changelog
+   and consume its fragments; release documentation must not falsely
+   claim live PyPI availability or lack thereof.
+6. **Exact final artifacts:** rerun #69 Phase B and #66 modern installed
+   wheel/sdist security profiles **after promotion** at the intended
+   `stable` SHA. Archive hashes, reports, GitHub run IDs, dependency
+   metadata and independent consumer evidence.
+7. **Manual release decision:** fresh authenticated Dependabot delta,
+   scoped #66 security acceptance and #69 final migration signoff;
+   then an **explicitly approved** annotated tag, TestPyPI/PyPI and
+   provenance record, with no automatic publication.
 
 The current [release-specific checklist](docs/releases/RELEASE_CANDIDATE_0.5.0.md)
 is authoritative for remaining gates. **Optional #49/#54/#50**

@@ -9,9 +9,14 @@ fastapi-cache2.
   and critical correctness maintenance targets **2027-11-20**
   (12 months), subject to maintainer capacity. This is a target, not
   a contractual guarantee, for server-side CPython 3.11–3.13.
-- `0.5.0`: **candidate only, not published or currently in an active support
-  window.** Its proposed security/migration contract requires #69 phase B
-  and #66 final exact-artifact signoff before any release or new commitment.
+- `0.5.x`: on publication, the line targets best-effort security and
+  critical correctness maintenance for **12 months from the initial
+  0.5.0 PyPI publication date**, subject to maintainer capacity. This
+  applies to server-side CPython 3.11–3.13 only; it is not an active
+  commitment before publication. See the
+  [release evidence](docs/releases/RELEASE_CANDIDATE_0.5.0.md) and
+  [current PyPI listings](https://pypi.org/project/fastapi-cache-stable/)
+  to distinguish prepared artifacts from published releases.
 - `0.3.x`: `0.3.0` and `0.3.1` were published **2026-11-19**; this remains
   the migration line. Its best-effort security/critical maintenance target
   is **2027-11-19**, subject to capacity.
@@ -20,21 +25,21 @@ fastapi-cache2.
   claim functional incompatibility. Applications using urllib3 in those
   runtimes must assess redirects themselves.
 - Check [PyPI](https://pypi.org/project/fastapi-cache-stable/) and
-  [CHANGELOG.md](CHANGELOG.md) for current versions. Stable `0.4.x` installs
-  on Python `>=3.8,<3.14`. Python 3.8–3.10 have a tested legacy
+  [CHANGELOG.md](CHANGELOG.md) for current versions. The published `0.4.x`
+  and versioned `0.5.0` metadata install on Python `>=3.8,<3.14`. Python 3.8–3.10 have a tested legacy
   functional-compatibility lane, but receive no security-support commitment
   for EOL runtimes or dependency versions. A critical advisory applicable to
   package-controlled behavior must be mitigated before release. If it applies
   only to a specific application-enabled feature or optional backend, the
   trigger and residual risk must be documented and explicitly accepted; EOL
   status alone is not a disposition.
-- In released `0.4.x`, the experimental DynamoDB extra requires Python
+- In `0.4.x` and the `0.5.0` distribution metadata, the experimental DynamoDB extra requires Python
   `>=3.10`; Python 3.8/3.9 legacy compatibility is limited to Redis/InMemory
   and the documented core APIs.
 - Redis client support is Python-conditional: 4.x through 6.1.x on Python
   3.8, through 7.0.x on 3.9 and through 8.1.x on 3.10–3.13. Redis standalone
   is verified; TLS/Sentinel/Cluster/failover are not certified.
-- Python 3.14 remains outside the `0.4.x` metadata range until the full
+- Python 3.14 remains outside the `0.4.x` and `0.5.0` metadata ranges until the full
   functional matrix passes.
 - `1.x` (planned): if and when `1.0.0` is released with a co-maintainer in
   place, security and critical correctness fixes for 24 months after that

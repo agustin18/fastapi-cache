@@ -26,25 +26,75 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install towncrier
+      - name: Install pinned Towncrier and release project dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install "towncrier>=26,<27"
+          python -m pip install "towncrier==26.9.0"
+          # Towncrier imports the configured fastapi_cache package while
+          # building; the base worktree must have runtime deps available.
+          # This is build tooling, not a published dependency change.
+          python -m pip install -e .
       # A release-status/README-only edit must not need a fictional news
       # fragment. Fail closed for any Python, metadata, workflow, test or
       # other non-Markdown change, including rename/delete paths.
       - name: Classify changelog requirement
         id: scope
         run: python scripts/check_changelog_scope.py --output "$GITHUB_OUTPUT"
-      - name: Check changelog fragment
+      - name: Check changelog fragment or verify exact release rendering
         if: steps.scope.outputs.docs_only != 'true'
         run: |
-          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'skip-changelog') }}" == "true" ]]; then
-            echo "skip-changelog label present"
-            exit 0
+          set -euo pipefail
+          # A release-promotion PR *consumes* all previously staged fragments.
+          # Never waive this gate: verify the committed CHANGELOG is exactly
+          # what Towncrier builds from the base commit's fragment inventory.
+          if git diff --name-only origin/stable...HEAD | grep -Fxq CHANGELOG.md &&
+             git diff --name-status --no-renames origin/stable...HEAD |
+               grep -Eq '^D[[:space:]]+changelog[.]d/[0-9]+[.](feature|bugfix|doc|removal|misc)[.]md$'; then
+            python - <<'PY'
+          import subprocess
+          import tomllib
+          from pathlib import Path
+          base = subprocess.check_output(
+              ["git", "show", "origin/stable:pyproject.toml"], text=False
+          )
+          previous = tomllib.loads(base.decode())["tool"]["poetry"]["version"]
+          current = tomllib.loads(Path("pyproject.toml").read_text())["tool"]["poetry"]["version"]
+          assert previous == current == "0.5.0", (previous, current)
+          PY
+            mapfile -t fragments < <(
+              git ls-tree -r --name-only origin/stable changelog.d |
+                grep -E '^changelog[.]d/[0-9]+[.](feature|bugfix|doc|removal|misc)[.]md$'
+            )
+            test "${#fragments[@]}" -gt 0
+            for fragment in "${fragments[@]}"; do
+              if [[ -e "$fragment" ]]; then
+                echo "::error::Unconsumed release fragment $fragment"
+                exit 1
+              fi
+              git diff --name-status --no-renames origin/stable...HEAD -- "$fragment" |
+                grep -Eq "^D[[:space:]]+${fragment//./[.]}$"
+            done
+            if find changelog.d -maxdepth 1 -type f -name '[0-9]*.md' | grep -q .; then
+              echo "::error::Unexpected new release fragment in promotion PR"
+              exit 1
+            fi
+            worktree="$RUNNER_TEMP/verify-050-changelog-base"
+            git worktree add --detach "$worktree" origin/stable
+            (
+              cd "$worktree"
+              towncrier --version
+              towncrier build --yes --version 0.5.0 --date 2026-11-21
+            )
+            diff -u "$worktree/CHANGELOG.md" "$GITHUB_WORKSPACE/CHANGELOG.md"
+            echo "Generated Towncrier 0.5.0 release entry matches byte-for-byte."
+          else
+            if [[ "${{ contains(github.event.pull_request.labels.*.name, 'skip-changelog') }}" == "true" ]]; then
+              echo "skip-changelog label present"
+              exit 0
+            fi
+            if [[ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" ]]; then
+              echo "dependabot PR"
+              exit 0
+            fi
+            towncrier check --compare-with origin/stable
           fi
-          if [[ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" ]]; then
-            echo "dependabot PR"
-            exit 0
-          fi
-          towncrier check --compare-with origin/stable

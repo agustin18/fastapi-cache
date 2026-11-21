@@ -165,7 +165,7 @@ not an automatic safety guarantee.
 
 ### Explicit header variation (new opt-in for 0.5.0)
 
-The source-merged (not yet published) `@cache(vary_headers=("Accept-Language", "X-Region"))` API
+The 0.5.0 `@cache(vary_headers=("Accept-Language", "X-Region"))` API
 addresses a narrow case: a **public** endpoint's representation depends on
 those named headers, but their values do **not** appear among the function's
 FastAPI-resolved parameters. This includes a declared dependency whose
@@ -213,13 +213,15 @@ value only enters middleware state or a `ContextVar`.
   SHA-256 for key identifiers hides raw header strings but is neither
   encryption, authentication nor cache-flood protection.
 
-**Prepublication status:** PR #81 is merged into `stable`, but the public
-API is **not in published 0.4.1**. It is staged for 0.5.0. A passing
-test proves only the listed paths and configurations, not complete
-automatic cross-tenant isolation. Published 0.2.2→0.4.1 phase A has
-passed after the change; the independent phase B workflow tests the
-candidate's actual 0.5.0 wheel and sdist. It must be repeated on the
-**final post-merge commit** before release.
+**Version and verification:** this API is not available in 0.4.1.
+Before using it, verify an installed 0.5.0 distribution on
+[PyPI](https://pypi.org/project/fastapi-cache-stable/); do not infer
+availability merely from a source merge. A successful test only proves
+the listed paths and configurations, not generic cross-tenant isolation.
+The [published 0.2.2→0.4.1 parity](audit/migration/PUBLISHED_022_TO_041_PHASE_A.md)
+remains an independent historical baseline, and the
+[0.5.0 phase-B workflow](.github/workflows/migration-candidate-phase-b.yml)
+must pass on the exact release-intended source SHA and wheel/sdist.
 
 ## Generated FastAPI routes and shared default keys (#68)
 
@@ -286,7 +288,7 @@ Use a fresh environment and update your **application dependency declaration**
 and lockfile: never install both distributions in one environment, because
 they own the same `fastapi_cache` import.
 
-For the published `0.4.1` stable release in a clean environment:
+For the previously published `0.4.1` release in a clean environment:
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
@@ -294,11 +296,12 @@ python -m pip install "fastapi-cache-stable[redis]==0.4.1"
 python -m pip check
 ```
 
-For evaluating a **future prerelease** (not required for 0.4.1):
+For 0.5.0 **after verifying that it is listed on PyPI** (otherwise use
+a previously published version, such as 0.4.1):
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
-python -m pip install --pre --upgrade "fastapi-cache-stable[redis]"
+python -m pip install "fastapi-cache-stable[redis]==0.5.0"
 python -m pip check
 python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 ```
@@ -333,7 +336,7 @@ resolve from regular PyPI; do not mix TestPyPI and PyPI candidates via
 ## Compatibility matrix
 
 - **Verified**: tested in CI with identified versions.
-- **0.5.0 candidate**: source-level intent, not guaranteed in a published package until exact-artifact validation and manual release.
+- **Version-specific**: inspect the actual published artifact and source SHA before claiming an API or tested security behavior is shipped.
 - **Experimental**: interface available, coverage insufficient.
 - **Unsupported**: outside the compatibility contract.
 
@@ -342,7 +345,7 @@ resolve from regular PyPI; do not mix TestPyPI and PyPI candidates via
 | Python 3.11–3.13 | Verified, security-supported | Main functional matrix and separate runtime security-audit profile |
 | Python 3.10 | Verified legacy compatibility | Main functional tests and Pydantic v1 migration job; EOL, no security-support commitment |
 | Python 3.8/3.9 | Verified legacy compatibility | Pinned FastAPI 0.111.1/Pydantic 1.10.27/2.8.2 matrix and wheel smoke; EOL, no security-support commitment |
-| Python 3.14 | Unsupported for stable `0.4.1` | Add and pass a full matrix before announcing support |
+| Python 3.14 | Unsupported for `0.4.1` and `0.5.0` | Add and pass a full matrix before announcing support |
 | FastAPI | Verified with 0.111.1 and current 0.x | Older 0.100.x is unverified; no upper pin yet (`fastapi = "*"`) |
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
@@ -733,7 +736,8 @@ records their SHA-256, installs each in isolated environments across
 Python 3.8–3.13, runs Redis 7.4 migration, physically replaces the
 candidate with the upstream 0.2.2 package for the bounded ordinary-data
 rollback, then runs a separate 0.5.0 InMemory/Vary consumer. This
-candidate workflow must be repeated on the post-merge final SHA.
+workflow must pass on the **exact release-intended SHA**, and its
+wheel/sdist digests must be archived for release provenance.
 See [#69](https://github.com/agustin18/fastapi-cache/issues/69) and
 [0.5.0 release gates](docs/releases/RELEASE_CANDIDATE_0.5.0.md).
 
