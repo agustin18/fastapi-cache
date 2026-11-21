@@ -21,6 +21,25 @@ The primary product advantage remains conservative migration from
 `fastapi-cache2==0.2.2`, preserved `fastapi_cache` imports, predictable
 cache keys and safe default HTTP/private-response behavior.
 
+
+## 0.6.0 — planning, not a release commitment
+
+The active [0.6.0 tracker #86](https://github.com/agustin18/fastapi-cache/issues/86)
+supersedes the **completed** [0.5.0 train #70](https://github.com/agustin18/fastapi-cache/issues/70).
+The proposed first feature PR is [#85](https://github.com/agustin18/fastapi-cache/pull/85)
+for opt-in bounded InMemory (#54). It is **unmerged** and not available
+in the immutable published 0.5.0 wheel. A separate documentation PR
+updates the [five-minute quickstart](docs/QUICKSTART.md) and adds
+a [navigable site](site_docs/index.md) with CI preview; public hosting
+and true versioned deployment remain independent approvals.
+
+0.6.0 should stay focused on optional bounded InMemory and privacy-safe
+observability (#50). Single-flight is **research**, and argument filtering
+(#49) requires a separate safety contract before any implementation.
+Proven #53 privacy defects outrank the feature roadmap. Never inherit
+0.5.0's release-specific security acceptance for a different SHA.
+
+
 ## Version strategy
 
 - **0.5.x:** current published line. Keep the published Python
