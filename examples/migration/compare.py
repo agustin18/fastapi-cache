@@ -1,3 +1,4 @@
+# ruff: noqa: S101 - comparison deliberately asserts migration safety
 """Fail-closed before/after comparison of two isolated demo executions."""
 
 from __future__ import annotations
@@ -5,10 +6,10 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 
-def verify(legacy: Dict[str, Any], replacement: Dict[str, Any]) -> None:
+def verify(legacy: dict[str, Any], replacement: dict[str, Any]) -> None:
     assert (legacy["distribution"], legacy["version"]) == (
         "fastapi-cache2",
         "0.2.2",
