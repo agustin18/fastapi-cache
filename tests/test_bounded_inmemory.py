@@ -29,6 +29,45 @@ def test_invalid_max_entries_fails_closed(invalid: object) -> None:
         InMemoryBackend(max_entries=invalid)  # type: ignore[arg-type]
 
 
+@pytest.mark.parametrize("initial", [None, 2])
+@pytest.mark.parametrize("attempt", [None, 0, 1, 2, 5, -1, True, "3"])
+def test_max_entries_is_read_only_after_initialization(
+    initial: object, attempt: object
+) -> None:
+    """Neither shrinking, disabling nor replacing the validated cap is legal."""
+    backend = InMemoryBackend(max_entries=initial)  # type: ignore[arg-type]
+    with pytest.raises(AttributeError):
+        setattr(backend, "max_entries", attempt)
+    assert backend.max_entries == initial
+
+
+def test_mutation_attempt_cannot_violate_bounded_lru_capacity() -> None:
+    """The auditor's shrink-to-one reproduction must now fail closed."""
+    async def run() -> None:
+        backend = InMemoryBackend(max_entries=2)
+        await backend.set("a", b"a")
+        await backend.set("b", b"b")
+        with pytest.raises(AttributeError):
+            backend.max_entries = 1  # type: ignore[misc]
+        with pytest.raises(AttributeError):
+            backend.max_entries = None  # type: ignore[misc]
+        with pytest.raises(AttributeError):
+            backend.max_entries = -1  # type: ignore[misc]
+        await backend.set("c", b"c")
+        assert backend.max_entries == 2
+        assert list(backend._store) == ["b", "c"]  # pyright: ignore[reportPrivateUsage]
+        assert await backend.get("a") is None
+        assert await backend.get("b") == b"b"
+        assert await backend.get("c") == b"c"
+        assert len(backend._store) == 2  # pyright: ignore[reportPrivateUsage]
+        assert backend._recency is not None  # pyright: ignore[reportPrivateUsage]
+        assert len(backend._recency) == 2  # pyright: ignore[reportPrivateUsage]
+        assert backend._expiry_index is not None  # pyright: ignore[reportPrivateUsage]
+        assert len(backend._expiry_index) == 0  # pyright: ignore[reportPrivateUsage]
+
+    asyncio.run(run())
+
+
 def test_default_remains_unbounded_and_backward_compatible() -> None:
     async def run() -> None:
         backend = InMemoryBackend()
