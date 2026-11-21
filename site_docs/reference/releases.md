@@ -1,6 +1,6 @@
 # Published releases and evidence
 
-Release tags are immutable reference points. The repository's `stable` branch may contain later documentation or unreleased work.
+Release tags are immutable reference points. The repository's `stable` branch may contain later documentation or unreleased work. [#85](https://github.com/agustin18/fastapi-cache/pull/85) merged bounded InMemory into source only; **it is not part of any published 0.5.0 artifact**. See [#92](https://github.com/agustin18/fastapi-cache/issues/92) for 0.6.0 release gates.
 
 | Release | Status | Highlights |
 |---|---|---|
