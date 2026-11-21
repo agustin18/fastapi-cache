@@ -42,14 +42,18 @@ def test_indexed_heap_exactness_under_direct_arbitrary_mutations(seed: int) -> N
                 default=None,
             )
             actual = index.oldest_expired(now)
-            wanted = earliest[1] if earliest is not None and earliest[0] < now else None
+            wanted = (
+                earliest[1]
+                if earliest is not None and earliest[0] < now
+                else None
+            )
             assert actual == wanted
 
         heap = index._heap  # pyright: ignore[reportPrivateUsage]
         positions = index._positions  # pyright: ignore[reportPrivateUsage]
         assert len(index) == len(expected)
         assert len(heap) == len(positions) == len(expected)
-        assert dict((key, expiry) for expiry, key in heap) == expected
+        assert {key: expiry for expiry, key in heap} == expected
         assert set(positions) == set(expected)
         for position, (expiry, key) in enumerate(heap):
             assert positions[key] == position
