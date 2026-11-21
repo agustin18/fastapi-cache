@@ -64,6 +64,8 @@ See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blo
 | **Checking security** | [Tenant and request safety](site_docs/guides/privacy.md) · [Security policy](SECURITY.md) | Default auth bypass, custom headers, cache-key isolation |
 | **Looking ahead** | [Next release plan](site_docs/roadmap.md) · [#86 tracker](https://github.com/agustin18/fastapi-cache/issues/86) | 0.6.0 candidates, not publication promises |
 
+**Try it:** [one-command before/after migration demo](examples/migration/README.md) (two isolated published environments, no Redis or credentials).
+
 **Published:** [fastapi-cache-stable 0.5.0](https://pypi.org/project/fastapi-cache-stable/0.5.0/). The new searchable site is in [site_docs/](site_docs/index.md) and has a **CI build preview**; it is not claimed to be hosted publicly until a separate deployment is approved.
 
 

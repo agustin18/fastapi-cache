@@ -1,0 +1,44 @@
+name: Published migration before-and-after demo
+
+on:
+  pull_request:
+    branches: [stable]
+    paths:
+      - "examples/migration/**"
+      - "examples/README.md"
+      - "site_docs/migration.md"
+      - "tests/test_migration_demo_contract.py"
+      - ".github/workflows/migration-demo.yml"
+  push:
+    branches: [stable]
+    paths:
+      - "examples/migration/**"
+      - "examples/README.md"
+      - "site_docs/migration.md"
+      - "tests/test_migration_demo_contract.py"
+      - ".github/workflows/migration-demo.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  before-after:
+    name: Published old/new demo on Py ${{ matrix.python }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Verify demo Python syntax (without importing the checkout)
+        run: python -m compileall -q examples/migration
+      - name: Run reproducible published-vs-published demo
+        run: python examples/migration/run_demo.py
