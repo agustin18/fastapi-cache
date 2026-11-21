@@ -30,7 +30,7 @@ def test_merged_source_api_is_labelled_unreleased() -> None:
     assert "max_entries: Optional[int]" in api
     assert "not part of a published 0.6.0 distribution" in api
     assert "Merged source, unreleased" in matrix
-    assert "not in published 0.5.0" in matrix
+    assert "not in 0.5.0" in matrix
     assert "not part of any published 0.5.0 artifact" in releases
 
 
