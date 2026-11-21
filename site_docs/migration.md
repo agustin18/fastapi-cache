@@ -64,6 +64,16 @@ from fastapi_cache.decorator import cache
 !!! danger "Hidden identity is not automatically safe"
     Headers like `X-API-Key`, tenant identity in `request.state`, middleware or `ContextVar` may not affect the default key. HTTP `Vary` alone does not partition the internal cache. See [privacy](guides/privacy.md) and [#53 residual](https://github.com/agustin18/fastapi-cache/issues/53).
 
+## See the same app before and after
+
+The [runnable before/after demo](https://github.com/agustin18/fastapi-cache/blob/stable/examples/migration/README.md)
+starts the **same FastAPI source** in two disposable virtual environments:
+published `fastapi-cache2==0.2.2` and published `fastapi-cache-stable==0.5.0`.
+It proves an ordinary MISS/HIT and ETag/304 stay functional, and illustrates
+the intentional safer default for fictitious authenticated requests.
+It uses InMemory, **not** persisted Redis, and is not proof that arbitrary
+private/tenant state or rollback is safe.
+
 ## Smoke-test before traffic
 
 1. GET anonymously: **MISS → HIT**; include ETag/304.
