@@ -67,6 +67,13 @@ or [0.4.1 signed provenance](RELEASE_STATUS_0.4.1.md).
 - [ ] Reconfirm no broken historical default key goldens, unintended
   downgrade in private/default auth semantics, or consumer-installed
   `fastapi_cache` namespace collisions.
+- [ ] **Promotion documentation:** replace provisional `0.5.0 is not on
+  PyPI` wording in README/long-description, SUPPORT, release notes,
+  migration and version-specific guard tests with accurate release-stage
+  wording **before publishing**. Ensure the package metadata contains no
+  false availability claim. This creates a new source SHA: rebuild both
+  artifacts, recompute SHA-256 and repeat #69 phase B and #66 exact-final-
+  artifact checks. Never reuse a previously approved candidate hash.
 - [ ] Explicit manual signoff to create an annotated `v0.5.0` tag,
   TestPyPI testing, production PyPI publish and GitHub release.
   Verify publishing workflows against the same approved source SHA.
