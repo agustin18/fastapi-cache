@@ -73,7 +73,8 @@ def test_050_promotion_docs_do_not_assert_false_pypi_availability() -> None:
     assert "candidate only, not published" not in support
     assert "PREPUBLICATION DRAFT" not in notes
     assert "NOT RELEASED" not in checklist
-    assert "71/71" in checklist and "13/13" in checklist
+    assert "71/71" in checklist
+    assert "13/13" in checklist
     assert "phase-b" in checklist.lower()
     assert "## [0.5.0]" in changelog
     assert changelog.index("## [0.5.0]") < changelog.index("## [0.4.1]")
