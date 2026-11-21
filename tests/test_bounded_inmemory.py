@@ -37,7 +37,7 @@ def test_max_entries_is_read_only_after_initialization(
     """Neither shrinking, disabling nor replacing the validated cap is legal."""
     backend = InMemoryBackend(max_entries=initial)  # type: ignore[arg-type]
     with pytest.raises(AttributeError):
-        setattr(backend, "max_entries", attempt)
+        setattr(backend, "max_entries", attempt)  # noqa: B010 - test descriptor
     assert backend.max_entries == initial
 
 
