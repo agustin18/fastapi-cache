@@ -3,7 +3,8 @@
 import asyncio
 import random
 from collections import OrderedDict
-from typing import Dict, Optional, OrderedDict as OrderedDictType, Tuple
+from typing import Dict, Optional, Tuple
+from typing import OrderedDict as OrderedDictType
 
 import pytest
 
@@ -19,7 +20,7 @@ def test_seeded_bounded_inmemory_fuzz(
     """20 deterministic seeds × 2,000 reads/writes/TTL/clears, no Hypothesis dep."""
     now = [1000]
     monkeypatch.setattr("fastapi_cache.backends.inmemory.time.time", lambda: now[0])
-    rng = random.Random(seed)
+    rng = random.Random(seed)  # noqa: S311 - deterministic test data, not security
     capacity = 1 + seed % 17
     reference: OrderedDictType[str, Entry] = OrderedDict()
 
@@ -64,7 +65,6 @@ def test_seeded_bounded_inmemory_fuzz(
         assert recency is not None
         assert index is not None
         assert len(store) <= capacity
-        assert list(store) == list(reference) or set(store) == set(reference)
         assert list(recency) == list(reference)
         assert set(store) == set(reference)
         for key, val in reference.items():
