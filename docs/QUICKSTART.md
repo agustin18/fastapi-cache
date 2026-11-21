@@ -8,7 +8,7 @@ The Python import remains `fastapi_cache`.
 
 The examples below pin the published 0.6.0 release. The same minimal app
 works; `max_entries` is opt-in on InMemory. See
-[0.6.0 notes](RELEASE_NOTES_0.6.0.md).
+[0.6.0 notes](releases/RELEASE_NOTES_0.6.0.md).
 
 ## Install
 

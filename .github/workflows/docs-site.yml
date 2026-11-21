@@ -57,13 +57,13 @@ jobs:
               if not page.is_file():
                   raise AssertionError((name, page))
               data = page.read_text(encoding="utf-8")
-              assert "<html" in data and "0.5.0" in data, (name, page)
+              assert "<html" in data and "0.6.0" in data, (name, page)
           homepage = pages["home"].read_text(encoding="utf-8")
           assert "Start from scratch" in homepage
           assert "Migrate from fastapi-cache2" in homepage
-          assert "not in 0.5.0" in pages["features"].read_text(encoding="utf-8")
+          assert "0.6.0" in pages["features"].read_text(encoding="utf-8")
           quickstart = Path("docs/QUICKSTART.md").read_text()
-          assert "fastapi-cache-stable==0.5.0" in quickstart
+          assert "fastapi-cache-stable==0.6.0" in quickstart
           assert "fastapi-cache-stable==0.4.1" not in quickstart
           PY
       - name: Validate every built HTML link, target file and page fragment
