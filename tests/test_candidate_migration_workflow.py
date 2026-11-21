@@ -66,7 +66,8 @@ def test_released_041_remains_latest_user_install_and_050_is_not_live() -> None:
     assert 'version = "0.5.0"' in pyproject
     assert 'fastapi-cache-stable[redis]==0.4.1' in readme
     assert "not on PyPI" in readme
-    assert "0.5.0" in support and "candidate" in support
+    assert "0.5.0" in support
+    assert "candidate" in support
     assert "PREPUBLICATION DRAFT" in notes
     assert "NOT RELEASED" in checklist
     assert "phase B" in checklist.lower()
