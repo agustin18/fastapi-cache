@@ -17,7 +17,6 @@ from typing import AsyncGenerator, Dict
 # Use typing.Dict on HTTP route return annotations deliberately: the published
 # upstream 0.2.2 decorator resolves them with Pydantic v1 on Python 3.8,
 # where PEP 585 dict[str, ...] is not subscriptable even under postponed annotations.
-
 import redis
 import redis.asyncio as redis_async
 from fastapi import FastAPI, Request, Response
