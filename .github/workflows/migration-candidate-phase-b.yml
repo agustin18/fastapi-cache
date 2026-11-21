@@ -1,0 +1,304 @@
+name: 0.5.0 candidate migration phase B
+
+on:
+  pull_request:
+    branches: [stable]
+    paths:
+      - ".github/workflows/migration-candidate-phase-b.yml"
+      - "pyproject.toml"
+      - "poetry.lock"
+      - "fastapi_cache/**"
+      - "tests/candidate_050_inmemory_probe.py"
+      - "tests/migration_redis_e2e.py"
+      - "tests/redis_vary_probe.py"
+      - "tests/test_candidate_migration_workflow.py"
+      - "MIGRATION.md"
+      - "audit/migration/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migration-phase-b-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-exact-artifacts:
+    name: Build exact 0.5.0 wheel + sdist once, record hashes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          # Pull-request default refs are synthetic merge commits. Audit the
+          # actual PR HEAD; run manually on stable after its final merge.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Build and verify both immutable candidate files
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          python -m pip install --upgrade pip
+          python -m pip install "build==1.2.2" twine
+          mkdir -p "$RUNNER_TEMP/phase-b-dist"
+          python -m build --wheel --sdist --outdir "$RUNNER_TEMP/phase-b-dist"
+          python -m twine check "$RUNNER_TEMP"/phase-b-dist/*
+          python - <<'PY'
+          import json
+          import os
+          from email.parser import Parser
+          from pathlib import Path
+          import tarfile
+          import tomllib
+          import zipfile
+
+          dist = Path(os.environ["RUNNER_TEMP"]) / "phase-b-dist"
+          wheels = sorted(dist.glob("fastapi_cache_stable-0.5.0-*.whl"))
+          sdists = sorted(dist.glob("fastapi_cache_stable-0.5.0.tar.gz"))
+          assert len(wheels) == 1 and len(sdists) == 1
+          assert len(list(dist.iterdir())) == 2, "unexpected build artifacts"
+          with zipfile.ZipFile(wheels[0]) as archive:
+              names = archive.namelist()
+              metadata_file = next(p for p in names if p.endswith(".dist-info/METADATA"))
+              metadata = Parser().parsestr(archive.read(metadata_file).decode())
+              assert metadata["Name"] == "fastapi-cache-stable"
+              assert metadata["Version"] == "0.5.0"
+              assert "fastapi_cache/__init__.py" in names
+          with tarfile.open(sdists[0], "r:gz") as archive:
+              member = next(
+                  m for m in archive.getmembers()
+                  if m.name.endswith("/pyproject.toml")
+              )
+              payload = archive.extractfile(member)
+              assert payload is not None
+              source_meta = tomllib.loads(payload.read().decode())
+              assert source_meta["tool"]["poetry"]["version"] == "0.5.0"
+          (dist / "provenance.json").write_text(
+              json.dumps({
+                  "source_sha": os.environ["EXPECTED_SHA"],
+                  "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+                  "workflow_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+                  "candidate_version": "0.5.0",
+                  "wheel": wheels[0].name,
+                  "sdist": sdists[0].name,
+                  "source_type": "PR_HEAD_or_stable_SHA",
+                  "published": False,
+              }, indent=2) + "\n", encoding="utf-8",
+          )
+          PY
+          (
+            cd "$RUNNER_TEMP/phase-b-dist"
+            sha256sum fastapi_cache_stable-0.5.0-*.whl \
+              fastapi_cache_stable-0.5.0.tar.gz > SHA256SUMS
+            sha256sum --check SHA256SUMS
+          )
+      - name: Keep exact candidate files and provenance, even if build fails
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: migration-phase-b-050-distributions
+          path: ${{ runner.temp }}/phase-b-dist/
+          if-no-files-found: warn
+          retention-days: 90
+
+  migration-and-rollback:
+    name: Py ${{ matrix.python }} / ${{ matrix.format }} / real Redis 7.4 / rollback
+    needs: build-exact-artifacts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        format: ["wheel", "sdist"]
+    services:
+      redis:
+        image: redis:7.4
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Retrieve exact build, verify SHA256 and commit provenance
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: migration-phase-b-050-distributions
+          path: ${{ runner.temp }}/phase-b-dist
+      - name: Verify artifact bytes and select isolated framework profile
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PY_VERSION: ${{ matrix.python }}
+          FORMAT: ${{ matrix.format }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/phase-b-dist"
+          sha256sum --check SHA256SUMS
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          data = json.loads(
+              (Path(os.environ["RUNNER_TEMP"]) / "phase-b-dist" / "provenance.json").read_text()
+          )
+          assert data["source_sha"] == os.environ["EXPECTED_SHA"]
+          assert data["candidate_version"] == "0.5.0"
+          assert data["published"] is False
+          for key in ("wheel", "sdist"):
+              assert (Path(os.environ["RUNNER_TEMP"]) / "phase-b-dist" / data[key]).is_file()
+          PY
+          if [[ "$FORMAT" == wheel ]]; then
+            candidate=$(find . -maxdepth 1 -name 'fastapi_cache_stable-0.5.0-*.whl' -print -quit)
+          else
+            candidate=$(find . -maxdepth 1 -name 'fastapi_cache_stable-0.5.0.tar.gz' -print -quit)
+          fi
+          test -n "$candidate"
+          echo "CANDIDATE_ARTIFACT=$RUNNER_TEMP/phase-b-dist/${candidate#./}" >> "$GITHUB_ENV"
+          if [[ "$PY_VERSION" == 3.13 ]]; then
+            echo "FASTAPI_VERSION=0.115.12" >> "$GITHUB_ENV"
+            echo "PYDANTIC_VERSION=2.11.7" >> "$GITHUB_ENV"
+          elif [[ "$PY_VERSION" == 3.11 || "$PY_VERSION" == 3.12 ]]; then
+            echo "FASTAPI_VERSION=0.111.1" >> "$GITHUB_ENV"
+            echo "PYDANTIC_VERSION=2.8.2" >> "$GITHUB_ENV"
+          else
+            echo "FASTAPI_VERSION=0.111.1" >> "$GITHUB_ENV"
+            echo "PYDANTIC_VERSION=1.10.27" >> "$GITHUB_ENV"
+          fi
+      - name: Download published upstream wheel (no checkout imports)
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          mkdir -p "$RUNNER_TEMP/legacy-dist" "$RUNNER_TEMP/phase-b-evidence"
+          python -m pip download --only-binary=:all: --no-deps \
+            --dest "$RUNNER_TEMP/legacy-dist" "fastapi-cache2==0.2.2"
+          test "$(find "$RUNNER_TEMP/legacy-dist" -name '*.whl' | wc -l)" -eq 1
+          sha256sum "$RUNNER_TEMP"/legacy-dist/*.whl \
+            > "$RUNNER_TEMP/phase-b-evidence/upstream-wheel-sha256.txt"
+      - name: Install legacy and exact candidate in separate fresh venvs
+        run: |
+          set -euo pipefail
+          legacy_wheel=$(find "$RUNNER_TEMP/legacy-dist" -name '*.whl' -print -quit)
+          for env in legacy candidate; do
+            python -m venv "$RUNNER_TEMP/$env"
+            "$RUNNER_TEMP/$env/bin/python" -m pip install --upgrade pip
+          done
+          "$RUNNER_TEMP/legacy/bin/python" -m pip install \
+            "$legacy_wheel[redis]" "redis==4.6.0" \
+            "fastapi==$FASTAPI_VERSION" "pydantic==$PYDANTIC_VERSION" "httpx==0.27.0"
+          "$RUNNER_TEMP/candidate/bin/python" -m pip install \
+            "$CANDIDATE_ARTIFACT[redis]" "redis==4.6.0" \
+            "fastapi==$FASTAPI_VERSION" "pydantic==$PYDANTIC_VERSION" "httpx==0.27.0"
+          for env in legacy candidate; do
+            "$RUNNER_TEMP/$env/bin/python" -m pip check
+            "$RUNNER_TEMP/$env/bin/python" -m pip freeze \
+              > "$RUNNER_TEMP/phase-b-evidence/$env-pip-freeze.txt"
+          done
+      - name: Prove actual legacy writer / candidate reader / safe package rollback
+        env:
+          REDIS_URL: redis://localhost:6379/0
+          MIGRATION_E2E_CONFIRM_ISOLATED_REDIS: "YES"
+          MIGRATION_E2E_CANDIDATE_VERSION: "0.5.0"
+          PY_VERSION: ${{ matrix.python }}
+          FORMAT: ${{ matrix.format }}
+        run: |
+          set -euo pipefail
+          cd /tmp
+          py_tag="${PY_VERSION//./}"
+          export MIGRATION_E2E_PREFIX="fastapi-cache-migration-e2e-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${py_tag}-${FORMAT}"
+          export MIGRATION_E2E_GENERATION=legacy
+          "$RUNNER_TEMP/legacy/bin/python" -I \
+            "$GITHUB_WORKSPACE/tests/migration_redis_e2e.py" seed \
+            | tee "$RUNNER_TEMP/phase-b-evidence/seed.log"
+          export MIGRATION_E2E_GENERATION=candidate
+          "$RUNNER_TEMP/candidate/bin/python" -I \
+            "$GITHUB_WORKSPACE/tests/migration_redis_e2e.py" candidate \
+            | tee "$RUNNER_TEMP/phase-b-evidence/candidate.log"
+          # Prove clean uninstall-and-install; do not co-install both
+          # distributions, which own the same fastapi_cache import package.
+          "$RUNNER_TEMP/candidate/bin/python" -m pip uninstall -y fastapi-cache-stable
+          legacy_wheel=$(find "$RUNNER_TEMP/legacy-dist" -name '*.whl' -print -quit)
+          "$RUNNER_TEMP/candidate/bin/python" -m pip install \
+            "$legacy_wheel[redis]" "redis==4.6.0"
+          "$RUNNER_TEMP/candidate/bin/python" -m pip check
+          "$RUNNER_TEMP/candidate/bin/python" -m pip freeze \
+            > "$RUNNER_TEMP/phase-b-evidence/rollback-pip-freeze.txt"
+          export MIGRATION_E2E_GENERATION=rollback
+          "$RUNNER_TEMP/candidate/bin/python" -I \
+            "$GITHUB_WORKSPACE/tests/migration_redis_e2e.py" rollback \
+            | tee "$RUNNER_TEMP/phase-b-evidence/rollback.log"
+      - name: Independent candidate consumer, HTTP InMemory and Redis Vary
+        env:
+          REDIS_URL: redis://localhost:6379/0
+          PY_VERSION: ${{ matrix.python }}
+        run: |
+          set -euo pipefail
+          if [[ "$PY_VERSION" == 3.8 || "$PY_VERSION" == 3.9 ]]; then
+            CONSUMER_REDIS=4.6.0
+          else
+            CONSUMER_REDIS=8.1.0
+          fi
+          python -m venv "$RUNNER_TEMP/consumer"
+          "$RUNNER_TEMP/consumer/bin/python" -m pip install --upgrade pip
+          "$RUNNER_TEMP/consumer/bin/python" -m pip install \
+            "$CANDIDATE_ARTIFACT[redis]" "redis==$CONSUMER_REDIS" \
+            "fastapi==$FASTAPI_VERSION" "pydantic==$PYDANTIC_VERSION" "httpx==0.27.0"
+          "$RUNNER_TEMP/consumer/bin/python" -m pip check
+          "$RUNNER_TEMP/consumer/bin/python" -m pip freeze \
+            > "$RUNNER_TEMP/phase-b-evidence/consumer-pip-freeze.txt"
+          cd /tmp
+          "$RUNNER_TEMP/consumer/bin/python" -I \
+            "$GITHUB_WORKSPACE/tests/candidate_050_inmemory_probe.py" \
+            | tee "$RUNNER_TEMP/phase-b-evidence/consumer-inmemory.log"
+          "$RUNNER_TEMP/consumer/bin/python" -I \
+            "$GITHUB_WORKSPACE/tests/redis_vary_probe.py" \
+            | tee "$RUNNER_TEMP/phase-b-evidence/consumer-redis-vary.log"
+      - name: Record exact source, artifact hashes and lane evidence
+        if: always()
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PY_VERSION: ${{ matrix.python }}
+          FORMAT: ${{ matrix.format }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/phase-b-evidence"
+          cp "$RUNNER_TEMP/phase-b-dist/SHA256SUMS" \
+            "$RUNNER_TEMP/phase-b-evidence/candidate-sha256.txt"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          dst = Path(os.environ["RUNNER_TEMP"]) / "phase-b-evidence"
+          (dst / "run-provenance.json").write_text(json.dumps({
+              "source_sha": os.environ["SOURCE_SHA"],
+              "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+              "workflow_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "candidate_version": "0.5.0",
+              "artifact_type": os.environ["FORMAT"],
+              "python": os.environ["PY_VERSION"],
+              "redis_server": "redis:7.4",
+              "old_package": "fastapi-cache2==0.2.2",
+              "candidate_is_exact_CI_artifact": True,
+              "legacy_rollback_client": "redis==4.6.0",
+              "mode": "PR candidate: not a published release",
+          }, indent=2) + "\n")
+          PY
+      - name: Upload replayable lane logs even on failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: migration-phase-b-050-py${{ matrix.python }}-${{ matrix.format }}
+          path: ${{ runner.temp }}/phase-b-evidence/
+          if-no-files-found: warn
+          retention-days: 90
