@@ -83,7 +83,7 @@ jobs:
             (
               cd "$worktree"
               towncrier --version
-              towncrier build --yes --version 0.5.0 --date 2026-11-20
+              towncrier build --yes --version 0.5.0 --date 2026-11-21
             )
             diff -u "$worktree/CHANGELOG.md" "$GITHUB_WORKSPACE/CHANGELOG.md"
             echo "Generated Towncrier 0.5.0 release entry matches byte-for-byte."
