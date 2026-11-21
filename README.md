@@ -4,16 +4,19 @@
 > The Python import stays `fastapi_cache`; intentional safety/behavior changes
 > are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
 >
-> **Latest published stable:** [0.4.1 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.4.1/)
-> (released 2026-11-20). **0.5.0 is a source candidate, not on PyPI.**
-> Its versioned migration and risk gates are tracked in [#69](https://github.com/agustin18/fastapi-cache/issues/69) and [#66](https://github.com/agustin18/fastapi-cache/issues/66). ·
+> **Published releases and availability:** [fastapi-cache-stable on PyPI](https://pypi.org/project/fastapi-cache-stable/).
+> Version 0.5.0 introduces opt-in HTTP header variants; check its actual
+> availability on PyPI before installing. Its migration/security evidence is
+> tracked in [#69](https://github.com/agustin18/fastapi-cache/issues/69)
+> and [#66](https://github.com/agustin18/fastapi-cache/issues/66). ·
 > [Quickstart](https://github.com/agustin18/fastapi-cache/blob/stable/docs/QUICKSTART.md) ·
 > [Migration](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md) ·
 > [Compatibility](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md) ·
 > [Security](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) ·
 > [Support](https://github.com/agustin18/fastapi-cache/blob/stable/SUPPORT.md) ·
 > [Changelog](https://github.com/agustin18/fastapi-cache/blob/stable/CHANGELOG.md) ·
-> [Release provenance](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.4.1.md).
+> [Release notes](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_NOTES_0.5.0.md) ·
+> [Published 0.4.1 provenance](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.4.1.md).
 > Pre-releases must be independently evaluated before production deployment.
 >
 > Installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has
@@ -82,12 +85,18 @@ in 0.4.x.
 
 ## Install
 
-Install the published stable release (pin the version you test):
+Install a **version confirmed available on PyPI**, pinned to the
+exact distribution you test. For 0.5.0, once listed on PyPI:
 
 ```sh
-python -m pip install "fastapi-cache-stable[redis]==0.4.1"
+python -m pip uninstall -y fastapi-cache2
+python -m pip install "fastapi-cache-stable[redis]==0.5.0"
 python -m pip check
 ```
+
+If 0.5.0 is not listed yet, keep using a verified published version
+(such as [0.4.1](https://pypi.org/project/fastapi-cache-stable/0.4.1/)).
+Do not treat the repository version alone as publication evidence.
 
 For process-local InMemory caching, omit `[redis]`. See the
 [5-minute quickstart](https://github.com/agustin18/fastapi-cache/blob/stable/docs/QUICKSTART.md) for a complete example.
@@ -369,13 +378,13 @@ validated identity, tenant and permissions when authenticated caching is
 explicitly enabled. DB session objects with changing `repr()` values can
 otherwise produce perpetual misses; see the migration checklist.
 
-### Explicit request-header variants (merged after 0.4.1; not yet released)
+### Explicit request-header variants (0.5.0; unavailable in 0.4.1)
 
-**Availability:** `vary_headers` was merged in PR #81 and exists in the
-0.5.0 source candidate. It **does not exist in published 0.4.1**.
-Do not copy this example into a production 0.4.1 installation until a
-tested 0.5.0 package has been published and pinned. Keep the application
-security review and namespace migration requirements below.
+**Versioned API:** `vary_headers` was introduced for the 0.5.0 release
+line. It is **not part of published 0.4.1**. Before using this example,
+verify that 0.5.0 is listed on PyPI, install the exact version and review
+your application-specific cache-key/identity and namespace-migration
+requirements below.
 
 For anonymous/public endpoints that depend on a **known** header through a
 dependency, middleware, or `contextvars`, opt in to a header-specific key:
