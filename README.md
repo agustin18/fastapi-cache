@@ -53,6 +53,20 @@ See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blo
 [security policy](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) and
 [legacy vulnerability explanation](https://github.com/agustin18/fastapi-cache/blob/stable/audit/security/LEGACY_SUPPORT_AND_RISKS.md).
 
+
+## Choose your path
+
+| I'm… | Start here | What you'll learn |
+|---|---|---|
+| **Starting from zero** | [Install in 5 minutes](docs/QUICKSTART.md) · [Visual guide source](site_docs/getting-started.md) | Pinned package, InMemory, first HIT/MISS, Redis |
+| **Already on fastapi-cache2** | [Migration walkthrough](site_docs/migration.md) · [Full migration contract](MIGRATION.md) | Remove the old distribution, validate privacy, migrate namespaces, rollback |
+| **Comparing features/backends** | [Feature matrix](site_docs/reference/features.md) · [Backend choice](site_docs/backends.md) | What's actually in 0.5.0 and what remains proposed |
+| **Checking security** | [Tenant and request safety](site_docs/guides/privacy.md) · [Security policy](SECURITY.md) | Default auth bypass, custom headers, cache-key isolation |
+| **Looking ahead** | [Next release plan](site_docs/roadmap.md) · [#86 tracker](https://github.com/agustin18/fastapi-cache/issues/86) | 0.6.0 candidates, not publication promises |
+
+**Published:** [fastapi-cache-stable 0.5.0](https://pypi.org/project/fastapi-cache-stable/0.5.0/). The new searchable site is in [site_docs/](site_docs/index.md) and has a **CI build preview**; it is not claimed to be hosted publicly until a separate deployment is approved.
+
+
 ## Introduction
 
 `fastapi-cache` is a tool to cache FastAPI endpoint and function results, with
