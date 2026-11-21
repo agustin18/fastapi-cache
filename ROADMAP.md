@@ -40,6 +40,27 @@ Proven #53 privacy defects outrank the feature roadmap. Never inherit
 0.5.0's release-specific security acceptance for a different SHA.
 
 
+## Adoption and competitive documentation (0.6.0 proposal)
+
+- [#88](https://github.com/agustin18/fastapi-cache/issues/88):
+  **first coordinated public promotion**, not the first PyPI release;
+  published 0.5.0 stays the baseline until a separate reviewed 0.6.0.
+- [#48](https://github.com/agustin18/fastapi-cache/issues/48):
+  navigable Zensical docs sources shipped in #87. A separate manual-only
+  GitHub Pages workflow, tested preview, API reference and comparison guide
+  are proposed; publication and live URL verification require approval.
+- [Alternatives guide](site_docs/reference/alternatives.md):
+  compare FastAPI-CacheX, Cashews, aiocache and Redis SDK by application
+  fit, not unsupported performance multipliers. **No universal feature
+  parity goal** for 0.6.0.
+- [Public API guide](site_docs/reference/api.md):
+  distinguish *published 0.5.0* from opt-in capabilities proposed in #54.
+- **Feature freeze:** #54 only after clean base, heap fuzz, full-capacity
+  10k/100k LRU/expired-reclaim benchmarks and signed exact-head CI;
+  #50 only if scoped, opt-in, data-minimizing, and reviewed without delaying
+  release. #53 residual stays a security review gate; #49, tags,
+  stampede/locks and other expansions remain separate design/research.
+
 ## Version strategy
 
 - **0.5.x:** current published line. Keep the published Python
