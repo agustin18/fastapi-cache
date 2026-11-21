@@ -12,6 +12,11 @@ python -m pip install "fastapi-cache-stable" uvicorn
 python -m pip install "fastapi-cache-stable[redis]" uvicorn
 ```
 
+To see **the same FastAPI app before and after migrating from `fastapi-cache2`**,
+run the [one-command migration demo](migration/README.md). It installs the two
+distributions in separate temporary virtual environments and compares safe
+default behavior, without touching any Redis instance.
+
 Run from the repository root, for example:
 
 ```sh
