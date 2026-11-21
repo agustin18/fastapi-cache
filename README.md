@@ -66,7 +66,7 @@ See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blo
 
 **Try it:** [one-command before/after migration demo](examples/migration/README.md) (two isolated published environments, no Redis or credentials).
 
-**Published:** [fastapi-cache-stable 0.5.0](https://pypi.org/project/fastapi-cache-stable/0.5.0/). **Merged source, not yet released:** [#85](https://github.com/agustin18/fastapi-cache/pull/85) adds an opt-in bounded InMemory backend in `stable` for a proposed 0.6.0; it is **not** available with the 0.5.0 install pin. The searchable site is in [site_docs/](site_docs/index.md) with CI preview; it is not confirmed publicly hosted.
+**Published:** [fastapi-cache-stable 0.5.0](https://pypi.org/project/fastapi-cache-stable/0.5.0/). **Merged source, not yet released:** [#85](https://github.com/agustin18/fastapi-cache/pull/85) adds an opt-in bounded InMemory backend in `stable` for a proposed 0.6.0; it is **not available with the 0.5.0 install pin**. The searchable site is in [site_docs/](site_docs/index.md) with CI preview; it is not confirmed publicly hosted.
 
 
 ## Introduction
