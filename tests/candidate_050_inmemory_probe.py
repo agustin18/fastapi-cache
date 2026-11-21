@@ -4,12 +4,11 @@ Run via an installed wheel/sdist from /tmp, not from a repository checkout.
 This is not an application-specific production certification.
 """
 
-import hashlib
 import importlib.metadata as metadata
 import json
 from contextvars import ContextVar
 from pathlib import Path
-from typing import Any, Dict
+from typing import Dict
 
 from fastapi import Depends, FastAPI, Response
 from starlette.requests import Request
@@ -44,10 +43,9 @@ def main() -> None:
         sample_endpoint, "migration-parity:ordinary",
         args=(7,), kwargs={"lang": "es"},
     )
-    reference = hashlib.md5(
-        b"__main__:sample_endpoint:(7,):{'lang': 'es'}"
-    ).hexdigest()
-    assert key == GOLDEN == "migration-parity:ordinary:" + reference
+    # Fixed golden from the original published upstream contract; do not
+    # regenerate it with the fork or a cryptographic-compatibility fallback.
+    assert key == GOLDEN
 
     FastAPICache.reset()
     FastAPICache.init(InMemoryBackend(), prefix="candidate-050-inmemory")
