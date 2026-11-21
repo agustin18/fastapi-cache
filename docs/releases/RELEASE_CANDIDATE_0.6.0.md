@@ -43,10 +43,10 @@
   restricted ordinary-data rollback; verify `pip check` and targeted
   namespace cleanup, retain golden keys. Never resume unsafe private
   caching after rollback.
-- [ ] Installed independent *in-repo CI fixture* verifies ordinary
+- [ ] Installed *in-repo CI fixture* verifies ordinary
   MISS/HIT/304, protected-request bypass, opt-in `Vary`,
   `max_entries=2` LRU eviction, public capacity immutability,
-  default unbounded behavior. This is **not** consumer #91.
+  default unbounded behavior. This is controlled installed-package verification.
 - [ ] Verify locked main-only Poetry profiles and installed wheel/sdist
   `Requires-Python >=3.8,<3.14`. CPython 3.8–3.10 remains
   **legacy functional only**; recommended security-supported servers
@@ -58,29 +58,18 @@
   decisions individually. A passing prior-release audit is not a
   surrogate for candidate package evidence.
 
-## Consumer evidence and scope-limited technical release
+## Release validation policy
 
-Maintainer-directed scope decision: **0.6.0 may be considered for a
-technical release without the two real consumer validations**. This is
-a release-specific exception to the former launch gate, not completed
-validation or a waiver of privacy, CI, artifact or security requirements.
-The public count remains **0/2**. [#91](https://github.com/agustin18/fastapi-cache/issues/91)
-stays open and is a prerequisite for broad adoption promotion (#88);
-two distinct real apps are required, with owner-operated vs third-party
-relationship disclosed when evidence is accepted. Do not name or expose
-private applications. Internal CI, examples, copied apps and multiple
-environments of one app are not independent consumer evidence.
+Release readiness is determined by reproducible technical evidence and
+maintainer approval, under [CONTRIBUTING.md](../../CONTRIBUTING.md).
+Project-authored fixtures, installed-distribution tests, integration
+services and maintainer-run checks are valid technical evidence.
+Application feedback can strengthen coverage but is voluntary.
 
-- [ ] Independently review this scoped technical-release exception and
-  reconcile #91/#92. State publicly: "No external consumer validation
-  was completed for this release. Published verification consists of
-  controlled project tests and CI integration fixtures, not independent
-  production deployments or third-party adoption."
-- [ ] Keep #91 at 0/2 unless there is qualifying reproducible evidence.
-  Public hosting verification and actual consumers remain promotion gates,
-  not prerequisites for a scoped technical PyPI release.
-- [ ] No public claim of production adoption, universal safety, feature
-  parity, performance superiority or complete drop-in compatibility.
+No minimum number of users, external applications, deployments, or
+testimonials is required for any release or announcement. Do not invent
+or solicit evidence merely to meet a quota. Public claims must reflect
+what was actually tested; private application details are not required.
 
 ## Promotion — distinct manual authorizations
 
@@ -97,11 +86,11 @@ environments of one app are not independent consumer evidence.
   `stable` only. Do not treat `workflow_dispatch` alone as a
   sufficient release-authorization control.
 - [ ] Prepare `0.6.0rc1` only if a separately approved prerelease
-  is useful for independent external exercises. A final-version
+  is useful for additional technical verification. A final-version
   candidate wheel **must not be uploaded** under an RC tag.
 - [ ] Explicit maintainer GO for a final immutable tag, TestPyPI
   publish and smoke install; record tag/commit and both exact hashes.
-- [ ] Re-check dependencies, risk decisions and consumers, then obtain
+- [ ] Re-check dependencies and risk decisions, then obtain
   **separate** maintainer GO for production PyPI. Both manual workflows
   require the annotated version tag, the successful manual Phase B run
   on that exact stable commit, and explicitly approved wheel/sdist hashes.
@@ -114,7 +103,8 @@ environments of one app are not independent consumer evidence.
 - [ ] Publish version-accurate public documentation through restricted
   `github-pages` environment on `stable` only; verify live URL,
   links/search/mobile and preservation of historical v0.5.0 docs
-  before adding an external website link or advertising #88.
+  before adding a link to the hosted site. This is a separate docs task,
+  not a release or ordinary announcement gate.
 
 ## Evidence ledger
 
@@ -126,8 +116,6 @@ environments of one app are not independent consumer evidence.
 | Phase B build + 12 migration + 7 exact security | TBD | TBD | PENDING |
 | Fresh Dependabot delta | TBD | TBD | PENDING |
 | #53 privacy disposition | TBD | TBD | PENDING |
-| #91 consumer A | — | No public evidence | 0/2, separate adoption gate |
-| #91 consumer B | — | No public evidence | 0/2, separate adoption gate |
 | Final GO / tag / TestPyPI / PyPI | TBD | TBD | **NOT AUTHORIZED** |
 
 The scope and status in [#92](https://github.com/agustin18/fastapi-cache/issues/92)

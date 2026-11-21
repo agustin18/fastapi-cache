@@ -65,10 +65,9 @@ Proven #53 privacy defects outrank the feature roadmap. Never inherit
 - **Feature freeze:** #54/#85 passed independent counteraudit and exact-head
   CI before merge; **final 0.6.0 artifacts require new security and
   migration evidence**. #50 is deferred to 0.7.0 unless separately approved.
-  #53 residual remains a security risk-disposition gate; #91 remains at
-  0/2 real consumers and gates broad promotion, not the scoped 0.6.0
-  technical release (explicit exception in the candidate checklist).
-  #92 tracks final candidate checks and manual release approval.
+  #53 remains a security risk-disposition gate. #92 tracks final
+  candidate checks and manual release approval. No release or announcement
+  depends on a minimum number of adopters or external validations.
 
 ## Version strategy
 
@@ -256,7 +255,7 @@ claims of feature/performance/security parity.
 
 | Capability / application need | Current contract | Evidence required to claim readiness | Target |
 |---|---|---|---|
-| Legacy migration and stable response identity | Published 0.5.0, pinned CI; release candidate in progress | Real app installations, ordinary key goldens, selective rollback and secret-safe key changes | 0.6.0 |
+| Legacy migration and stable response identity | Published 0.5.0, pinned CI; release candidate in progress | Controlled installed-package integration, ordinary key goldens, selective rollback and secret-safe key changes | 0.6.0 |
 | Entry-count limit for one InMemory instance | Source merged in #85, not shipped in 0.5.0 | Real installed 0.6 artifact, TTL/LRU/fuzz/concurrency, 10k/100k scaling and byte-memory caveat | 0.6.0 |
 | Auth/private-request isolation | Conservative defaults and opt-in header variation | #53 library vs app ownership decision; independent negative privacy cases | 0.6.0 gate |
 | Privacy-safe callbacks | Not implemented | Typed opt-in signal, data minimization, callback isolation and overhead profile | Next feature train |
@@ -289,7 +288,7 @@ Python-conditional Redis client range; unshipped source and Redis
 3. Require functional CI, type/lint checks, Redis integration where
    relevant, publishable wheel/sdist, clean installs, `pip check`,
    and applicable package-audit evidence for every release. Test a
-   consumer and rollback path for migration-sensitive changes.
+   controlled installed-package integration and rollback path for migration-sensitive changes.
 4. Keep authenticated bypass safe by default; `PickleCoder` must not
    receive untrusted cache data. Preserve privacy tests and avoid
    logging secrets or full cache keys.

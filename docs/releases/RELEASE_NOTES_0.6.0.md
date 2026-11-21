@@ -38,10 +38,11 @@ checks, real Redis 7.4 migration and rollback verification,
 modern security scans of the same files and the exact final source SHA.
 Until recorded, these checks are **not completed release evidence**.
 
-No external consumer validation was completed; the public ledger remains
-0/2. This is a proposed scope-limited technical release, not a claim of
-third-party adoption or production certification. Two real consumer
-validations and public site verification remain broad-promotion gates.
+Validation is based on reproducible project tests, installed-package
+checks and reviewed integration evidence. The support matrix and
+documented limitations define the scope of these results. Report
+reproducible defects through the issue tracker; use private vulnerability
+reporting for security issues.
 
 ### Privacy and promotion safeguards
 
@@ -83,7 +84,4 @@ No release artifact has been authorized yet.
 **NO-GO pending** [#92](https://github.com/agustin18/fastapi-cache/issues/92),
 [#53 privacy signoff](https://github.com/agustin18/fastapi-cache/issues/53),
 exact final-artifact evidence and explicit manual approval.
-[#91](https://github.com/agustin18/fastapi-cache/issues/91) remains open
-for real consumer evidence and broad promotion, not this technical
-release when the documented scoped exception is independently approved.
 Do not treat these draft notes as a PyPI availability statement.

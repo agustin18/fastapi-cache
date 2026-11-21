@@ -36,7 +36,8 @@ The full [GitHub roadmap](https://github.com/agustin18/fastapi-cache/blob/stable
   start design earlier without promising a new public API.
 
 The [quality and adoption tracker](https://github.com/agustin18/fastapi-cache/issues/95)
-defines acceptance evidence, not delivery dates. Technical 0.6.0 approval
-requires exact final artifact/security/migration evidence and explicit
-approval. The public consumer ledger is 0/2; broad promotion requires
-real consumer evidence and verified documentation hosting.
+defines acceptance evidence, not delivery dates. Release approval
+requires applicable final artifact/security/migration evidence and
+explicit maintainer approval. User feedback is welcome through the
+issue tracker, but there is no adoption quota or external-test
+requirement for releases or announcements.
