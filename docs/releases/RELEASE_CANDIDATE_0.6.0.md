@@ -26,14 +26,18 @@
 ## Candidate build and tests — every checkbox requires actual evidence
 
 - [ ] Record PR HEAD SHA and merge SHA. Bump metadata to `0.6.0` on this
-  **unmerged candidate branch**; do not create `v0.6.0` tag yet.
+  candidate source (merged in #94, with corrective PR pending); do not
+  create `v0.6.0` tag yet.
 - [ ] Exact HEAD CI on Python 3.8–3.13, lint/types, Redis, benchmarks,
   CodeQL, installed-runtime security, release changelog gate and docs
   link validator all **green**. Log run URLs and failing-retry disposition.
 - [ ] [Phase B workflow](../../.github/workflows/migration-candidate-phase-b.yml):
   build a SINGLE 0.6.0 wheel/sdist pair, record **actual SHA-256** values,
   verify wheel METADATA and sdist pyproject, artifact provenance, and
-  `twine check`; no re-build inside consumer lanes.
+  `twine check`; no re-build inside consumer lanes. Require all 12
+  migration lanes AND seven exact-bundle security profiles (20 jobs total,
+  including build). Source-only diagnostic security builds are not final
+  binary evidence.
 - [ ] 12 Python 3.8–3.13 × wheel/sdist runs on dedicated Redis 7.4:
   published legacy writer → exact 0.6.0 candidate reader →
   restricted ordinary-data rollback; verify `pip check` and targeted
@@ -54,17 +58,29 @@
   decisions individually. A passing prior-release audit is not a
   surrogate for candidate package evidence.
 
-## Real independent consumers — release blocker
+## Consumer evidence and scope-limited technical release
 
-- [ ] [#91 Consumer A](https://github.com/agustin18/fastapi-cache/issues/91):
-  independently maintained new app exercises standalone Redis, InMemory,
-  private/tenant safeguards, install metadata, lifecycle and error cases.
-- [ ] [#91 Consumer B](https://github.com/agustin18/fastapi-cache/issues/91):
-  independently maintained legacy user migrates real app from released
-  0.2.2, with clean install, selective Redis cleanup and safe rollback.
-- [ ] Attach evidence, versions, permissioned identifiers and actual
-  package digests. Fork examples, owner-run fixture and CI jobs count
-  **0/2**, even if all internal checks pass.
+Maintainer-directed scope decision: **0.6.0 may be considered for a
+technical release without the two real consumer validations**. This is
+a release-specific exception to the former launch gate, not completed
+validation or a waiver of privacy, CI, artifact or security requirements.
+The public count remains **0/2**. [#91](https://github.com/agustin18/fastapi-cache/issues/91)
+stays open and is a prerequisite for broad adoption promotion (#88);
+two distinct real apps are required, with owner-operated vs third-party
+relationship disclosed when evidence is accepted. Do not name or expose
+private applications. Internal CI, examples, copied apps and multiple
+environments of one app are not independent consumer evidence.
+
+- [ ] Independently review this scoped technical-release exception and
+  reconcile #91/#92. State publicly: "No external consumer validation
+  was completed for this release. Published verification consists of
+  controlled project tests and CI integration fixtures, not independent
+  production deployments or third-party adoption."
+- [ ] Keep #91 at 0/2 unless there is qualifying reproducible evidence.
+  Public hosting verification and actual consumers remain promotion gates,
+  not prerequisites for a scoped technical PyPI release.
+- [ ] No public claim of production adoption, universal safety, feature
+  parity, performance superiority or complete drop-in compatibility.
 
 ## Promotion — distinct manual authorizations
 
@@ -86,8 +102,13 @@
 - [ ] Explicit maintainer GO for a final immutable tag, TestPyPI
   publish and smoke install; record tag/commit and both exact hashes.
 - [ ] Re-check dependencies, risk decisions and consumers, then obtain
-  **separate** maintainer GO for production PyPI; use manual publish
-  workflows, observe results and preserve provenance.
+  **separate** maintainer GO for production PyPI. Both manual workflows
+  require the annotated version tag, the successful manual Phase B run
+  on that exact stable commit, and explicitly approved wheel/sdist hashes.
+  They retrieve/verify the same pair instead of rebuilding. Production
+  requires matching TestPyPI index digests and fresh authenticated
+  Dependabot delta. Smoke-install from TestPyPI before production approval;
+  after publication download both files and verify hashes.
 - [ ] After release, repin the in-repo migration demo from 0.5.0 to
   **the exact published 0.6.0 distribution** and rerun it.
 - [ ] Publish version-accurate public documentation through restricted
@@ -102,11 +123,11 @@
 | CI, security, docs | TBD | TBD | PENDING |
 | Exact wheel SHA-256 | TBD | TBD | PENDING |
 | Exact sdist SHA-256 | TBD | TBD | PENDING |
-| Phase B 13/13 | TBD | TBD | PENDING |
+| Phase B build + 12 migration + 7 exact security | TBD | TBD | PENDING |
 | Fresh Dependabot delta | TBD | TBD | PENDING |
 | #53 privacy disposition | TBD | TBD | PENDING |
-| #91 consumer A | TBD | TBD | PENDING |
-| #91 consumer B | TBD | TBD | PENDING |
+| #91 consumer A | — | No public evidence | 0/2, separate adoption gate |
+| #91 consumer B | — | No public evidence | 0/2, separate adoption gate |
 | Final GO / tag / TestPyPI / PyPI | TBD | TBD | **NOT AUTHORIZED** |
 
 The scope and status in [#92](https://github.com/agustin18/fastapi-cache/issues/92)
