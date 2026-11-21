@@ -92,9 +92,11 @@ authentication or role state safe. See
 [the privacy guide](../site_docs/guides/privacy.md) and
 [#53](https://github.com/agustin18/fastapi-cache/issues/53).
 
-Published 0.5.0 InMemory is **unbounded per process**. The separate
-[#54 proposal](https://github.com/agustin18/fastapi-cache/issues/54)
-adds optional capacity only in a future release if reviewed and shipped.
+Published 0.5.0 InMemory is **unbounded per process**.
+[PR #85](https://github.com/agustin18/fastapi-cache/pull/85) merged an
+optional, fixed-at-construction `max_entries` cap into **unreleased
+`stable` source**. It is **not available with the 0.5.0 install pin above**.
+Read the [version-separated InMemory guide](../site_docs/guides/inmemory.md).
 
 ## Privacy and migration rules
 
