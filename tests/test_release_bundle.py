@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any, Dict
 
 import pytest
-
 from scripts.verify_release_bundle import WORKFLOW, validate_run, verify_bundle
 
 SHA = "a" * 40
@@ -61,40 +60,40 @@ def test_exact_bundle_is_accepted(bundle: Path) -> None:
     }
 
 
-@pytest.mark.parametrize("field,value", [
-    ("id", 101),
-    ("head_repository", {"full_name": "other/repo"}),
-    ("head_sha", "b" * 40),
-    ("head_branch", "feature"),
-    ("event", "pull_request"),
-    ("path", ".github/workflows/other.yml"),
-    ("status", "in_progress"),
-    ("conclusion", "failure"),
+@pytest.mark.parametrize(("field", "value", "message"), [
+    ("id", 101, "unexpected workflow run id"),
+    ("head_repository", {"full_name": "other/repo"}, "belong to this repository"),
+    ("head_sha", "b" * 40, "run source SHA mismatch"),
+    ("head_branch", "feature", "run must be on stable"),
+    ("event", "pull_request", "manual final run required"),
+    ("path", ".github/workflows/other.yml", "wrong evidence workflow"),
+    ("status", "in_progress", "evidence run is incomplete"),
+    ("conclusion", "failure", "evidence run did not pass"),
 ])
-def test_unapproved_runs_are_rejected(field: str, value: Any) -> None:
+def test_unapproved_runs_are_rejected(field: str, value: Any, message: str) -> None:
     run = run_record()
     run[field] = value
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=message):
         validate_run(run, REPO, SHA, RUN_ID)
 
 
-@pytest.mark.parametrize("field,value", [
-    ("source_sha", "b" * 40),
-    ("workflow_run_id", "101"),
-    ("workflow_attempt", "2"),
-    ("candidate_version", "0.5.0"),
-    ("published", True),
-    ("wheel", "../wrong.whl"),
-    ("sdist", "other.tar.gz"),
+@pytest.mark.parametrize(("field", "value", "message"), [
+    ("source_sha", "b" * 40, "bundle source SHA mismatch"),
+    ("workflow_run_id", "101", "bundle run mismatch"),
+    ("workflow_attempt", "2", "bundle attempt mismatch"),
+    ("candidate_version", "0.5.0", "bundle version mismatch"),
+    ("published", True, "expected unpublished evidence bundle"),
+    ("wheel", "../wrong.whl", "unexpected wheel name"),
+    ("sdist", "other.tar.gz", "unexpected sdist name"),
 ])
 def test_unapproved_provenance_is_rejected(
-    bundle: Path, field: str, value: Any
+    bundle: Path, field: str, value: Any, message: str
 ) -> None:
     path = bundle / "provenance.json"
     metadata = json.loads(path.read_text())
     metadata[field] = value
     path.write_text(json.dumps(metadata))
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=message):
         verify_bundle(bundle, run_record(), SHA, VERSION, WHEEL_HASH, SDIST_HASH)
 
 
