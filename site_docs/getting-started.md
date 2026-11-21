@@ -9,28 +9,28 @@ Get from zero to a working FastAPI cache in five minutes. The examples use **pub
 
 === "Linux / macOS"
 
-    \`\`\`console
+    ```console
     python3 -m venv .venv
     source .venv/bin/activate
     python -m pip install "fastapi-cache-stable==0.5.0" uvicorn
     python -m pip check
-    \`\`\`
+    ```
 
 === "Windows PowerShell"
 
-    \`\`\`powershell
+    ```powershell
     py -3 -m venv .venv
     .\.venv\Scripts\Activate.ps1
     python -m pip install "fastapi-cache-stable==0.5.0" uvicorn
     python -m pip check
-    \`\`\`
+    ```
 
 !!! danger "Package collision"
-    If you already use \`fastapi-cache2\`, **follow the [migration steps](migration.md)**. Do not install both distributions in the same environment; they provide the same \`fastapi_cache\` module.
+    If you already use `fastapi-cache2`, **follow the [migration steps](migration.md)**. Do not install both distributions in the same environment; they provide the same `fastapi_cache` module.
 
 ## 2. Create app.py
 
-\`\`\`python
+```python
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
@@ -57,24 +57,24 @@ app = FastAPI(lifespan=lifespan)
 @cache(expire=60)
 async def hello():
     return {"message": "Hello from the cache!"}
-\`\`\`
+```
 
-The order is important: \`@app.get\` belongs **above** \`@cache\`.
+The order is important: `@app.get` belongs **above** `@cache`.
 
 ## 3. Run the server
 
-\`\`\`console
+```console
 python -m uvicorn app:app --port 8000
-\`\`\`
+```
 
 In a second terminal:
 
-\`\`\`console
+```console
 curl -i http://127.0.0.1:8000/hello
 curl -i http://127.0.0.1:8000/hello
-\`\`\`
+```
 
-The first response has \`X-FastAPI-Cache: MISS\`; the second identical request within 60 seconds has **\`HIT\`**. Add \`If-None-Match\` using the ETag value to test a conditional 304.
+The first response has `X-FastAPI-Cache: MISS`; the second identical request within 60 seconds has **`HIT`**. Add `If-None-Match` using the ETag value to test a conditional 304.
 
 ## 4. Choose where data lives
 
@@ -88,6 +88,6 @@ The 0.5.0 InMemory backend has **no entry-count limit**. A future, opt-in bounde
 
 ## 5. Before production
 
-Review [private-response safety](guides/privacy.md), [compatibility](reference/compatibility.md), and use the exact released package version in your application lockfile. \`FastAPICache.reset()\` resets the configuration, **not** backend data or Redis connections.
+Review [private-response safety](guides/privacy.md), [compatibility](reference/compatibility.md), and use the exact released package version in your application lockfile. `FastAPICache.reset()` resets the configuration, **not** backend data or Redis connections.
 
 **Next:** [Configure Redis](guides/redis.md) · [Features](reference/features.md)
