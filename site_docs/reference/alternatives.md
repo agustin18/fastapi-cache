@@ -31,7 +31,7 @@ Choosing a library is a question of **migration cost, HTTP semantics, operationa
 
     ---
 
-    [#54](https://github.com/agustin18/fastapi-cache/issues/54) is reviewing an opt-in, entry-count-limited LRU/TTL backend, with actual full-capacity 10k/100k workload benchmarks. **Not shipped in 0.5.0.**
+    [PR #85](https://github.com/agustin18/fastapi-cache/pull/85) merged the opt-in entry-count-limited LRU/TTL backend and read-only capacity, with full-capacity 10k/100k CI benchmarks. It is **implemented in unreleased `stable` but not shipped in 0.5.0**.
 
 -   :material-chart-timeline-variant: **Optional diagnostics**
 
