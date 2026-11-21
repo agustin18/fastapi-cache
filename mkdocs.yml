@@ -1,5 +1,7 @@
 site_name: fastapi-cache-stable
 site_description: Drop-in FastAPI response caching with safe migration from fastapi-cache2.
+# Intended canonical URL after separately approved and verified Pages deployment.
+site_url: https://agustin18.github.io/fastapi-cache/
 repo_url: https://github.com/agustin18/fastapi-cache
 repo_name: agustin18/fastapi-cache
 edit_uri: edit/stable/site_docs/
@@ -20,6 +22,8 @@ nav:
       - Troubleshooting: guides/troubleshooting.md
   - Reference:
       - Capabilities: reference/features.md
+      - API reference: reference/api.md
+      - Compare alternatives: reference/alternatives.md
       - Compatibility: reference/compatibility.md
       - Version history: reference/releases.md
       - Roadmap: roadmap.md

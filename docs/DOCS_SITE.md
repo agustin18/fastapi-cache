@@ -37,3 +37,23 @@ Historical releases already remain navigable at [docs/releases](releases/README.
 - Compare release dates/hashes against [RELEASE_STATUS_0.5.0.md](releases/RELEASE_STATUS_0.5.0.md), not source version on stable.
 
 The site uses [Zensical](https://zensical.org/) for search, responsive navigation and a modern theme.
+
+## Planned public hosting (separate approval)
+
+A new **manual-only** workflow, `.github/workflows/docs-pages.yml`, uses the
+same GitHub Pages deployment pattern as
+[fastapi-stream-lease](https://github.com/agustin18/fastapi-stream-lease)
+while retaining our Zensical theme. It has **no automatic push trigger**:
+merging documentation changes does not activate or publish the website.
+
+Read the exact setup, live URL checks and immutable-version policy in
+[HOSTING_AND_VERSIONING.md](HOSTING_AND_VERSIONING.md).
+Compare the installed API, unshipped features and alternatives in
+[site_docs/reference/](../site_docs/reference/). Do **not** claim a
+publicly accessible URL until the manual deployment and smoke tests pass.
+
+CacheX publishes a Zensical-built site on Read the Docs. That does not require
+us to change generator: GitHub Pages can publish our generated HTML without
+a second documentation SaaS. Zensical's versioned `mike` integration
+remains transitional; pin and test it independently before offering a
+historical version selector.

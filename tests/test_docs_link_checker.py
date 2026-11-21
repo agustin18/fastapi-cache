@@ -56,3 +56,26 @@ def test_missing_site_fails(tmp_path: Path) -> None:
     pages, _, errors = check_site(tmp_path)
     assert pages == 0
     assert "No HTML pages" in errors[0]
+
+
+def test_links_under_github_pages_project_prefix(tmp_path: Path) -> None:
+    _page(
+        tmp_path,
+        "index.html",
+        '<html><a href="/fastapi-cache/guide/#ready">Guide</a>'
+        '<a href="/fastapi-cache/assets/site.css">Styles</a></html>',
+    )
+    _page(tmp_path, "guide/index.html", '<html><h2 id="ready">Ready</h2></html>')
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "assets/site.css").write_text("body {}")
+    pages, links, errors = check_site(tmp_path, base_path="/fastapi-cache")
+    assert pages == 2
+    assert links == 2
+    assert errors == []
+
+
+def test_links_deny_absolute_path_outside_pages_base(tmp_path: Path) -> None:
+    _page(tmp_path, "index.html", '<html><a href="/other-project/">Wrong</a></html>')
+    _, _, errors = check_site(tmp_path, base_path="/fastapi-cache")
+    assert len(errors) == 1
+    assert "escapes site" in errors[0]
