@@ -4,7 +4,7 @@
 The same [app.py](app.py), with the same `fastapi_cache` imports and
 `@cache` decorators, runs twice in **different disposable environments**.
 
-Run from a checkout on **CPython 3.11 or 3.12** (Windows, macOS or Linux):
+Run from a checkout on **CPython 3.11 or 3.12**. The script is **designed for Windows, macOS and Linux**, but automated end-to-end execution has been verified **only on Linux** (Python 3.11 and 3.12); other platforms still need independent smoke tests:
 
 ```console
 python examples/migration/run_demo.py
@@ -56,3 +56,32 @@ module. This demo does not change PyPI artifacts or introduce new runtime
 dependencies. Before a future 0.6.0 launch, re-run the comparison against the
 **exact published 0.6.0 artifact** in an independently reviewed release gate;
 this 0.5.0 demonstration cannot certify an unreleased version.
+
+## Required 0.6.0 refresh checklist (not yet completed)
+
+This runnable tutorial is **deliberately pinned to already-published 0.5.0**.
+Do not rename it to a 0.6.0 verification based on source code or a successful
+0.5.0 CI run. When the exact release candidate is built and independently
+reviewed, the release owner must:
+
+1. Run the **separate candidate wheel/sdist and Redis migration/rollback
+   workflow** at the final source SHA; this published-vs-published demo
+   cannot substitute for those release gates.
+2. After **0.6.0 is actually published**, update the replacement pin in
+   `run_demo.py`, the distribution-version assertion in `app.py`,
+   the expected version and explanatory output in `compare.py`, the
+   negative-test fixtures in `tests/test_migration_demo_contract.py`,
+   this README, and links/version claims in the onboarding docs.
+3. Re-run `pip check`, isolated `python -I` execution and the comparison
+   against **downloaded, installed 0.6.0 distribution artifacts**.
+   Preserve the previous 0.5.0 result as historical evidence, and record
+   exact artifact hashes and source SHA in release evidence.
+4. Validate the refreshed tutorial on Linux CI for both supported demo
+   interpreters; run additional Windows/macOS smoke lanes before claiming
+   those platforms have been verified.
+5. Keep **two genuine external consumers** as an independent requirement
+   under [#88](https://github.com/agustin18/fastapi-cache/issues/88);
+   this in-repository tutorial counts as **zero** such consumers.
+
+Release pin updates must not silently replace previously published audit
+evidence. Nothing in this checklist authorizes PyPI publication.
