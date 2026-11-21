@@ -18,7 +18,7 @@ Release tags are immutable reference points. The repository's `stable` branch ma
 | Wheel | `60be61f68908bb8621a53c902baed2b61c9e894cffa95d8df0e9dd71c5bc4b5e` |
 | Sdist | `c0f8f8b872d337b432afd1340dbe8b9b1800933dfed9c3f3c14ad232153408f2` |
 
-The annotated `v0.6.0` tag points to commit `6b6924a61bbcc0ba602da514accb4c563806742f`. Final release evidence: Phase B run `44944620217` (20/20), TestPyPI run `44944911074`, PyPI run `44945090377`.
+The annotated `v0.6.0` tag points to commit `6b6924a61bbcc0ba602da514accb4c563806742f`. Final release evidence: Phase B run `44944620217` (20 of 20), TestPyPI run `44944911074`, PyPI run `44945090377`.
 
 ## 0.5.0 provenance
 

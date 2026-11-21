@@ -67,7 +67,7 @@ Redis: `fastapi-cache-stable[redis]==0.6.0`.
 ## Release evidence
 
 - Final source: `6b6924a61bbcc0ba602da514accb4c563806742f`
-- Phase B: run `44944620217`, attempt 1, 20/20 jobs
+- Phase B: run `44944620217`, attempt 1, 20 of 20 jobs
 - Wheel SHA-256: `60be61f68908bb8621a53c902baed2b61c9e894cffa95d8df0e9dd71c5bc4b5e`
 - Sdist SHA-256: `c0f8f8b872d337b432afd1340dbe8b9b1800933dfed9c3f3c14ad232153408f2`
 - TestPyPI: run `44944911074`
