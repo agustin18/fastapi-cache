@@ -275,6 +275,32 @@ Status definitions:
 | DynamoDB | Experimental; Python >=3.10 only for target `0.5.0` | `dynamodb` extra requires aiobotocore and aiohttp >=3.14.4; the extra omits those dependencies on Python 3.8/3.9. Unit tests use a fake client; `clear` raises `NotImplementedError`; no real-service integration |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
 
+### Bounded InMemory in unreleased `stable` (not a 0.5.0 guarantee)
+
+The **published 0.5.0 matrix above remains unchanged**: its InMemory
+backend is unbounded. [PR #85](https://github.com/agustin18/fastapi-cache/pull/85)
+merged the planned next-release constructor
+`InMemoryBackend(max_entries: Optional[int] = None)` into `stable`.
+**No 0.6.0 distribution has been published.**
+
+- `None` retains unbounded legacy behavior. A positive integer caps
+  **entry count per instance**, not payload bytes or total cache capacity
+  across processes. `bool`, zero, negative and non-integer values fail
+  construction validation.
+- `max_entries` is a **read-only** property fixed at initialization.
+  Assignments raise `AttributeError`; dynamic resizing is unsupported.
+- At capacity, a new key reclaims one expired key first if available,
+  otherwise the least-recently-used entry. The indexed TTL heap avoids
+  a full scan on normal writes. Explicit namespace clearing still scans
+  stored keys while holding the instance async lock; for N stored entries
+  and k matches the bound is O(N + k log N).
+- There is no background sweeper, bytes-based cap or thread/cross-event-loop
+  sharing guarantee. Existing cache privacy/tenant boundaries remain
+  application responsibilities, and the feature cannot be installed with
+  `fastapi-cache-stable==0.5.0`.
+- Verified source and CI checks for #85 do **not** replace the final
+  package-specific checks in [#92](https://github.com/agustin18/fastapi-cache/issues/92).
+
 > Verified Redis integration covers Redis 7 with redis-py 4.6.0. Other
 > versions are not verified by that job alone.
 
