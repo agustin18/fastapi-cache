@@ -8,14 +8,15 @@ import argparse
 import posixpath
 from html.parser import HTMLParser
 from pathlib import Path
+from typing import List, Set
 from urllib.parse import unquote, urlsplit
 
 
 class LinkParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
-        self.ids = set()
-        self.links = []
+        self.ids: Set[str] = set()
+        self.links: List[str] = []
 
     def handle_starttag(self, tag, attrs) -> None:
         self._collect(attrs)
