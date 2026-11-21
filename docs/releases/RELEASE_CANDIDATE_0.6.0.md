@@ -70,8 +70,16 @@
 
 - [ ] Freeze final source/doc/lock/changelog SHA. Generate the real
   `0.6.0` section in CHANGELOG using Towncrier, consuming release
-  fragments **only in the promotion PR**. Any change after evidence
+  fragments **only in the promotion PR**. The release-promotion workflow
+  must regenerate the changelog from the stable base with the version/date
+  in the new entry and compare output byte-for-byte. Do not bypass this
+  gate or reuse the 0.5.0 release date. Any change after evidence
   capture requires a fresh exact-artifact run.
+- [ ] Confirm the `pypi`, `testpypi` and `github-pages` GitHub
+  Environments have appropriately restricted source branches and
+  human reviewers where supported. In particular, protect Pages to
+  `stable` only. Do not treat `workflow_dispatch` alone as a
+  sufficient release-authorization control.
 - [ ] Prepare `0.6.0rc1` only if a separately approved prerelease
   is useful for independent external exercises. A final-version
   candidate wheel **must not be uploaded** under an RC tag.
