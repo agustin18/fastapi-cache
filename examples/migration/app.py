@@ -1,3 +1,4 @@
+# ruff: noqa: S101 - demo assertions are intentional fail-closed checks
 """Same unchanged FastAPI application under two separately installed providers.
 
 This is a deliberately artificial, local-only, InMemory example. It exposes
@@ -10,12 +11,10 @@ import importlib.metadata as metadata
 import json
 import sys
 from pathlib import Path
-from typing import Dict
-
-from fastapi import FastAPI, Request, Response
-from fastapi.testclient import TestClient
 
 import fastapi_cache
+from fastapi import FastAPI, Request, Response
+from fastapi.testclient import TestClient
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
@@ -26,18 +25,18 @@ calls = {"public": 0, "viewer": 0}
 
 @app.get("/public")
 @cache(namespace="public", expire=120)
-async def public(response: Response) -> Dict[str, int]:
+async def public(response: Response) -> dict[str, int]:
     calls["public"] += 1
     return {"calls": calls["public"]}
 
 
 @app.get("/viewer")
 @cache(namespace="viewer", expire=120)
-async def viewer(request: Request) -> Dict[str, str]:
+async def viewer(request: Request) -> dict[str, str]:
     # These are fictitious markers, NOT credentials or an authentication demo.
     calls["viewer"] += 1
-    token = request.headers.get("Authorization")
-    return {"viewer": "alice" if token == "Bearer demo-alice" else "bob"}
+    demo_marker = request.headers.get("Authorization")
+    return {"viewer": "alice" if demo_marker == "Bearer demo-alice" else "bob"}
 
 
 def _status(response: Response) -> str | None:
