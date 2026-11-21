@@ -6,7 +6,7 @@ The published package remains [fastapi-cache-stable 0.5.0](https://pypi.org/proj
 
 [fastapi-stream-lease](https://github.com/agustin18/fastapi-stream-lease) already uses [GitHub Pages](https://agustin18.github.io/fastapi-stream-lease/) with an automated documentation build, the same repository-owner account and a familiar Material-style interface. Our existing Zensical site already provides mobile navigation, search, light/dark modes, code-copy controls and checked internal links. **Do not replace Zensical just to change hosting.**
 
-[FastAPI-CacheX](https://fastapi-cachex.readthedocs.io/en/stable/) serves its Zensical-built documentation through Read the Docs. GitHub Pages can meet our current needs without configuring a third-party service or creating another account.
+GitHub Pages can serve our Zensical-built static documentation without a separate documentation hosting service or account. Selection is based on our operational requirements, not a comparison with another project's hosting.
 
 **Proposed canonical URL (not confirmed live):** https://agustin18.github.io/fastapi-cache/
 
