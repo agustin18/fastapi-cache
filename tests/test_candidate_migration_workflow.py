@@ -70,7 +70,7 @@ def test_released_041_remains_latest_user_install_and_050_is_not_live() -> None:
     assert "candidate" in support
     assert "PREPUBLICATION DRAFT" in notes
     assert "NOT RELEASED" in checklist
-    assert "phase b" in checklist.lower()
+    assert "phase-b" in checklist.lower()
 
 
 def test_phase_b_reuses_migration_golden_without_modifying_phase_a() -> None:
