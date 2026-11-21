@@ -51,15 +51,12 @@ def auth_key_builder(
     args: Tuple[Any, ...],
     kwargs: Dict[str, Any],
 ) -> str:
-    identity = ""
-    if request is not None:
-        identity = "|".join(
-            [
-                request.headers.get("Authorization", ""),
-                request.headers.get("Cookie", ""),
-            ]
-        )
-    digest = hashlib.sha256(identity.encode()).hexdigest()
+    # Synthetic fixture only: not an application authentication strategy.
+    identity = (
+        tuple(request.headers.getlist("Authorization")),
+        tuple(request.headers.getlist("Cookie")),
+    ) if request is not None else ((), ())
+    digest = hashlib.sha256(repr(identity).encode()).hexdigest()
     return f"{namespace}:{func.__module__}:{func.__name__}:{digest}:{args}:{kwargs}"
 
 
@@ -717,9 +714,9 @@ def test_duplicate_credential_fields_bypass_default_cache(field: str) -> None:
 
 
 @pytest.mark.parametrize("field", ["Authorization", "Cookie"])
-@pytest.mark.parametrize("returned_response", [False, True])
+@pytest.mark.parametrize("response_kind", ["dict", "pickle", "json"])
 def test_authenticated_opt_in_keeps_http_cache_private(
-    field: str, returned_response: bool
+    field: str, response_kind: str
 ) -> None:
     init_cache()
     app = FastAPI()
@@ -730,12 +727,12 @@ def test_authenticated_opt_in_keeps_http_cache_private(
         expire=60,
         cache_authenticated=True,
         key_builder=auth_key_builder,
-        coder=PickleCoder if returned_response else JsonCoder,
+        coder=PickleCoder if response_kind == "pickle" else JsonCoder,
     )
     async def me(request: Request) -> Any:
         calls["n"] += 1
         payload = {"principal": request.headers.get(field, "anon")}
-        if returned_response:
+        if response_kind != "dict":
             return JSONResponse(payload)
         return payload
 

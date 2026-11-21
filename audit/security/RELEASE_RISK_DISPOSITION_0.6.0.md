@@ -184,3 +184,19 @@ resuelven en el release existente; CA4 antes de la siguiente versión.
 CA3, review del diff actualizado y nueva CI verde, aceptación documentada
 del mantenedor, promoción final y verificaciones exactas recién descritas.
 Esta revisión no autoriza el merge, tag ni publicación.
+
+
+### Remediation follow-up (pending verification)
+
+CA1: replace the ambiguous raw-header examples with a narrowly scoped
+structured HMAC over validated identity dimensions, fail closed for missing
+identity and unsupported contexts, and test the documented code.
+Synthetic test helpers use all header occurrences; add plain JSONResponse
+opt-in regression. CA2: exercise TestPyPI verification with controlled
+negative cases; require exact named job matrix and first attempt for both
+promotion workflows. CA3: migration lanes check source, run and attempt;
+use a new full dispatch rather than mixing reruns. Actual final stable
+bundle download/tag preflight, environment settings, security freshness,
+maintainer acceptance and publication remain separate final gates.
+CA4/CA5: clarify RC scope and candidate HTTP policy in migration guides.
+No release authorization; run new HEAD checks and incremental review.

@@ -76,8 +76,9 @@ def check_auth_privacy() -> None:
         func: Any, namespace: str, *, request: Optional[Request] = None,
         **_: Any
     ) -> str:
-        identity = request.headers.get("Cookie", "anon") if request is not None else "anon"
-        return f"{namespace}:{func.__name__}:{hashlib.sha256(identity.encode()).hexdigest()}"
+        # Synthetic fixture only; actual apps key on verified principal state.
+        identity = tuple(request.headers.getlist("Cookie")) if request is not None else ()
+        return f"{namespace}:{func.__name__}:{hashlib.sha256(repr(identity).encode()).hexdigest()}"
 
     @app.get("/opt-in")
     @cache(expire=60, namespace="private", cache_authenticated=True,

@@ -33,6 +33,38 @@ def validate_run(
             "wrong evidence workflow")
     require(run.get("status") == "completed", "evidence run is incomplete")
     require(run.get("conclusion") == "success", "evidence run did not pass")
+    require(run.get("run_attempt") == 1, "new manual dispatch required; reruns are not evidence")
+
+
+def validate_jobs(payload: Dict[str, Any], run_id: str) -> None:
+    """Require every planned job of the first, successful Phase B attempt."""
+    expected = {"Build exact 0.6.0 wheel + sdist once, record hashes"}
+    expected.update(
+        f"Py {version} / {kind} / real Redis 7.4 / rollback"
+        for version in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13")
+        for kind in ("wheel", "sdist")
+    )
+    expected.update(
+        f"Exact artifact security / Python {version} / {extra} / wheel"
+        for version in ("3.11", "3.12", "3.13")
+        for extra in ("none", "redis")
+    )
+    expected.add("Exact artifact security / Python 3.12 / all / sdist")
+    jobs = payload["jobs"]
+    require(
+        payload["total_count"] == len(expected) == len(jobs)
+        and {job["name"] for job in jobs} == expected,
+        "unexpected or incomplete Phase B job matrix",
+    )
+    require(
+        all(
+            str(job["run_id"]) == run_id
+            and job["status"] == "completed"
+            and job["conclusion"] == "success"
+            for job in jobs
+        ),
+        "Phase B job failed, skipped, incomplete or from another run",
+    )
 
 
 def verify_bundle(
@@ -49,7 +81,7 @@ def verify_bundle(
     require(provenance["source_sha"] == source_sha, "bundle source SHA mismatch")
     require(str(provenance["workflow_run_id"]) == str(run["id"]), "bundle run mismatch")
     require(str(provenance["workflow_attempt"]) == str(run["run_attempt"]),
-            "bundle attempt mismatch; rerun ALL evidence jobs")
+            "bundle attempt mismatch; dispatch a new full evidence run")
     require(provenance["candidate_version"] == version, "bundle version mismatch")
     require(provenance["published"] is False, "expected unpublished evidence bundle")
     wheel = provenance["wheel"]
@@ -88,9 +120,16 @@ def verify_test_index(version: str, expected: Dict[str, str]) -> None:
     with urlopen(url, timeout=30) as response:  # noqa: S310
         payload = json.load(response)
     require(payload["info"]["version"] == version, "wrong TestPyPI version")
+    files = payload["urls"]
+    require(len(files) == len(expected), "TestPyPI distribution count mismatch")
+    require(
+        len({item["filename"] for item in files}) == len(files),
+        "duplicate TestPyPI distribution filename",
+    )
+    require(not any(item.get("yanked", False) for item in files), "yanked TestPyPI file")
     actual = {
         item["filename"]: item["digests"]["sha256"]
-        for item in payload["urls"]
+        for item in files
     }
     require(actual == expected, "TestPyPI distributions differ from approved bundle")
 
@@ -98,6 +137,7 @@ def verify_test_index(version: str, expected: Dict[str, str]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-json", type=Path, required=True)
+    parser.add_argument("--jobs-json", type=Path, required=True)
     parser.add_argument("--repository", required=True)
     parser.add_argument("--source-sha", required=True)
     parser.add_argument("--run-id", required=True)
@@ -114,6 +154,7 @@ def main() -> None:
             "expected final release version")
     run = json.loads(args.run_json.read_text())
     validate_run(run, args.repository, args.source_sha, args.run_id)
+    validate_jobs(json.loads(args.jobs_json.read_text()), args.run_id)
     expected = verify_bundle(
         args.bundle, run, args.source_sha, args.version, args.wheel_sha, args.sdist_sha
     )

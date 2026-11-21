@@ -2,11 +2,19 @@
 
 import hashlib
 import json
+from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict
 
 import pytest
-from scripts.verify_release_bundle import WORKFLOW, validate_run, verify_bundle
+from scripts import verify_release_bundle
+from scripts.verify_release_bundle import (
+    WORKFLOW,
+    validate_jobs,
+    validate_run,
+    verify_bundle,
+    verify_test_index,
+)
 
 SHA = "a" * 40
 REPO = "agustin18/fastapi-cache"
@@ -69,6 +77,7 @@ def test_exact_bundle_is_accepted(bundle: Path) -> None:
     ("path", ".github/workflows/other.yml", "wrong evidence workflow"),
     ("status", "in_progress", "evidence run is incomplete"),
     ("conclusion", "failure", "evidence run did not pass"),
+    ("run_attempt", 2, "new manual dispatch required"),
 ])
 def test_unapproved_runs_are_rejected(field: str, value: Any, message: str) -> None:
     run = run_record()
@@ -131,3 +140,107 @@ def test_publish_workflows_use_same_approved_artifact_pair() -> None:
     assert "exact-installed-security:" in phase_b
     assert "uses: ./.github/workflows/security-installed-profiles.yml" in phase_b
     assert "artifact_name: migration-phase-b-060-distributions" in phase_b
+
+
+def job_record() -> Dict[str, Any]:
+    names = ["Build exact 0.6.0 wheel + sdist once, record hashes"]
+    names.extend(
+        f"Py {version} / {kind} / real Redis 7.4 / rollback"
+        for version in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13")
+        for kind in ("wheel", "sdist")
+    )
+    names.extend(
+        f"Exact artifact security / Python {version} / {extra} / wheel"
+        for version in ("3.11", "3.12", "3.13")
+        for extra in ("none", "redis")
+    )
+    names.append("Exact artifact security / Python 3.12 / all / sdist")
+    return {
+        "total_count": 20,
+        "jobs": [
+            {"name": name, "run_id": 100, "status": "completed", "conclusion": "success"}
+            for name in names
+        ],
+    }
+
+
+def test_complete_first_attempt_jobs() -> None:
+    validate_jobs(job_record(), RUN_ID)
+
+
+@pytest.mark.parametrize("mutation", ["missing", "extra", "duplicate", "wrong_run", "failure", "skipped", "incomplete"])
+def test_reject_unapproved_jobs(mutation: str) -> None:
+    payload = job_record()
+    jobs = payload["jobs"]
+    if mutation == "missing":
+        jobs.pop()
+    elif mutation == "extra":
+        jobs.append(dict(jobs[0], name="unexpected"))
+    elif mutation == "duplicate":
+        jobs[-1]["name"] = jobs[0]["name"]
+    elif mutation == "wrong_run":
+        jobs[-1]["run_id"] = 101
+    elif mutation == "incomplete":
+        jobs[-1]["status"] = "in_progress"
+    else:
+        jobs[-1]["conclusion"] = mutation
+    with pytest.raises(ValueError, match="Phase B job"):
+        validate_jobs(payload, RUN_ID)
+
+
+def index_payload() -> Dict[str, Any]:
+    return {
+        "info": {"version": VERSION},
+        "urls": [
+            {"filename": name, "digests": {"sha256": digest}, "yanked": False}
+            for name, digest in ((WHEEL, WHEEL_HASH), (SDIST, SDIST_HASH))
+        ],
+    }
+
+
+@pytest.mark.parametrize("mutation", ["exact", "wrong_hash", "missing", "extra", "duplicate", "wrong_version", "yanked"])
+def test_testpypi_exact_pair(monkeypatch: pytest.MonkeyPatch, mutation: str) -> None:
+    payload = index_payload()
+    files = payload["urls"]
+    if mutation == "wrong_hash":
+        files[0]["digests"]["sha256"] = "0" * 64
+    elif mutation == "missing":
+        files.pop()
+    elif mutation == "extra":
+        files.append(dict(files[0], filename="unexpected.whl"))
+    elif mutation == "duplicate":
+        files[1] = files[0]
+    elif mutation == "wrong_version":
+        payload["info"]["version"] = "0.5.0"
+    elif mutation == "yanked":
+        files[0]["yanked"] = True
+
+    def fake_open(url: str, timeout: int) -> BytesIO:
+        assert url == f"https://test.pypi.org/pypi/fastapi-cache-stable/{VERSION}/json"
+        assert timeout == 30
+        return BytesIO(json.dumps(payload).encode())
+
+    monkeypatch.setattr(verify_release_bundle, "urlopen", fake_open)
+    expected = {WHEEL: WHEEL_HASH, SDIST: SDIST_HASH}
+    if mutation == "exact":
+        verify_test_index(VERSION, expected)
+    else:
+        with pytest.raises(ValueError, match="TestPyPI"):
+            verify_test_index(VERSION, expected)
+
+
+def test_testpypi_invalid_json(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        verify_release_bundle, "urlopen", lambda *args, **kwargs: BytesIO(b"not json")
+    )
+    with pytest.raises(json.JSONDecodeError):
+        verify_test_index(VERSION, {WHEEL: WHEEL_HASH, SDIST: SDIST_HASH})
+
+
+def test_testpypi_unreachable(monkeypatch: pytest.MonkeyPatch) -> None:
+    def unavailable(*args: Any, **kwargs: Any) -> None:
+        raise OSError("unreachable")
+
+    monkeypatch.setattr(verify_release_bundle, "urlopen", unavailable)
+    with pytest.raises(OSError, match="unreachable"):
+        verify_test_index(VERSION, {WHEEL: WHEEL_HASH, SDIST: SDIST_HASH})

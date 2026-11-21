@@ -36,7 +36,9 @@
   verify wheel METADATA and sdist pyproject, artifact provenance, and
   `twine check`; no re-build inside consumer lanes. Require all 12
   migration lanes AND seven exact-bundle security profiles (20 jobs total,
-  including build). Source-only diagnostic security builds are not final
+  including build) in one successful initial manual dispatch on final stable.
+  Reruns are not promotion evidence; dispatch a new full run instead.
+  Source-only diagnostic security builds are not final
   binary evidence.
 - [ ] 12 Python 3.8–3.13 × wheel/sdist runs on dedicated Redis 7.4:
   published legacy writer → exact 0.6.0 candidate reader →
@@ -86,14 +88,16 @@ what was actually tested; private application details are not required.
   `stable` only. Do not treat `workflow_dispatch` alone as a
   sufficient release-authorization control.
 - [ ] Prepare `0.6.0rc1` only if a separately approved prerelease
-  is useful for additional technical verification. A final-version
+  is useful for additional technical verification, after separately adapting
+  and testing the version-specific Phase B/publish gates. A final-version
   candidate wheel **must not be uploaded** under an RC tag.
 - [ ] Explicit maintainer GO for a final immutable tag, TestPyPI
   publish and smoke install; record tag/commit and both exact hashes.
 - [ ] Re-check dependencies and risk decisions, then obtain
   **separate** maintainer GO for production PyPI. Both manual workflows
   require the annotated version tag, the successful manual Phase B run
-  on that exact stable commit, and explicitly approved wheel/sdist hashes.
+  on that exact stable commit (initial attempt and all 20 named jobs), and
+  explicitly approved wheel/sdist hashes.
   They retrieve/verify the same pair instead of rebuilding. Production
   requires matching TestPyPI index digests and fresh authenticated
   Dependabot delta. Smoke-install from TestPyPI before production approval;

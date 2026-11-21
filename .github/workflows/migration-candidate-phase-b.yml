@@ -7,6 +7,8 @@ on:
       - ".github/workflows/migration-candidate-phase-b.yml"
       - ".github/workflows/security-installed-profiles.yml"
       - "scripts/validate_security_audit.py"
+      - "scripts/verify_release_bundle.py"
+      - "tests/test_release_bundle.py"
       - "pyproject.toml"
       - "poetry.lock"
       - "fastapi_cache/**"
@@ -157,6 +159,8 @@ jobs:
               (Path(os.environ["RUNNER_TEMP"]) / "phase-b-dist" / "provenance.json").read_text()
           )
           assert data["source_sha"] == os.environ["EXPECTED_SHA"]
+          assert str(data["workflow_run_id"]) == os.environ["GITHUB_RUN_ID"]
+          assert str(data["workflow_attempt"]) == os.environ["GITHUB_RUN_ATTEMPT"]
           assert data["candidate_version"] == "0.6.0"
           assert data["published"] is False
           for key in ("wheel", "sdist"):
