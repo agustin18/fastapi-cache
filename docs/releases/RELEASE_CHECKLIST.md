@@ -113,11 +113,11 @@ belong in [CHANGELOG.md](../../CHANGELOG.md). Check
   authenticated source snapshot; fail closed if a newly opened GHSA is absent
   or if identifiers, manifest or vulnerable version ranges differ.
 - [x] Reconcile and individually account for all 95 historical/current GHSA
-  in [the pre-stable review ledger](audit/security/STABLE_RELEASE_SECURITY_REVIEW_20261119.csv).
+  in [the pre-stable review ledger](../../audit/security/STABLE_RELEASE_SECURITY_REVIEW_20261119.csv).
   This is **proposed evidence review**, not risk acceptance.
 - [x] Record all **21** individually scoped release dispositions in the
   [maintainer acceptance document](../../audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md).
-  Preserve the [canonical source triage](audit/security/SECURITY_ADVISORY_TRIAGE.csv)
+  Preserve the [canonical source triage](../../audit/security/SECURITY_ADVISORY_TRIAGE.csv)
   and original GitHub alert states/PENDING evidence unchanged. The separate
   decision document carries the **release acceptance**, not a fictitious
   vulnerability fix.
