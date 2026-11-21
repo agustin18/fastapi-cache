@@ -66,7 +66,7 @@ See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blo
 
 **Try it:** [one-command before/after migration demo](examples/migration/README.md) (two isolated published environments, no Redis or credentials).
 
-**Published:** [fastapi-cache-stable 0.5.0](https://pypi.org/project/fastapi-cache-stable/0.5.0/). The new searchable site is in [site_docs/](site_docs/index.md) and has a **CI build preview**; it is not claimed to be hosted publicly until a separate deployment is approved.
+**Published:** [fastapi-cache-stable 0.5.0](https://pypi.org/project/fastapi-cache-stable/0.5.0/). **Merged source, not yet released:** [#85](https://github.com/agustin18/fastapi-cache/pull/85) adds an opt-in bounded InMemory backend in `stable` for a proposed 0.6.0; it is **not available with the 0.5.0 install pin**. The searchable site is in [site_docs/](site_docs/index.md) with CI preview; it is not confirmed publicly hosted.
 
 
 ## Introduction
@@ -550,9 +550,10 @@ all instances/workers and persistent Redis caches. The bypass is not retroactive
 
 ### InMemoryBackend
 
-The `InMemoryBackend` stores cache data in memory and only deletes when an
-expired key is accessed. This means that if you don't access a function after
-data has been cached, the data will not be removed automatically.
+**Published 0.5.0** `InMemoryBackend` stores cache data in an
+**unbounded** dictionary and removes expired entries lazily when accessed.
+Never-revisited keys may accumulate. Do not pass `max_entries` to the
+published 0.5.0 distribution.
 
 `expire=None` means no expiration. Each backend instance owns its store and lock, so a new
 instance does not see entries from another instance. Do not share one instance across event
@@ -561,6 +562,19 @@ must call `super().__init__()`. InMemory is process-local; use Redis or Memcache
 cross-process sharing. `expire=0` keeps the legacy fallback to the global `expire` value.
 `get_with_ttl` returns `-1` for no-expiration entries; the decorator omits `max-age` for
 those entries and for `expire=None`.
+
+**Implemented in `stable` for the next release (not in published 0.5.0):**
+[PR #85](https://github.com/agustin18/fastapi-cache/pull/85) adds
+`InMemoryBackend(max_entries=1_000)`. This positive-integer, opt-in cap
+counts **entries per backend instance**, not bytes, processes or all workers;
+`None` preserves the unbounded default. `max_entries` is a **read-only
+property**, fixed at construction: assignments afterward raise
+`AttributeError`. When full, bounded mode evicts the LRU item, reclaiming
+an expired item first when available; no background sweeper is started.
+Explicit namespace clearing still scans local entries under the async lock.
+The next-release API is not an installed feature until a separately reviewed
+version ships. See [InMemory version guide](site_docs/guides/inmemory.md)
+and [release acceptance #92](https://github.com/agustin18/fastapi-cache/issues/92).
 
 ### RedisBackend
 

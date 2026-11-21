@@ -29,7 +29,7 @@ Historical releases already remain navigable at [docs/releases](releases/README.
 
 ## Authoring contract
 
-- Primary guides describe published behavior. Features from unmerged PRs must be visibly labeled proposed.
+- Primary guides describe **published** behavior. Features merged into `stable` but absent from the latest PyPI artifact must be labeled **merged source, not released**, with a distinct next-release section. Features in unmerged PRs stay proposed.
 - Show the distribution name fastapi-cache-stable, the import fastapi_cache and Python legacy/security support boundaries accurately.
 - Migration walkthroughs cover uninstalling fastapi-cache2, application lockfiles, tenant safety, targeted namespace cleanup and bounded rollback.
 - Snippets declare dependencies and are runnable on the named Python/server profiles.

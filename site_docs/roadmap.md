@@ -1,14 +1,14 @@
 # Roadmap: what is next?
 
-**0.5.0 is published.** Proposed 0.6.0 features remain unshipped until separately reviewed and released. This page is an approachable overview, not a release authorization.
+**0.5.0 is published.** [#85](https://github.com/agustin18/fastapi-cache/pull/85) is merged in `stable`, but its new API remains **unshipped** until a separately reviewed 0.6.0 artifact exists. This is a roadmap, not release authorization.
 
 ## Priorities for 0.6.0
 
 | Priority | Issue | What users gain | Boundary |
 |---|---|---|---|
 | P0 when reproducible | [#53 — hidden identity/tenant inputs](https://github.com/agustin18/fastapi-cache/issues/53) | Correct private-response behavior | No promise of generic autodetection |
-| P1 / active PR | [#54 — bounded InMemory](https://github.com/agustin18/fastapi-cache/issues/54) | Optional LRU capacity for a single process | No memory-byte or multiworker guarantee |
-| P1 / proposed | [#50 — typed events](https://github.com/agustin18/fastapi-cache/issues/50) | Observe HIT/MISS/BYPASS/error safely | Opt-in; no mandatory telemetry |
+| P1 / code merged, release pending | [#54 — bounded InMemory](https://github.com/agustin18/fastapi-cache/issues/54) | Optional read-only per-instance `max_entries` with LRU/TTL | **Not in 0.5.0**; no byte or multiworker cap |
+| P2 / defer by default | [#50 — typed events](https://github.com/agustin18/fastapi-cache/issues/50) | Optional HIT/MISS/BYPASS/error events | **Not implemented/published**; defer to 0.7.0 unless independently audited before freeze |
 | Research | Single-flight | Avoid duplicated same-key computations | Needs cancellation/race tests |
 | Design first | [#49 — parameter exclusion](https://github.com/agustin18/fastapi-cache/issues/49) | Stable keys for irrelevant dependencies | No implicit removal of user/tenant/locale |
 | Maintenance | [#45 DynamoDB](https://github.com/agustin18/fastapi-cache/issues/45), [#55 FIPS](https://github.com/agustin18/fastapi-cache/issues/55) | Real defect fixes | Isolated from new minor features |

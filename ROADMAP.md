@@ -26,16 +26,22 @@ cache keys and safe default HTTP/private-response behavior.
 
 The active [0.6.0 tracker #86](https://github.com/agustin18/fastapi-cache/issues/86)
 supersedes the **completed** [0.5.0 train #70](https://github.com/agustin18/fastapi-cache/issues/70).
-The proposed first feature PR is [#85](https://github.com/agustin18/fastapi-cache/pull/85)
-for opt-in bounded InMemory (#54). It is **unmerged** and not available
-in the immutable published 0.5.0 wheel. A separate documentation PR
-updates the [five-minute quickstart](docs/QUICKSTART.md) and adds
-a [navigable site](site_docs/index.md) with CI preview; public hosting
-and true versioned deployment remain independent approvals.
+[PR #85](https://github.com/agustin18/fastapi-cache/pull/85)
+for opt-in bounded InMemory (#54) **merged into `stable`** at commit
+`190d105915972d436ddbf4ad152ad654a4db392a`. Its positive integer
+`max_entries` cap is **read-only after construction**, counts entries
+per instance (not bytes), and retains the default unbounded behavior.
+**Not available in the immutable published 0.5.0 wheel.**
+The [quickstart](docs/QUICKSTART.md) and
+[navigable site source](site_docs/index.md) describe the published release
+separately. Pages activation and versioned historical hosting still need
+explicit approval and URL verification.
 
-0.6.0 should stay focused on optional bounded InMemory and privacy-safe
-observability (#50). Single-flight is **research**, and argument filtering
-(#49) requires a separate safety contract before any implementation.
+0.6.0 should focus on the merged opt-in bounded InMemory feature,
+release validation and the remaining #53 privacy/security disposition.
+**Defer #50 observability to 0.7.0 by default** unless fully implemented,
+audited and explicitly accepted before freeze. Single-flight is
+**research**, and #49 argument filtering requires a separate safety contract.
 Proven #53 privacy defects outrank the feature roadmap. Never inherit
 0.5.0's release-specific security acceptance for a different SHA.
 
@@ -46,20 +52,23 @@ Proven #53 privacy defects outrank the feature roadmap. Never inherit
   **first coordinated public promotion**, not the first PyPI release;
   published 0.5.0 stays the baseline until a separate reviewed 0.6.0.
 - [#48](https://github.com/agustin18/fastapi-cache/issues/48):
-  navigable Zensical docs sources shipped in #87. A separate manual-only
-  GitHub Pages workflow, tested preview, API reference and comparison guide
-  are proposed; publication and live URL verification require approval.
+  navigable Zensical docs shipped in #87 and manual-only GitHub Pages
+  workflow, API reference and comparison guide merged in #89. Public
+  activation, stable-only environment restriction and live URL verification
+  require separate approval.
 - [Alternatives guide](site_docs/reference/alternatives.md):
   compare FastAPI-CacheX, Cashews, aiocache and Redis SDK by application
   fit, not unsupported performance multipliers. **No universal feature
   parity goal** for 0.6.0.
 - [Public API guide](site_docs/reference/api.md):
-  distinguish *published 0.5.0* from opt-in capabilities proposed in #54.
-- **Feature freeze:** #54 only after clean base, heap fuzz, full-capacity
-  10k/100k LRU/expired-reclaim benchmarks and signed exact-head CI;
-  #50 only if scoped, opt-in, data-minimizing, and reviewed without delaying
-  release. #53 residual stays a security review gate; #49, tags,
-  stampede/locks and other expansions remain separate design/research.
+  distinguish *published 0.5.0* from merged-but-unreleased
+  `max_entries` in the next-release source.
+- **Feature freeze:** #54/#85 passed independent counteraudit and exact-head
+  CI before merge; **final 0.6.0 artifacts require new security and
+  migration evidence**. #50 is deferred to 0.7.0 unless separately approved.
+  #53 residual remains a security risk-disposition gate; #91 requires two
+  independent consumers; #92 tracks final candidate checks and manual
+  release approval. #49, tags and single-flight remain future research.
 
 ## Version strategy
 
@@ -67,10 +76,11 @@ Proven #53 privacy defects outrank the feature roadmap. Never inherit
   `>=3.8,<3.14` metadata and documented Redis client ranges; security
   maintenance is best-effort on server-side CPython 3.11–3.13.
 - **0.4.x:** previous published patch line, retained for migration.
-- **Future version (separate opt-in features):** argument filtering,
-  bounded InMemory and privacy-safe cache events are optional.
-  If they change the public API, prefer a separately reviewed new
-  minor release (e.g. `0.6.0`) instead of reopening 0.5.0.
+- **0.6.0 candidate:** bounded InMemory is merged in source only, not
+  in the published 0.5.0 distribution. Argument filtering (#49) and
+  privacy-safe event callbacks (#50) remain separate possible future work.
+  A new minor release needs a reviewed wheel/sdist, not a retroactive
+  rewrite of 0.5.0.
   Keep distributed locking, tag invalidation and app-scoped configurations
   in research until their concurrency and privacy contracts are tested.
 - **1.0.0:** not automatically scheduled; current
@@ -194,7 +204,7 @@ matrix. None of them reopens the published 0.5.0 signoff.
 | **P1 — correctness** | [#45](https://github.com/agustin18/fastapi-cache/issues/45) DynamoDB expired-value and client-lifecycle correctness | Experimental backend; needs a real-service reproduction |
 | **P1 — portability** | [#55](https://github.com/agustin18/fastapi-cache/issues/55) FIPS/restricted-MD5 key compatibility | Preserve legacy digests on non-FIPS profiles |
 | **P2 — API** | [#49](https://github.com/agustin18/fastapi-cache/issues/49) deterministic argument filtering | Must never silently drop identity or response-defining inputs |
-| **P2 — capacity** | [#54](https://github.com/agustin18/fastapi-cache/issues/54) bounded InMemory eviction | Default behavior and compatibility must remain unchanged |
+| **Source merged, release pending** | [#54 / #85](https://github.com/agustin18/fastapi-cache/pull/85) bounded InMemory | Read-only cap, default unchanged; **not** in 0.5.0 |
 | **P2 — observability** | [#50](https://github.com/agustin18/fastapi-cache/issues/50) typed HIT/MISS/BYPASS/STORE/ERROR events | Opt-in, privacy-safe and no mandatory telemetry dependency |
 | **P3 — compatibility** | [#51](https://github.com/agustin18/fastapi-cache/issues/51) Python 3.14 qualification | Only after a full functional/security matrix passes |
 | **P3 — documentation** | [#48](https://github.com/agustin18/fastapi-cache/issues/48) versioned documentation site | A separately hosted site is optional; migration guides remain authoritative here |

@@ -49,7 +49,7 @@ HTTP `Vary` alone does not partition the library's internal cache. The decorator
     FastAPICache.init(InMemoryBackend(), prefix="demo")
     ```
 
-    Per-instance, process-local, **unbounded in published 0.5.0**. The proposed `max_entries` argument in [#54](https://github.com/agustin18/fastapi-cache/issues/54) is **not released**.
+    Per-instance, process-local, **unbounded in published 0.5.0**. [PR #85](https://github.com/agustin18/fastapi-cache/pull/85) merged a capacity argument into **unreleased `stable` source**, not into the 0.5.0 package.
 
 === "Redis standalone"
 
@@ -62,6 +62,21 @@ HTTP `Vary` alone does not partition the library's internal cache. The decorator
     ```
 
     Close your client in lifespan teardown. Redis Cluster namespace-wide `clear()` is unsupported.
+
+## Next-release source API (not published)
+
+!!! warning "0.5.0 does not accept this argument"
+    The following constructor is implemented in `stable` after [PR #85](https://github.com/agustin18/fastapi-cache/pull/85), but is **not part of a published 0.6.0 distribution**. Keep existing `fastapi-cache-stable==0.5.0` installs on their documented unbounded constructor.
+
+```python
+InMemoryBackend(*, max_entries: Optional[int] = None)
+```
+
+- A **positive integer** caps entry **count per backend instance**. `None` preserves the original unbounded mode; `bool`, zero, negative and non-integer inputs raise `ValueError`.
+- `max_entries` is a **read-only property** after construction. Assignments raise `AttributeError`, and dynamic resizing is not supported.
+- When full, new keys reclaim one expired entry if available, else evict the least-recently-used entry. The expiry heap does not start a background task.
+- This is **not** a byte-memory cap or an aggregate multiworker limit. Explicit namespace clear can still scan the entire local store under the async lock.
+- For a source-only example and release requirements see the [InMemory guide](../guides/inmemory.md) and [0.6.0 checklist](https://github.com/agustin18/fastapi-cache/issues/92).
 
 ## Coders
 
