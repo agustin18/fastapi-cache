@@ -40,6 +40,6 @@ def test_readme_and_roadmap_do_not_claim_060_was_published() -> None:
     assert "not available with the 0.5.0 install pin" in readme
     assert "read-only" in readme
     assert "AttributeError" in readme
-    assert "not in published 0.5.0" in roadmap.lower()
+    assert "not available in the immutable published 0.5.0 wheel" in roadmap.lower()
     assert "#50" in roadmap and "0.7.0" in roadmap
     assert "190d105915972d436ddbf4ad152ad654a4db392a" in roadmap
