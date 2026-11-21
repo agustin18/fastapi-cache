@@ -1,18 +1,14 @@
-# Quickstart — fastapi-cache-stable 0.5.0
+# Quickstart — fastapi-cache-stable 0.6.0
 
 Five-minute example of response caching with
-[`fastapi-cache-stable`](https://pypi.org/project/fastapi-cache-stable/0.5.0/).
+[`fastapi-cache-stable`](https://pypi.org/project/fastapi-cache-stable/0.6.0/).
 The Python import remains `fastapi_cache`.
 
-## 0.6.0 promotion preparation
+## 0.6.0 release
 
-The public examples below still pin 0.5.0. To evaluate 0.6.0 before
-publication, verify the approved SHA-256 of a local wheel, install it by
-its actual path in a fresh virtual environment, and run `pip check`.
-The same minimal app works; in 0.6.0 only, you may set
-`InMemoryBackend(max_entries=1_000)`. After PyPI verification, the exact
-0.6.0 pin becomes the normal install command. See
-[0.6.0 notes](releases/RELEASE_NOTES_0.6.0.md).
+The examples below pin the published 0.6.0 release. The same minimal app
+works; `max_entries` is opt-in on InMemory. See
+[0.6.0 notes](RELEASE_NOTES_0.6.0.md).
 
 ## Install
 
@@ -22,7 +18,7 @@ environment. Create a clean virtual environment:
 ```sh
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install "fastapi-cache-stable==0.5.0" "uvicorn"
+python -m pip install "fastapi-cache-stable==0.6.0" "uvicorn"
 python -m pip check
 ```
 
@@ -73,7 +69,7 @@ next identical request within the TTL should show `HIT`.
 The decorator order matters: `@app.get` is **above** `@cache`.
 
 **InMemory is per Python process**, not shared between workers; it
-has no size cap in 0.5.0. Use Redis standalone when workers must
+has no size cap by default in 0.6.0. Use Redis standalone when workers must
 share cached values.
 
 ## Redis standalone
@@ -81,16 +77,16 @@ share cached values.
 First install the tested Redis client line:
 
 ```sh
-python -m pip install "fastapi-cache-stable[redis]==0.5.0"
+python -m pip install "fastapi-cache-stable[redis]==0.6.0"
 ```
 
 Use [the complete Redis lifespan example](../README.md#quick-start)
-and a **test Redis instance**. The 0.5.0 compatibility matrix covers
+and a **test Redis instance**. The 0.6.0 compatibility matrix covers
 Python-conditional redis-py 4.6–8.1 clients and Redis servers 6.2/7.0/7.4/8.0;
 see [COMPATIBILITY.md](../COMPATIBILITY.md) and the
 [Redis research evidence](../audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md).
 
-## Header variations in 0.5.0
+## Header variations (available since 0.5.0)
 
 Public responses that vary on a known header can opt in with
 `@cache(expire=60, vary_headers=("Accept-Language",))`. Declare
@@ -102,11 +98,10 @@ authentication or role state safe. See
 [the privacy guide](../site_docs/guides/privacy.md) and
 [#53](https://github.com/agustin18/fastapi-cache/issues/53).
 
-Published 0.5.0 InMemory is **unbounded per process**.
-[PR #85](https://github.com/agustin18/fastapi-cache/pull/85) merged an
-optional, fixed-at-construction `max_entries` cap into **unreleased
-`stable` source**. It is **not available with the 0.5.0 install pin above**.
-Read the [version-separated InMemory guide](../site_docs/guides/inmemory.md).
+`InMemoryBackend()` is unbounded by default. For a per-process entry cap,
+use `InMemoryBackend(max_entries=1_000)`: it is opt-in, fixed at construction,
+with LRU eviction and expired-entry reclamation. See the
+[InMemory guide](../site_docs/guides/inmemory.md).
 
 ## Privacy and migration rules
 
@@ -120,7 +115,7 @@ Read the [version-separated InMemory guide](../site_docs/guides/inmemory.md).
   `Vary`, locale, tenant or custom-auth headers. Use a suitable
   custom key builder, or bypass caching until variation is proven safe.
   See [the header/Vary investigation](https://github.com/agustin18/fastapi-cache/issues/53).
-  **0.3.1, 0.4.1 and 0.5.0** bypass cache reads and writes when an endpoint
+  **0.3.1, 0.4.1, 0.5.0 and 0.6.0** bypass cache reads and writes when an endpoint
   explicitly declares `Request` and uses the default builder; endpoints
   with a custom, identity-aware key builder still cache. This does not make
   hidden middleware/context variables safe for routes that do not declare
