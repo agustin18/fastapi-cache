@@ -15,7 +15,7 @@ This page describes features in the **published 0.5.0 wheel and sdist**. PRs and
 | Authorization/Cookie bypass | :material-check-circle: Shipped | Default behavior, not generic custom-auth detection |
 | `vary_headers` | :material-check-circle: Shipped | Explicit public header variations, no tenant autodetection |
 | Typed JSON restoration | :material-check-circle: Opt-in | `TypedJsonCoder`, Pydantic v2 profiles |
-| InMemory capacity / LRU | :material-clock-outline: Merged source, unreleased | [PR #85](https://github.com/agustin18/fastapi-cache/pull/85): immutable per-instance entry-count limit in `stable`, **not in published 0.5.0** |
+| InMemory capacity / LRU | :material-clock-outline: Merged source, unreleased | [PR #85](https://github.com/agustin18/fastapi-cache/pull/85): immutable per-instance entry-count limit in `stable`, **not in 0.5.0** (published wheel/sdist) |
 | Cache event callbacks | :material-clock-outline: Proposed | [#50](https://github.com/agustin18/fastapi-cache/issues/50) |
 | Argument exclusion | :material-clock-outline: Proposed | [#49](https://github.com/agustin18/fastapi-cache/issues/49), privacy design required |
 | Single-flight / distributed locking | :material-flask-outline: Research | Cancellation, lease and stampede design needed |
