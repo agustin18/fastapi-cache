@@ -22,7 +22,13 @@ The primary product advantage remains conservative migration from
 cache keys and safe default HTTP/private-response behavior.
 
 
-## 0.6.0 — planning, not a release commitment
+## 0.6.0 — final promotion, not published
+
+The corrective [#104](https://github.com/agustin18/fastapi-cache/pull/104) merged
+at `b5d9e125e49ae54b578c1e2b98f33bb9b5f452c0` after 80/80 checks. The frozen
+scope is ready for promotion preparation under #92; new features are
+excluded. Final verification and explicit approval remain necessary.
+[Candidate status ledger](docs/releases/RELEASE_STATUS_0.6.0.md).
 
 The active [0.6.0 tracker #86](https://github.com/agustin18/fastapi-cache/issues/86)
 supersedes the **completed** [0.5.0 train #70](https://github.com/agustin18/fastapi-cache/issues/70).

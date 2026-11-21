@@ -2,6 +2,12 @@
 
 ## Supported versions
 
+- `0.6.0` source is prepared for final artifact verification. No publication
+  or external certification is claimed. The proposed support scope remains
+  server-side CPython 3.11–3.13; 3.8–3.10 legacy functional only. See
+  [risk disposition](audit/security/RELEASE_RISK_DISPOSITION_0.6.0.md) and
+  [release acceptance #92](https://github.com/agustin18/fastapi-cache/issues/92).
+
 - `0.5.0` is the current published line (released **2026-11-21**). It targets
   best-effort security and critical correctness fixes on server-side
   **CPython 3.11–3.13**, within the 12-month target in
@@ -142,7 +148,7 @@ equivalent edge rules. Do not assume host isolation protects hidden
 
 ## Candidate 0.6.0 authentication and HTTP cache boundaries
 
-The proposed 0.6.0 correction checks all Authorization/Cookie header
+The merged 0.6.0 source correction checks all Authorization/Cookie header
 occurrences and keeps generated Cache-Control private, no-store on
 cached HTTP responses from routes with authenticated caching enabled
 (including MISS/HIT/304). This is an HTTP intermediary policy, not a

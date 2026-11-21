@@ -8,6 +8,31 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.6.0](https://github.com/agustin18/fastapi-cache/tree/v0.6.0) - 2026-11-21
+
+### Features
+
+- Add an optional `InMemoryBackend(max_entries=...)` capacity limit with per-instance least-recently-used eviction, expired-entry cleanup before eviction, and no behavior change when omitted. The bound counts entries rather than payload bytes and does not synchronize separate worker processes. [#54](https://github.com/agustin18/fastapi-cache/issues/54)
+
+### Bugfixes
+
+- Inspect every Authorization and Cookie field occurrence before applying credential-aware caching policy. For cached HTTP results on authenticated-caching opt-in routes, keep intermediary caching private and disabled with `Cache-Control: private, no-store`, while retaining explicitly keyed server-side caching and existing default key compatibility. [#53](https://github.com/agustin18/fastapi-cache/issues/53)
+- Require a complete first-attempt release evidence job matrix, reject incomplete or mismatched TestPyPI distributions, and bind migration lanes to the exact workflow run and attempt. [#92](https://github.com/agustin18/fastapi-cache/issues/92)
+
+### Improved Documentation
+
+- Create a searchable, responsive docs site with separate beginner installation and safe fastapi-cache2 migration, explicit 0.5.0 security/capability boundaries, release evidence, and read-only CI previews. Update the published 0.5.0 quickstart and separate the completed 0.5.0 release from 0.6.0 planning. [#48](https://github.com/agustin18/fastapi-cache/issues/48)
+- Replace the illustrative authenticated cache key builder with a route-specific structured key over verified identity and clarify the candidate HTTP privacy policy. [#53](https://github.com/agustin18/fastapi-cache/issues/53)
+- Add an evidence-bound public API reference and comparative alternatives guide, plus an explicit manual GitHub Pages deployment workflow and documented 0.5.0/0.6.0 docs versioning plan; no website is automatically published. [#86](https://github.com/agustin18/fastapi-cache/issues/86)
+- Add a cross-platform, isolated before/after migration demo for published fastapi-cache2 0.2.2 and fastapi-cache-stable 0.5.0, illustrating unchanged imports, ordinary cache hits, and intentional private-request safety differences. [#88](https://github.com/agustin18/fastapi-cache/issues/88)
+- Define reproducible technical verification and maintainer approval as the release criteria, with no mandatory adopter count or external application validation. Welcome reproducible user feedback without making adoption a prerequisite for publishing or announcing a version. [#91](https://github.com/agustin18/fastapi-cache/issues/91)
+- Update documentation after #85: describe the unreleased, opt-in, read-only entry-count InMemory limit separately from the published unbounded 0.5.0 API, with source-vs-artifact assertions and refreshed roadmap/release gates. [#92](https://github.com/agustin18/fastapi-cache/issues/92)
+
+### Misc
+
+- Bind installed-runtime security checks and both manual publication stages to the exact migration-tested wheel and sdist, verifying source SHA, run provenance, individual approved hashes and TestPyPI digest parity before production publication. [#92](https://github.com/agustin18/fastapi-cache/issues/92)
+- Stage the 0.6.0 candidate's exact wheel/sdist migration-and-rollback verification, installed InMemory capacity probe, draft release notes and fail-closed evidence ledger. This prepares a release review without tagging or publishing packages. [#94](https://github.com/agustin18/fastapi-cache/issues/94)
+
 ## [0.5.0](https://github.com/agustin18/fastapi-cache/tree/v0.5.0) - 2026-11-21
 
 ### Features

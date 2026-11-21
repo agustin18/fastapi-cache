@@ -4,6 +4,16 @@ Five-minute example of response caching with
 [`fastapi-cache-stable`](https://pypi.org/project/fastapi-cache-stable/0.5.0/).
 The Python import remains `fastapi_cache`.
 
+## 0.6.0 promotion preparation
+
+The public examples below still pin 0.5.0. To evaluate 0.6.0 before
+publication, verify the approved SHA-256 of a local wheel, install it by
+its actual path in a fresh virtual environment, and run `pip check`.
+The same minimal app works; in 0.6.0 only, you may set
+`InMemoryBackend(max_entries=1_000)`. After PyPI verification, the exact
+0.6.0 pin becomes the normal install command. See
+[0.6.0 notes](releases/RELEASE_NOTES_0.6.0.md).
+
 ## Install
 
 Use **server-side CPython 3.11–3.13** for the current security-supported

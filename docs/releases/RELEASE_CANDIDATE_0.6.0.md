@@ -1,4 +1,4 @@
-# 0.6.0 release candidate — exact-artifact acceptance (DRAFT)
+# 0.6.0 final promotion — exact-artifact acceptance
 
 > **NOT PUBLISHED. NOT AUTHORIZED FOR TAG OR PYPI.**
 > The latest released distribution is `fastapi-cache-stable==0.5.0`.
@@ -15,9 +15,9 @@
 - [ ] [#53](https://github.com/agustin18/fastapi-cache/issues/53):
   classify package-owned and application-owned hidden identity/context
   risks, document negative/positive reproductions and explicit reviewer
-  risk acceptance. A demonstrated unresolved package-controlled cross-tenant
+  risk acceptance by the maintainer for the final SHA. A demonstrated unresolved package-controlled cross-tenant
   disclosure is a **NO-GO**.
-- [ ] Confirm [#50](https://github.com/agustin18/fastapi-cache/issues/50)
+- [x] Confirm [#50](https://github.com/agustin18/fastapi-cache/issues/50)
   event hooks and [#49](https://github.com/agustin18/fastapi-cache/issues/49)
   parameter exclusion **remain outside 0.6.0**; defer feature work.
 - [ ] Verify site copy for public competitor-neutral positioning and
@@ -25,9 +25,10 @@
 
 ## Candidate build and tests — every checkbox requires actual evidence
 
-- [ ] Record PR HEAD SHA and merge SHA. Bump metadata to `0.6.0` on this
-  candidate source (merged in #94, with corrective PR pending); do not
-  create `v0.6.0` tag yet.
+- [x] Metadata `0.6.0` merged in #94; [#104](https://github.com/agustin18/fastapi-cache/pull/104)
+  merged as `b5d9e125e49ae54b578c1e2b98f33bb9b5f452c0`, after 80/80 checks
+  on `8ff49aa28632e87db0586bec771483910ebf5554`. Final promotion changes
+  the SHA; do not reuse that evidence or create the tag yet.
 - [ ] Exact HEAD CI on Python 3.8–3.13, lint/types, Redis, benchmarks,
   CodeQL, installed-runtime security, release changelog gate and docs
   link validator all **green**. Log run URLs and failing-retry disposition.
@@ -80,13 +81,14 @@ what was actually tested; private application details are not required.
   fragments **only in the promotion PR**. The release-promotion workflow
   must regenerate the changelog from the stable base with the version/date
   in the new entry and compare output byte-for-byte. Do not bypass this
-  gate or reuse the 0.5.0 release date. Any change after evidence
+  gate. Use the actual preparation/release date, which may coincide with a
+  prior release on the same day. Any change after evidence
   capture requires a fresh exact-artifact run.
-- [ ] Confirm the `pypi`, `testpypi` and `github-pages` GitHub
-  Environments have appropriately restricted source branches and
-  human reviewers where supported. In particular, protect Pages to
-  `stable` only. Do not treat `workflow_dispatch` alone as a
-  sufficient release-authorization control.
+- [ ] Confirm `pypi` and `testpypi` GitHub Environments and Trusted
+  Publishing configuration restrict the release source appropriately,
+  including annotated release tags; apply human reviewers where supported.
+  Do not treat `workflow_dispatch` alone as a sufficient authorization
+  control. Pages is optional and separate from publication.
 - [ ] Prepare `0.6.0rc1` only if a separately approved prerelease
   is useful for additional technical verification, after separately adapting
   and testing the version-specific Phase B/publish gates. A final-version
@@ -114,13 +116,19 @@ what was actually tested; private application details are not required.
 
 | Requirement | Source SHA / workflow | Evidence URL or SHA-256 | Status |
 |---|---|---|---|
-| CI, security, docs | TBD | TBD | PENDING |
+| #104 candidate review (historical) | `8ff49aa28632e87db0586bec771483910ebf5554` | [CI](https://github.com/agustin18/fastapi-cache/actions/runs/44933031194), [Phase B](https://github.com/agustin18/fastapi-cache/actions/runs/44933031159) | 80/80 passed; not final evidence |
+| CI, security, docs (final stable) | TBD | TBD | PENDING |
 | Exact wheel SHA-256 | TBD | TBD | PENDING |
 | Exact sdist SHA-256 | TBD | TBD | PENDING |
 | Phase B build + 12 migration + 7 exact security | TBD | TBD | PENDING |
 | Fresh Dependabot delta | TBD | TBD | PENDING |
 | #53 privacy disposition | TBD | TBD | PENDING |
 | Final GO / tag / TestPyPI / PyPI | TBD | TBD | **NOT AUTHORIZED** |
+
+The [status ledger](RELEASE_STATUS_0.6.0.md) links final acceptance in #53
+and #92. Do not edit the to-be-tagged commit after verification merely to
+insert its own SHA or artifact hashes. Record them in immutable issue
+comments and a post-publication docs follow-up.
 
 The scope and status in [#92](https://github.com/agustin18/fastapi-cache/issues/92)
 are authoritative; a merged candidate PR is **not** consent to publish.

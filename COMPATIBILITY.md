@@ -11,6 +11,16 @@ source provenance; a source checkout alone is not publication evidence. The
 [PyPI](https://pypi.org/project/fastapi-cache-stable/) and
 [CHANGELOG.md](CHANGELOG.md) for current releases and historical versions.
 
+## 0.6.0 promotion compatibility
+
+The staged 0.6.0 package retains `Requires-Python >=3.8,<3.14`, documented
+Python-conditional Redis client bounds, imports and ordinary default keys.
+It adds optional bounded InMemory and targeted private HTTP response
+corrections. Final installed-artifact verification is pending under
+[#92](https://github.com/agustin18/fastapi-cache/issues/92); the matrix
+below remains the published 0.5.0 contract. No new backend or Python
+version is qualified by this promotion.
+
 ## Redis client support in 0.5.0
 
 Published `0.5.0` inherits the `0.4.0` Redis support and incorporates the #47 implementation, changing

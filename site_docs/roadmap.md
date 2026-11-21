@@ -2,6 +2,10 @@
 
 **0.5.0 is published.** [#85](https://github.com/agustin18/fastapi-cache/pull/85) is merged in `stable`, but its new API remains **unshipped** until a separately reviewed 0.6.0 artifact exists. This is a roadmap, not release authorization.
 
+The #104 correction is merged and the 0.6.0 promotion is being prepared.
+Final artifact evidence and separate publication approval are still pending
+under [#92](https://github.com/agustin18/fastapi-cache/issues/92).
+
 ## Priorities for 0.6.0
 
 | Priority | Issue | What users gain | Boundary |

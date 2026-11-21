@@ -1,7 +1,8 @@
-# fastapi-cache-stable 0.6.0 — draft release notes
+# fastapi-cache-stable 0.6.0 — prepared release notes
 
-> **DRAFT / NOT PUBLISHED — 2026-11-21.** Version metadata in the
-> candidate PR is for testing wheel/sdist only. Current public install
+> **PROMOTION PREPARED / NOT PUBLISHED — 2026-11-21.** #104 is merged;
+> the final stable source and exact artifact evidence require acceptance.
+> Current public install
 > remains `fastapi-cache-stable==0.5.0`. These notes become release
 > notes only after the [exact-artifact release gate](RELEASE_CANDIDATE_0.6.0.md)
 > is satisfied and publication is explicitly authorized.
@@ -46,7 +47,7 @@ reporting for security issues.
 
 ### Privacy and promotion safeguards
 
-The corrective candidate checks every Authorization/Cookie occurrence
+The merged 0.6.0 source checks every Authorization/Cookie occurrence
 and applies private, no-store HTTP policy to cached results from routes
 with authentication caching enabled. These are not substitutes for
 validated identity-aware keys or authorization checks. Existing cache
@@ -56,7 +57,8 @@ entries in HTTP intermediaries may require invalidation. See the
 
 The release workflow requires a reviewed, single wheel/sdist pair used
 in migration and installed security profiles and in both index uploads.
-No release artifact has been authorized yet.
+No release artifact has been authorized yet. The [status ledger](RELEASE_STATUS_0.6.0.md)
+separates candidate evidence from final stable and index verification.
 
 ## Compatibility and limitations
 
