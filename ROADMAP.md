@@ -6,6 +6,17 @@ isolation; see [0.4.1 release status](docs/releases/RELEASE_STATUS_0.4.1.md)
 for publication evidence. The 0.4.0 release remains the previous baseline. The `0.3.x` artifacts remain the previous migration line.
 **Do not reopen a completed publication gate without new material evidence.**
 
+**Current 0.5.0 train (prepublication):** #67 and #68 closed; #69 Phase A
+completed with [PR #80](https://github.com/agustin18/fastapi-cache/pull/80);
+#53's explicit `vary_headers` contract merged with
+[PR #81](https://github.com/agustin18/fastapi-cache/pull/81)
+(commit `58fd446f`), while residual arbitrary hidden tenant/context risks remain open.
+[PR #82](https://github.com/agustin18/fastapi-cache/pull/82) stages the
+**0.5.0 candidate and Phase B exact wheel/sdist migration tests**, not
+an authorized release. The final security review [#66](https://github.com/agustin18/fastapi-cache/issues/66)
+and **post-merge exact-artifact Phase B rerun** remain release gates.
+Latest published PyPI distribution: **0.4.1**.
+
 Everything below is a **candidate plan, not a delivery promise**.
 The primary product advantage remains conservative migration from
 `fastapi-cache2==0.2.2`, preserved `fastapi_cache` imports, predictable
@@ -16,14 +27,16 @@ cache keys and safe default HTTP/private-response behavior.
 - **0.4.x:** backward-compatible maintenance. Keep the published
   Python `>=3.8,<3.14` metadata and documented Redis client ranges;
   security maintenance is best-effort on server-side CPython 3.11–3.13.
-- **0.5.0:** release-quality security/CI, confirmed factory-route key-collision
-  mitigation, residual tenant/context isolation review and verifiable legacy
-  migration. This is enough to justify the release **without feature additions**.
-  If a safe targeted 0.4.x correctness fix is ready earlier, release it first.
-- **0.5.x later/optional:** opt-in argument filtering, bounded InMemory and
-  cache events. Merge into 0.5.0 only if each has its own audited, green PR;
-  none may delay a necessary security/correctness release. Keep distributed
-  locking, tags and app-scoped configurations in research.
+- **0.5.0 candidate:** consolidate already merged factory-route fix,
+  explicit opt-in `vary_headers`, verified legacy migration and exact
+  supported-modern security audits. The remaining scope is **Phase B and
+  release-scoped #66**, without unrelated features. No tag/publication
+  before the final SHA is independently reviewed.
+- **Future version (separate opt-in features):** argument filtering,
+  bounded InMemory and privacy-safe cache events are optional.
+  If they change the public API, prefer a separately reviewed new
+  minor release (e.g. `0.6.0`) instead of delaying or expanding 0.5.0.
+  Keep distributed locking, tags and app-scoped configurations in research.
 - **1.0.0:** not automatically scheduled; current
   [support policy](SUPPORT.md) requires a co-maintainer before committing
   to a longer `1.x` support window.
@@ -46,11 +59,14 @@ Shipped:
   (uvicorn removed), [#46](https://github.com/agustin18/fastapi-cache/issues/46)
   (read-only Dependabot delta) and the #61 distribution-metadata regression.
 
-`0.3.1` remains the migration baseline and retains its own release history in
-[docs/releases](docs/releases/). [#53](https://github.com/agustin18/fastapi-cache/issues/53)
-remains open for `Vary`-aware caching, hidden dependency/contextvars/middleware
-inputs and per-tenant/user key design. The 0.3.1 explicit-`Request` bypass is
-not a general guarantee.
+`0.3.1` remains the earlier migration line and retains its own release history in
+[docs/releases](docs/releases/). Published 0.4.1 resolves #68's generated
+route replay, while source `stable` after #81 implements explicit opt-in
+HTTP `Vary` (not in published 0.4.1). [#53](https://github.com/agustin18/fastapi-cache/issues/53)
+stays open **only for residual arbitrary hidden context/tenant identity,
+proxy trust and header cardinality**. Neither explicit-`Request`
+bypass nor `vary_headers` automatically makes an application's
+unknown identity dimensions safe.
 
 ## 0.4.x — maintenance candidates (no release date promised)
 
@@ -58,8 +74,8 @@ not a general guarantee.
 |---|---|---|
 | **P1** | [#55: MD5/FIPS key portability](https://github.com/agustin18/fastapi-cache/issues/55) | Reproduce restricted-hash failures; retain legacy key digests and **Python 3.8** support. Upstream `usedforsecurity=False` needs version-specific handling |
 | **P1** | [#45: DynamoDB correctness](https://github.com/agustin18/fastapi-cache/issues/45) | Reproduce/fix expired-value reads and client cleanup lifecycle if verified; keep DynamoDB experimental |
-| **P0 — correctness** | [#68: confirmed factory-route key collision](https://github.com/agustin18/fastapi-cache/issues/68) | Fixed by #73 and prepared for 0.4.1: generated/wrapped handlers are partitioned, unwrapped module-level keys are unchanged, and old generated entries are not reused. Complete publication/verification; residual #53 limits remain |
-| **P0 — security review** | [#53: residual header/Vary design](https://github.com/agustin18/fastapi-cache/issues/53) | Coordinate hidden-request/tenant variants with #68. Keep current 0.3.1/0.4.0 explicit-Request bypass; prioritize proven privacy risks and versioned cache-key migration |
+| **Delivered in 0.4.1** | [#68: factory-route key collision](https://github.com/agustin18/fastapi-cache/issues/68) | Closed: published fix separates generated/wrapped handler keys without globally rewriting default keys; verify published 0.4.1 or later |
+| **Delivered in source after 0.4.1** | [#53: Vary opt-in and residual](https://github.com/agustin18/fastapi-cache/issues/53) | PR #81 merged: explicit hashed `:vary-v1:` with returned Response `Vary` on MISS/HIT/304. **Not in published 0.4.1**; issue stays open for hidden identity/tenant/proxy/cardinality limits |
 | **P2 — conditional** | [#51: Python 3.14 qualification](https://github.com/agustin18/fastapi-cache/issues/51) | Full functional/security matrix must pass before changing metadata; otherwise stay out of range |
 
 A `0.4.x` release is **not mandatory for docs-only or CI-only merges**;
@@ -80,9 +96,10 @@ path. **Do not** preserve unsafe historical response/tenant behavior.
 | Priority | Issue / deliverable | Acceptance |
 |---|---|---|
 | **P0** | [#66 security/Dependabot](https://github.com/agustin18/fastapi-cache/issues/66) | **Reuse** authenticated 0.4.0 baseline: 120 historical/current records, 21 unchanged open, no new material findings. Run existing scheduled/manual delta closer to 0.5.0; triage changed alerts, patch reachable modern profiles and exact-wheel `pip-audit`. Legacy-only alerts not silently dismissed |
-| **P0** | [#67 CI reliability](https://github.com/agustin18/fastapi-cache/issues/67) | [#71](https://github.com/agustin18/fastapi-cache/pull/71) **merged** (31/31 checks). Verify the docs-only gate with an actual Markdown-only PR; investigate only post-0.4.0 failures and concrete same-SHA flake evidence. No soft required tests |
-| **P0** | [#68 confirmed route collision](https://github.com/agustin18/fastapi-cache/issues/68) + [#53 context/Vary](https://github.com/agustin18/fastapi-cache/issues/53) | **Incorrect response replay is confirmed**: /a MISS then /b HIT serving /a data, per maintainer agent; independent builder collision reproduced. Commit an HTTP/Redis test, assess tenant/privacy reachability privately if applicable, and fix before optional features. Preserve default key goldens unless a deliberate, documented versioned migration is chosen |
-| **P0** | [#69 tested legacy migration and rollback](https://github.com/agustin18/fastapi-cache/issues/69) | **Two reviewable PRs**: (A) immutable old-package goldens, clean install and real Redis/InMemory migration; (B) exact 0.5.0 wheel/sdist, independent consumer, Redis-py 4 fallback and rollback. Deliberately changed security defaults documented |
+| **Completed** | [#67 CI reliability](https://github.com/agustin18/fastapi-cache/issues/67) | Closed: docs-only Towncrier positive/negative verification (#71/#76/#77). No softened mandatory tests |
+| **Completed / bounded residual** | [#68 generated keys](https://github.com/agustin18/fastapi-cache/issues/68) and [#53 Vary](https://github.com/agustin18/fastapi-cache/issues/53) | #68 closed and published in 0.4.1; #53 opt-in `vary_headers` merged in #81 with returned-Response Vary tests. #53 remains open for application-specific hidden identity/tenant and resource limits |
+| **P0 — pending final SHA** | [#69 published migration + rollback](https://github.com/agustin18/fastapi-cache/issues/69) | Part A #80 merged and verified with immutable published upstream 0.2.2→fork 0.4.1; Part B #82 proposes **one exact wheel/sdist** per source SHA and independently installed rollback/consumer matrix. Re-run on final merged release SHA |
+| **P0 — pending final signoff** | [#66 security](https://github.com/agustin18/fastapi-cache/issues/66) | A historical 120-record/21-open baseline is not consent for 0.5.0. Fresh authenticated delta, final modern installed wheel/sdist scan, scope-by-scope risk acceptance and explicit release decision |
 
 ### Optional opt-in additions (NOT 0.5.0 release gates)
 
@@ -101,17 +118,30 @@ remain targeted maintenance candidates, potentially `0.4.x`, after real
 reproduction. Python 3.14 must not enter published metadata without a
 full compatible matrix.
 
-### Focused PR sequence — release gates first, features parallel
+### Focused PR sequence — current release train
 
-1. **Completed:** [#71](https://github.com/agustin18/fastapi-cache/pull/71) fix docs-only Towncrier false gate and add regression coverage; squash merge `f9b12aa`. Validate against a docs-only PR (this PR).
-2. **Highest priority:** [#68](https://github.com/agustin18/fastapi-cache/issues/68) confirmed cross-route wrong response, with [#53](https://github.com/agustin18/fastapi-cache/issues/53) hidden-context/privacy review. One focused reproduction PR and a separate minimal patch PR; **ship a compatible 0.4.x correction early if justified**. No global key-format migration without a user-visible rollout/rollback strategy.
-3. [#66](https://github.com/agustin18/fastapi-cache/issues/66) reuse the authenticated pre-0.4.0 120/21 baseline and run a fresh delta; separate dependency remediations and exact-profile security audit.
-4. [#67](https://github.com/agustin18/fastapi-cache/issues/67) review CI failures since 0.4.0 or documented same-SHA repeats only; no broad 100–300-run retrospective unless evidence demands it.
-5. [#69](https://github.com/agustin18/fastapi-cache/issues/69) Part A: immutable upstream 0.2.2 golden-key/HTTP behavior and clean installation comparison.
-6. [#69](https://github.com/agustin18/fastapi-cache/issues/69) Part B: exact 0.5.0 candidate wheel/sdist, independent consumer and rollback evidence after version bump.
-7. Final release PR: merge-quality code, release-shaped CI, scoped Dependabot risk audit, immutable distribution evidence and **separate approval** for tag/TestPyPI/PyPI.
+1. **Completed:** #67 docs-only gate (#71/#76/#77) and #68 generated-handler key fix,
+   shipped and verified in 0.4.1.
+2. **Completed:** #69 Phase A, [PR #80](https://github.com/agustin18/fastapi-cache/pull/80):
+   published 0.2.2→0.4.1 goldens, clean installations and Redis 7.4 rollback.
+3. **Completed in source:** #53 [PR #81](https://github.com/agustin18/fastapi-cache/pull/81):
+   explicit header variation and returned-Response Vary; independent security
+   limitations stay open. Not yet in a published 0.5.0 package.
+4. **Current PR:** [#82](https://github.com/agustin18/fastapi-cache/pull/82)
+   candidate version `0.5.0`, exact wheel/sdist Phase-B build, Python
+   3.8–3.13 installed consumers, real Redis and package rollback, plus
+   dated documentation cleanup. **No tag or publication.**
+5. **After merge:** rerun #69 Phase B and modern installed security scans
+   on the **exact final stable commit**, retain wheel and sdist hashes.
+6. **Before publication:** #66 fresh authenticated Dependabot delta,
+   individually scoped modern and residual legacy/consumer risk decisions,
+   independent signoff, then a **separately authorized manual** tag,
+   TestPyPI/PyPI and release record.
 
-**Optional independent PRs:** [#49](https://github.com/agustin18/fastapi-cache/issues/49), [#54](https://github.com/agustin18/fastapi-cache/issues/54), [#50](https://github.com/agustin18/fastapi-cache/issues/50); these can ship in 0.5.0 if completed safely in time, or in a later 0.5.x/minor release without blocking security/correctness.
+The current [release-specific checklist](docs/releases/RELEASE_CANDIDATE_0.5.0.md)
+is authoritative for remaining gates. **Optional #49/#54/#50**
+are now deferred to a separately reviewed future minor release; none
+blocks 0.5.0.
 
 Additional confirmed security or backend bugs warrant their own focused
 PRs. Do not artificially expand the scope with distributed locks, tags,

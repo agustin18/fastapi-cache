@@ -7,16 +7,18 @@ See [0.3.0 release status and hashes](RELEASE_STATUS_0.3.0.md).
 **Important:** the historical, unchecked pre-promotion boxes below are
 an audit trail, **not outstanding requirements for the already published
 version**. The 21 reviewed open GHSA were expressly accepted within
-the documented 0.3.0 scope, not marked fixed. New work is tracked in
-[ROADMAP.md](ROADMAP.md) and GitHub issues.
+the documented 0.3.0 scope, not marked fixed. Current 0.5.0 preparation
+has its **own** [candidate checklist](RELEASE_CANDIDATE_0.5.0.md).
+New work is tracked in [ROADMAP.md](../../ROADMAP.md) and GitHub issues.
 
 ---
 
 # Stable release readiness
 
-This is the **one maintained release-status checklist**. User-facing guides
+This is the **historical 0.3.0 release-status checklist**; it is not the
+current 0.5.0 approval list. See [0.5.0 candidate gates](RELEASE_CANDIDATE_0.5.0.md). User-facing guides
 avoid hardcoding the current alpha/beta/RC in several files. Historic versions
-belong in [CHANGELOG.md](CHANGELOG.md). Check
+belong in [CHANGELOG.md](../../CHANGELOG.md). Check
 [PyPI](https://pypi.org/project/fastapi-cache-stable/) for published versions.
 
 ## Evidence already obtained
@@ -71,11 +73,11 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
 - [x] Exact PyPI-published RC2 wheel audit completed on Python 3.11–3.13
   with all extras: 3/3 SHA-256 checks, clean venv installs and `pip check`,
   73 packages installed and 72 third-party packages scanned per profile,
-  no known findings. See [archived provenance](audit/security/RC2_EXACT_PYPI_WHEEL_AUDIT_20261119.md)
+  no known findings. See [archived provenance](../../audit/security/RC2_EXACT_PYPI_WHEEL_AUDIT_20261119.md)
   and linked workflow artifacts (90-day retention).
 - [x] Record maintainer-directed release-specific **bounded risk acceptance**
   for all 21 captured open GHSA, without dismissing their GitHub alerts:
-  [0.3.0 signoff record](audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md).
+  [0.3.0 signoff record](../../audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md).
   Separate independent contra-audit and fresh snapshot are still needed
   before publication.
 
@@ -89,8 +91,8 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   as current-only advisory #120. This is conditionally scoped for RC2,
   **not** a claim that legacy Starlette or consumers are patched.
 - [x] Record the maintainer-requested scoped 21-GHSA acceptance in
-  [the 0.3.0 decision](audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md),
-  checked against the [95-row historical review](audit/security/STABLE_RELEASE_SECURITY_REVIEW_20261119.md).
+  [the 0.3.0 decision](../../audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md),
+  checked against the [95-row historical review](../../audit/security/STABLE_RELEASE_SECURITY_REVIEW_20261119.md).
   This records an explicit owner direction, **not** a forged GitHub
   review signature or approval of the final publish action.
   Python 3.8–3.10 remain functional legacy only.
@@ -111,11 +113,11 @@ belong in [CHANGELOG.md](CHANGELOG.md). Check
   authenticated source snapshot; fail closed if a newly opened GHSA is absent
   or if identifiers, manifest or vulnerable version ranges differ.
 - [x] Reconcile and individually account for all 95 historical/current GHSA
-  in [the pre-stable review ledger](audit/security/STABLE_RELEASE_SECURITY_REVIEW_20261119.csv).
+  in [the pre-stable review ledger](../../audit/security/STABLE_RELEASE_SECURITY_REVIEW_20261119.csv).
   This is **proposed evidence review**, not risk acceptance.
 - [x] Record all **21** individually scoped release dispositions in the
-  [maintainer acceptance document](audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md).
-  Preserve the [canonical source triage](audit/security/SECURITY_ADVISORY_TRIAGE.csv)
+  [maintainer acceptance document](../../audit/security/MAINTAINER_RISK_ACCEPTANCE_20261119.md).
+  Preserve the [canonical source triage](../../audit/security/SECURITY_ADVISORY_TRIAGE.csv)
   and original GitHub alert states/PENDING evidence unchanged. The separate
   decision document carries the **release acceptance**, not a fictitious
   vulnerability fix.

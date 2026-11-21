@@ -4,7 +4,9 @@
 [`fastapi-cache2`](https://pypi.org/project/fastapi-cache2/). This document defines what
 "drop-in" means for this project and what we promise to keep stable.
 
-This contract describes the documented `0.4.x` line. The `0.3.x` artifacts remain available as the previous migration line. Use
+This contract describes the published `0.4.x` line and the pending
+0.5.0 source candidate. **0.5.0 is not yet published.** The `0.3.x`
+artifacts remain available as the previous migration line. Use
 [PyPI](https://pypi.org/project/fastapi-cache-stable/) and
 [CHANGELOG.md](CHANGELOG.md) for current releases and historical versions.
 
@@ -33,15 +35,16 @@ and the implementation PR runs a smaller mandatory wheel/sdist CI matrix.
 Existing `0.3.x` PyPI artifacts remain immutable. The expanded contract
 applies to the published `0.4.1` artifact.
 
-## Factory-generated HTTP handlers (#68, prospective correction)
+## Factory-generated HTTP handlers (#68, fixed in published 0.4.1)
 
-**Published 0.4.0 remains affected; the prepared 0.4.1 patch isolates generated/wrapped HTTP handlers**: factory-created functions can share
+**Published 0.4.0 is affected; published 0.4.1 fixes the generated/wrapped
+HTTP handler collision**: factory-created functions can share
 module/name/args/namespace while serving different HTTP routes. This can
-cause a wrong response to be replayed. See [#68](https://github.com/agustin18/fastapi-cache/issues/68).
-Until a corrective release is available, give generated routes distinct
-namespaces or review an explicit path-aware key builder.
+cause a wrong response to be replayed in 0.4.0. Upgrade to 0.4.1 or
+choose separate route namespaces / a reviewed path-aware builder.
+See [#68](https://github.com/agustin18/fastapi-cache/issues/68).
 
-A narrowly scoped candidate fix separates **generated/wrapped HTTP handler
+The shipped narrow fix separates **generated/wrapped HTTP handler
 cache keys** by stable request method/host/root/path and the legacy digest.
 It detects actual function **closures via code free variables** and
 explicit decorator wrappers via `__wrapped__`, even when
@@ -67,8 +70,9 @@ ports or spellings can cause different keys. Unrestricted client-supplied
 not an authorization check or a tenant boundary. Hidden request context,
 custom key builders and independent applications sharing a backend
 prefix remain separate responsibilities (#53). Direct non-ASGI `@cache`
-usage retains the legacy key behavior. A PR is **not** an authorization
-to publish this correction; check the released version.
+usage retains the legacy key behavior. The #68 correction is already
+published in 0.4.1; independent application/tenant isolation remains
+outside its guarantee.
 
 ## What "drop-in" means
 
@@ -158,7 +162,7 @@ cache(
     injected_dependency_namespace="__fastapi_cache",
     cache_authenticated=None,
     infer_response_model=False,
-    vary_headers=None,  # opt-in Sequence[str], proposed for 0.5.0
+    vary_headers=None,  # opt-in Sequence[str], in 0.5.0 source candidate only
 )
 ```
 
@@ -318,7 +322,7 @@ Historical introduction versions belong in [CHANGELOG.md](CHANGELOG.md).
 | Injected `response` metadata is checked before cache reads and writes | Dict/list responses could cache cookies, private data, custom statuses, or custom headers |
 | A second `FastAPICache.init(...)` is not a silent no-op | Configuration was impossible to change |
 
-## Explicit HTTP header variants (opt-in, proposed for 0.5.0)
+## Explicit HTTP header variants (merged for 0.5.0; not in published 0.4.1)
 
 The optional `vary_headers` decorator argument isolates only explicitly
 declared, validated HTTP request field names; it does not infer hidden state.

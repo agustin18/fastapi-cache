@@ -85,6 +85,33 @@ can reduce cache hit rates for existing Request-taking endpoints. HTTP
 Redis/InMemory cache. **0.3.0 users must upgrade to 0.3.1 or avoid caching
 such endpoints**; the published `0.3.0` wheel itself is immutable.
 
+## Explicit Vary and hidden-context residual scope (0.5.0 candidate)
+
+PR #81 merged `@cache(vary_headers=(...))` into source `stable`, but
+**published 0.4.1 does not expose this API**. It is staged for 0.5.0
+and is opt-in: an application must explicitly list every
+representation-determining request header. The default key format and
+the explicit-`Request`/default-builder bypass remain unchanged.
+A returned `Response` receives generated `Vary` on MISS/HIT and the
+conditional 304 carries `Vary`; HTTP `Vary` alone does not partition
+the server-side cache. Unlisted response `Vary` values bypass storage.
+
+**Residual limitation (#53):** this is not generic auto-detection of
+dependency/middleware state, `contextvars`, validated tenant identity
+or permissions. `X-API-Key` and other custom authentication field names
+are *not* blocked by syntactic validation and do not trigger the standard
+Authorization/Cookie bypass. Use complete identity-aware custom builders
+or bypass private caching. High-cardinality, untrusted header values can
+cause backend resource exhaustion; validate and bound them before
+caching. Hashing does not authenticate, encrypt or prevent cardinality
+attacks. Rotate/clear pre-opt-in namespaces as documented in
+[MIGRATION.md](MIGRATION.md).
+
+**0.5.0 release security is not yet signed off:** modern Python 3.11–3.13
+installed wheel/sdist evidence, fresh authenticated Dependabot delta
+and an explicit release-scoped residual-risk review remain mandatory
+under [#66](https://github.com/agustin18/fastapi-cache/issues/66).
+
 ## Factory-generated route key collisions (affected 0.4.0; fixed 0.4.1)
 
 Published `0.4.0` can cache a result under the same legacy key for

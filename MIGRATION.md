@@ -153,17 +153,19 @@ those routes; old Redis entries are not automatically deleted. Neither
 the global default key digest nor the key format for ordinary
 parameter-only endpoints is changed.
 
-**Residual scope:** `Vary`-aware caching, headers/state read by hidden
-dependencies or middleware, ambient `contextvars`/application state, and
-per-user/tenant custom key design remain open in
-[#53](https://github.com/agustin18/fastapi-cache/issues/53). The 0.3.1
-bypass cannot detect those inputs in routes that do not declare
+**Residual scope:** PR #81 merged explicit opt-in `vary_headers` and
+correctly propagates `Vary` to returned responses, but arbitrary
+headers/state read by hidden dependencies, ambient `contextvars`, custom
+tenant/identity and user-supplied key cardinality remain the application's
+responsibility and are still tracked in
+[#53](https://github.com/agustin18/fastapi-cache/issues/53).
+The 0.3.1 bypass cannot detect those inputs in routes that do not declare
 `Request`, and a custom key builder is an explicit application contract,
 not an automatic safety guarantee.
 
 ### Explicit header variation (new opt-in for 0.5.0)
 
-The proposed `@cache(vary_headers=("Accept-Language", "X-Region"))` API
+The source-merged (not yet published) `@cache(vary_headers=("Accept-Language", "X-Region"))` API
 addresses a narrow case: a **public** endpoint's representation depends on
 those named headers, but their values do **not** appear among the function's
 FastAPI-resolved parameters. This includes a declared dependency whose
@@ -211,10 +213,13 @@ value only enters middleware state or a `ContextVar`.
   SHA-256 for key identifiers hides raw header strings but is neither
   encryption, authentication nor cache-flood protection.
 
-**Prepublication status:** this contract is in PR #81, not in released
-0.4.1. A passing test proves only the listed paths and configurations,
-not complete automatic cross-tenant isolation. Phase A of #69 must be
-rerun after the change; phase B tests the exact 0.5.0 artifacts.
+**Prepublication status:** PR #81 is merged into `stable`, but the public
+API is **not in published 0.4.1**. It is staged for 0.5.0. A passing
+test proves only the listed paths and configurations, not complete
+automatic cross-tenant isolation. Published 0.2.2→0.4.1 phase A has
+passed after the change; the independent phase B workflow tests the
+candidate's actual 0.5.0 wheel and sdist. It must be repeated on the
+**final post-merge commit** before release.
 
 ## Generated FastAPI routes and shared default keys (#68)
 
@@ -228,7 +233,7 @@ distinct explicit `@cache(namespace="...")` or provide a reviewed stable
 route- and identity-aware key builder; rotate/clear potentially shared
 namespaces **before accepting traffic**.
 
-**Prepared in 0.4.1 (pending publication):**
+**Fixed in published 0.4.1:**
 for generated FastAPI HTTP handlers, detect actual **closures** from
 function code free variables and functions with explicit `__wrapped__`
 metadata created by decorators such as `functools.wraps`. This includes
@@ -244,8 +249,8 @@ receive newly partitioned keys. That invalidates their effective cache
 warm state even if the responses were previously safe. Custom builders
 remain application-controlled. New generated-route entries retain the same
 namespace prefix, but **old closure-handler cache entries are intentionally
-not reused**. Do not mistake a code merge for a published release; check
-PyPI and the changelog first.
+not reused**. The fix is present in published 0.4.1 and in the 0.5.0
+source candidate; confirm the version installed in each environment.
 
 **Limitations:** This narrowly addresses generated *HTTP route* key collisions.
 It does not automatically fix direct `@cache` calls without an ASGI request,
@@ -328,7 +333,7 @@ resolve from regular PyPI; do not mix TestPyPI and PyPI candidates via
 ## Compatibility matrix
 
 - **Verified**: tested in CI with identified versions.
-- **Targeted for 0.4.1**: intended behavior, not yet guaranteed.
+- **0.5.0 candidate**: source-level intent, not guaranteed in a published package until exact-artifact validation and manual release.
 - **Experimental**: interface available, coverage insufficient.
 - **Unsupported**: outside the compatibility contract.
 
@@ -342,7 +347,7 @@ resolve from regular PyPI; do not mix TestPyPI and PyPI candidates via
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
 | `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
-| Redis standalone | Verified for clear semantics | Redis 7 service in CI with redis-py 4.6.0; key-only clear and namespace boundary tested. redis-py 5/6 are not supported by the current `^4.2.0rc1` constraint and are untested |
+| Redis standalone | Verified for documented profiles | Published 0.4.1 and 0.5.0 candidate retain Python-specific redis-py constraints: 3.8 `<6.2`, 3.9 `<7.1`, 3.10–3.13 `<8.2`, each with redis-py 4.x fallback. Real Redis server/client matrix covers the selected combinations; it does not certify all server configurations |
 | Redis Cluster | Unsupported | `clear` limitations documented; no complete namespace clearing |
 | InMemory | Verified for basic operations, clear semantics, `expire=None` and instance isolation | Unit tests; each instance owns its store and lock; no size cap yet |
 | Memcached | Experimental | No full `clear`/TTL parity |
@@ -706,8 +711,9 @@ Before live traffic, verify the **exact pinned distribution**:
 - [ ] Key and namespace invalidation, lifespan re-entry and rollback work.
 - [ ] Rollback does not restore unsafe shared caching of private responses.
 
-See [RELEASE_CHECKLIST.md](docs/releases/RELEASE_CHECKLIST.md) for maintainer release
-evidence and security gates, which do not belong in an end-user guide.
+See the [0.5.0 candidate release gates](docs/releases/RELEASE_CANDIDATE_0.5.0.md)
+for current maintainer evidence, distinct from the
+[historical release checklist](docs/releases/RELEASE_CHECKLIST.md).
 
 ## Reproducing the Redis migration E2E
 
@@ -719,8 +725,17 @@ the default-key golden, InMemory GET/304, legacy auth/`Request` behavior
 changes, real Redis 7.4 migration and compatible ordinary-data rollback,
 then tests the stable wheel with redis-py 8.1.0. See the
 [bounded Part A contract](audit/migration/PUBLISHED_022_TO_041_PHASE_A.md).
-This is **not** a test of the future 0.5.0 wheel/sdist, arbitrary consumer
-authentication, or unrestricted rollback.
+This historical published-to-published comparison is **not** a test of the
+new 0.5.0 candidate, arbitrary consumer authentication, or unrestricted
+rollback. The independent [0.5.0 phase-B workflow](.github/workflows/migration-candidate-phase-b.yml)
+builds the actual candidate wheel and sdist from the exact source SHA,
+records their SHA-256, installs each in isolated environments across
+Python 3.8–3.13, runs Redis 7.4 migration, physically replaces the
+candidate with the upstream 0.2.2 package for the bounded ordinary-data
+rollback, then runs a separate 0.5.0 InMemory/Vary consumer. This
+candidate workflow must be repeated on the post-merge final SHA.
+See [#69](https://github.com/agustin18/fastapi-cache/issues/69) and
+[0.5.0 release gates](docs/releases/RELEASE_CANDIDATE_0.5.0.md).
 
 
 The manual harness in [`tests/migration_redis_e2e.py`](tests/migration_redis_e2e.py) runs a legacy

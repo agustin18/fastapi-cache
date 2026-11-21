@@ -4,8 +4,9 @@
 > The Python import stays `fastapi_cache`; intentional safety/behavior changes
 > are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
 >
-> **Latest stable:** [0.4.1 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.4.1/)
-> (released 2026-11-20) ·
+> **Latest published stable:** [0.4.1 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.4.1/)
+> (released 2026-11-20). **0.5.0 is a source candidate, not on PyPI.**
+> Its versioned migration and risk gates are tracked in [#69](https://github.com/agustin18/fastapi-cache/issues/69) and [#66](https://github.com/agustin18/fastapi-cache/issues/66). ·
 > [Quickstart](https://github.com/agustin18/fastapi-cache/blob/stable/docs/QUICKSTART.md) ·
 > [Migration](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md) ·
 > [Compatibility](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md) ·
@@ -368,7 +369,13 @@ validated identity, tenant and permissions when authenticated caching is
 explicitly enabled. DB session objects with changing `repr()` values can
 otherwise produce perpetual misses; see the migration checklist.
 
-### Explicit request-header variants (new opt-in; not in published 0.4.1)
+### Explicit request-header variants (merged after 0.4.1; not yet released)
+
+**Availability:** `vary_headers` was merged in PR #81 and exists in the
+0.5.0 source candidate. It **does not exist in published 0.4.1**.
+Do not copy this example into a production 0.4.1 installation until a
+tested 0.5.0 package has been published and pinned. Keep the application
+security review and namespace migration requirements below.
 
 For anonymous/public endpoints that depend on a **known** header through a
 dependency, middleware, or `contextvars`, opt in to a header-specific key:

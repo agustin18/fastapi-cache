@@ -12,8 +12,11 @@ import sys
 from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Dict
 
+# Use typing.Dict on HTTP route return annotations deliberately: the published
+# upstream 0.2.2 decorator resolves them with Pydantic v1 on Python 3.8,
+# where PEP 585 dict[str, ...] is not subscriptable even under postponed annotations.
 import redis
 import redis.asyncio as redis_async
 from fastapi import FastAPI, Request, Response
@@ -56,7 +59,7 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/ordinary")
 @cache(namespace="ordinary", expire=TTL_SECONDS)
-async def ordinary(response: Response) -> dict[str, str]:
+async def ordinary(response: Response) -> Dict[str, str]:  # noqa: UP006  # Py3.8 Pydantic v1 evaluates annotations
     global ordinary_calls
     ordinary_calls += 1
     return {"generation": GENERATION, "kind": "ordinary"}
@@ -64,7 +67,7 @@ async def ordinary(response: Response) -> dict[str, str]:
 
 @app.get("/private")
 @cache(namespace="private", expire=TTL_SECONDS)
-async def private(request: Request, response: Response) -> dict[str, str]:
+async def private(request: Request, response: Response) -> Dict[str, str]:  # noqa: UP006  # Py3.8 Pydantic v1 evaluates annotations
     global private_calls
     private_calls += 1
     return {
@@ -83,14 +86,14 @@ async def special(response: Response) -> date:
 
 @app.get("/unrelated")
 @cache(namespace="unrelated", expire=TTL_SECONDS)
-async def unrelated(response: Response) -> dict[str, str]:
+async def unrelated(response: Response) -> Dict[str, str]:  # noqa: UP006  # Py3.8 Pydantic v1 evaluates annotations
     global unrelated_calls
     unrelated_calls += 1
     return {"kind": "unrelated", "value": "must-survive-targeted-clear"}
 
 
 @app.post("/migration/cleanup")
-async def cleanup_legacy_incompatible_namespaces() -> dict[str, int]:
+async def cleanup_legacy_incompatible_namespaces() -> Dict[str, int]:  # noqa: UP006  # Py3.8 Pydantic v1 evaluates annotations
     return {
         "private": await FastAPICache.clear(namespace="private"),
         "special": await FastAPICache.clear(namespace="special"),
