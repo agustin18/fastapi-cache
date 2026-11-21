@@ -12,7 +12,6 @@ import sys
 import tempfile
 import venv
 from pathlib import Path
-from typing import Dict
 
 
 FRAMEWORK = ("fastapi==0.111.1", "pydantic==2.8.2", "httpx==0.27.0")
@@ -30,7 +29,7 @@ def _python_in_venv(folder: Path) -> Path:
 
 
 def _run(executable: Path, args: list[str], cwd: Path) -> str:
-    completed = subprocess.run(
+    completed = subprocess.run(  # noqa: S603 - trusted local venv interpreter and fixed args
         [str(executable), *args],
         cwd=str(cwd),
         check=True,
@@ -40,7 +39,7 @@ def _run(executable: Path, args: list[str], cwd: Path) -> str:
     return completed.stdout
 
 
-def _probe(root: Path, mode: str) -> Dict[str, object]:
+def _probe(root: Path, mode: str) -> dict[str, object]:
     environment = root / mode
     venv.EnvBuilder(with_pip=True).create(str(environment))
     python = _python_in_venv(environment)
@@ -55,7 +54,7 @@ def _probe(root: Path, mode: str) -> Dict[str, object]:
     )
     _run(python, ["-m", "pip", "check"], root)
     output = _run(python, ["-I", str(DIRECTORY / "app.py"), mode], root)
-    report: Dict[str, object] = json.loads(output)
+    report: dict[str, object] = json.loads(output)
     (root / f"{mode}.json").write_text(
         json.dumps(report, indent=2) + "\n", encoding="utf-8"
     )
