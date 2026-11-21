@@ -4,6 +4,7 @@ Release tags are immutable reference points. The repository's `stable` branch ma
 
 | Release | Status | Highlights |
 |---|---|---|
+| 0.6.0 | Source promotion prepared; **not published** | Bounded InMemory, targeted privacy fixes and immutable release-bundle checks. [Pending evidence](https://github.com/agustin18/fastapi-cache/issues/92) |
 | [0.5.0](https://pypi.org/project/fastapi-cache-stable/0.5.0/) | Published 2026-11-21 | Opt-in `vary_headers`, strict artifact migration and security gates |
 | [0.4.1](https://pypi.org/project/fastapi-cache-stable/0.4.1/) | Published 2026-11-20 | Generated/factory-route cache key isolation |
 | [0.4.0](https://pypi.org/project/fastapi-cache-stable/0.4.0/) | Published 2026-11-20 | Redis-py 4–8 conditional compatibility |
