@@ -1,0 +1,76 @@
+name: Documentation site
+
+on:
+  pull_request:
+    branches: [stable]
+    paths:
+      - "site_docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs-site.yml"
+      - "docs/QUICKSTART.md"
+      - "docs/DOCS_SITE.md"
+      - "README.md"
+      - "ROADMAP.md"
+  push:
+    branches: [stable]
+    paths:
+      - "site_docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs-site.yml"
+      - "docs/QUICKSTART.md"
+      - "docs/DOCS_SITE.md"
+      - "README.md"
+      - "ROADMAP.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    name: Build, verify and preview documentation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Install pinned docs tooling (not a runtime dependency)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "zensical==0.1.3"
+      - name: Build static site
+        run: zensical build
+      - name: Check real pages and published-version promises
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          pages = {
+              "home": Path("site/index.html"),
+              "start": Path("site/getting-started/index.html"),
+              "migration": Path("site/migration/index.html"),
+              "features": Path("site/reference/features/index.html"),
+              "privacy": Path("site/guides/privacy/index.html"),
+          }
+          for name, page in pages.items():
+              if not page.is_file():
+                  raise AssertionError((name, page))
+              data = page.read_text(encoding="utf-8")
+              assert "<html" in data and "0.5.0" in data, (name, page)
+          homepage = pages["home"].read_text(encoding="utf-8")
+          assert "Start from scratch" in homepage
+          assert "Migrate from fastapi-cache2" in homepage
+          assert "not in 0.5.0" in pages["features"].read_text(encoding="utf-8")
+          quickstart = Path("docs/QUICKSTART.md").read_text()
+          assert "fastapi-cache-stable==0.5.0" in quickstart
+          assert "fastapi-cache-stable==0.4.1" not in quickstart
+          PY
+      - name: Upload preview without publishing a website
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: documentation-site-preview
+          path: site/
+          if-no-files-found: warn
+          retention-days: 14
