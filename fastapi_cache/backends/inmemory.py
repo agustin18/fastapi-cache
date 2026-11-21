@@ -100,7 +100,9 @@ class InMemoryBackend(Backend):
             or max_entries < 1
         ):
             raise ValueError("max_entries must be a positive integer or None")
-        self.max_entries = max_entries
+        # Capacity is fixed at construction: runtime resizing would require
+        # coordinated eviction and index rebuilding under the async lock.
+        self._max_entries = max_entries
         self._store: Dict[str, Value] = {}
         self._recency: Optional[OrderedDict[str, None]] = (
             OrderedDict() if max_entries is not None else None
@@ -109,6 +111,11 @@ class InMemoryBackend(Backend):
             _ExpirationIndex() if max_entries is not None else None
         )
         self._lock: Optional[Lock] = None
+
+    @property
+    def max_entries(self) -> Optional[int]:
+        """Immutable per-instance entry cap, or None for legacy unbounded mode."""
+        return self._max_entries
 
     def _get_lock(self) -> Lock:
         if self._lock is None:
