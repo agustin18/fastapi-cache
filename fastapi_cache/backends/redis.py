@@ -33,7 +33,10 @@ class RedisBackend(Backend):
 
     async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
         async with self.redis.pipeline(transaction=not self.is_cluster) as pipe:
-            return await pipe.ttl(key).get(key).execute()  # type: ignore[union-attr,no-any-return]
+            ttl, value = await pipe.ttl(key).get(key).execute()  # type: ignore[union-attr]
+            # redis-py pipelines return a list. The public Backend contract
+            # promises a tuple; preserve TTL and value without changing them.
+            return (ttl, value)
 
     async def get(self, key: str) -> Optional[bytes]:
         return await self.redis.get(key)  # type: ignore[union-attr]

@@ -20,6 +20,13 @@ It does not promote experimental providers to supported status.
 | Backend client close | No external client | Caller owns Redis client | Caller owns client | **Known gap:** close lifecycle |
 | Redis Cluster namespace clear | N/A | Explicitly unsupported | N/A | N/A |
 
+`get_with_ttl()` has the declared `Tuple[int, Optional[bytes]]` return shape
+on supported Redis and InMemory backends. Redis pipeline `execute()` returns
+a list, so the Redis adapter explicitly returns a tuple without changing the
+TTL sentinel or data bytes. This corrects the source API contract and should
+be assessed by any downstream application that relied on the previous
+undocumented list identity; published 0.6.0 bytes remain unchanged.
+
 A `get_with_ttl` miss has **no bytes** and nonpositive TTL. The underlying
 Redis `TTL` command returns -2; InMemory returns 0. A universal exact
 sentinel is not yet guaranteed across providers. This RFC must be reviewed

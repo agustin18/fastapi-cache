@@ -51,18 +51,24 @@ def test_get_set_ttl_and_scoped_clear_contract(kind: str) -> None:
         missing = namespace + ":absent"
         try:
             assert await backend.get(missing) is None
-            missed_ttl, missed_value = await backend.get_with_ttl(missing)
+            missing_result = await backend.get_with_ttl(missing)
+            assert isinstance(missing_result, tuple)
+            missed_ttl, missed_value = missing_result
             # Redis reports -2 on missing; InMemory reports 0. Both are misses.
             assert missed_ttl <= 0
             assert missed_value is None
 
             await backend.set(immortal, b"persistent")
             assert await backend.get(immortal) == b"persistent"
-            assert await backend.get_with_ttl(immortal) == (-1, b"persistent")
+            immortal_result = await backend.get_with_ttl(immortal)
+            assert isinstance(immortal_result, tuple)
+            assert immortal_result == (-1, b"persistent")
 
             await backend.set(public, b"first", expire=60)
             await backend.set(sibling, b"untouched", expire=60)
-            remaining, value = await backend.get_with_ttl(public)
+            finite_result = await backend.get_with_ttl(public)
+            assert isinstance(finite_result, tuple)
+            remaining, value = finite_result
             assert 0 < remaining <= 60
             assert value == b"first"
             await backend.set(public, b"second", expire=60)
