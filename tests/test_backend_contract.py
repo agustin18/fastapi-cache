@@ -33,6 +33,7 @@ def test_get_set_ttl_and_scoped_clear_contract(kind: str) -> None:
                 pytest.fail("Refusing backend contract checks against non-loopback Redis")
             try:
                 from redis.asyncio import Redis
+
                 from fastapi_cache.backends.redis import RedisBackend
             except ImportError:
                 if os.environ.get("REQUIRE_REDIS") == "1":
@@ -52,7 +53,8 @@ def test_get_set_ttl_and_scoped_clear_contract(kind: str) -> None:
             assert await backend.get(missing) is None
             missed_ttl, missed_value = await backend.get_with_ttl(missing)
             # Redis reports -2 on missing; InMemory reports 0. Both are misses.
-            assert missed_ttl <= 0 and missed_value is None
+            assert missed_ttl <= 0
+            assert missed_value is None
 
             await backend.set(immortal, b"persistent")
             assert await backend.get(immortal) == b"persistent"
@@ -61,7 +63,8 @@ def test_get_set_ttl_and_scoped_clear_contract(kind: str) -> None:
             await backend.set(public, b"first", expire=60)
             await backend.set(sibling, b"untouched", expire=60)
             remaining, value = await backend.get_with_ttl(public)
-            assert 0 < remaining <= 60 and value == b"first"
+            assert 0 < remaining <= 60
+            assert value == b"first"
             await backend.set(public, b"second", expire=60)
             assert await backend.get(public) == b"second"
 
