@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from scripts.release_contract import package_version
+
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "migration-candidate-phase-b.yml"
 
@@ -53,7 +55,7 @@ def test_phase_b_uses_isolated_old_new_consumers_and_scoped_redis() -> None:
     assert "flushdb()" not in workflow
 
 
-def test_060_candidate_preserves_published_050_evidence() -> None:
+def test_candidate_source_metadata_and_published_history() -> None:
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     support = (ROOT / "SUPPORT.md").read_text(encoding="utf-8")
@@ -65,11 +67,12 @@ def test_060_candidate_preserves_published_050_evidence() -> None:
     ).read_text(encoding="utf-8")
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
-    assert 'version = "0.6.0"' in pyproject
-    assert 'fastapi-cache-stable[redis]==0.6.0' in readme
+    version = package_version()
+    assert f'version = "{version}"' in pyproject
+    assert f'fastapi-cache-stable[redis]=={version}' in readme
     assert "pypi.org/project/fastapi-cache-stable/" in readme
     assert "0.5.0 is a source candidate, not on PyPI" not in readme
-    assert "**Latest published stable:** [0.6.0" in readme
+    assert f"**Latest published stable:** [{version}" in readme
     assert "candidate only, not published" not in support
     assert "PREPUBLICATION DRAFT" not in notes
     assert "NOT RELEASED" not in checklist

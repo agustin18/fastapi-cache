@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from scripts.release_contract import package_version
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -12,10 +14,11 @@ def _read(path: str) -> str:
 def test_readme_and_quickstart_expose_published_060() -> None:
     readme = _read("README.md")
     quickstart = _read("docs/QUICKSTART.md")
-    assert "Latest published stable:** [0.6.0" in readme
-    assert 'fastapi-cache-stable[redis]==0.6.0' in readme
-    assert 'fastapi-cache-stable==0.6.0' in quickstart
-    assert "0.6.0 release" in quickstart
+    version = package_version()
+    assert f"Latest published stable:** [{version}" in readme
+    assert f"fastapi-cache-stable[redis]=={version}" in readme
+    assert f"fastapi-cache-stable=={version}" in quickstart
+    assert f"{version} release" in quickstart
     assert "max_entries" in readme
     assert "AttributeError" in readme
 
