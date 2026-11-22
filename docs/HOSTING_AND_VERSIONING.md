@@ -1,6 +1,6 @@
 # Hosting and versioning the documentation
 
-The published package remains [fastapi-cache-stable 0.6.0](https://pypi.org/project/fastapi-cache-stable/0.5.0/). **This document describes the proposed deployment**; a PR merge alone does not make a documentation URL public.
+The published package remains [fastapi-cache-stable 0.6.0](https://pypi.org/project/fastapi-cache-stable/0.6.0/). **This document describes the proposed deployment**; a PR merge alone does not make a documentation URL public.
 
 ## Why GitHub Pages?
 
@@ -23,7 +23,7 @@ GitHub Pages can serve our Zensical-built static documentation without a separat
 
 The current root documentation documents **published 0.6.0**. Don't edit it to advertise future APIs before their own versions ship. A site update on `stable` is not evidence that a new PyPI version was released.
 
-**Do not overwrite the historical 0.6.0 docs silently**. Evaluate a reproducible snapshot built from Git tag `v0.5.0` and hosted at a separate `/v0.5.0/` path, and keep an unambiguous current-version alias. Validate all relative links inside both snapshots and the navigation between versions before adding a selector.
+**Do not overwrite the historical 0.5.0 docs silently**. Evaluate a reproducible snapshot built from Git tag `v0.5.0` and hosted at a separate `/v0.5.0/` path, and keep an unambiguous current-version alias. Validate all relative links inside both snapshots and the navigation between versions before adding a selector.
 
 Zensical currently supports a **transitional fork of `mike`** for versioned MkDocs documentation. This is not yet equivalent to native versioning, and the fork must be evaluated, pinned to a reviewed source revision and tested before adding it to a deployment pipeline. Alternative: explicit, immutable per-version static builds from tags and a small top-level versions page. Decide the final strategy independently under #48.
 

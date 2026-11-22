@@ -45,3 +45,16 @@ def test_pages_checks_version_from_package_metadata() -> None:
         assert "python scripts/check_docs_version.py --site-dir site" in source
         assert 'if "0.5.0" not in main' not in source
         assert 'assert "0.6.0" in pages' not in source
+
+def test_hosting_runbook_aligns_current_pypi_link_and_historical_snapshot() -> None:
+    from scripts.check_docs_version import published_version
+
+    version = published_version()
+    runbook = HOSTING.read_text(encoding="utf-8")
+    assert (
+        f"[fastapi-cache-stable {version}]"
+        f"(https://pypi.org/project/fastapi-cache-stable/{version}/)"
+    ) in runbook
+    assert "historical 0.5.0 docs" in runbook
+    assert "Git tag `v0.5.0`" in runbook
+    assert "`/v0.5.0/`" in runbook
