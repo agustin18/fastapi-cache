@@ -8,6 +8,7 @@ repos:
     rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b
     hooks:
       - id: check-yaml
+        args: [--unsafe]
       - id: check-toml
       - id: detect-private-key
       - id: check-added-large-files

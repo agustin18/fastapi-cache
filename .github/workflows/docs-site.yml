@@ -8,6 +8,7 @@ on:
       - "mkdocs.yml"
       - "pyproject.toml"
       - "scripts/check_docs_version.py"
+      - "scripts/check_docs_rendering.py"
       - ".github/workflows/docs-site.yml"
       - "docs/QUICKSTART.md"
       - "docs/DOCS_SITE.md"
@@ -20,6 +21,7 @@ on:
       - "mkdocs.yml"
       - "pyproject.toml"
       - "scripts/check_docs_version.py"
+      - "scripts/check_docs_rendering.py"
       - ".github/workflows/docs-site.yml"
       - "docs/QUICKSTART.md"
       - "docs/DOCS_SITE.md"
@@ -70,6 +72,8 @@ jobs:
         run: python scripts/check_docs_version.py --site-dir site
       - name: Validate every built HTML link, target file and page fragment
         run: python scripts/check_docs_links.py --site-dir site --base-path /fastapi-cache
+      - name: Validate rendered icons
+        run: python scripts/check_docs_rendering.py --site-dir site
       - name: Upload preview without publishing a website
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
