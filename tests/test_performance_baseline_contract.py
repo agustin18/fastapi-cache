@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pytest
-
 from benchmarks.runner import VERSION, WHEEL_SHA256, validate_redis_url
 
 

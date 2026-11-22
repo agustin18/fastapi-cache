@@ -37,9 +37,14 @@ def validate_redis_url(value: str) -> str:
 
 
 def _run(argv: list[str], cwd: Path) -> str:
-    completed = subprocess.run(  # noqa: S603 - controlled interpreter and fixed arguments
-        argv, cwd=str(cwd), text=True, check=True, capture_output=True
-    )
+    try:
+        completed = subprocess.run(  # noqa: S603 - controlled interpreter and fixed arguments
+            argv, cwd=str(cwd), text=True, check=True, capture_output=True
+        )
+    except subprocess.CalledProcessError as error:
+        raise RuntimeError(
+            "Isolated benchmark command failed:\n" + error.stdout + "\n" + error.stderr
+        ) from error
     return completed.stdout
 
 

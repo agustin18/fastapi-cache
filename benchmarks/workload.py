@@ -20,14 +20,15 @@ from collections import defaultdict
 from pathlib import Path
 from urllib.parse import urlsplit
 
-import fastapi_cache
 import httpx
 from fastapi import FastAPI, Header
+from redis.asyncio import Redis
+
+import fastapi_cache
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
-from redis.asyncio import Redis
 
 
 class Measurements:
@@ -55,8 +56,8 @@ class Measurements:
             ordered = sorted(readings)
             if not ordered:
                 raise RuntimeError(f"Missing measurements for {case}")
-            def ms(rank: float) -> float:
-                return ordered[math.ceil(rank * len(ordered)) - 1] / 1_000_000
+            def ms(rank: float, samples: list[int] = ordered) -> float:
+                return samples[math.ceil(rank * len(samples)) - 1] / 1_000_000
             seconds = self.wall_seconds[case]
             cases[case] = {
                 "samples": len(ordered),
@@ -172,18 +173,18 @@ async def http_cases(rec: Measurements, backend: object, label: str,
                     await request(f"miss_{size}", f"/payload/{size}?nonce={i + 1000}", "MISS")
                 baseline = await client.get(fixed)
                 etag = baseline.headers["etag"]
-                for i in range(iterations):
+                for _i in range(iterations):
                     await request(f"304_{size}", fixed, "HIT",
                                   headers={"If-None-Match": etag}, code=304)
             await request("vary_warmup", "/vary", "MISS", {"Accept-Language": "en"})
-            for i in range(iterations):
+            for _i in range(iterations):
                 await request("vary_hit", "/vary", "HIT", {"Accept-Language": "en"})
                 await request("auth_bypass", "/payload/small?nonce=99999", None,
                               {"Authorization": "Bearer synthetic-benchmark"})
             for i in range(max(3, iterations // 8)):
                 await request("slow_miss", f"/slow?nonce={i}", "MISS")
             await request("slow_warmup", "/slow?nonce=99999", "MISS")
-            for i in range(iterations):
+            for _i in range(iterations):
                 await request("slow_hit", "/slow?nonce=99999", "HIT")
             await request("ttl_initial", "/ttl", "MISS")
             await asyncio.sleep(1.1)
@@ -215,14 +216,14 @@ async def redis_cases(rec: Measurements, url: str, profile: str) -> dict[str, ob
         batches = 2 if profile == "smoke" else 4
         value = b"x" * 512
         for level in levels:
-            async def operation(index: int, kind: str, batch: int) -> None:
-                key = f"{prefix}:c{level}:{batch}:{index}"
+            async def operation(index: int, kind: str, batch: int, current_level: int = level) -> None:
+                key = f"{prefix}:c{current_level}:{batch}:{index}"
                 t = time.perf_counter_ns()
                 if kind == "set":
                     await backend.set(key, value, expire=60)
                 else:
                     require(await backend.get(key) == value, "Redis value mismatch")
-                rec.record(f"redis_{kind}_concurrency_{level}", time.perf_counter_ns() - t)
+                rec.record(f"redis_{kind}_concurrency_{current_level}", time.perf_counter_ns() - t)
 
             try:
                 for batch in range(batches):
