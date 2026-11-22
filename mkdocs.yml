@@ -1,6 +1,6 @@
 site_name: fastapi-cache-stable
 site_description: Drop-in FastAPI response caching with safe migration from fastapi-cache2.
-# Intended canonical URL after separately approved and verified Pages deployment.
+# Canonical URL for the published GitHub Pages site.
 site_url: https://agustin18.github.io/fastapi-cache/
 repo_url: https://github.com/agustin18/fastapi-cache
 repo_name: agustin18/fastapi-cache
@@ -14,10 +14,11 @@ nav:
   - Get started:
       - Install from scratch: getting-started.md
       - Migrate from fastapi-cache2: migration.md
+  - Backends:
       - Choose a backend: backends.md
-  - Guides:
-      - Redis standalone: guides/redis.md
       - InMemory: guides/inmemory.md
+      - Redis standalone: guides/redis.md
+  - Guides:
       - Privacy and tenant safety: guides/privacy.md
       - Troubleshooting: guides/troubleshooting.md
   - Reference:
@@ -41,7 +42,9 @@ theme:
     - navigation.tabs
     - navigation.sections
     - navigation.top
+    - navigation.footer
     - navigation.tracking
+    - content.action.edit
     - content.code.copy
     - content.tabs.link
     - search.suggest
@@ -73,6 +76,8 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
   - toc:
       permalink: true
 

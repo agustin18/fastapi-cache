@@ -1,7 +1,17 @@
-name: Publish documentation to GitHub Pages (manual)
+name: Publish documentation to GitHub Pages
 
-# Explicit publication only. Merging this PR never deploys a website.
+# Deploy only from stable. Pull requests use the read-only preview workflow.
 on:
+  push:
+    branches: [stable]
+    paths:
+      - "site_docs/**"
+      - "mkdocs.yml"
+      - "README.md"
+      - "docs/**"
+      - "pyproject.toml"
+      - "scripts/check_docs_version.py"
+      - ".github/workflows/docs-pages.yml"
   workflow_dispatch:
 
 permissions: {}
@@ -58,7 +68,7 @@ jobs:
           path: site/
 
   deploy:
-    name: Deploy Pages (requires approved manual run)
+    name: Deploy Pages from stable
     if: github.ref == 'refs/heads/stable'
     needs: build
     runs-on: ubuntu-24.04
