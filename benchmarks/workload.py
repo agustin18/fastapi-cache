@@ -100,7 +100,7 @@ async def inmemory_cases(rec: Measurements, profile: str) -> None:
             start = time.perf_counter()
             for index in range(capacity):
                 if stage == "read":
-                    key = f"churn:{index}"
+                    key = f"lru_churn:{index}"
                     t = time.perf_counter_ns()
                     found = await backend.get(key)
                     rec.record(f"inmemory_{stage}_n{capacity}", time.perf_counter_ns() - t)
