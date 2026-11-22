@@ -48,11 +48,11 @@ See the [separate 0.7.0 execution and issue-alignment page](site_docs/plan-0-7.m
   release-specific final installed evidence or maintainer authorization.
 - **Public documentation:** [#48](https://github.com/agustin18/fastapi-cache/issues/48),
   [merged PR #109](https://github.com/agustin18/fastapi-cache/pull/109) (`ea38814`).
-  Current release references and demo checks were updated; this merge did not
-  deploy Pages. Actual Pages deployment is public and
-  requires separately authorized environment configuration plus HTTP/search/mobile
-  and link verification. Versioned `/latest/` and immutable `/0.6.0/`
-  routes are planned, not already deployed. [#88](https://github.com/agustin18/fastapi-cache/issues/88)
+  Current release references and demo checks were updated. The public site is
+  live at <https://agustin18.github.io/fastapi-cache/> and deploys only from
+  `stable` through merged #116/#117 (`fbd90b5`); the build job is read-only and
+  the `github-pages` environment is restricted to `stable`. Versioned
+  `/latest/` and immutable `/0.6.0/` routes remain planned. [#88](https://github.com/agustin18/fastapi-cache/issues/88)
   publicity separately requires explicit authorization for this launch.
 - **Backend capability contract:** [#111](https://github.com/agustin18/fastapi-cache/issues/111)
   ahead of backend fixes [#45](https://github.com/agustin18/fastapi-cache/issues/45):

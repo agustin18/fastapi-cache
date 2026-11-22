@@ -11,9 +11,10 @@ pipeline. See the [published evidence](reference/releases.md) and
 version-neutral release pipeline ([#113](https://github.com/agustin18/fastapi-cache/pull/113))
 and a focused Redis return-type contract correction
 ([#114](https://github.com/agustin18/fastapi-cache/pull/114)) are **merged into
-`stable` after publication**. They do not create a new PyPI release or a public
-Pages deployment. The full backend contract and future final artifact checks
-remain separate acceptance work.
+`stable` after publication**. The site is now live at
+<https://agustin18.github.io/fastapi-cache/> and deploys from `stable`; this
+does not create a new PyPI release. The full backend contract and future final
+artifact checks remain separate acceptance work.
 
 [Read the separate 0.7.0 execution and issue-alignment plan](plan-0-7.md).
 
@@ -39,6 +40,6 @@ documentation and explicit maintainer approval are release gates. There is
 
 [Project roadmap](https://github.com/agustin18/fastapi-cache/blob/stable/ROADMAP.md)
 contains historical details and proposed work.
-[#48](https://github.com/agustin18/fastapi-cache/issues/48) tracks optional
-GitHub Pages hosting and immutable historical documentation; the generated site
-is not assumed live until a verified deployment.
+[#48](https://github.com/agustin18/fastapi-cache/issues/48) now tracks the
+remaining immutable historical documentation routes; the current site is live
+at <https://agustin18.github.io/fastapi-cache/>.

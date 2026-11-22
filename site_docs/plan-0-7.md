@@ -2,17 +2,19 @@
 
 **Status as of 2026-11-22: planning only.** The latest **published** distribution is
 [fastapi-cache-stable 0.6.0](https://pypi.org/project/fastapi-cache-stable/0.6.0/).
-Nothing on this page authorizes tagging, TestPyPI/PyPI uploads, enabling GitHub
-Pages, outreach or a support-contract change. A merged PR is not proof that an
-API is available in the published wheel.
+The GitHub Pages documentation site is live at
+<https://agustin18.github.io/fastapi-cache/>. Nothing on this page authorizes
+tagging, TestPyPI/PyPI uploads, outreach or a support-contract change. A merged
+PR is not proof that an API is available in the published wheel.
 
 ## Verified starting point
 
 | PR | PR status | Related issue | Issue status | What the PR establishes | What it does **not** establish |
 |---|---|---|---|---|---|
-| [#109](https://github.com/agustin18/fastapi-cache/pull/109) | Merged (`ea38814`) | [#48](https://github.com/agustin18/fastapi-cache/issues/48) | Open | Current-release docs checks and 0.6.0 migration-demo repair | A live Pages site, immutable version routes or authorized outreach |
+| [#109](https://github.com/agustin18/fastapi-cache/pull/109) | Merged (`ea38814`) | [#48](https://github.com/agustin18/fastapi-cache/issues/48) | Open | Current-release docs checks and 0.6.0 migration-demo repair | The separate pages launch; immutable version routes or authorized outreach |
 | [#113](https://github.com/agustin18/fastapi-cache/pull/113) | Merged (`fb9278c`) | [#110](https://github.com/agustin18/fastapi-cache/issues/110) | Open | Version-neutral release pipeline | A run on the final future 0.7.0 SHA, a tag or PyPI publication |
 | [#114](https://github.com/agustin18/fastapi-cache/pull/114) | Merged (`ed50598`) | [#111](https://github.com/agustin18/fastapi-cache/issues/111) | Open | Redis `get_with_ttl()` returns the tuple required by the tested contract | Full conformance of InMemory, Redis, Memcached or DynamoDB |
+| [#116](https://github.com/agustin18/fastapi-cache/pull/116) / [#117](https://github.com/agustin18/fastapi-cache/pull/117) | Merged (`fbd90b5`) | [#48](https://github.com/agustin18/fastapi-cache/issues/48) | Open | Stable-only Pages deployment and verified public documentation URL | Immutable version routes, launch outreach or PyPI metadata changes |
 
 The [published 0.6.0 provenance](reference/releases.md) remains immutable.
 Do not use source-only tests or post-release `stable` changes to describe its
@@ -22,7 +24,7 @@ contents.
 
 | Stage | Work | Acceptance / handoff |
 |---|---|---|
-| 1 · Documentation | [#48](https://github.com/agustin18/fastapi-cache/issues/48) correct stale references and validate built site | Docs preview CI, release-version regression check, links and anchors; **separate** Pages environment approval and live deployment if desired |
+| 1 · Documentation | [#48](https://github.com/agustin18/fastapi-cache/issues/48) correct stale references and validate built site | Docs preview CI, release-version regression check, links and anchors; Pages is live from `stable`; immutable version routes remain |
 | 2 · Performance baseline | [#100](https://github.com/agustin18/fastapi-cache/issues/100) start from installed published 0.6.0 | Reproducible commands, fixed workload and budgets chosen *before* feature work, raw results, platform metadata and no superiority claims |
 | 3 · Backend contract | [#111](https://github.com/agustin18/fastapi-cache/issues/111) + [#112](https://github.com/agustin18/fastapi-cache/issues/112) | Installed wheel/sdist cases for TTL, clear, ownership, failure and corrupt-data policy; experimental backend limits explicit |
 | 4 · Architecture RFCs | [#99](https://github.com/agustin18/fastapi-cache/issues/99) + [#103](https://github.com/agustin18/fastapi-cache/issues/103) | Reproduction, design alternatives, default and key-compatibility review; **accepted designs** before new concurrency/events API |
