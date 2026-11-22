@@ -53,7 +53,7 @@ def main() -> None:
     other = (
         "fastapi-cache-stable" if mode == "legacy" else "fastapi-cache2"
     )
-    version = "0.2.2" if mode == "legacy" else "0.5.0"
+    version = "0.2.2" if mode == "legacy" else "0.6.0"
     assert metadata.version(distribution) == version
 
     try:

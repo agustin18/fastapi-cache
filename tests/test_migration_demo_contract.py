@@ -23,7 +23,7 @@ def _reports() -> tuple[dict[str, Any], dict[str, Any]]:
         },
         {
             "distribution": "fastapi-cache-stable",
-            "version": "0.5.0",
+            "version": "0.6.0",
             "public_statuses": ["MISS", "HIT"],
             "conditional_status": 304,
             "viewer_statuses": [None, None],
@@ -40,7 +40,7 @@ def test_public_migration_demo_expected_contract() -> None:
 @pytest.mark.parametrize(
     ("field", "bad_value"),
     [
-        ("version", "0.6.0"),
+        ("version", "0.5.0"),
         ("public_statuses", ["MISS", "MISS"]),
         ("conditional_status", 200),
         ("viewer_statuses", ["MISS", "HIT"]),
@@ -69,6 +69,6 @@ def test_demo_keeps_providers_separate_and_no_external_cache() -> None:
     assert '"-I"' in runner
     assert "TemporaryDirectory" in runner
     assert '"fastapi-cache2==0.2.2"' in runner
-    assert '"fastapi-cache-stable==0.5.0"' in runner
+    assert '"fastapi-cache-stable==0.6.0"' in runner
     assert "redis.Redis" not in app
     assert "Bearer demo-alice" in app

@@ -16,7 +16,7 @@ from pathlib import Path
 FRAMEWORK = ("fastapi==0.111.1", "pydantic==2.8.2", "httpx==0.27.0")
 PROVIDERS = {
     "legacy": "fastapi-cache2==0.2.2",
-    "replacement": "fastapi-cache-stable==0.5.0",
+    "replacement": "fastapi-cache-stable==0.6.0",
 }
 DIRECTORY = Path(__file__).resolve().parent
 
