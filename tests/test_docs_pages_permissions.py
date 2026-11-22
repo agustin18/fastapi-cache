@@ -1,4 +1,4 @@
-"""Regression gates for the optional manual GitHub Pages deployment (#48)."""
+"""Regression gates for the stable-branch GitHub Pages deployment (#48)."""
 
 from pathlib import Path
 
@@ -7,12 +7,13 @@ WORKFLOW = ROOT / ".github" / "workflows" / "docs-pages.yml"
 HOSTING = ROOT / "docs" / "HOSTING_AND_VERSIONING.md"
 
 
-def test_manual_pages_build_cannot_request_deploy_tokens() -> None:
+def test_pages_build_cannot_request_deploy_tokens() -> None:
     data = WORKFLOW.read_text(encoding="utf-8")
     top, jobs = data.split("jobs:\n", 1)
     build, deploy = jobs.split("\n  deploy:\n", 1)
+    assert "  push:" in top
+    assert "branches: [stable]" in top
     assert "  workflow_dispatch:" in top
-    assert "\n  push:" not in top
     assert "\n  pull_request:" not in top
     assert "permissions: {}" in top
     assert "pages: write" not in build
