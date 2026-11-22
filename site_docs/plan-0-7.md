@@ -8,11 +8,11 @@ API is available in the published wheel.
 
 ## Verified starting point
 
-| PR / issue | Status | What it establishes | What it does **not** establish |
-|---|---|---|---|
-| [#109](https://github.com/agustin18/fastapi-cache/pull/109), [#48](https://github.com/agustin18/fastapi-cache/issues/48) | Merged (`ea38814`) | Current-release docs checks and 0.6.0 migration-demo repair | A live Pages site, immutable version routes or authorized outreach |
-| [#113](https://github.com/agustin18/fastapi-cache/pull/113), [#110](https://github.com/agustin18/fastapi-cache/issues/110) | Merged (`fb9278c`) | Version-neutral release pipeline | A run on the final future 0.7.0 SHA, a tag or PyPI publication |
-| [#114](https://github.com/agustin18/fastapi-cache/pull/114), [#111](https://github.com/agustin18/fastapi-cache/issues/111) | Merged (`ed50598`) | Redis `get_with_ttl()` returns the tuple required by the tested contract | Full conformance of InMemory, Redis, Memcached or DynamoDB |
+| PR | PR status | Related issue | Issue status | What the PR establishes | What it does **not** establish |
+|---|---|---|---|---|---|
+| [#109](https://github.com/agustin18/fastapi-cache/pull/109) | Merged (`ea38814`) | [#48](https://github.com/agustin18/fastapi-cache/issues/48) | Open | Current-release docs checks and 0.6.0 migration-demo repair | A live Pages site, immutable version routes or authorized outreach |
+| [#113](https://github.com/agustin18/fastapi-cache/pull/113) | Merged (`fb9278c`) | [#110](https://github.com/agustin18/fastapi-cache/issues/110) | Open | Version-neutral release pipeline | A run on the final future 0.7.0 SHA, a tag or PyPI publication |
+| [#114](https://github.com/agustin18/fastapi-cache/pull/114) | Merged (`ed50598`) | [#111](https://github.com/agustin18/fastapi-cache/issues/111) | Open | Redis `get_with_ttl()` returns the tuple required by the tested contract | Full conformance of InMemory, Redis, Memcached or DynamoDB |
 
 The [published 0.6.0 provenance](reference/releases.md) remains immutable.
 Do not use source-only tests or post-release `stable` changes to describe its
