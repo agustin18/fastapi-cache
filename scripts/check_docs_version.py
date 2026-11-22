@@ -28,10 +28,20 @@ def validate(site, root=ROOT):
         "site_docs/index.md": "CURRENT RELEASE " + version,
         "site_docs/roadmap.md": "**" + version + " is published.**",
         "site_docs/reference/features.md": "# What ships in " + version + "?",
+        "docs/DOCS_SITE.md": "published package remains **fastapi-cache-stable " + version + "**",
+        "docs/releases/README.md": "[" + version + " published release notes]",
     }
     for path, needle in sources.items():
         if needle not in (root / path).read_text(encoding="utf-8"):
             raise ValueError(path + " is not aligned with " + version)
+    # Do not let the release archive claim the *current* published version
+    # is still a candidate. Historic checklists keep their original wording.
+    archive = (root / "docs/releases/README.md").read_text(encoding="utf-8")
+    for line in archive.splitlines():
+        if line.startswith("- [" + version) and any(
+            phrase in line for phrase in ("NOT RELEASED", "pending final acceptance", "candidate evidence only")
+        ):
+            raise ValueError("Release archive still marks " + version + " as unpublished")
     for path, needle in (
         ("index.html", "CURRENT RELEASE " + version),
         ("reference/features/index.html", "What ships in " + version),

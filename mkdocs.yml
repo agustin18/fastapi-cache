@@ -27,6 +27,7 @@ nav:
       - Compatibility: reference/compatibility.md
       - Version history: reference/releases.md
       - Roadmap: roadmap.md
+      - 0.7.0 execution plan: plan-0-7.md
 
 theme:
   name: material

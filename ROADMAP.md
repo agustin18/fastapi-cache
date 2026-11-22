@@ -36,16 +36,20 @@ application-owned hidden tenant/context/cardinality limitations and future
 reproducible package-controlled issues. No independent consumer quota,
 third-party security certification or hosted-docs requirement applies.
 
-## Immediate P0/P1 — prior to 0.7.0 features
+## Immediate P0/P1 — 0.7.0 qualification status
+
+See the [separate 0.7.0 execution and issue-alignment page](site_docs/plan-0-7.md). It is a plan, not a release promise.
 
 - **P0 release infrastructure:** [#110](https://github.com/agustin18/fastapi-cache/issues/110),
-  [draft PR #113](https://github.com/agustin18/fastapi-cache/pull/113).
-  Remove release-specific Phase B/publish identifiers; preserve exact-artifact,
-  20-job first-attempt, tag, approved hashes and TestPyPI parity gates.
-  A 0.7.0 synthetic dry-run cannot replace final installed evidence.
+  [merged PR #113](https://github.com/agustin18/fastapi-cache/pull/113) (`fb9278c`).
+  The version-neutral infrastructure is merged, without any 0.7.0 tag or upload.
+  Preserve exact-artifact, 20-job first-attempt, tag, approved hashes and
+  TestPyPI parity gates. A synthetic 0.7.0 dry-run cannot replace new
+  release-specific final installed evidence or maintainer authorization.
 - **Public documentation:** [#48](https://github.com/agustin18/fastapi-cache/issues/48),
-  [draft PR #109](https://github.com/agustin18/fastapi-cache/pull/109).
-  Repair version checks and 0.6.0 demo first. Pages deployment is public and
+  [merged PR #109](https://github.com/agustin18/fastapi-cache/pull/109) (`ea38814`).
+  Current release references and demo checks were updated; this merge did not
+  deploy Pages. Actual Pages deployment is public and
   requires separately authorized environment configuration plus HTTP/search/mobile
   and link verification. Versioned `/latest/` and immutable `/0.6.0/`
   routes are planned, not already deployed. [#88](https://github.com/agustin18/fastapi-cache/issues/88)
@@ -53,6 +57,9 @@ third-party security certification or hosted-docs requirement applies.
 - **Backend capability contract:** [#111](https://github.com/agustin18/fastapi-cache/issues/111)
   ahead of backend fixes [#45](https://github.com/agustin18/fastapi-cache/issues/45):
   TTL, clear, close, cancellation, timeouts and declared limitations.
+  [Merged PR #114](https://github.com/agustin18/fastapi-cache/pull/114)
+  (`ed50598`) fixed Redis `get_with_ttl()` tuple conformance; this is only
+  a subset of the broader installed-distribution contract in #111.
 - **Corrupt data and serialization:** [#112](https://github.com/agustin18/fastapi-cache/issues/112)
   defines fail-open/closed, trust, privacy and error propagation.
 - **Benchmarks:** [#100](https://github.com/agustin18/fastapi-cache/issues/100)

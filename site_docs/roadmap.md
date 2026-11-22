@@ -6,6 +6,17 @@ pipeline. See the [published evidence](reference/releases.md) and
 [compatibility](reference/compatibility.md). Features listed below are
 **planned**, not available with a 0.6.0 install.
 
+**Implementation status (2026-11-22):** Documentation corrections
+([#109](https://github.com/agustin18/fastapi-cache/pull/109)), the
+version-neutral release pipeline ([#113](https://github.com/agustin18/fastapi-cache/pull/113))
+and a focused Redis return-type contract correction
+([#114](https://github.com/agustin18/fastapi-cache/pull/114)) are **merged into
+`stable` after publication**. They do not create a new PyPI release or a public
+Pages deployment. The full backend contract and future final artifact checks
+remain separate acceptance work.
+
+[Read the separate 0.7.0 execution and issue-alignment plan](plan-0-7.md).
+
 ## Release priorities (proposals, not deadlines)
 
 | Target | Work | Quality boundary |
