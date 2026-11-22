@@ -68,7 +68,7 @@ from fastapi_cache.decorator import cache
 
 The [runnable before/after demo](https://github.com/agustin18/fastapi-cache/blob/stable/examples/migration/README.md)
 starts the **same FastAPI source** in two disposable virtual environments:
-published `fastapi-cache2==0.2.2` and published `fastapi-cache-stable==0.5.0`.
+published `fastapi-cache2==0.2.2` and published `fastapi-cache-stable==0.6.0`.
 It proves an ordinary MISS/HIT and ETag/304 stay functional, and illustrates
 the intentional safer default for fictitious authenticated requests.
 It uses InMemory, **not** persisted Redis, and is not proof that arbitrary

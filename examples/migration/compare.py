@@ -16,7 +16,7 @@ def verify(legacy: dict[str, Any], replacement: dict[str, Any]) -> None:
     )
     assert (replacement["distribution"], replacement["version"]) == (
         "fastapi-cache-stable",
-        "0.5.0",
+        "0.6.0",
     )
 
     for report in (legacy, replacement):
@@ -41,7 +41,7 @@ def main() -> None:
     verify(legacy, replacement)
     print("PASS: unchanged FastAPI imports, ordinary MISS -> HIT, ETag 304")
     print("PASS: legacy private-data reuse reproduced with fictional identities")
-    print("PASS: published 0.5.0 bypasses protected requests by default")
+    print("PASS: published 0.6.0 bypasses protected requests by default")
     print("NOTE: this is not evidence of safe rollback for authenticated data")
 
 

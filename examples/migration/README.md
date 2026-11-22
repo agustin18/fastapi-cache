@@ -1,6 +1,6 @@
 # Before and after: migrating one FastAPI app
 
-**Published baseline:** `fastapi-cache2==0.2.2` → `fastapi-cache-stable==0.5.0`.
+**Published baseline:** `fastapi-cache2==0.2.2` → `fastapi-cache-stable==0.6.0`.
 The same [app.py](app.py), with the same `fastapi_cache` imports and
 `@cache` decorators, runs twice in **different disposable environments**.
 
@@ -22,14 +22,14 @@ Expected end of the output:
 ```text
 PASS: unchanged FastAPI imports, ordinary MISS -> HIT, ETag 304
 PASS: legacy private-data reuse reproduced with fictional identities
-PASS: published 0.5.0 bypasses protected requests by default
+PASS: published 0.6.0 bypasses protected requests by default
 NOTE: this is not evidence of safe rollback for authenticated data
 Temporary environments deleted; host environment unchanged.
 ```
 
 ## What it demonstrates
 
-| The same endpoint | Legacy 0.2.2 | Published fork 0.5.0 |
+| The same endpoint | Legacy 0.2.2 | Published fork 0.6.0 |
 |---|---|---|
 | Anonymous `/public` | MISS → HIT | MISS → HIT |
 | Conditional request with ETag | 304 | 304 |
@@ -52,36 +52,20 @@ cleanup, an independent consumer and a **package** rollback. It does **not**
 endorse restoring legacy authenticated response caching.
 
 Do not co-install the two distributions: both own the same `fastapi_cache`
-module. This demo does not change PyPI artifacts or introduce new runtime
-dependencies. Before a future 0.6.0 launch, re-run the comparison against the
-**exact published 0.6.0 artifact** in an independently reviewed release gate;
-this 0.5.0 demonstration cannot certify an unreleased version.
+module. The demo only compares two **published** versions. It is not
+independent adopter evidence, does not prove private rollback and does not
+substitute for final-artifact Redis migration tests.
 
-## Required 0.6.0 refresh checklist (not yet completed)
+## Version and evidence
 
-This runnable tutorial is **deliberately pinned to already-published 0.5.0**.
-Do not rename it to a 0.6.0 verification based on source code or a successful
-0.5.0 CI run. When the exact release candidate is built and independently
-reviewed, the release owner must:
+The replacement is pinned to the immutable published 0.6.0 distribution.
+[0.6.0 release provenance](../../docs/releases/RELEASE_STATUS_0.6.0.md)
+records the approved SHA-256 of its wheel/sdist and the 20/20 final Phase B
+run. This tutorial does not build its own release artifacts; CI downloads
+the **published** 0.6.0 package in a separate environment and verifies
+ordinary caching, ETag/304 and safe default auth bypass.
 
-1. Run the **separate candidate wheel/sdist and Redis migration/rollback
-   workflow** at the final source SHA; this published-vs-published demo
-   cannot substitute for those release gates.
-2. After **0.6.0 is actually published**, update the replacement pin in
-   `run_demo.py`, the distribution-version assertion in `app.py`,
-   the expected version and explanatory output in `compare.py`, the
-   negative-test fixtures in `tests/test_migration_demo_contract.py`,
-   this README, and links/version claims in the onboarding docs.
-3. Re-run `pip check`, isolated `python -I` execution and the comparison
-   against **downloaded, installed 0.6.0 distribution artifacts**.
-   Preserve the previous 0.5.0 result as historical evidence, and record
-   exact artifact hashes and source SHA in release evidence.
-4. Validate the refreshed tutorial on Linux CI for both supported demo
-   interpreters; run additional Windows/macOS smoke lanes before claiming
-   those platforms have been verified.
-5. Keep **two genuine external consumers** as an independent requirement
-   under [#88](https://github.com/agustin18/fastapi-cache/issues/88);
-   this in-repository tutorial counts as **zero** such consumers.
-
-Release pin updates must not silently replace previously published audit
-evidence. Nothing in this checklist authorizes PyPI publication.
+Retain earlier published 0.5.0 results as historical release evidence.
+No external-consumer quota or hosted-documentation requirement applies
+to shipping or announcing a release. No new publication is authorized by
+running this example.

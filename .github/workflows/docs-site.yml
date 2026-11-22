@@ -6,6 +6,8 @@ on:
     paths:
       - "site_docs/**"
       - "mkdocs.yml"
+      - "pyproject.toml"
+      - "scripts/check_docs_version.py"
       - ".github/workflows/docs-site.yml"
       - "docs/QUICKSTART.md"
       - "docs/DOCS_SITE.md"
@@ -16,6 +18,8 @@ on:
     paths:
       - "site_docs/**"
       - "mkdocs.yml"
+      - "pyproject.toml"
+      - "scripts/check_docs_version.py"
       - ".github/workflows/docs-site.yml"
       - "docs/QUICKSTART.md"
       - "docs/DOCS_SITE.md"
@@ -57,15 +61,13 @@ jobs:
               if not page.is_file():
                   raise AssertionError((name, page))
               data = page.read_text(encoding="utf-8")
-              assert "<html" in data and "0.6.0" in data, (name, page)
+              assert "<html" in data, (name, page)
           homepage = pages["home"].read_text(encoding="utf-8")
           assert "Start from scratch" in homepage
           assert "Migrate from fastapi-cache2" in homepage
-          assert "0.6.0" in pages["features"].read_text(encoding="utf-8")
-          quickstart = Path("docs/QUICKSTART.md").read_text()
-          assert "fastapi-cache-stable==0.6.0" in quickstart
-          assert "fastapi-cache-stable==0.4.1" not in quickstart
           PY
+      - name: Verify current publication version from pyproject.toml
+        run: python scripts/check_docs_version.py --site-dir site
       - name: Validate every built HTML link, target file and page fragment
         run: python scripts/check_docs_links.py --site-dir site --base-path /fastapi-cache
       - name: Upload preview without publishing a website
