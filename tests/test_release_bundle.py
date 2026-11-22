@@ -8,7 +8,12 @@ from typing import Any, Dict
 
 import pytest
 from scripts import verify_release_bundle
-from scripts.release_contract import BUILD_JOB, artifact_name, package_version, validate_version
+from scripts.release_contract import (
+    BUILD_JOB,
+    artifact_name,
+    package_version,
+    validate_version,
+)
 from scripts.verify_release_bundle import (
     WORKFLOW,
     validate_jobs,
@@ -135,7 +140,7 @@ def test_publish_workflows_use_same_approved_artifact_pair() -> None:
         assert "wheel_sha256:" in source
         assert "sdist_sha256:" in source
         assert "python -m build" not in source
-        assert "scripts/verify_release_bundle.py" in source
+        assert "python -m scripts.verify_release_bundle" in source
         assert "sha256sum --check" in source
         assert 'test "$GITHUB_REF" = "refs/tags/v$version"' in source
     assert "--require-testpypi" in (workflows / "publish.yml").read_text()
@@ -257,7 +262,7 @@ def test_future_version_agnostic_release_contract(tmp_path: Path) -> None:
     assert package_version(pyproject) == VERSION
     assert artifact_name(VERSION) == "migration-phase-b-0.7.0-distributions"
     for wrong in ("0.7.0rc1", "0.7", "../0.7.0", "0.7.0;echo unexpected"):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="final X.Y.Z"):
             validate_version(wrong)
 
 

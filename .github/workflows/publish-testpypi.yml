@@ -106,7 +106,7 @@ jobs:
         run: |
           set -euo pipefail
           version=$(python scripts/release_contract.py version)
-          python scripts/verify_release_bundle.py \
+          python -m scripts.verify_release_bundle \
             --run-json "$RUNNER_TEMP/evidence-run.json" \
             --jobs-json "$RUNNER_TEMP/evidence-jobs.json" \
             --repository "$GITHUB_REPOSITORY" --source-sha "$GITHUB_SHA" \

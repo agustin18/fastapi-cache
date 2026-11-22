@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import Any, Dict
 from urllib.request import urlopen
 
-try:
-    from scripts.release_contract import BUILD_JOB, artifact_name, package_version
-except ModuleNotFoundError:
-    # Preserve direct `python scripts/verify_release_bundle.py` invocation.
-    from release_contract import BUILD_JOB, artifact_name, package_version
+from scripts.release_contract import (
+    BUILD_JOB,
+    artifact_name,
+    package_version,
+)
 
 WORKFLOW = ".github/workflows/migration-candidate-phase-b.yml"
 PACKAGE = "fastapi-cache-stable"
