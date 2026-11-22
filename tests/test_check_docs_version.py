@@ -2,7 +2,6 @@
 from pathlib import Path
 
 import pytest
-
 from scripts.check_docs_version import published_version, validate
 
 ROOT = Path(__file__).resolve().parents[1]
