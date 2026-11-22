@@ -10,16 +10,19 @@ from typing import Any
 from urllib.parse import urlsplit
 
 import pytest
+
 from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.types import Backend
 
 
-@pytest.mark.parametrize("kind", [
-    "inmemory",
-    pytest.param("redis", marks=pytest.mark.redis),
-])
+@pytest.mark.parametrize(
+    "kind",
+    ["inmemory", pytest.param("redis", marks=pytest.mark.redis)],
+)
 def test_get_set_ttl_and_scoped_clear_contract(kind: str) -> None:
     async def verify() -> None:
         client: Any = None
+        backend: Backend
         if kind == "redis":
             url = os.environ.get("REDIS_URL")
             if not url:
