@@ -1,6 +1,6 @@
 # Hosting and versioning the documentation
 
-The published package remains [fastapi-cache-stable 0.6.0](https://pypi.org/project/fastapi-cache-stable/0.6.0/). **This document describes the proposed deployment**; a PR merge alone does not make a documentation URL public.
+The published package remains [fastapi-cache-stable 0.6.0](https://pypi.org/project/fastapi-cache-stable/0.6.0/). The documentation site is live at <https://agustin18.github.io/fastapi-cache/> and deploys from `stable`; a merge does not create a package release or change the immutable 0.6.0 artifact.
 
 ## Why GitHub Pages?
 
@@ -8,7 +8,7 @@ The published package remains [fastapi-cache-stable 0.6.0](https://pypi.org/proj
 
 GitHub Pages can serve our Zensical-built static documentation without a separate documentation hosting service or account. Selection is based on our operational requirements, not a comparison with another project's hosting.
 
-**Proposed canonical URL (not confirmed live):** https://agustin18.github.io/fastapi-cache/
+**Canonical URL (verified live 2026-11-22, HTTP 200):** https://agustin18.github.io/fastapi-cache/
 
 ## Deployment steps (maintainer approval required)
 
@@ -17,7 +17,7 @@ GitHub Pages can serve our Zensical-built static documentation without a separat
 3. A docs merge to `stable` triggers the deployment automatically; a maintainer may also run it explicitly. Both jobs refuse to run unless `github.ref == 'refs/heads/stable'`. The **read-only** build job installs pinned Zensical, generates static HTML, checks **all local links/anchors**, verifies the install/migration/reference entry points, and uploads the Pages artifact. Only the separate deploy job can request `pages: write` and `id-token: write`; it runs after the build and any required environment approval.
 4. Inspect the GitHub Actions published deployment URL and open the actual website. Do **not** assume the expected URL is reachable: Pages' unique-domain setting can affect the final address.
 5. Independently check the home page, `getting-started/`, `migration/`, `reference/api/`, `reference/alternatives/`, site search, mobile dark mode, and links to the real 0.6.0 PyPI artifact and GitHub release. Verify navigation from a phone-sized viewport; confirm the information in every page matches the released artifact.
-6. **Only after successful publication**, add the verified website URL to the root README, PyPI metadata on a future release (do not republish an immutable old version), social posts, and launch tracker [#88](https://github.com/agustin18/fastapi-cache/issues/88). Keep issue #48 open until verification is recorded.
+6. The verified website URL is in the root README. PyPI metadata can only change in a future release; do not republish the immutable 0.6.0 artifact. Social posts and launch tracker [#88](https://github.com/agustin18/fastapi-cache/issues/88) remain separate decisions.
 
 ## Historical versions
 
@@ -55,8 +55,6 @@ landing page only after verifying the target. Do not promise a working
 version selector without an implemented, tested mechanism.
 
 Deploying Pages is **public visibility** even without a social announcement.
-Keep `workflow_dispatch`, secure the `github-pages` environment to
-`stable`, obtain explicit maintainer authorization, deploy and verify
-HTTP status, page links, search and mobile layout. Do not add a URL to
-README or a release announcement until live verification. PyPI metadata
-can be updated in the **next** normal version, not retroactively.
+The `github-pages` environment remains restricted to `stable`; verify HTTP
+status, page links and search after deployment. The README link is live.
+PyPI metadata changes only in the **next** normal version, not retroactively.

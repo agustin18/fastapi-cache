@@ -87,4 +87,6 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/agustin18/fastapi-cache
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/fastapi-cache-stable/
 copyright: Apache-2.0 · Community-maintained, independent from upstream.

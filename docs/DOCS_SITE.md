@@ -23,7 +23,7 @@ The generated site/ directory is not committed. The documentation tool is **not 
 
 ## PR previews
 
-The read-only Documentation site GitHub Actions workflow builds the site and uploads static output as a short-lived artifact. It does not publish GitHub Pages, mutate PyPI or create a deployment. A public website and true multi-version hosting require separate maintainer approval.
+The read-only Documentation site GitHub Actions workflow builds the site and uploads static output as a short-lived artifact. The separate Pages workflow deploys only from `stable`. The live site is <https://agustin18.github.io/fastapi-cache/>; multi-version hosting remains a separate follow-up.
 
 Historical releases already remain navigable at [docs/releases](releases/README.md); source on stable is not immutable documentation for older wheels.
 
@@ -38,21 +38,19 @@ Historical releases already remain navigable at [docs/releases](releases/README.
 
 The site uses [Zensical](https://zensical.org/) for search, responsive navigation and a modern theme.
 
-## Planned public hosting (separate approval)
+## Public hosting
 
-A new **manual-only** workflow, `.github/workflows/docs-pages.yml`, uses the
-same GitHub Pages deployment pattern as
-[fastapi-stream-lease](https://github.com/agustin18/fastapi-stream-lease)
-while retaining our Zensical theme. It has **no automatic push trigger**:
-merging documentation changes does not activate or publish the website.
+The workflow `.github/workflows/docs-pages.yml` publishes the same Zensical
+site as [fastapi-stream-lease](https://github.com/agustin18/fastapi-stream-lease)
+on documentation-relevant pushes to `stable`; it can also be run manually.
+The public URL is <https://agustin18.github.io/fastapi-cache/>. The Pages
+environment is restricted to `stable`, the build job is read-only, and only
+the deploy job receives Pages and OIDC permissions.
 
 Read the exact setup, live URL checks and immutable-version policy in
 [HOSTING_AND_VERSIONING.md](HOSTING_AND_VERSIONING.md).
 Compare the installed API, unshipped features and alternatives in
-[site_docs/reference/](../site_docs/reference/). Do **not** claim a
-publicly accessible URL until the manual deployment and smoke tests pass.
+[site_docs/reference/](../site_docs/reference/).
 
-GitHub Pages can publish our generated Zensical HTML without a separate
-documentation hosting service. Zensical's versioned `mike` integration
-remains transitional; pin and test it independently before offering a
-historical version selector.
+Zensical's versioned `mike` integration remains transitional; pin and test it
+independently before offering a historical version selector.
