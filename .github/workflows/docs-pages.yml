@@ -47,9 +47,11 @@ jobs:
               if not file.is_file():
                   raise SystemExit(f"Missing built docs page: {file}")
           main = (Path("site") / "index.html").read_text(encoding="utf-8")
-          if "0.5.0" not in main or "fastapi-cache2" not in main:
-              raise SystemExit("Docs landing must identify the current published version")
+          if "fastapi-cache2" not in main:
+              raise SystemExit("Docs landing must identify the migration source")
           PY
+      - name: Verify current publication version from pyproject.toml
+        run: python scripts/check_docs_version.py --site-dir site
       - name: Upload validated static output
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
         with:

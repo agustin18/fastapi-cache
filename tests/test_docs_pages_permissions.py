@@ -35,3 +35,13 @@ def test_environment_branch_protection_is_required_in_manual_runbook() -> None:
     assert "only `stable`" in text
     assert "environment branch restriction is a security requirement" in text
     assert "workflow that changes its own `if` guard" in text
+
+def test_pages_checks_version_from_package_metadata() -> None:
+    data = WORKFLOW.read_text(encoding="utf-8")
+    workflow = (ROOT / ".github" / "workflows" / "docs-site.yml").read_text(
+        encoding="utf-8"
+    )
+    for source in (data, workflow):
+        assert "python scripts/check_docs_version.py --site-dir site" in source
+        assert 'if "0.5.0" not in main' not in source
+        assert 'assert "0.6.0" in pages' not in source
