@@ -25,7 +25,7 @@ cache keys and safe default HTTP/private-response behavior.
 ## 0.6.0 — published and verified
 
 The 0.6.0 final source is tagged at `6b6924a61bbcc0ba602da514accb4c563806742f`,
-with published wheel/sdist hashes, 20/20 final Phase B tests,
+with published wheel/sdist hashes, all twenty final Phase B jobs,
 TestPyPI/PyPI parity and maintainer risk acceptance documented in
 [release evidence](docs/releases/RELEASE_STATUS_0.6.0.md).
 Optional bounded InMemory, authentication and HTTP-cache privacy corrections
