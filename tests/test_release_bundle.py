@@ -8,6 +8,12 @@ from typing import Any, Dict
 
 import pytest
 from scripts import verify_release_bundle
+from scripts.release_contract import (
+    BUILD_JOB,
+    artifact_name,
+    package_version,
+    validate_version,
+)
 from scripts.verify_release_bundle import (
     WORKFLOW,
     validate_jobs,
@@ -19,9 +25,9 @@ from scripts.verify_release_bundle import (
 SHA = "a" * 40
 REPO = "agustin18/fastapi-cache"
 RUN_ID = "100"
-VERSION = "0.6.0"
-WHEEL = "fastapi_cache_stable-0.6.0-py3-none-any.whl"
-SDIST = "fastapi_cache_stable-0.6.0.tar.gz"
+VERSION = "0.7.0"  # Dry-run the NEXT release with synthetic local evidence.
+WHEEL = f"fastapi_cache_stable-{VERSION}-py3-none-any.whl"
+SDIST = f"fastapi_cache_stable-{VERSION}.tar.gz"
 WHEEL_HASH = hashlib.sha256(b"wheel").hexdigest()
 SDIST_HASH = hashlib.sha256(b"sdist").hexdigest()
 
@@ -52,6 +58,7 @@ def bundle(tmp_path: Path) -> Path:
         "workflow_run_id": RUN_ID,
         "workflow_attempt": "1",
         "candidate_version": VERSION,
+        "artifact_name": artifact_name(VERSION),
         "wheel": WHEEL,
         "sdist": SDIST,
         "published": False,
@@ -91,6 +98,7 @@ def test_unapproved_runs_are_rejected(field: str, value: Any, message: str) -> N
     ("workflow_run_id", "101", "bundle run mismatch"),
     ("workflow_attempt", "2", "bundle attempt mismatch"),
     ("candidate_version", "0.5.0", "bundle version mismatch"),
+    ("artifact_name", "migration-phase-b-0.6.0-distributions", "unexpected evidence artifact name"),
     ("published", True, "expected unpublished evidence bundle"),
     ("wheel", "../wrong.whl", "unexpected wheel name"),
     ("sdist", "other.tar.gz", "unexpected sdist name"),
@@ -132,18 +140,18 @@ def test_publish_workflows_use_same_approved_artifact_pair() -> None:
         assert "wheel_sha256:" in source
         assert "sdist_sha256:" in source
         assert "python -m build" not in source
-        assert "scripts/verify_release_bundle.py" in source
+        assert "python -m scripts.verify_release_bundle" in source
         assert "sha256sum --check" in source
         assert 'test "$GITHUB_REF" = "refs/tags/v$version"' in source
     assert "--require-testpypi" in (workflows / "publish.yml").read_text()
     phase_b = (workflows / "migration-candidate-phase-b.yml").read_text()
     assert "exact-installed-security:" in phase_b
     assert "uses: ./.github/workflows/security-installed-profiles.yml" in phase_b
-    assert "artifact_name: migration-phase-b-060-distributions" in phase_b
+    assert "artifact_name: ${{ needs.build-exact-artifacts.outputs.artifact_name }}" in phase_b
 
 
 def job_record() -> Dict[str, Any]:
-    names = ["Build exact 0.6.0 wheel + sdist once, record hashes"]
+    names = [BUILD_JOB]
     names.extend(
         f"Py {version} / {kind} / real Redis 7.4 / rollback"
         for version in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13")
@@ -244,3 +252,34 @@ def test_testpypi_unreachable(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(verify_release_bundle, "urlopen", unavailable)
     with pytest.raises(OSError, match="unreachable"):
         verify_test_index(VERSION, {WHEEL: WHEEL_HASH, SDIST: SDIST_HASH})
+
+def test_future_version_agnostic_release_contract(tmp_path: Path) -> None:
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "fastapi-cache-stable"\nversion = "0.7.0"\n',
+        encoding="utf-8",
+    )
+    assert package_version(pyproject) == VERSION
+    assert artifact_name(VERSION) == "migration-phase-b-0.7.0-distributions"
+    for wrong in ("0.7.0rc1", "0.7", "../0.7.0", "0.7.0;echo unexpected"):
+        with pytest.raises(ValueError, match="final X.Y.Z"):
+            validate_version(wrong)
+
+
+def test_wrong_distribution_name_fails_closed(tmp_path: Path) -> None:
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text('[tool.poetry]\nname = "other"\nversion = "0.7.0"\n')
+    with pytest.raises(ValueError, match="distribution name"):
+        package_version(pyproject)
+
+
+def test_publish_workflows_no_longer_pin_a_past_artifact() -> None:
+    workflows = Path(__file__).resolve().parents[1] / ".github" / "workflows"
+    for name in ("publish.yml", "publish-testpypi.yml"):
+        content = (workflows / name).read_text(encoding="utf-8")
+        assert "migration-phase-b-060-distributions" not in content
+        assert "python scripts/release_contract.py artifact" in content
+    workflow = (workflows / "migration-candidate-phase-b.yml").read_text()
+    assert "migration-phase-b-060-distributions" not in workflow
+    assert "fastapi_cache_stable-0.6.0-" not in workflow
+    assert 'candidate_version": "0.6.0"' not in workflow

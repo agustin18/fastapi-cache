@@ -1,4 +1,4 @@
-"""Independent InMemory / HTTP consumer for the exact 0.6.0 candidate artifact.
+"""Independent InMemory / HTTP consumer for the exact versioned candidate artifact.
 
 Run via an installed wheel/sdist from /tmp, not from a repository checkout.
 This is not an application-specific production certification.
@@ -8,6 +8,7 @@ import asyncio
 import hashlib
 import importlib.metadata as metadata
 import json
+import os
 from contextvars import ContextVar
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -112,8 +113,9 @@ def check_auth_privacy() -> None:
 
 
 def main() -> None:
-    assert metadata.version("fastapi-cache-stable") == "0.6.0"
-    assert fastapi_cache.__version__ == "0.6.0"
+    version = os.environ["MIGRATION_E2E_CANDIDATE_VERSION"]
+    assert metadata.version("fastapi-cache-stable") == version
+    assert fastapi_cache.__version__ == version
     check_bounded_inmemory()
     check_auth_privacy()
     try:
@@ -134,7 +136,7 @@ def main() -> None:
     assert key == GOLDEN
 
     FastAPICache.reset()
-    FastAPICache.init(InMemoryBackend(), prefix="candidate-060-inmemory")
+    FastAPICache.init(InMemoryBackend(), prefix="candidate-inmemory")
     calls = {"ordinary": 0, "variant": 0, "error": 0, "request": 0}
     selected_locale: ContextVar[str] = ContextVar("candidate-locale", default="")
     app = FastAPI()
@@ -215,7 +217,7 @@ def main() -> None:
                    for r in (failed, failed_again))
     FastAPICache.reset()
     print(json.dumps({
-        "candidate": "0.6.0",
+        "candidate": version,
         "import_path": str(location),
         "default_key": key,
         "ordinary": "MISS/HIT/304",
