@@ -7,7 +7,7 @@ license = "Apache-2.0"
 readme = "README.md"
 homepage = "https://github.com/agustin18/fastapi-cache"
 repository = "https://github.com/agustin18/fastapi-cache.git"
-documentation = "https://github.com/agustin18/fastapi-cache#readme"
+documentation = "https://agustin18.github.io/fastapi-cache/"
 keywords = ["fastapi", "cache", "caching"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",

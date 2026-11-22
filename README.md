@@ -6,6 +6,7 @@
 >
 > **Latest published stable:** [0.6.0 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.6.0/)
 > (released 2026-11-21) ·
+> [Documentation](https://agustin18.github.io/fastapi-cache/) ·
 > [Release notes](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_NOTES_0.6.0.md) ·
 > [Release evidence](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.6.0.md) ·
 > [Quickstart](https://github.com/agustin18/fastapi-cache/blob/stable/docs/QUICKSTART.md) ·
@@ -67,7 +68,7 @@ See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blo
 
 **Try it:** [one-command before/after migration demo](examples/migration/README.md) (two isolated published environments, no Redis or credentials).
 
-**Published:** [fastapi-cache-stable 0.6.0](https://pypi.org/project/fastapi-cache-stable/0.6.0/). It includes the opt-in bounded `InMemoryBackend(max_entries=...)` and the 0.6.0 privacy corrections. The searchable site source is in [site_docs/](site_docs/index.md); public hosting is optional and may not be live.
+**Published:** [fastapi-cache-stable 0.6.0](https://pypi.org/project/fastapi-cache-stable/0.6.0/). It includes the opt-in bounded `InMemoryBackend(max_entries=...)` and the 0.6.0 privacy corrections. Read the searchable [documentation site](https://agustin18.github.io/fastapi-cache/); source is in [site_docs/](site_docs/index.md).
 
 
 ## Introduction
