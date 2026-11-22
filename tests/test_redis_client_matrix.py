@@ -90,7 +90,9 @@ def test_binary_ttl_pipeline_errors(protocol: Optional[int]) -> None:
             key = "matrix:binary"
             raw = bytes((0, 255, 128)) + b"payload"
             await backend.set(key, raw, expire=60)
-            ttl, data = await backend.get_with_ttl(key)
+            ttl_result = await backend.get_with_ttl(key)
+            assert isinstance(ttl_result, tuple)
+            ttl, data = ttl_result
             assert isinstance(ttl, int)
             assert 0 < ttl <= 60
             assert data == raw
