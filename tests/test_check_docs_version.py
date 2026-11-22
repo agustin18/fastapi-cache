@@ -8,7 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_package_is_single_current_version_source() -> None:
-    assert published_version() == "0.6.0"
+    assert published_version().count(".") == 2
+    assert published_version() in (ROOT / "README.md").read_text(encoding="utf-8")
 
 
 def test_missing_current_version_fails_closed(tmp_path: Path) -> None:
