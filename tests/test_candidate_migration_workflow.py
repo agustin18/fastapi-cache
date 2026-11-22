@@ -14,8 +14,8 @@ def test_phase_b_builds_exact_sha_once_and_checks_candidate_files() -> None:
         "build-exact-artifacts:",
         "migration-and-rollback:",
         "needs: build-exact-artifacts",
-        "fastapi_cache_stable-0.6.0-*.whl",
-        "fastapi_cache_stable-0.6.0.tar.gz",
+        "fastapi_cache_stable-{version}-*.whl",
+        "fastapi_cache_stable-{version}.tar.gz",
         "sha256sum --check SHA256SUMS",
         "provenance.json",
         '"published": False',
@@ -38,12 +38,12 @@ def test_phase_b_uses_isolated_old_new_consumers_and_scoped_redis() -> None:
         "fastapi-cache2==0.2.2",
         "redis==4.6.0",
         "MIGRATION_E2E_CONFIRM_ISOLATED_REDIS",
-        "MIGRATION_E2E_CANDIDATE_VERSION: \"0.6.0\"",
+        "MIGRATION_E2E_CANDIDATE_VERSION: ${{ needs.build-exact-artifacts.outputs.version }}",
         "migration_redis_e2e.py\" seed",
         "migration_redis_e2e.py\" candidate",
         "migration_redis_e2e.py\" rollback",
         "pip uninstall -y fastapi-cache-stable",
-        "candidate_060_inmemory_probe.py",
+        "candidate_inmemory_probe.py",
         "redis_vary_probe.py",
         "pip check",
         "cd /tmp",
@@ -95,9 +95,7 @@ def test_phase_b_reuses_migration_golden_without_modifying_phase_a() -> None:
     assert "fastapi-cache2==0.2.2" in workflow
     assert "fastapi-cache-stable==0.4.1" in workflow
     assert "candidate_050_inmemory_probe.py" not in workflow
-    candidate = (
-        ROOT / "tests" / "candidate_060_inmemory_probe.py"
-    ).read_text(encoding="utf-8")
+    candidate = (ROOT / "tests" / "candidate_inmemory_probe.py").read_text(encoding="utf-8")
     assert "6c5186afe53d101dea5118bda9aebbcf" in candidate
     assert "site-packages" in candidate
-    assert "metadata.version(\"fastapi-cache-stable\") == \"0.6.0\"" in candidate
+    assert 'metadata.version("fastapi-cache-stable") == version' in candidate
