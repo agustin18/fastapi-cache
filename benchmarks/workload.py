@@ -115,7 +115,7 @@ async def inmemory_cases(rec: Measurements, profile: str) -> None:
         require(await backend.get("fill:0") is None, "LRU failed to evict old key")
         ttl = InMemoryBackend(max_entries=2)
         await ttl.set("expire:old", value, expire=1)
-        await asyncio.sleep(1.1)
+        await asyncio.sleep(2.2)  # integer-clock TTL uses strict <; allow a full extra second
         start = time.perf_counter_ns()
         await ttl.set("expire:fresh", value, expire=60)
         rec.record(f"inmemory_ttl_reclaim_n{capacity}", time.perf_counter_ns() - start)
@@ -187,7 +187,7 @@ async def http_cases(rec: Measurements, backend: object, label: str,
             for _i in range(iterations):
                 await request("slow_hit", "/slow?nonce=99999", "HIT")
             await request("ttl_initial", "/ttl", "MISS")
-            await asyncio.sleep(1.1)
+            await asyncio.sleep(2.2)  # integer-clock TTL uses strict <; allow a full extra second
             await request("ttl_expired", "/ttl", "MISS")
             t = time.perf_counter_ns()
             removed = await FastAPICache.clear(namespace="payload")
