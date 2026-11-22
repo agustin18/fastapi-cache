@@ -9,6 +9,12 @@ from pathlib import Path
 from typing import Any, Dict
 from urllib.request import urlopen
 
+try:
+    from scripts.release_contract import BUILD_JOB, artifact_name, package_version
+except ModuleNotFoundError:
+    # Preserve direct `python scripts/verify_release_bundle.py` invocation.
+    from release_contract import BUILD_JOB, artifact_name, package_version
+
 WORKFLOW = ".github/workflows/migration-candidate-phase-b.yml"
 PACKAGE = "fastapi-cache-stable"
 
@@ -38,7 +44,7 @@ def validate_run(
 
 def validate_jobs(payload: Dict[str, Any], run_id: str) -> None:
     """Require every planned job of the first, successful Phase B attempt."""
-    expected = {"Build exact 0.6.0 wheel + sdist once, record hashes"}
+    expected = {BUILD_JOB}
     expected.update(
         f"Py {version} / {kind} / real Redis 7.4 / rollback"
         for version in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13")
@@ -77,12 +83,18 @@ def verify_bundle(
 ) -> Dict[str, str]:
     require(re.fullmatch(r"[0-9a-f]{64}", wheel_hash) is not None, "invalid wheel hash")
     require(re.fullmatch(r"[0-9a-f]{64}", sdist_hash) is not None, "invalid sdist hash")
+    for field in ("provenance.json", "SHA256SUMS"):
+        meta = bundle / field
+        require(meta.is_file() and not meta.is_symlink(),
+                "missing or untrusted evidence metadata: " + field)
     provenance = json.loads((bundle / "provenance.json").read_text())
     require(provenance["source_sha"] == source_sha, "bundle source SHA mismatch")
     require(str(provenance["workflow_run_id"]) == str(run["id"]), "bundle run mismatch")
     require(str(provenance["workflow_attempt"]) == str(run["run_attempt"]),
             "bundle attempt mismatch; dispatch a new full evidence run")
     require(provenance["candidate_version"] == version, "bundle version mismatch")
+    require(provenance["artifact_name"] == artifact_name(version),
+            "unexpected evidence artifact name")
     require(provenance["published"] is False, "expected unpublished evidence bundle")
     wheel = provenance["wheel"]
     sdist = provenance["sdist"]
@@ -152,6 +164,8 @@ def main() -> None:
     require(re.fullmatch(r"[0-9a-f]{40}", args.source_sha) is not None, "invalid source SHA")
     require(re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", args.version) is not None,
             "expected final release version")
+    require(args.version == package_version(),
+            "requested version differs from release source metadata")
     run = json.loads(args.run_json.read_text())
     validate_run(run, args.repository, args.source_sha, args.run_id)
     validate_jobs(json.loads(args.jobs_json.read_text()), args.run_id)
