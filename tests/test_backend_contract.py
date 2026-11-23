@@ -49,6 +49,8 @@ def test_get_set_ttl_and_scoped_clear_contract(kind: str) -> None:
         sibling = namespace + ":alpha-extra:item"
         immortal = namespace + ":forever:item"
         missing = namespace + ":absent"
+        empty_key = namespace + ":empty"
+        immediate_key = namespace + ":zero-ttl"
         try:
             assert await backend.get(missing) is None
             missing_result = await backend.get_with_ttl(missing)
@@ -63,6 +65,26 @@ def test_get_set_ttl_and_scoped_clear_contract(kind: str) -> None:
             immortal_result = await backend.get_with_ttl(immortal)
             assert isinstance(immortal_result, tuple)
             assert immortal_result == (-1, b"persistent")
+
+            # Empty bytes are a cache HIT, never conflated with a missing key.
+            await backend.set(empty_key, b"", expire=60)
+            assert await backend.get(empty_key) == b""
+            empty_ttl, empty_value = await backend.get_with_ttl(empty_key)
+            assert 0 < empty_ttl <= 60
+            assert empty_value == b""
+            assert await backend.clear(key=empty_key) == 1
+            assert await backend.get(empty_key) is None
+
+            # Same API, deliberately different provider semantics: Redis rejects
+            # EX <= 0 while InMemory treats nonpositive TTL as immediate MISS.
+            if kind == "inmemory":
+                await backend.set(immediate_key, b"value", expire=0)
+                assert await backend.get(immediate_key) is None
+                assert await backend.get_with_ttl(immediate_key) == (0, None)
+            else:
+                with pytest.raises(Exception):
+                    await backend.set(immediate_key, b"value", expire=0)
+                assert await backend.get(immediate_key) is None
 
             await backend.set(public, b"first", expire=60)
             await backend.set(sibling, b"untouched", expire=60)
