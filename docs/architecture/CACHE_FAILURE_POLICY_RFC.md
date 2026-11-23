@@ -1,6 +1,8 @@
 # Cache failure policy RFC — safe boundaries for 0.7.x
 
-**Status: proposed design, not an accepted general recovery policy.**
+**Status: the narrow #124 decode-before-304 bugfix is merged in
+unreleased source; the general error/recovery policy is still proposed,
+not approved or published in 0.6.0.**
 Tracked in [#112](https://github.com/agustin18/fastapi-cache/issues/112)
 with dependencies on [#99](https://github.com/agustin18/fastapi-cache/issues/99)
 and [#103](https://github.com/agustin18/fastapi-cache/issues/103).
@@ -15,7 +17,7 @@ No changes to the published 0.6.0 artifact.
 | Coder cannot encode | Return response uncached | Header/status contract |
 | Coder encode error | Propagate | Potentially narrow safe fallback |
 | Coder decode error | Propagate (no invalidation) | Fail-closed vs opt-in recover |
-| Bad cached bytes + matching If-None-Match | 0.6.0 could return 304 before attempting decode | Scoped correction in PR #124 |
+| Bad cached bytes + matching If-None-Match | Published 0.6.0 can return 304 before decoding | Fixed in unreleased source PR #124, no general fallback |
 | Cancellation | Normally propagates | Backends and per-version verification |
 | Untrusted PickleCoder data | Unsafe deserialization | Never auto-unpickle untrusted values |
 

@@ -12,7 +12,7 @@ cannot prove that one library is faster, safer or better.
     correction [#123](https://github.com/agustin18/fastapi-cache/pull/123)
     and decode-before-304 correction
     [#124](https://github.com/agustin18/fastapi-cache/pull/124)
-    remain **Draft PRs**, not features of 0.6.0.
+    are **merged into unreleased source**, not features of published 0.6.0.
 
 ## What the published 0.6.0 package offers
 
@@ -40,8 +40,10 @@ historical published-wheel 0.5.0/0.6.0 AB/BA benchmark
 [#122](https://github.com/agustin18/fastapi-cache/pull/122)
 is merged, but Redis timings changed sign between CI sessions:
 **do not claim an observed speedup or regression**.
-Further independent hardware measurements and real HTTP socket
-tests are tracked under [#100](https://github.com/agustin18/fastapi-cache/issues/100).
+Merged [#128](https://github.com/agustin18/fastapi-cache/pull/128) (`f81e60b`) adds
+**descriptive** real loopback HTTP socket tests; independent controlled
+hardware, fault profiles and preregistered numeric budgets are still tracked
+under [#100](https://github.com/agustin18/fastapi-cache/issues/100).
 
 For a new application start with the [installation guide](../getting-started.md).
 For an existing application, use [migration](../migration.md),

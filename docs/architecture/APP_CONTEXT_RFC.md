@@ -1,6 +1,9 @@
 # RFC: explicit app context without breaking global FastAPICache
 
-**Status: design proposal only. Not accepted or shipped in 0.6.0.**
+**Status: design proposal, not shipped. 2026-11-23 scope decision:
+defer any new public per-app configuration API out of 0.7; preserve the
+process-global singleton and its documented isolation limitations.
+No design is accepted for implementation yet.**
 Tracks [#99](https://github.com/agustin18/fastapi-cache/issues/99)
 with dependencies on [#103](https://github.com/agustin18/fastapi-cache/issues/103),
 [#112](https://github.com/agustin18/fastapi-cache/issues/112),

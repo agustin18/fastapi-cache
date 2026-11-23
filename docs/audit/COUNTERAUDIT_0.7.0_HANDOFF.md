@@ -16,17 +16,18 @@ Never substitute those hashes for a 0.7.0 candidate.
 - #120/#121/#122 merged (published-wheel smoke/full and 0.5/0.6 AB/BA).
   Historical Redis timing changes sign across hosted runners.
   [#100](https://github.com/agustin18/fastapi-cache/issues/100)
-  needs fixed hardware, real HTTP sockets, failures and pre-approved budgets.
+  has merged #128 (`f81e60b`) real loopback HTTP socket evidence; fixed independent
+  hardware, Redis fault/recovery and pre-approved budgets remain.
 - [#123](https://github.com/agustin18/fastapi-cache/pull/123)
-  **Draft** for #111 exact InMemory TTL deadline; verify bounded heap,
-  zero/negative TTL, live-clock rollback, Redis contrast and compatibility.
+  **merged** (`612e9d6`) for inclusive InMemory TTL; verify final candidate
+  installed-artifact behavior, clock skew and Redis/experimental parity limits.
 - [#124](https://github.com/agustin18/fastapi-cache/pull/124)
-  **Draft** for #112 corrupt-HIT ETag/304; verify decode and private-data
-  boundaries, Pickle trust, cancellation and still-unapproved recovery.
+  **merged** (`4dc66ad`) for corrupt-HIT ETag/304; broader
+  backend/coder policy, Pickle trust and recovery remain unresolved.
 - [#99](https://github.com/agustin18/fastapi-cache/issues/99) and
   [#103](https://github.com/agustin18/fastapi-cache/issues/103)
-  app/non-HTTP context **not approved**. #96/#50/basic #102 features
-  have no implied clearance to start or publish.
+  scope decision **deferred new app/non-HTTP APIs out of 0.7**; full
+  designs remain unapproved. #96/#50/basic #102 have no implied clearance.
 - [#110](https://github.com/agustin18/fastapi-cache/issues/110)
   version-neutral infrastructure exists, but no **final 0.7.0**
   Phase B, hash, tag or registry verification exists.

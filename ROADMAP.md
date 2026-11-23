@@ -45,15 +45,16 @@ contain post-publication infrastructure changes. [#120](https://github.com/agust
 the published-wheel smoke/full suite and balanced 0.5.0/0.6.0 comparator
 are available as **measurement infrastructure**, not a performance certification.
 [#100](https://github.com/agustin18/fastapi-cache/issues/100) remains open:
-independent fixed hardware, real socket HTTP, failure cases and pre-agreed
-budgets are not complete.
+Merged #128 (`f81e60b`) adds descriptive real localhost socket HTTP evidence, but independent
+fixed hardware, fault/disconnect cases and pre-agreed budgets are incomplete.
 
-[#123](https://github.com/agustin18/fastapi-cache/pull/123) proposes an
-inclusive InMemory TTL deadline under [#111](https://github.com/agustin18/fastapi-cache/issues/111).
-[#124](https://github.com/agustin18/fastapi-cache/pull/124) proposes
-decode-before-304 under [#112](https://github.com/agustin18/fastapi-cache/issues/112).
-Both are unmerged Draft PRs and require separate contract/security acceptance.
-Do not advertise either behavior in 0.6.0 docs.
+[#123](https://github.com/agustin18/fastapi-cache/pull/123) is **merged** as
+`612e9d6` (inclusive InMemory TTL); [#124](https://github.com/agustin18/fastapi-cache/pull/124)
+is **merged** as `4dc66ad` (decode before 304). Both changes are in
+unreleased `stable` source, **not in the published 0.6.0 wheel**.
+#111/#112 remain open for the wider backend, serialization and error
+contracts, including PickleCoder trust. New #99/#103 APIs are **deferred
+beyond 0.7**, not silently approved or shipped.
 
 The [candidate 0.7.0 acceptance checklist](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_CANDIDATE_0.7.0.md)
 and [counteraudit handoff](https://github.com/agustin18/fastapi-cache/blob/stable/docs/audit/COUNTERAUDIT_0.7.0_HANDOFF.md)

@@ -2,10 +2,10 @@
 
 This page documents public entry points present in **the published
 fastapi-cache-stable 0.6.0 wheel and sdist**. It does not advertise
-experimental internal APIs, future backend parity or unmerged
+experimental internal APIs, future backend parity or post-0.6.0
+**merged source-only** behavior in
 [#123](https://github.com/agustin18/fastapi-cache/pull/123) /
-[#124](https://github.com/agustin18/fastapi-cache/pull/124)
-behavior. For exact signatures inspect the
+[#124](https://github.com/agustin18/fastapi-cache/pull/124). For exact signatures inspect the
 [source at annotated tag v0.6.0](https://github.com/agustin18/fastapi-cache/tree/v0.6.0/fastapi_cache)
 and [artifact provenance](releases.md).
 
@@ -70,8 +70,8 @@ scan all local keys under the async lock.
 **TTL note:** the published 0.6.0 InMemory implementation uses
 integer wall-clock seconds and a strict `ttl_ts < now` expiry test;
 a value can remain visible at the exact deadline with remaining TTL 0.
-Draft [#123](https://github.com/agustin18/fastapi-cache/pull/123)
-proposes inclusive deadline `<=` for a future release, **not for 0.6.0**.
+Merged source [#123](https://github.com/agustin18/fastapi-cache/pull/123)
+uses inclusive deadline `<=` for a future release, **not for published 0.6.0**.
 See the [InMemory guide](../guides/inmemory.md).
 
 ## Redis standalone
@@ -97,9 +97,9 @@ are not certified by the standalone service matrix.
   of conditional HTTP decoding requires its own security review.
 
 Malformed cached HIT bytes with a matching HTTP ETag can receive a
-`304` without decoding first in published 0.6.0; draft
-[#124](https://github.com/agustin18/fastapi-cache/pull/124) addresses
-this correctness issue with fail-closed decoding before the validator.
+`304` without decoding first in published 0.6.0; merged source
+[#124](https://github.com/agustin18/fastapi-cache/pull/124) corrects
+this for a future release with fail-closed decoding before the validator.
 The general corruption/retry policy remains open under [#112](https://github.com/agustin18/fastapi-cache/issues/112).
 
 **Related:** [compatibility](compatibility.md),

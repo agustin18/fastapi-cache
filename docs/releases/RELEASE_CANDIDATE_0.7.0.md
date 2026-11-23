@@ -7,14 +7,17 @@ Every unchecked box is an unsatisfied gate, not a claimed completion.
 
 ## 1. Scope and behavioral contracts
 
-- [ ] #111 approve exact TTL equality, InMemory vs Redis zero/negative TTL,
-      still-live clock rollback, close/clear/ownership and experimental provider limits.
-      Review Draft #123 as an observable behavior change, not a patch to 0.6.0.
-- [ ] #112 approve policy for malformed cached bytes, coder encode/decode,
-      backend GET/SET errors, cancellation, ETag/304, optional invalidation
-      or recompute and Pickle trust. Review #124 separately.
-- [ ] #99 app/lifespan isolation and #103 non-HTTP caching designs explicitly
-      accepted or consciously deferred, with tenant/privacy risk recorded.
+- [ ] #111 **narrow #123 merged** (TTL equality, zero/negative and clock
+      rollback characterized, absent from 0.6.0); still approve the wider
+      InMemory/Redis/Memcached/DynamoDB clear/close/ownership/cancellation
+      capability and expiry/error contract with installed-artifact evidence.
+- [ ] #112 **narrow #124 merged** (decode before ETag 304, fail closed,
+      not in published 0.6.0). Still approve policy for coder encode/decode,
+      backend GET/SET, cancellation, invalidation/retry, and Pickle trusted-store
+      limitation; test negative security/concurrency paths.
+- [x] #99/#103 **scope decision for 0.7**: new per-app and non-HTTP
+      APIs are deferred beyond 0.7; singleton/tenant limitations documented.
+      Neither RFC's future implementation is approved or the issues closed.
 - [ ] #100 fixed independent hardware, real HTTP network, Redis
       failure profiles, and **regression budgets signed before measurement**;
       historical AB/BA comparator is not a performance certification.

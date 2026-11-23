@@ -294,8 +294,8 @@ reported remaining TTL of **zero** at the exact deadline. This is not an
 automatic safety/TTL parity guarantee with Redis. InMemory stores with
 `expire=0` may still yield a same-second hit in 0.6.0,
 while a **negative** InMemory TTL is already expired. Redis rejects both
-`SET EX 0` and negative EX values. [Draft PR #123](https://github.com/agustin18/fastapi-cache/pull/123)
-proposes inclusive expiry `ttl_ts <= now`, **not yet published**.
+`SET EX 0` and negative EX values. [Merged source PR #123](https://github.com/agustin18/fastapi-cache/pull/123)
+implements inclusive expiry `ttl_ts <= now`, **not yet published**.
 Because this implementation uses the wall clock rather than monotonic
 elapsed time, backward clock changes can also increase the remaining TTL
 of a still-live entry. Choose and test a backend for your actual freshness

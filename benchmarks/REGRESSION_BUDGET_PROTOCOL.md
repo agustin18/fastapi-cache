@@ -3,6 +3,9 @@
 Tracked under [#100](https://github.com/agustin18/fastapi-cache/issues/100).
 The published-wheel 0.6.0 harness (#120/#121) and historical
 0.5.0/0.6.0 shared-case AB/BA comparator (#122) are merged.
+[Merged #128](https://github.com/agustin18/fastapi-cache/pull/128)
+(`f81e60b`) adds synthetic loopback TCP Uvicorn HTTP with the same published wheel;
+it is not independent fixed hardware or a preapproved regression budget.
 The latter's direct Redis GET ratio changed **sign** between CI sessions:
 these results cannot justify a superiority/regression claim or a
 budget retrofitted *after* measuring.
