@@ -12,7 +12,12 @@ cache and HIT. It inspects logs for synthetic raw data/key leakage.
 
 No external Redis URL is accepted, no production Redis is contacted, no
 FLUSHDB or FLUSHALL is executed, and the unique container is destroyed.
-Watchdog timeouts are test infrastructure, **not preapproved latency budgets**.
+The caller-owned redis-py client is explicitly configured with
+`Retry(NoBackoff(), 0)`: **no automatic client retries** during the probe.
+This isolates the library's first-failure behavior; redis-py 6+ defaults
+can retry for longer, and default-client outage latency/recovery is
+**not** qualified by these results. Watchdog timeouts are test
+infrastructure, **not preapproved latency budgets**.
 
 This is not HA, TLS, Sentinel, Cluster, managed failover, network partition,
 distributed locks, persistence, or independent-machine perf certification.
