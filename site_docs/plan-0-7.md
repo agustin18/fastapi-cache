@@ -1,5 +1,16 @@
 # 0.7.0 execution plan and evidence gates
 
+> **Current decision (2026-11-23, proposed pending review):** 0.7.0
+> is a small correctness release. #133/#134 are merged into source
+> \`0c306a6\`. [Scope/risk decision](../docs/releases/SCOPE_0.7.0_DECISION.md)
+> proposes keeping full controlled-hardware #100 certification open for
+> performance-focused 0.8+, with no performance claims and separate
+> signed acceptance. **No tag, final candidate, publication or audit GO.**
+> Historical descriptions below are retained as background and are
+> superseded where they assign #96/#50 to 0.7 or require fixed-hardware
+> numbers for a no-performance-claim release.
+
+
 **Status: 2026-11-23 — planning, no release date, no tag, no registry GO.**
 Latest published artifact remains [fastapi-cache-stable 0.6.0](reference/releases.md).
 Source merged after publication is not an installable 0.7.0 release.

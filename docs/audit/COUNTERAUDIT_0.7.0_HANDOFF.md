@@ -37,23 +37,31 @@ Never substitute those hashes for a 0.7.0 candidate.
 - #130 (`0.7.0.dev0` source vs immutable 0.6.0 published docs),
   #131 (additional backend error/ownership tests, NOT daemon outage),
   #132 (SHA-checked local candidate wheel socket harness) are merged
-  through `stable` `1d78154`; none approves a final release.
+  before later `stable` changes; none approves a final release.
 - [#133](https://github.com/agustin18/fastapi-cache/pull/133)
-  proposes a real disposable Redis 7.4 process stop/restart test; **only
-  count it after merge, installed-wheel CI and evidence review**.
+  **merged** real disposable Redis 7.4 process stop/restart test: installed
+  wheel on Python 3.8/3.12/3.13, intentionally no redis-py retries in
+  the probe; no default retry latency/HA guarantee.
+- [#134](https://github.com/agustin18/fastapi-cache/pull/134)
+  **merged** narrow-scope decisions; `stable` at the start of this
+  preparation was `0c306a67a6adb4ed098e96e70dd0da192c8fbf85`.
 
 ## Trigger for formal final-candidate contraaudit
 
 Request final audit **only after** selected contracts are accepted,
-functional PRs merged, exact baseline budgets approved and measured,
-docs and security/privacy tests validated, and a candidate is frozen
+functional PRs merged, **either** full #100 baseline budgets approved
+before controlled measurement **or** the explicitly signed
+no-performance-claim deferral accepted by an independent reviewer and
+maintainer, docs and security/privacy tests validated, and candidate frozen
 to one stable SHA. Obtain first-attempt **20/20 Phase B** for exactly
 that SHA (12 Redis migration/rollback + 7 installed security + build),
 independent wheel/sdist hashes, provenance, fresh authenticated
 Dependabot delta and complete installed-wheel/sdist evidence.
 
-A **design-only** review of proposed RFCs may happen earlier; it is NOT
-the final release candidate's independent GO.
+The **pre-release PR counteraudit** can happen now, before the final version
+promotion; it judges PR HEADs, merged source, risk dispositions and proposed
+release gates. It is **not** the final exact-artifact GO, which requires
+final-source first-attempt 20-job Phase B and independent wheel/sdist hashes.
 
 ## Exact evidence manifest — do not invent
 
@@ -65,7 +73,7 @@ the final release candidate's independent GO.
 | Candidate sdist filename / independent SHA-256 | TBD |
 | First-attempt full 20-job Phase B URL and job inventory | TBD |
 | Python/Redis/dependency freeze, migration/rollback | TBD |
-| Fixed independent hardware, budget approval before run, raw results | TBD |
+| #100 disposition: explicit narrow no-claim deferral GO, OR independent hardware/budget approval/raw results | TBD / NOT SIGNED |
 | Real HTTP socket and fault/disconnect results | TBD |
 | TTL/corrupt/auth/tenant/serialization/cancellation test provenance | TBD |
 | Fresh Dependabot/lock findings and owner dispositions | TBD |
@@ -99,10 +107,13 @@ the final release candidate's independent GO.
 > Python 3.14 or HA promises. Test opt-in single-flight/events/resilience
 > **only if actually selected for 0.7.0**.
 >
-> Challenge each performance claim using *pre-registered* budgets, fixed
-> independent hardware, full dependency/CPU provenance, repeated AB/BA,
-> real socket HTTP, Redis fault profiles and raw samples. A historical
-> Redis ratio that changes sign is not an improvement or regression.
+> Challenge *any actual* performance claim against preregistered budgets,
+> independent controlled hardware, complete provenance, repeated AB/BA,
+> real socket HTTP and raw data. For a correctness-only release with **no
+> performance claim**, explicitly approve/reject the proposed #100 deferral
+> only after checking for material regressions; a default-Redis-retry
+> latency guarantee is not justified by the #133 no-retry experiment.
+> Historical runner ratios that change sign are not speedup evidence.
 >
 > Return an evidence matrix: PASS / FAIL / NOT RUN, exact commands/artifact
 > identities/CI URLs, reproduction steps, P0/P1/P2 severity, library-owned
