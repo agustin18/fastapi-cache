@@ -1,4 +1,4 @@
-"""Real loopback TCP HTTP baseline against the SHA-verified published 0.6.0 wheel.
+"""Real loopback TCP HTTP profile against an exact verified installed wheel.
 
 Two isolated server processes (InMemory and Redis), with httpx over a REAL
 127.0.0.1 socket. Never fetches a remote service, never flushes a Redis DB.
@@ -36,9 +36,9 @@ from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
 
-def installed_only() -> None:
-    if metadata.version("fastapi-cache-stable") != "0.6.0":
-        raise RuntimeError("Wrong published wheel version")
+def installed_only(expected_version: str) -> None:
+    if metadata.version("fastapi-cache-stable") != expected_version:
+        raise RuntimeError("Wrong installed wheel version")
     try:
         metadata.distribution("fastapi-cache2")
     except metadata.PackageNotFoundError:
@@ -106,7 +106,7 @@ def create_app(backend: object, prefix: str) -> FastAPI:
 
 
 async def serve(args: argparse.Namespace) -> None:
-    installed_only()
+    installed_only(args.expected_version)
     client: Redis | None = None
     try:
         if args.backend == "redis":
@@ -160,7 +160,7 @@ class Samples:
             }
         summary = {
             "metadata": {
-                "published_version": metadata.version("fastapi-cache-stable"),
+                "tested_distribution_version": metadata.version("fastapi-cache-stable"),
                 "fastapi": metadata.version("fastapi"),
                 "httpx": metadata.version("httpx"),
                 "uvicorn": metadata.version("uvicorn"),
@@ -168,7 +168,7 @@ class Samples:
                 "python": platform.python_version(),
                 "platform": platform.platform(),
                 "transport": "real TCP loopback HTTP, separate Uvicorn OS process",
-                "isolation": "installed published wheel, python -I, no editable install",
+                "isolation": "installed SHA-verified wheel, python -I, no editable install",
                 "tail_warning": (
                     "Nearest-rank p99 across serial requests on a shared "
                     "runner is descriptive only; not a production p99 estimate"
@@ -277,6 +277,7 @@ async def run_one(
         sys.executable, "-I", str(Path(__file__).resolve()), "serve",
         "--backend", backend, "--redis-url", args.redis_url,
         "--port", str(port), "--prefix", prefix,
+        "--expected-version", args.expected_version,
     ]
     # Only synthetic requests; Uvicorn access logs are disabled.
     with log.open("w", encoding="utf-8") as errors:
@@ -315,7 +316,7 @@ async def run_one(
 
 
 async def run(args: argparse.Namespace) -> None:
-    installed_only()
+    installed_only(args.expected_version)
     check_redis(args.redis_url)
     output = Path(args.output).resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -333,6 +334,7 @@ def main() -> None:
     p.add_argument("--port", type=int, default=0)
     p.add_argument("--prefix", default="")
     p.add_argument("--iterations", type=int, default=120)
+    p.add_argument("--expected-version", default="0.6.0")
     p.add_argument("--output", type=Path)
     args = p.parse_args()
     if sys.version_info[:2] != (3, 12):
