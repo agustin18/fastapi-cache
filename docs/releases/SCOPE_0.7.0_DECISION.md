@@ -2,7 +2,7 @@
 
 This document prevents issue-count-driven release planning. Source `stable`
 at `0c306a67a6adb4ed098e96e70dd0da192c8fbf85` has version
-`0.7.0.dev0`; the **published** package is still `0.6.0`.
+`0.7.0` release candidate; the **published** package is still `0.6.0`.
 Neither this file nor a green CI implies a release GO.
 
 ## Proposed release scope (explicit decision still required)

@@ -18,8 +18,9 @@
 > [Support](https://github.com/agustin18/fastapi-cache/blob/stable/SUPPORT.md) ·
 > [Changelog](https://github.com/agustin18/fastapi-cache/blob/stable/CHANGELOG.md).
 > **0.6.0:** published technical release with opt-in bounded InMemory.
-> `stable` may carry unreleased `0.7.0.dev0` source; build artifacts from
-> `stable` are **not** the published 0.6.0 distribution or an approved 0.7.0 release.
+> `stable` carries the unreleased `0.7.0` release candidate; build artifacts
+> from `stable` are **not** the published 0.6.0 distribution or an approved
+> 0.7.0 release.
 > Pre-releases must be independently evaluated before production deployment.
 >
 > Installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has

@@ -43,10 +43,9 @@ Merged #130/#131/#132 do not constitute a frozen final candidate.
 
 ## 2. Candidate source and documentation
 
-- [ ] Approved PRs merged; source currently `0.7.0.dev0` (#130 merged).
-      Prepare a separate final promotion PR setting `0.7.0`, release notes,
-      Towncrier changelog and candidate compatibility notes, **without
-      incorrectly changing published `docs/releases/PUBLISHED_VERSION`
+- [x] Approved PRs merged; source is now `0.7.0` in the promotion candidate.
+      Release notes, Towncrier changelog and candidate compatibility notes are
+      prepared, **without changing published `docs/releases/PUBLISHED_VERSION`
       (remains `0.6.0` until registry publication)**. No history overwrite.
 - [ ] **Frozen final stable source SHA: TBD.** No unreviewed source edits afterward.
 - [ ] Full supported and legacy Python matrix plus real Redis 7.4,

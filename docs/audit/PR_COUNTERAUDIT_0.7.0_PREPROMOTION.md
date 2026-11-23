@@ -3,7 +3,7 @@
 **This is a PREPROMOTION review prompt, not final release approval.**
 Read the canonical 0.7 [risk register](../releases/RISK_REGISTER_0.7.0.md),
 [scope decision](../releases/SCOPE_0.7.0_DECISION.md),
-[draft notes](../releases/RELEASE_NOTES_0.7.0_DRAFT.md),
+[release notes](../releases/RELEASE_NOTES_0.7.0.md),
 [artifact checklist](../releases/RELEASE_CANDIDATE_0.7.0.md), and
 [final-artifact handoff](COUNTERAUDIT_0.7.0_HANDOFF.md).
 
@@ -49,7 +49,7 @@ Falsify at least:
    PASS claims, misleading 0.7 install snippets, stale `#133` status
    or `1d78154` as latest. Published pointer must be exactly
    `docs/releases/PUBLISHED_VERSION=0.6.0`. The PR must NOT change
-   version from `0.7.0.dev0` or produce a tag.
+   version from `0.7.0` or produce a tag.
 2. #100 no-claim fixed-host deferral: the maintainer **accepted** this
    release-specific deferral on 2026-11-23. The independent reviewer must
    still verify the limited runtime delta, no performance feature, honest
