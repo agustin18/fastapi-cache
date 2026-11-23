@@ -6,7 +6,7 @@
 > stop/restart on an installed wheel with **retries explicitly disabled**.
 > For 0.7 we seek a proportionate no-performance-claim #100 deferral
 > **only by express reviewer/maintainer acceptance**; first-attempt
-> final Phase B 20/20 and exact-artifact audit are non-deferrable.
+> final Phase B with all twenty mandatory jobs and exact-artifact audit are non-deferrable.
 > Longer-term target: true app/lifespan isolation, safe local
 > single-flight, privacy-minimal events, tags, app cache and resilient HTTP
 > behavior, always opt-in and backwards compatible where possible.
