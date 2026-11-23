@@ -1,0 +1,65 @@
+name: 0.7 real Redis daemon fault qualification
+
+on:
+  pull_request:
+    branches: [stable]
+    paths:
+      - ".github/workflows/redis-fault-070.yml"
+      - "tests/redis_fault_probe.py"
+      - "tests/test_redis_fault_workflow_contract.py"
+      - "fastapi_cache/**"
+      - "pyproject.toml"
+      - "poetry.lock"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: redis-fault-070-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  installed-wheel-stop-restart:
+    name: Installed wheel Redis 7.4 daemon restart
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { python: "3.8", redis_client: "6.1.1" }
+          - { python: "3.12", redis_client: "8.1.0" }
+          - { python: "3.13", redis_client: "8.1.0" }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Build an exact candidate wheel
+        run: |
+          set -euo pipefail
+          python -m pip install "build==1.2.2"
+          python -m build --wheel --outdir /tmp/fault-wheel .
+          test "$(find /tmp/fault-wheel -name '*.whl' | wc -l)" -eq 1
+          sha256sum /tmp/fault-wheel/*.whl
+      - name: Install wheel into isolated venv
+        env:
+          REDIS_CLIENT: ${{ matrix.redis_client }}
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/fault-installed
+          /tmp/fault-installed/bin/python -m pip install --upgrade pip
+          wheel=$(find /tmp/fault-wheel -name '*.whl' -print -quit)
+          /tmp/fault-installed/bin/python -m pip install "$wheel[redis]" "redis==$REDIS_CLIENT"
+          /tmp/fault-installed/bin/python -m pip check
+      - name: Pull isolated Redis image
+        run: docker pull redis:7.4
+      - name: Stop and restart the owned Redis container
+        env:
+          REDIS_FAULT_DISPOSABLE: "1"
+        run: |
+          set -euo pipefail
+          export CANDIDATE_VERSION="$(python scripts/release_contract.py version --allow-development)"
+          cd /tmp
+          /tmp/fault-installed/bin/python -I "$GITHUB_WORKSPACE/tests/redis_fault_probe.py"
