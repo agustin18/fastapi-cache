@@ -3,8 +3,7 @@
 No tag creation, network access, indexing or publication lives here.
 Final releases remain X.Y.Z only; the explicit allow-development flag permits
 PR-only X.Y.Z.devN artifacts. Manual final-release gates fail closed by default.
-Python 3.8
-compatibility is deliberate: the module is imported by legacy CI tests.
+Python 3.8 compatibility is deliberate: legacy CI imports this module.
 """
 import argparse
 import re
