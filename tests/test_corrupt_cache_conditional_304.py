@@ -3,13 +3,15 @@
 import hashlib
 from typing import Dict, Optional, Tuple
 
+import pydantic
+import pytest
 from fastapi import FastAPI
 from httpx import Response
 from starlette.testclient import TestClient
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
-from fastapi_cache.coder import JsonCoder
+from fastapi_cache.coder import JsonCoder, TypedJsonCoder
 from fastapi_cache.decorator import cache
 
 
@@ -60,3 +62,31 @@ def test_valid_cached_bytes_keep_conditional_304_contract() -> None:
     assert response.status_code == 304
     assert response.headers["X-FastAPI-Cache"] == "HIT"
     assert response.content == b""
+
+
+@pytest.mark.skipif(
+    not pydantic.VERSION.startswith("2."), reason="Pydantic v2 typed validation"
+)
+def test_typed_decode_validation_runs_before_conditional_304() -> None:
+    """Malformed but syntactically valid JSON cannot bypass typed validation."""
+    class Payload(pydantic.BaseModel):
+        count: int
+
+    entry = b'{"count":"not-an-integer"}'
+    FastAPICache.reset()
+    FastAPICache.init(FixedEntryBackend(entry), prefix="test-corrupt-typed")
+    app = FastAPI()
+
+    @app.get("/typed")
+    @cache(expire=60, coder=TypedJsonCoder)
+    async def typed() -> Payload:
+        raise AssertionError("Unexpected recomputation on malformed HIT")
+
+    validator = f'W/"{hashlib.sha256(entry).hexdigest()}"'
+    try:
+        with TestClient(app, raise_server_exceptions=False) as client:
+            result = client.get("/typed", headers={"If-None-Match": validator})
+            assert result.status_code == 500
+            assert result.status_code != 304
+    finally:
+        FastAPICache.reset()
