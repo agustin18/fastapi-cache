@@ -1,4 +1,4 @@
-# 0.7.0 security, correctness and compatibility risk register — UNSIGNED
+# 0.7.0 security, correctness and compatibility risk register — MAINTAINER DECISION RECORDED; INDEPENDENT REVIEW PENDING
 
 **Scope:** source at pre-preparation `0c306a67a6adb4ed098e96e70dd0da192c8fbf85`
 only; will change if release-promotion PRs merge. Published artifact remains
@@ -17,7 +17,7 @@ maintainer acceptance or independent approval. Populate evidence with
 | #112 cancellation | #131 CancelledError propagates for synthetic read | Concurrent write race, in-flight refresh, real outage cancellation unqualified | No single-flight, locks, callbacks or recovery API in 0.7 | NOT REVIEWED |
 | #112 PickleCoder | Explicit legacy PickleCoder uses pickle.loads | Arbitrary code execution if attacker can modify pickle bytes | Never use with untrusted/shared mutable Redis; prefer JsonCoder; no auto-unpickle policy | NOT REVIEWED |
 | #53 auth/tenant/Vary | Credential headers bypass; opt-in Vary; explicit Request unsafe default bypass | Middleware/contextvars/custom auth/tenant inputs not automatically part of keys | Application must provide safe key partition or bypass; do not claim generic isolation | NOT REVIEWED |
-| #100 performance | #120–#122 published baseline, #128 real socket, #133 process outage | CI runners unstable; no independent hardware/approved numerical budgets; default redis-py retry latency unqualified | Propose **explicit no-claim fixed-host deferral**, not speed certification | NOT REVIEWED |
+| #100 performance | #120–#122 published baseline, #128 real socket, #133 process outage | CI runners unstable; no independent hardware/approved numerical budgets; default redis-py retry latency unqualified | **Maintainer accepted** the no-claim fixed-host deferral on 2026-11-23; not speed certification | MAINTAINER ACCEPTED / REVIEWER PENDING |
 | #110/#126 release bytes | Version-neutral pipeline and 0.6.0 precedent | No 0.7 final SHA, 20/20 Phase B, frozen hashes, security delta or independent artifact review | Mandatory before tag/registry GO; NO DEFERRAL | BLOCKED |
 
 ## Mandatory maintainer/reviewer decisions
@@ -27,9 +27,11 @@ maintainer acceptance or independent approval. Populate evidence with
 - [ ] Classify real P0/P1 findings and any exploitable package-owned
       tenant/identity leak. A confirmed P0/P1 is a NO-GO, not a documentation
       deferral. Do not disclose unpatched exploit details in a public issue.
-- [ ] Either **ACCEPT** the no-performance-claim deferral for #100 or
-      require full independently controlled, preregistered numeric AB/BA.
-      No silent approval from green CI.
+- [x] **ACCEPT** the no-performance-claim deferral for #100, recorded
+      by the maintainer on 2026-11-23. The independent reviewer must still
+      validate it; if a speed claim or material regression appears, require
+      full independently controlled, preregistered numeric AB/BA.
+      Green CI alone is not approval.
 - [ ] Independently reproduce important negative paths with installed
       artifacts; do not mark NOT RUN as PASS.
 - [ ] Approve or reject unchanged metadata support Python 3.8–3.10

@@ -20,8 +20,10 @@ continue to pin verified `0.6.0` until 0.7.0 is actually released.
 (candidate wheel socket measurement support) are now **merged** on
 `stable` prior to #133/#134; current source SHA is `0c306a6`.
 #133 now adds real disposable Redis 7.4 daemon stop/restart testing,
-**explicitly with client retries disabled**. None of these changes
-qualifies production retry latency or constitutes a 0.7.0 release.
+**explicitly with client retries disabled**. The maintainer accepted the
+#100 no-performance-claim deferral on 2026-11-23; independent reviewer
+validation is still required. None of these changes qualifies production
+retry latency or constitutes a 0.7.0 release.
 See the [narrow-scope pre-audit decision](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/SCOPE_0.7.0_DECISION.md)
 once reviewed and merged.
 

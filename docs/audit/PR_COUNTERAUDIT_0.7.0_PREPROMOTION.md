@@ -8,9 +8,9 @@ Read the canonical 0.7 [risk register](../releases/RISK_REGISTER_0.7.0.md),
 [final-artifact handoff](COUNTERAUDIT_0.7.0_HANDOFF.md).
 
 **Stable anchor before these PRs:** `0c306a67a6adb4ed098e96e70dd0da192c8fbf85`.
-**PRs under review:** #135 release risk + proportional no-claim performance
-deferral, #136 competitively sourced 0.8–1.0 roadmap.
-The auditor must fetch **current live PR HEAD SHAs**, not use hardcoded
+**PR under review:** #135 release risk + proportional no-claim performance
+deferral.
+The auditor must fetch the **current live PR HEAD SHA**, not use a hardcoded
 SHAs from a moving branch. No source promotion to `0.7.0`,
 tag, TestPyPI, PyPI, or release workflow is authorized by this review.
 
@@ -50,27 +50,23 @@ Falsify at least:
    or `1d78154` as latest. Published pointer must be exactly
    `docs/releases/PUBLISHED_VERSION=0.6.0`. The PR must NOT change
    version from `0.7.0.dev0` or produce a tag.
-2. #100 proposed no-claim fixed-host deferral: **ACCEPT** only if
-   limited runtime delta, no performance feature, honest HTTP/Redis
-   smoke and no material regression; otherwise **REJECT** with
-   reproducible commands, hardware and proposed preregistered budget.
-   GitHub-hosted metrics are not independent benchmarks. Redis 7.4
-   #133 uses `Retry(NoBackoff(),0)`; document it does not prove
-   default redis-py outage latency.
-3. Inspect PR #136 competitor matrix against versioned primary sources
-   (CacheX 0.7.3, cashews 7.6, aiocache 0.12.3, official Redis SDK);
-   challenge feature availability and versions, prevent copied false
-   equivalence. Check lifecycle/security dependencies #99 → #96/#50,
-   #97/#103 invalidation and typed APIs, #98 private stale cases and
-   #102 topology qualification. Dates are NOT contractual targets.
+2. #100 no-claim fixed-host deferral: the maintainer **accepted** this
+   release-specific deferral on 2026-11-23. The independent reviewer must
+   still verify the limited runtime delta, no performance feature, honest
+   HTTP/Redis smoke and no material regression. If any fails, reject the
+   deferral and require reproducible commands, hardware and a preregistered
+   budget. GitHub-hosted metrics are not independent benchmarks. Redis 7.4
+   #133 uses `Retry(NoBackoff(),0)`; it does not prove default redis-py
+   outage latency. This is not a performance PASS.
+3. No separate competitor PR is under review. Use the current stable
+   roadmap for future-scope discussion; do not treat future dates as
+   contractual targets.
 4. Run `ruff check .`, pre-commit, site build and link checker,
    artifact/release-contract tests, supported and legacy Python/Redis
    smoke on the **exact PR HEADs**; independently inspect mandatory
    workflows and explain any missing credentials or NOT RUN evidence.
-5. Re-run the **combined PR diff** conceptually on latest `stable`;
-   independently verify #135 and #136 do not depend on merging in
-   the wrong order or create contradictory headings/links. If
-   requested, run a branch with both changes, but do not merge them.
+5. Re-run the **#135 diff** conceptually on latest `stable`; verify it
+   does not create contradictory headings/links or claim a release.
 
 ## Expected independent report
 
@@ -80,7 +76,7 @@ or file/line/CI run URL, severity `P0/P1/P2`, scope
 what evidence would convert NOT RUN to PASS.
 
 Return separately:
-- **PR merge recommendation** for #135 and #136: GO / CONDITIONAL / NO-GO.
+- **PR merge recommendation** for #135: GO / CONDITIONAL / NO-GO.
 - **Release readiness today**: should remain NO-GO until a *separate*
   final `0.7.0` source promotion PR is reviewed and merged, the
   source SHA is frozen, first-attempt **20** Phase B jobs succeed,

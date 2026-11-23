@@ -1,4 +1,4 @@
-# 0.7.0 narrow-scope decision packet — REVIEWABLE / NOT SIGNED
+# 0.7.0 narrow-scope decision packet — REVIEWABLE / #100 DEFERRAL ACCEPTED / NOT RELEASED
 
 This document prevents issue-count-driven release planning. Source `stable`
 at `0c306a67a6adb4ed098e96e70dd0da192c8fbf85` has version
@@ -51,11 +51,12 @@ A **reproduced package-owned P0/P1** in this selected scope blocks release
 even when the broad issue is otherwise deferred. A NOT RUN gate must be
 accepted as an explicit limited support statement, never counted as PASS.
 
-## 2026-11-23 risk-based revision to the performance gate — PROPOSED
+## 2026-11-23 risk-based revision to the performance gate — MAINTAINER ACCEPTED
 
-For this **correctness-only** 0.7.0, the maintainer may expressly accept
-**no independent controlled-hardware regression certification** as a
-release-specific deferral of the *research portion* of #100, provided:
+For this **correctness-only** 0.7.0, the maintainer expressly accepted
+on **2026-11-23** the **no independent controlled-hardware regression
+certification** as a release-specific deferral of the *research portion*
+of #100, subject to all conditions below:
 - no performance superiority, production p95/p99, latency bound, Redis
   default-retry latency, or HA claim is made in notes, README or public docs;
 - unchanged production runtime code paths continue passing real Redis,
@@ -65,8 +66,9 @@ release-specific deferral of the *research portion* of #100, provided:
 - no new perf-sensitive public API, lock policy, stale mode, or background
   callback is slipped into this release.
 
-This is **not** evidence of equal or better speed and is **not** self-approved:
-record a reviewer and explicit maintainer ACCEPT/REJECT at final freeze.
+This is **not** evidence of equal or better speed and is **not** an
+independent PASS: the maintainer decision is recorded, while the
+independent reviewer must still verify the conditions before final freeze.
 If a measured regression, latency feature or speed claim enters scope,
 the complete independently controlled AB/BA, numerical budgets preapproved
 before measurement, raw samples and provenance in #100 become mandatory.
@@ -77,9 +79,9 @@ independent exact-artifact counteraudit.
 ## Hard prerelease gates (cannot be satisfied by this document)
 
 1. **Full #100 budget protocol applies ONLY if needed for a speed claim,
-   new performance feature or material suspected regression**. This is
-   explicitly proposed for deferral above; no sign-off yet. The original
-   full protocol would require a
+   new performance feature or material suspected regression**. The maintainer
+   accepted the no-claim deferral above on 2026-11-23; the independent reviewer
+   must still validate it. The original full protocol would require a
    controlled independently managed CPU/RAM/OS environment, identical
    installed-wheel dependency freeze, pairwise AB/BA scenario order, warmup,
    repeat/sample counts, metrics and *numeric* allowed regressions and
@@ -108,8 +110,8 @@ independent exact-artifact counteraudit.
    hashes, GitHub Release and updated documentation marker afterwards.
 
 **Decisions requested from maintainer:** accept narrow scope and exclusions;
-approve the risk classification (#111/#112/#53); expressly ACCEPT/REJECT
-#100 risk-proportionate no-claim deferral, or approve numeric budgets
-*before* an independent performance campaign; authorize final-release preparation
-only when those gates are evidenced. Nothing here grants permission to tag,
-publish, modify branch protection or silently close open issues.
+approve the risk classification (#111/#112/#53); the #100 no-claim deferral
+is **ACCEPTED by the maintainer on 2026-11-23** and still needs independent
+reviewer validation; authorize final-release preparation only when those
+gates are evidenced. Nothing here grants permission to tag, publish, modify
+branch protection or silently close open issues.

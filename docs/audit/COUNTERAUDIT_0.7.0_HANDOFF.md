@@ -49,10 +49,10 @@ Never substitute those hashes for a 0.7.0 candidate.
 ## Trigger for formal final-candidate contraaudit
 
 Request final audit **only after** selected contracts are accepted,
-functional PRs merged, **either** full #100 baseline budgets approved
-before controlled measurement **or** the explicitly signed
-no-performance-claim deferral accepted by an independent reviewer and
-maintainer, docs and security/privacy tests validated, and candidate frozen
+functional PRs merged, the maintainer has accepted the no-performance-claim
+#100 deferral (2026-11-23, documented in the scope/risk records) with
+independent reviewer validation still required, docs and security/privacy
+tests validated, and candidate frozen
 to one stable SHA. Obtain first-attempt **20/20 Phase B** for exactly
 that SHA (12 Redis migration/rollback + 7 installed security + build),
 independent wheel/sdist hashes, provenance, fresh authenticated
@@ -73,7 +73,7 @@ final-source first-attempt 20-job Phase B and independent wheel/sdist hashes.
 | Candidate sdist filename / independent SHA-256 | TBD |
 | First-attempt full 20-job Phase B URL and job inventory | TBD |
 | Python/Redis/dependency freeze, migration/rollback | TBD |
-| #100 disposition: explicit narrow no-claim deferral GO, OR independent hardware/budget approval/raw results | TBD / NOT SIGNED |
+| #100 disposition: maintainer accepted no-claim deferral 2026-11-23; independent reviewer validation | MAINTAINER ACCEPTED / REVIEWER NOT RUN |
 | Real HTTP socket and fault/disconnect results | TBD |
 | TTL/corrupt/auth/tenant/serialization/cancellation test provenance | TBD |
 | Fresh Dependabot/lock findings and owner dispositions | TBD |
