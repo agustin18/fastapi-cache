@@ -29,11 +29,13 @@ TTL expiry, targeted namespace clearing and a slow endpoint. HTTP tests use
 operations use the real local Redis socket and measure concurrent SET/GET.
 
 A GitHub Actions PR run executes `smoke` and a separate **full three-process**
-profile against a disposable Redis 7.4 CI service. Both upload short-lived
+profile against a disposable Redis 7.4 CI service, plus separate historical
+comparison and real TCP loopback HTTP jobs. The first two upload short-lived
 results: `raw.csv`, `summary.json`, `provenance.json`, `pip-freeze.txt`,
 `aggregate.json` and (for repeats) `runs/run-02`, `runs/run-03`.
 The manual `workflow_dispatch` runs the same two jobs: one smoke baseline and
-one full three-process baseline. The full profile is no longer PR-only.
+one full three-process baseline, **plus** historical comparison and socket HTTP.
+The full profile is no longer PR-only.
 `--repeats N` accepts 1–5
 fresh workload processes (default 1 smoke / 3 full); this measures variance
 across runs in one CI environment, **not** variance across independent hosts.
@@ -61,10 +63,12 @@ Never publish a superiority claim or treat different CI machines as a controlled
 - The HTTP case performs an end-of-run full **random prefix** cleanup, including
   Vary, slow and TTL entries; scoped Redis SCAN assertions fail if benchmark
   keys remain after cleanup. No `FLUSHDB` or other tenants are touched.
-  *Real-network* HTTP p99, timeout/failure behavior, replication on
-  independent controlled hardware and agreed regression budgets remain
-  pending. The historical 0.5.0 comparison is implemented below, but its
-  GitHub-hosted results are descriptive. Do not close #100 on merge.
+  **Qualified** real-network production HTTP p99, timeout/disconnect
+  behavior, replication on independent controlled hardware and agreed
+  regression budgets remain pending. The real localhost TCP socket profile
+  below measures only descriptive shared-runner latencies, not production p99.
+  The historical 0.5.0 comparison is implemented below and is similarly
+  descriptive. Do not close #100 on merge.
 - Concurrency latencies are individual task wall times, not serialized server
   time. `full` uses bounded batches to avoid an unbounded number of tasks.
 - `aggregate.json` includes per-run p50/p95/p99 medians, standard deviation
