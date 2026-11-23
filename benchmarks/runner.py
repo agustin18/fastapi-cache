@@ -13,7 +13,6 @@ import venv
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from aggregate import aggregate_results
 
 PACKAGE = "fastapi-cache-stable"
 VERSION = "0.6.0"
@@ -57,6 +56,9 @@ def _venv_python(folder: Path) -> Path:
 
 
 def main() -> None:
+    # Executable script has benchmarks/ on sys.path; module import in tests does not.
+    from aggregate import aggregate_results
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile", choices=("smoke", "full"), default="smoke")
     parser.add_argument("--output", type=Path, required=True)
