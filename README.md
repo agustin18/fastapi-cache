@@ -1,5 +1,7 @@
 # fastapi-cache-stable
 
+[![Documentation](https://img.shields.io/badge/docs-online-blue)](https://agustin18.github.io/fastapi-cache/)
+
 > Community-maintained fork of [fastapi-cache2](https://pypi.org/project/fastapi-cache2/).
 > The Python import stays `fastapi_cache`; intentional safety/behavior changes
 > are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
@@ -26,6 +28,7 @@
 > `stable` is the release branch; `main` tracks upstream.
 
 [![pypi](https://img.shields.io/pypi/v/fastapi-cache-stable.svg?style=flat)](https://pypi.org/p/fastapi-cache-stable)
+[![Python](https://img.shields.io/pypi/pyversions/fastapi-cache-stable.svg)](https://pypi.org/project/fastapi-cache-stable/)
 [![license](https://img.shields.io/github/license/agustin18/fastapi-cache)](https://github.com/agustin18/fastapi-cache/blob/stable/LICENSE)
 [![CI](https://github.com/agustin18/fastapi-cache/actions/workflows/ci.yml/badge.svg)](https://github.com/agustin18/fastapi-cache/actions/workflows/ci.yml)
 
