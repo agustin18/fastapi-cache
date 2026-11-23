@@ -21,13 +21,20 @@ Merged #130/#131/#132 do not constitute a frozen final candidate.
 - [x] #99/#103 **scope decision for 0.7**: new per-app and non-HTTP
       APIs are deferred beyond 0.7; singleton/tenant limitations documented.
       Neither RFC's future implementation is approved or the issues closed.
-- [ ] #100 fixed independent hardware, real HTTP network, Redis
-      failure profiles, and **regression budgets signed before measurement**;
-      historical AB/BA comparator is not a performance certification.
+- [ ] #100 release-specific risk disposition: **maintainer accepted the
+      no-performance-claim fixed-hardware deferral on 2026-11-23**; independent
+      reviewer validation is still required (see
+      [scope decision](SCOPE_0.7.0_DECISION.md)). Retain real
+      installed-artifact, HTTP socket, Redis 7.4 process failure and bounded
+      InMemory smoke; do not certify p95/p99 or default redis-py retry
+      latency. If any performance claim or material regression is found,
+      require preregistered numeric controlled AB/BA. Broad #100 issue
+      remains open.
 - [ ] Approve/reject the narrow-scope proposal: **new #96 single-flight,
       #50 typed events and #99/#103 public APIs do not ship in 0.7.0**.
-      #102 may supply standalone Redis failure *test evidence*, but no new
-      resilience policy, HA/TLS/Cluster guarantee or public feature ships
+      #133 **merged** standalone Redis daemon fault *test evidence* with
+      retries explicitly disabled; no new resilience policy, HA/TLS/Cluster
+      guarantee or public feature ships
       without separately approved tests and contracts. Keep issues open.
 - [ ] Preserve import `fastapi_cache`, ordinary key identity,
       compatibility of documented flows and real migration rollback.

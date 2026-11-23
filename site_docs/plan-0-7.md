@@ -1,5 +1,16 @@
 # 0.7.0 execution plan and evidence gates
 
+> **Current decision (2026-11-23, proposed pending review):** 0.7.0
+> is a small correctness release. #133/#134 are merged into source
+> `0c306a6`. [Scope/risk decision](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/SCOPE_0.7.0_DECISION.md)
+> proposes keeping full controlled-hardware #100 certification open for
+> performance-focused 0.8+, with no performance claims and separate
+> signed acceptance. **No tag, final candidate, publication or audit GO.**
+> Historical descriptions below are retained as background and are
+> superseded where they assign #96/#50 to 0.7 or require fixed-hardware
+> numbers for a no-performance-claim release.
+
+
 **Status: 2026-11-23 — planning, no release date, no tag, no registry GO.**
 Latest published artifact remains [fastapi-cache-stable 0.6.0](reference/releases.md).
 Source merged after publication is not an installable 0.7.0 release.
@@ -7,8 +18,12 @@ The development source identity is `0.7.0.dev0`; published installation examples
 continue to pin verified `0.6.0` until 0.7.0 is actually released.
 #130 (development identity), #131 (error/ownership tests), and #132
 (candidate wheel socket measurement support) are now **merged** on
-`stable` `1d78154`. They do not deliver independent physical performance
-qualification, real Redis process outages or a 0.7.0 release.
+`stable` prior to #133/#134; current source SHA is `0c306a6`.
+#133 now adds real disposable Redis 7.4 daemon stop/restart testing,
+**explicitly with client retries disabled**. The maintainer accepted the
+#100 no-performance-claim deferral on 2026-11-23; independent reviewer
+validation is still required. None of these changes qualifies production
+retry latency or constitutes a 0.7.0 release.
 See the [narrow-scope pre-audit decision](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/SCOPE_0.7.0_DECISION.md)
 once reviewed and merged.
 
@@ -16,7 +31,7 @@ once reviewed and merged.
 
 | Scope | Verified progress | Still required |
 |---|---|---|
-| [#100](https://github.com/agustin18/fastapi-cache/issues/100) | [#120](https://github.com/agustin18/fastapi-cache/pull/120), [#121](https://github.com/agustin18/fastapi-cache/pull/121), [#122](https://github.com/agustin18/fastapi-cache/pull/122) **merged**; 0.6.0 published-wheel smoke/full and balanced published 0.5/0.6 comparison | Independent controlled hardware, real Redis fault/disconnect cases and **pre-approved** budgets; [#128](https://github.com/agustin18/fastapi-cache/pull/128) **merged as `f81e60b`** providing descriptive real loopback HTTP socket measurements |
+| [#100](https://github.com/agustin18/fastapi-cache/issues/100) | #120–#122 installed-wheel benchmark + historical AB/BA; #128 real localhost socket; #133 real disposable Redis 7.4 daemon fault with retries disabled | **Explicit reviewer + maintainer choice**: accept no-speed-claim fixed-hardware deferral for 0.7, or preregister budgets and perform independent controlled measurement. Default redis-py retry latency is NOT qualified. Broad issue stays open. |
 | [#111](https://github.com/agustin18/fastapi-cache/issues/111) | Redis tuple smoke; [#123](https://github.com/agustin18/fastapi-cache/pull/123) **merged source** (`612e9d6`), exact InMemory TTL equality; absent from published 0.6.0 | Contract accepted, clock skew limitation, backend ownership and experimental providers |
 | [#112](https://github.com/agustin18/fastapi-cache/issues/112) | [#124](https://github.com/agustin18/fastapi-cache/pull/124) **merged source** (`4dc66ad`), decode-before-304; absent from published 0.6.0 | Corruption/serialization/backend error policy, privacy and cancellation |
 | [#99](https://github.com/agustin18/fastapi-cache/issues/99), [#103](https://github.com/agustin18/fastapi-cache/issues/103) | New app-scoped and non-HTTP APIs explicitly **deferred out of 0.7**; singleton behavior remains | Design issues stay open for 0.8+; no multi-app/tenant isolation promise |
@@ -35,8 +50,10 @@ are **planning templates** until accepted and backed by exact evidence.
 
 The narrow #123/#124 corrections are merged, but complete #111/#112
 backend/error contracts remain open; #99/#103 new APIs are deferred for 0.7.
-Next qualify independent-host performance and real Redis fault behavior and individually reviewed opt-in candidates #96/#50/basic #102,
-deferring unsafe scope to 0.7.x. Last, freeze selected PRs and repeat the
+Next independently review selected #111/#112/#53 risks and accept/reject
+the narrow #100 no-speed-claim deferral. #133 already covers a **limited** real
+standalone Redis outage with no client retries. **Do not add #96/#50 or
+new #102 policies in 0.7**. Then freeze selected source and repeat the
 **exact final SHA** 20-job Phase B, wheel/sdist hash, security and
 TestPyPI/PyPI workflow with explicit approval. Never publish from the
 historical 0.6.0 artifact, a PR synthetic merge SHA, or CI alone.
@@ -56,7 +73,7 @@ The [published 0.6.0 provenance](reference/releases.md) remains immutable.
 Do not use source-only tests or post-release `stable` changes to describe its
 contents.
 
-## Execution order
+## Historical broad-scope execution order (superseded for 0.7)
 
 | Stage | Work | Acceptance / handoff |
 |---|---|---|
