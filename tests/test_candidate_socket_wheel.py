@@ -5,7 +5,6 @@ import zipfile
 from pathlib import Path
 
 import pytest
-
 from benchmarks.candidate_artifact import verify_candidate_wheel
 
 
