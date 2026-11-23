@@ -32,6 +32,16 @@ Never substitute those hashes for a 0.7.0 candidate.
   version-neutral infrastructure exists, but no **final 0.7.0**
   Phase B, hash, tag or registry verification exists.
 
+## Verified merged source (not a frozen release)
+
+- #130 (`0.7.0.dev0` source vs immutable 0.6.0 published docs),
+  #131 (additional backend error/ownership tests, NOT daemon outage),
+  #132 (SHA-checked local candidate wheel socket harness) are merged
+  through `stable` `1d78154`; none approves a final release.
+- [#133](https://github.com/agustin18/fastapi-cache/pull/133)
+  proposes a real disposable Redis 7.4 process stop/restart test; **only
+  count it after merge, installed-wheel CI and evidence review**.
+
 ## Trigger for formal final-candidate contraaudit
 
 Request final audit **only after** selected contracts are accepted,
@@ -71,7 +81,9 @@ the final release candidate's independent GO.
 > above. Do not trust prior AI reviews, PR summaries, green checks or
 > editable source as release-artifact proof. Independently verify source,
 > version, wheel/sdist hashes, manifest, first-attempt full Phase B,
-> annotated tag target and fresh authenticated security delta.
+> the **absence of any unauthorized 0.7.0 tag** and a fresh authenticated
+> security delta. The tag target is inspected **after** an explicitly
+> authorized tag is created, not as a precondition for a pre-tag GO.
 >
 > Attempt to falsify: TTL equality and **live** clock rollback (both
 > InMemory modes); Redis zero/negative TTL differences; malformed JSON,
