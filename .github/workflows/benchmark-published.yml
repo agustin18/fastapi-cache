@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   baseline:
-    name: Published-wheel benchmark (PR smoke / manual full)
+    name: Published-wheel smoke (PR and manual)
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     services:
@@ -37,12 +37,9 @@ jobs:
       - name: Run isolated published-wheel baseline
         run: |
           set -euo pipefail
-          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
-            profile=full
-          else
-            profile=smoke
-          fi
-          python benchmarks/runner.py --profile "$profile" \
+          # Keep low-cost smoke on PR and manual dispatch;
+          # the full-evidence job below owns the repeated full run.
+          python benchmarks/runner.py --profile smoke \
             --redis-url redis://127.0.0.1:6379/15 \
             --output "$RUNNER_TEMP/published-060-benchmark"
       - name: Upload raw benchmark evidence
@@ -56,7 +53,6 @@ jobs:
 
   full-evidence:
     name: Full published 0.6.0 baseline (three isolated runs)
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     permissions:

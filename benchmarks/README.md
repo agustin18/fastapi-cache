@@ -32,7 +32,9 @@ A GitHub Actions PR run executes `smoke` and a separate **full three-process**
 profile against a disposable Redis 7.4 CI service. Both upload short-lived
 results: `raw.csv`, `summary.json`, `provenance.json`, `pip-freeze.txt`,
 `aggregate.json` and (for repeats) `runs/run-02`, `runs/run-03`.
-The manual `workflow_dispatch` also executes full. `--repeats N` accepts 1–5
+The manual `workflow_dispatch` runs the same two jobs: one smoke baseline and
+one full three-process baseline. The full profile is no longer PR-only.
+`--repeats N` accepts 1–5
 fresh workload processes (default 1 smoke / 3 full); this measures variance
 across runs in one CI environment, **not** variance across independent hosts.
 Never publish a superiority claim or treat different CI machines as a controlled comparison.
