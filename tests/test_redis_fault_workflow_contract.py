@@ -11,7 +11,7 @@ def test_disposable_server_and_installed_wheel_gate() -> None:
         encoding="utf-8"
     )
     for token in (
-        '"127.0.0.1::6379"',
+        'f"127.0.0.1:{port}:6379"',
         '"redis:7.4"',
         'REDIS_FAULT_DISPOSABLE',
         '"stop", "--time", "1"',
