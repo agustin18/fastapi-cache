@@ -27,7 +27,7 @@ def test_seeded_bounded_inmemory_fuzz(
     def reference_get(key: str) -> Optional[Entry]:
         val = reference.get(key)
         if val is not None:
-            if val[1] is not None and val[1] < now[0]:
+            if val[1] is not None and val[1] <= now[0]:
                 del reference[key]
                 return None
             reference.move_to_end(key)
@@ -38,7 +38,7 @@ def test_seeded_bounded_inmemory_fuzz(
             candidates = sorted(
                 (ttl, k)
                 for k, (_, ttl) in reference.items()
-                if ttl is not None and ttl < now[0]
+                if ttl is not None and ttl <= now[0]
             )
             if candidates:
                 del reference[candidates[0][1]]

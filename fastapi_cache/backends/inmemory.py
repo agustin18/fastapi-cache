@@ -1,6 +1,7 @@
 """In-process cache with optional bounded, per-instance LRU capacity.
 
-Unbounded default preserves historical lazy-expiration semantics.
+Unbounded default preserves lazy expiration; exact TTL boundaries expire
+when the integer-second deadline is reached (no zero-TTL stale reads).
 Bounded writes use an indexed min-heap for expiry and an OrderedDict
 for recency: O(log capacity), no full-store scans on ordinary writes.
 """
@@ -87,7 +88,7 @@ class _ExpirationIndex:
         self._sift_up(index)
 
     def oldest_expired(self, now: int) -> Optional[str]:
-        if self._heap and self._heap[0][0] < now:
+        if self._heap and self._heap[0][0] <= now:
             return self._heap[0][1]
         return None
 
@@ -136,7 +137,7 @@ class InMemoryBackend(Backend):
     def _get(self, key: str) -> Optional[Value]:
         v = self._store.get(key)
         if v:
-            if v.ttl_ts is not None and v.ttl_ts < self._now:
+            if v.ttl_ts is not None and v.ttl_ts <= self._now:
                 self._discard(key)
             else:
                 if self._recency is not None:
