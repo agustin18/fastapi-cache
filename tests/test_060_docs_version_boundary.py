@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from scripts.release_contract import package_version
+from scripts.check_docs_version import published_version
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -14,7 +14,7 @@ def _read(path: str) -> str:
 def test_readme_and_quickstart_expose_published_060() -> None:
     readme = _read("README.md")
     quickstart = _read("docs/QUICKSTART.md")
-    version = package_version()
+    version = published_version()
     assert f"Latest published stable:** [{version}" in readme
     assert f"fastapi-cache-stable[redis]=={version}" in readme
     assert f"fastapi-cache-stable=={version}" in quickstart

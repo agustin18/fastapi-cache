@@ -260,6 +260,17 @@ def test_future_version_agnostic_release_contract(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     assert package_version(pyproject) == VERSION
+    dev_source = tmp_path / "development.toml"
+    dev_source.write_text(
+        '[tool.poetry]\nname = "fastapi-cache-stable"\nversion = "0.7.0.dev0"\n',
+        encoding="utf-8",
+    )
+    assert package_version(dev_source, allow_development=True) == "0.7.0.dev0"
+    assert artifact_name("0.7.0.dev0", allow_development=True) == "migration-phase-b-0.7.0.dev0-distributions"
+    with pytest.raises(ValueError, match="final"):
+        package_version(dev_source)
+    with pytest.raises(ValueError, match="final"):
+        artifact_name("0.7.0.dev0")
     assert artifact_name(VERSION) == "migration-phase-b-0.7.0-distributions"
     for wrong in ("0.7.0rc1", "0.7", "../0.7.0", "0.7.0;echo unexpected"):
         with pytest.raises(ValueError, match="final X.Y.Z"):
