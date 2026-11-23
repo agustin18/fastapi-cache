@@ -28,10 +28,14 @@ TTL expiry, targeted namespace clearing and a slow endpoint. HTTP tests use
 `httpx.ASGITransport` (in-process), **not real HTTP network latency**. Redis
 operations use the real local Redis socket and measure concurrent SET/GET.
 
-A GitHub Actions PR run executes `smoke` and uploads `raw.csv`, `summary.json`,
-`provenance.json` and `pip-freeze.txt` as short-lived artifacts. A *manual*
-`workflow_dispatch` runs the full matrix. Never publish a superiority claim
-from either run or treat different CI machines as a controlled comparison.
+A GitHub Actions PR run executes `smoke` and a separate **full three-process**
+profile against a disposable Redis 7.4 CI service. Both upload short-lived
+results: `raw.csv`, `summary.json`, `provenance.json`, `pip-freeze.txt`,
+`aggregate.json` and (for repeats) `runs/run-02`, `runs/run-03`.
+The manual `workflow_dispatch` also executes full. `--repeats N` accepts 1–5
+fresh workload processes (default 1 smoke / 3 full); this measures variance
+across runs in one CI environment, **not** variance across independent hosts.
+Never publish a superiority claim or treat different CI machines as a controlled comparison.
 
 ## Methodology and gaps
 
@@ -45,13 +49,22 @@ from either run or treat different CI machines as a controlled comparison.
   versions. Repeat workloads on the same pinned machine before setting
   regression budgets.
 - The opt-in InMemory `max_entries` limit is a count, not a memory-byte bound.
-  RSS/peak memory, CPU utilization, *real* HTTP socket p99, Redis server
-  resource use, timeout/failure behavior and a 0.5.0 comparator are **not yet
-  implemented** in this first PR. Do not mark issue #100 complete on merge.
+  **Linux process** current/peak RSS and CPU seconds are recorded. Peak RSS is a
+  cumulative high-water mark including imports, all earlier scenarios and
+  benchmark recording overhead, NOT isolated backend heap size. Redis `INFO`
+  memory/CPU start/end samples cover the standalone CI server, not exclusive
+  per-request allocations; resource measurements are descriptive.
+- The HTTP case performs an end-of-run full **random prefix** cleanup, including
+  Vary, slow and TTL entries; no `FLUSHDB` or other tenants are touched.
+  *Real network* HTTP p99, timeout/failure behavior and controlled **0.5.0
+  historical comparator** are still pending. Do not close #100 on merge.
 - Concurrency latencies are individual task wall times, not serialized server
   time. `full` uses bounded batches to avoid an unbounded number of tasks.
-- Warmup and multiple-run variance, RSS and controlled 0.5.0 comparison belong
-  in follow-up evidence before a performance acceptance threshold is approved.
+- `aggregate.json` includes per-run p50/p95/p99 medians, standard deviation
+  and coefficient of variation (CV) **across processes**. Cases with fewer than
+  100 samples per run explicitly warn that a stable p99 claim is unsupported.
+  Full workloads repeat three times; additional warmup, independent-host
+  replication, 0.5.0 comparisons and accepted thresholds are future work.
 
 ## Release boundaries
 

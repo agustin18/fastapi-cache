@@ -53,3 +53,41 @@ jobs:
           path: ${{ runner.temp }}/published-060-benchmark/
           if-no-files-found: warn
           retention-days: 14
+
+  full-evidence:
+    name: Full published 0.6.0 baseline (three isolated runs)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    services:
+      redis:
+        image: redis:7.4
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Run three isolated full workload processes
+        run: |
+          python benchmarks/runner.py --profile full --repeats 3 \\
+            --redis-url redis://127.0.0.1:6379/15 \\
+            --output "$RUNNER_TEMP/full-060-benchmark"
+      - name: Upload full baseline, resources and variation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: full-060-benchmark
+          path: ${{ runner.temp }}/full-060-benchmark/
+          if-no-files-found: warn
+          retention-days: 14
