@@ -29,11 +29,13 @@ TTL expiry, targeted namespace clearing and a slow endpoint. HTTP tests use
 operations use the real local Redis socket and measure concurrent SET/GET.
 
 A GitHub Actions PR run executes `smoke` and a separate **full three-process**
-profile against a disposable Redis 7.4 CI service. Both upload short-lived
+profile against a disposable Redis 7.4 CI service, plus separate historical
+comparison and real TCP loopback HTTP jobs. The first two upload short-lived
 results: `raw.csv`, `summary.json`, `provenance.json`, `pip-freeze.txt`,
 `aggregate.json` and (for repeats) `runs/run-02`, `runs/run-03`.
 The manual `workflow_dispatch` runs the same two jobs: one smoke baseline and
-one full three-process baseline. The full profile is no longer PR-only.
+one full three-process baseline, **plus** historical comparison and socket HTTP.
+The full profile is no longer PR-only.
 `--repeats N` accepts 1–5
 fresh workload processes (default 1 smoke / 3 full); this measures variance
 across runs in one CI environment, **not** variance across independent hosts.
@@ -61,10 +63,12 @@ Never publish a superiority claim or treat different CI machines as a controlled
 - The HTTP case performs an end-of-run full **random prefix** cleanup, including
   Vary, slow and TTL entries; scoped Redis SCAN assertions fail if benchmark
   keys remain after cleanup. No `FLUSHDB` or other tenants are touched.
-  *Real-network* HTTP p99, timeout/failure behavior, replication on
-  independent controlled hardware and agreed regression budgets remain
-  pending. The historical 0.5.0 comparison is implemented below, but its
-  GitHub-hosted results are descriptive. Do not close #100 on merge.
+  **Qualified** real-network production HTTP p99, timeout/disconnect
+  behavior, replication on independent controlled hardware and agreed
+  regression budgets remain pending. The real localhost TCP socket profile
+  below measures only descriptive shared-runner latencies, not production p99.
+  The historical 0.5.0 comparison is implemented below and is similarly
+  descriptive. Do not close #100 on merge.
 - Concurrency latencies are individual task wall times, not serialized server
   time. `full` uses bounded batches to avoid an unbounded number of tasks.
 - `aggregate.json` includes per-run p50/p95/p99 medians, standard deviation
@@ -110,3 +114,41 @@ confound small differences. No automatically accepted regression threshold,
 superiority advertising, published-version downgrade or 0.7.0 release GO
 follows from this comparison. Repeat on controlled independent hardware and
 agree on budgets *before* qualifying new opt-in features.
+
+## Real loopback HTTP socket profile (separate #100 acceptance slice)
+
+The existing HTTP baselines above use in-process ASGITransport and do **not**
+represent TCP loopback or remote-server HTTP. An additional read-only
+`socket-http` GitHub Actions job now exercises the **published, SHA-verified
+0.6.0 wheel** over a **real 127.0.0.1 TCP socket** served by a *separate*
+Uvicorn OS process. It runs fresh InMemory and standalone Redis backend
+servers, 120 serial samples for each of HIT/MISS/304 on 128, 4,096 and
+65,536-byte JSON, Authorization bypass, explicit Accept-Language variation,
+slow endpoint and TTL expiry. Redis keys are restricted to a random
+`perf-http-<uuid>:` prefix in localhost DB15 and selectively unlinked.
+No application backend, production data, remote endpoint, FLUSHDB,
+HA/Cluster/TLS claim, registry upload or tag is touched.
+
+Reproduce with a disposable Redis 7.4 server available at
+`redis://127.0.0.1:6379/15` and CPython 3.12:
+
+    python3.12 benchmarks/socket_runner.py --repeats 2 --iterations 120 \
+      --redis-url redis://127.0.0.1:6379/15 \
+      --output benchmark-results/socket-http
+
+The runner installs published wheel 0.6.0 with verified SHA-256 in an
+isolated venv, pins FastAPI/Pydantic/httpx/redis-py and Uvicorn, rejects
+`fastapi-cache2` co-install and checkout imports with `python -I`,
+records `pip-freeze.txt`, `provenance.json`, raw per-case CSV,
+per-run percentile summaries, aggregate variation and short-lived server
+logs. Requests and authentication tokens are *synthetic* and logs disable
+Uvicorn access logging.
+
+**Qualification boundary:** the Uvicorn process is on a GitHub-hosted
+runner alongside the Redis test service, **not** independent controlled
+hardware. Serial request p99 with 120 observations is not a statistically
+qualified production p99. There is no agreed numerical regression budget,
+so the job tests reproducibility, correctness and observability, **not**
+speed superiority or a release GO. #100 remains OPEN for fixed independent
+hardware, prior-reviewed performance thresholds, fault/disconnect cases and
+candidate-vs-baseline OFF/ON profiling.
