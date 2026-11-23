@@ -28,7 +28,8 @@ The namespace is scoped under your configured prefix, not a command to clear eve
 !!! warning "Exact expiry deadline in the published wheel"
     Published 0.6.0 uses integer wall-clock seconds and a strict
     `ttl_ts < now` comparison. A value may be readable at the exact
-    deadline with remaining TTL zero (including immediate/negative expiry).
+    deadline with remaining TTL zero, including `expire=0`. A negative
+    InMemory TTL expires immediately; Redis rejects nonpositive EX values.
     [Draft #123](https://github.com/agustin18/fastapi-cache/pull/123)
     proposes the inclusive `<=` boundary for a future release. It has
     **not** changed the published 0.6.0 wheel. A backward wall-clock jump
