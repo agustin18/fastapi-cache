@@ -61,8 +61,13 @@ A real Redis 7.4 profile is required before claiming standalone parity.
    independent server TTL semantics: `ex=0` or a negative `ex` is rejected
    by Redis rather than normalized by this change. This is a *proposed*
    behavioral adjustment for 0.7, not a retroactive change to 0.6.0.
-   Clock skew, negative TTL across all backends, races and cancellation
-   require separate coverage before the whole contract issue can close.
+   A deterministic **still-live** entry test characterizes wall-clock rollback:
+   remaining TTL can *increase*, because the existing integer timestamp is
+   not a monotonic elapsed-time clock. An entry already deleted by expiry
+   does not revive after rollback. This does **not** claim resilience to
+   clock skew: negative TTL across all backends, time jumps, races and
+   cancellation still require a distinct cross-backend decision before
+   the full contract issue can close.
 
 The existing distributed package and external client ownership remain
 unchanged. Future implementation should add contract variants and

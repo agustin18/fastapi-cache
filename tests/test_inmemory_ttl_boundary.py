@@ -29,7 +29,7 @@ def test_exact_deadline_is_not_a_cache_hit(
         now[0] = 5003
         assert await backend.get_with_ttl("tenant:edge") == (0, None)
         assert await backend.get("tenant:edge") is None
-        now[0] = 5001  # wall clock moved backward; removed entries cannot revive
+        now[0] = 5001  # removed entries stay removed even if clock moves backward
         assert await backend.get("tenant:edge") is None
 
     asyncio.run(run())
@@ -69,5 +69,32 @@ def test_bounded_heap_reclaims_exact_deadline_before_live_lru(
         assert len(backend._store) == 2  # pyright: ignore[reportPrivateUsage]
         assert backend._expiry_index is not None  # pyright: ignore[reportPrivateUsage]
         assert len(backend._expiry_index) == 2  # pyright: ignore[reportPrivateUsage]
+
+    asyncio.run(run())
+
+@pytest.mark.parametrize("capacity", [None, 2])
+def test_backward_wall_clock_shift_on_still_live_entry(
+    capacity: Optional[int], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Characterize wall-clock skew: an unexpired entry can gain remaining TTL.
+
+    This documents a limitation of integer wall-clock timestamps, not a
+    monotonic-clock guarantee or a promise to expire after elapsed seconds.
+    """
+    now = [1000]
+    monkeypatch.setattr("fastapi_cache.backends.inmemory.time.time", lambda: now[0])
+
+    async def run() -> None:
+        backend = InMemoryBackend(max_entries=capacity)
+        await backend.set("tenant:skew", b"safe", expire=10)
+        now[0] = 1003
+        assert await backend.get_with_ttl("tenant:skew") == (7, b"safe")
+        now[0] = 998
+        assert await backend.get("tenant:skew") == b"safe"
+        assert await backend.get_with_ttl("tenant:skew") == (12, b"safe")
+        now[0] = 1010
+        assert await backend.get_with_ttl("tenant:skew") == (0, None)
+        now[0] = 999
+        assert await backend.get("tenant:skew") is None
 
     asyncio.run(run())
