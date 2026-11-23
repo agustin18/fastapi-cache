@@ -1,21 +1,28 @@
-# Public API reference · published 0.5.0
+# Public API reference · published 0.6.0
 
-This is a **curated reference** to stable, user-facing entry points; it does not advertise internal helpers, experimental backends or unreleased features. Consult the [source at tag v0.5.0](https://github.com/agustin18/fastapi-cache/tree/v0.5.0/fastapi_cache) for exact type signatures.
+This page documents public entry points present in **the published
+fastapi-cache-stable 0.6.0 wheel and sdist**. It does not advertise
+experimental internal APIs, future backend parity or unmerged
+[#123](https://github.com/agustin18/fastapi-cache/pull/123) /
+[#124](https://github.com/agustin18/fastapi-cache/pull/124)
+behavior. For exact signatures inspect the
+[source at annotated tag v0.6.0](https://github.com/agustin18/fastapi-cache/tree/v0.6.0/fastapi_cache)
+and [artifact provenance](releases.md).
 
-## `FastAPICache`
+## FastAPICache lifecycle
 
 ```python
 from fastapi_cache import FastAPICache
 ```
 
-| Entry point | Purpose | Notes |
+| Public API | Meaning | Compatibility boundary |
 |---|---|---|
-| `FastAPICache.init(backend, prefix="", expire=None, coder=JsonCoder, key_builder=default_key_builder, cache_status_header="X-FastAPI-Cache", enable=True, cache_authenticated=False, *, force=False)` | Configure a cache backend once per application process | A second call raises unless deliberate `force=True`. Does not manage or close caller-owned Redis clients |
-| `FastAPICache.reset()` | Reset process-global configuration | Does **not** remove stored backend/Redis entries |
-| `await FastAPICache.clear(namespace=None, key=None)` | Selectively remove keys or a namespace | Namespace is scoped under the initialized prefix; **not** a global flush |
-| `FastAPICache.get_backend()` | Retrieve initialized backend | Raises before initialization |
+| `FastAPICache.init(backend, prefix="", expire=None, coder=JsonCoder, key_builder=default_key_builder, cache_status_header="X-FastAPI-Cache", enable=True, cache_authenticated=False, *, force=False)` | Configure process-global cache instance | A second init raises unless `force=True`; multiple apps/lifespans are **not** automatically isolated |
+| `FastAPICache.reset()` | Clear process-global configuration | Does **not** remove entries from Redis or other backends; does not automatically close borrowed clients |
+| `await FastAPICache.clear(namespace=None, key=None)` | Remove matching backend entries | A namespace is scoped below the configured prefix; not a global Redis flush |
+| `FastAPICache.get_backend()` | Retrieve initialized backend | Requires earlier init |
 
-## `@cache` decorator
+## Cache decorator
 
 ```python
 from fastapi_cache.decorator import cache
@@ -26,65 +33,80 @@ async def items():
     return {"ok": True}
 ```
 
-| Argument | Published 0.5.0 behavior |
+| Argument | Published 0.6.0 meaning |
 |---|---|
-| `expire: Optional[int]` | TTL in seconds; `None` uses the configured default, which may be no expiration |
-| `namespace: str` | Application-scoped key namespace |
-| `coder` | `JsonCoder` by default; `TypedJsonCoder` for opt-in typed Pydantic v2 decoding |
-| `key_builder` | Custom function for validated identity and all response-defining dimensions |
-| `cache_authenticated: Optional[bool]` | Only opt in with a **complete identity/permission-aware key** |
-| `infer_response_model: bool` | Opt into FastAPI return-annotation response-model inference; disabled by default |
-| `vary_headers: Optional[Sequence[str]]` | Explicit allowlist of request headers affecting **public** response variants; no automatic tenant/identity detection |
-| `injected_dependency_namespace: str` | Names for injected request/response dependencies |
+| `expire: Optional[int]` | Seconds of TTL; None uses configured default, potentially unlimited |
+| `namespace: str` | Namespace under the configured **process-global prefix**, not implicit app/tenant isolation |
+| `coder` | JsonCoder default; TypedJsonCoder opt-in for Pydantic v2 |
+| `key_builder` | Explicit function accounting for validated identity, permission and all response-defining dimensions |
+| `cache_authenticated: Optional[bool]` | Opt-in caching of authenticated requests only with a complete identity-aware key |
+| `infer_response_model: bool` | Opt-in FastAPI response-model inference (disabled by default for legacy compatibility) |
+| `vary_headers: Optional[Sequence[str]]` | Explicit public request-header variants; not a substitute for tenant isolation |
+| `injected_dependency_namespace: str` | Namespace for injected request/response dependencies |
 
-HTTP `Vary` alone does not partition the library's internal cache. The decorator order is significant: FastAPI route decorators must go **above** `@cache`.
+FastAPI route decorators must be **above** `@cache`. An HTTP `Vary`
+header by itself does not partition a cached object by identity.
 
-## Backends
-
-=== "InMemory (0.5.0)"
-
-    ```python
-    from fastapi_cache.backends.inmemory import InMemoryBackend
-
-    FastAPICache.init(InMemoryBackend(), prefix="demo")
-    ```
-
-    Per-instance, process-local, **unbounded in published 0.5.0**. [PR #85](https://github.com/agustin18/fastapi-cache/pull/85) merged a capacity argument into **unreleased `stable` source**, not into the 0.5.0 package.
-
-=== "Redis standalone"
-
-    ```python
-    from redis import asyncio as redis
-    from fastapi_cache.backends.redis import RedisBackend
-
-    client = redis.from_url("redis://localhost:6379/0", decode_responses=False)
-    FastAPICache.init(RedisBackend(client), prefix="demo")
-    ```
-
-    Close your client in lifespan teardown. Redis Cluster namespace-wide `clear()` is unsupported.
-
-## Next-release source API (not published)
-
-!!! warning "0.5.0 does not accept this argument"
-    The following constructor is implemented in `stable` after [PR #85](https://github.com/agustin18/fastapi-cache/pull/85), but is **not part of a published 0.6.0 distribution**. Keep existing `fastapi-cache-stable==0.5.0` installs on their documented unbounded constructor.
+## InMemoryBackend — published 0.6.0
 
 ```python
-InMemoryBackend(*, max_entries: Optional[int] = None)
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
+
+backend = InMemoryBackend(max_entries=1_000)
+FastAPICache.init(backend, prefix="demo")
 ```
 
-- A **positive integer** caps entry **count per backend instance**. `None` preserves the original unbounded mode; `bool`, zero, negative and non-integer inputs raise `ValueError`.
-- `max_entries` is a **read-only property** after construction. Assignments raise `AttributeError`, and dynamic resizing is not supported.
-- When full, new keys reclaim one expired entry if available, else evict the least-recently-used entry. The expiry heap does not start a background task.
-- This is **not** a byte-memory cap or an aggregate multiworker limit. Explicit namespace clear can still scan the entire local store under the async lock.
-- For a source-only example and release requirements see the [InMemory guide](../guides/inmemory.md) and [0.6.0 checklist](https://github.com/agustin18/fastapi-cache/issues/92).
+`InMemoryBackend(*, max_entries: Optional[int] = None)` is **shipped in
+0.6.0**, but not present in published 0.5.0. `None` retains the
+unbounded, process-local default. A positive integer caps **entry count
+per backend instance**, never bytes, workers or total process RSS.
+`bool`, zero, negative and non-integer capacities fail validation.
+The cap is immutable after construction. At capacity, one expired key
+is reclaimed if possible, else the least-recently-used key is evicted.
+There is no background sweeper; explicit namespace clearing may still
+scan all local keys under the async lock.
 
-## Coders
+**TTL note:** the published 0.6.0 InMemory implementation uses
+integer wall-clock seconds and a strict `ttl_ts < now` expiry test;
+a value can remain visible at the exact deadline with remaining TTL 0.
+Draft [#123](https://github.com/agustin18/fastapi-cache/pull/123)
+proposes inclusive deadline `<=` for a future release, **not for 0.6.0**.
+See the [InMemory guide](../guides/inmemory.md).
 
-- `JsonCoder` is the default and decodes cached JSON into ordinary Python values.
-- `TypedJsonCoder` is opt-in for Pydantic v2 and has its own validation contract.
-- `PickleCoder` should **never** deserialize untrusted or attacker-modifiable bytes; avoid it in shared stores without integrity guarantees.
+## Redis standalone
 
-**Related:** [Compatibility](compatibility.md) · [Security](../guides/privacy.md) · [Migration](../migration.md) · [Full source](https://github.com/agustin18/fastapi-cache/tree/v0.5.0/fastapi_cache).
+```python
+from redis import asyncio as redis
+from fastapi_cache.backends.redis import RedisBackend
 
-!!! note "Automatic reference generation"
-    We can evaluate Zensical's `mkdocstrings` integration against tagged source later. Do not generate or publish an API reference from unreleased `stable` changes while labeling it 0.5.0.
+client = redis.from_url("redis://localhost:6379/0", decode_responses=False)
+FastAPICache.init(RedisBackend(client), prefix="demo")
+```
+
+Manage your Redis client's lifecycle in the application's lifespan.
+Redis Cluster namespace clearing is unsupported; Redis HA/TLS/Sentinel
+are not certified by the standalone service matrix.
+
+## Coders and trust
+
+- `JsonCoder` is the default; historical ordinary decoded behavior remains.
+- `TypedJsonCoder` uses opt-in typed Pydantic v2 restoration/validation.
+- `PickleCoder` deserializes arbitrary pickle bytes. **Never use it for
+  attacker-controlled or untrusted cache contents.** Changing the order
+  of conditional HTTP decoding requires its own security review.
+
+Malformed cached HIT bytes with a matching HTTP ETag can receive a
+`304` without decoding first in published 0.6.0; draft
+[#124](https://github.com/agustin18/fastapi-cache/pull/124) addresses
+this correctness issue with fail-closed decoding before the validator.
+The general corruption/retry policy remains open under [#112](https://github.com/agustin18/fastapi-cache/issues/112).
+
+**Related:** [compatibility](compatibility.md),
+[privacy](../guides/privacy.md),
+[migration](../migration.md),
+[release history](releases.md).
+
+!!! note "Generated API reference"
+    Documentation generation must use the **tagged published release**,
+    not post-release `stable` source falsely labeled as 0.6.0.
