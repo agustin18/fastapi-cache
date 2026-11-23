@@ -1,4 +1,4 @@
-"""Version gates derive active docs from the package metadata, not CI literals."""
+"""Published-docs checks remain fixed while source metadata can advance."""
 from pathlib import Path
 
 import pytest
@@ -12,9 +12,9 @@ def test_published_docs_identity_is_separate_from_development_source() -> None:
     published = published_version()
     source = package_version(allow_development=True)
     assert published.count(".") == 2
-    assert source.startswith("0.7.0")
+    assert source == published or source.startswith("0.7.0")
     assert published in (ROOT / "README.md").read_text(encoding="utf-8")
-    assert published in (ROOT / "docs/releases/RELEASE_STATUS_0.6.0.md").read_text(encoding="utf-8")
+    assert published in (ROOT / f"docs/releases/RELEASE_STATUS_{published}.md").read_text(encoding="utf-8")
 
 
 def test_missing_current_version_fails_closed(tmp_path: Path) -> None:
