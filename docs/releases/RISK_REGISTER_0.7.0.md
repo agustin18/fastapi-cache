@@ -2,7 +2,7 @@
 
 **Scope:** source at pre-preparation `0c306a67a6adb4ed098e96e70dd0da192c8fbf85`
 only; will change if release-promotion PRs merge. Published artifact remains
-\`fastapi-cache-stable==0.6.0\`. This record is a **review request**, not
+`fastapi-cache-stable==0.6.0`. This record is a **review request**, not
 maintainer acceptance or independent approval. Populate evidence with
 **exact SHA / run URL / installed-wheel digest** before final GO.
 
