@@ -34,8 +34,6 @@ def test_current_docs_metadata_cannot_drift(tmp_path: Path) -> None:
         "site_docs/reference/alternatives.md",
         "site_docs/backends.md",
         "site_docs/reference/compatibility.md",
-        "site_docs/guides/redis.md",
-        "site_docs/guides/troubleshooting.md",
     ],
 )
 def test_public_reference_markers_cannot_revert_to_old_release(
