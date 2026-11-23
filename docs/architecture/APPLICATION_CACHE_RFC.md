@@ -1,6 +1,9 @@
 # RFC: caching plain functions and application values
 
-**Status: investigation, not a promised 0.7.0 API.**
+**Status: investigation. 2026-11-23 scope decision: no new
+standalone application-cache public API in 0.7; defer design beyond 0.7.
+Existing backend methods and `@cache` remain available with explicit
+application-owned identities, lifetime and non-HTTP caveats.**
 Tracks [#103](https://github.com/agustin18/fastapi-cache/issues/103)
 and depends on app-context [#99](https://github.com/agustin18/fastapi-cache/issues/99)
 and error policy [#112](https://github.com/agustin18/fastapi-cache/issues/112).

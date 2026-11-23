@@ -8,15 +8,15 @@ Source merged after publication is not an installable 0.7.0 release.
 
 | Scope | Verified progress | Still required |
 |---|---|---|
-| [#100](https://github.com/agustin18/fastapi-cache/issues/100) | [#120](https://github.com/agustin18/fastapi-cache/pull/120), [#121](https://github.com/agustin18/fastapi-cache/pull/121), [#122](https://github.com/agustin18/fastapi-cache/pull/122) **merged**; 0.6.0 published-wheel smoke/full and balanced published 0.5/0.6 comparison | Independent controlled hardware, real socket HTTP, failure cases and **pre-approved** budgets |
-| [#111](https://github.com/agustin18/fastapi-cache/issues/111) | Redis tuple smoke; [#123](https://github.com/agustin18/fastapi-cache/pull/123) **Draft**, exact InMemory TTL equality | Contract accepted, clock skew limitation, backend ownership and experimental providers |
-| [#112](https://github.com/agustin18/fastapi-cache/issues/112) | [#124](https://github.com/agustin18/fastapi-cache/pull/124) **Draft**, decode-before-304 regression | Corruption/serialization/backend error policy, privacy and cancellation |
-| [#99](https://github.com/agustin18/fastapi-cache/issues/99), [#103](https://github.com/agustin18/fastapi-cache/issues/103) | RFC work underway, no new API published | Accept app/lifespan and non-HTTP contracts before #96/#50/#102 |
+| [#100](https://github.com/agustin18/fastapi-cache/issues/100) | [#120](https://github.com/agustin18/fastapi-cache/pull/120), [#121](https://github.com/agustin18/fastapi-cache/pull/121), [#122](https://github.com/agustin18/fastapi-cache/pull/122) **merged**; 0.6.0 published-wheel smoke/full and balanced published 0.5/0.6 comparison | Independent controlled hardware, real Redis fault/disconnect cases and **pre-approved** budgets; [#128](https://github.com/agustin18/fastapi-cache/pull/128) provides real loopback HTTP socket measurement in Draft |
+| [#111](https://github.com/agustin18/fastapi-cache/issues/111) | Redis tuple smoke; [#123](https://github.com/agustin18/fastapi-cache/pull/123) **merged source** (`612e9d6`), exact InMemory TTL equality; absent from published 0.6.0 | Contract accepted, clock skew limitation, backend ownership and experimental providers |
+| [#112](https://github.com/agustin18/fastapi-cache/issues/112) | [#124](https://github.com/agustin18/fastapi-cache/pull/124) **merged source** (`4dc66ad`), decode-before-304; absent from published 0.6.0 | Corruption/serialization/backend error policy, privacy and cancellation |
+| [#99](https://github.com/agustin18/fastapi-cache/issues/99), [#103](https://github.com/agustin18/fastapi-cache/issues/103) | New app-scoped and non-HTTP APIs explicitly **deferred out of 0.7**; singleton behavior remains | Design issues stay open for 0.8+; no multi-app/tenant isolation promise |
 | [#110](https://github.com/agustin18/fastapi-cache/issues/110) | Version-neutral release pipeline #113 merged | Fresh exact final 0.7.0 SHA + first-attempt 20-job Phase B, security/hashes and separate publication GO |
 
 The historical Redis timing difference between 0.5 and 0.6 changed sign
 across GitHub CI sessions. **No performance superiority or regression claim**
-follows. Published 0.6.0 is unaffected by draft changes.
+follows. Published 0.6.0 is unaffected by the newer merged source changes.
 
 The [0.7.0 candidate checklist](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_CANDIDATE_0.7.0.md),
 [performance preregistration protocol](https://github.com/agustin18/fastapi-cache/blob/stable/benchmarks/REGRESSION_BUDGET_PROTOCOL.md)
@@ -25,9 +25,9 @@ are **planning templates** until accepted and backed by exact evidence.
 
 ### Current release decision: NO-GO
 
-First approve #111/#112 functional and security contracts, then #99/#103
-architectural dependencies. Next qualify real-network/independent-host
-performance and individually reviewed opt-in candidates #96/#50/basic #102,
+The narrow #123/#124 corrections are merged, but complete #111/#112
+backend/error contracts remain open; #99/#103 new APIs are deferred for 0.7.
+Next qualify independent-host performance and real Redis fault behavior and individually reviewed opt-in candidates #96/#50/basic #102,
 deferring unsafe scope to 0.7.x. Last, freeze selected PRs and repeat the
 **exact final SHA** 20-job Phase B, wheel/sdist hash, security and
 TestPyPI/PyPI workflow with explicit approval. Never publish from the
