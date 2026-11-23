@@ -80,8 +80,8 @@ jobs:
           python-version: "3.12"
       - name: Run three isolated full workload processes
         run: |
-          python benchmarks/runner.py --profile full --repeats 3 \\
-            --redis-url redis://127.0.0.1:6379/15 \\
+          python benchmarks/runner.py --profile full --repeats 3 \
+            --redis-url redis://127.0.0.1:6379/15 \
             --output "$RUNNER_TEMP/full-060-benchmark"
       - name: Upload full baseline, resources and variation evidence
         if: always()

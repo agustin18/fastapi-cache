@@ -27,7 +27,7 @@ def aggregate_results(output: Path, repeats: int) -> dict[str, Any]:
     if any(set(doc["cases"]) != expected for doc in documents[1:]):
         raise ValueError("Different cases between benchmark runs; cannot compare")
 
-    def distribution(numbers: list[float]) -> dict[str, float | None]:
+    def distribution(numbers: list[float]) -> dict[str, Any]:
         mean = statistics.mean(numbers)
         return {
             "median": statistics.median(numbers),
