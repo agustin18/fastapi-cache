@@ -35,3 +35,14 @@ controls is acceptable. Never reuse a 0.6.0 run or inferred archive hash.
 
 Existing 0.6.0 tags, files and evidence remain immutable. This infrastructure
 change is not an authorization to create another release.
+
+## 0.7.0 evidence and contra-audit handoff
+
+Before starting an actual 0.7.0 promotion, use the [candidate acceptance
+checklist](RELEASE_CANDIDATE_0.7.0.md). An independent
+[counteraudit request](../audit/COUNTERAUDIT_0.7.0_HANDOFF.md) is prepared as
+a **template**, not a completed review. Audit the final exact SHA only after
+all chosen functionality, documentation and accepted security/performance
+budgets are frozen. An earlier PR-level CI pass cannot substitute for the
+20-job final Phase B, first-attempt/provenance/digest gates, fresh authenticated
+security delta, explicit TestPyPI/PyPI approvals and published-byte checks.

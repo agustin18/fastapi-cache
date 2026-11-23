@@ -1,13 +1,41 @@
-# 0.7.0 execution plan and issue alignment
+# 0.7.0 execution plan and evidence gates
 
-**Status as of 2026-11-22: planning only.** The latest **published** distribution is
-[fastapi-cache-stable 0.6.0](https://pypi.org/project/fastapi-cache-stable/0.6.0/).
-The GitHub Pages documentation site is live at
-<https://agustin18.github.io/fastapi-cache/>. Nothing on this page authorizes
-tagging, TestPyPI/PyPI uploads, outreach or a support-contract change. A merged
-PR is not proof that an API is available in the published wheel.
+**Status: 2026-11-23 — planning, no release date, no tag, no registry GO.**
+Latest published artifact remains [fastapi-cache-stable 0.6.0](reference/releases.md).
+Source merged after publication is not an installable 0.7.0 release.
 
-## Verified starting point
+## Actual progress (supersedes historical status below)
+
+| Scope | Verified progress | Still required |
+|---|---|---|
+| [#100](https://github.com/agustin18/fastapi-cache/issues/100) | [#120](https://github.com/agustin18/fastapi-cache/pull/120), [#121](https://github.com/agustin18/fastapi-cache/pull/121), [#122](https://github.com/agustin18/fastapi-cache/pull/122) **merged**; 0.6.0 published-wheel smoke/full and balanced published 0.5/0.6 comparison | Independent controlled hardware, real socket HTTP, failure cases and **pre-approved** budgets |
+| [#111](https://github.com/agustin18/fastapi-cache/issues/111) | Redis tuple smoke; [#123](https://github.com/agustin18/fastapi-cache/pull/123) **Draft**, exact InMemory TTL equality | Contract accepted, clock skew limitation, backend ownership and experimental providers |
+| [#112](https://github.com/agustin18/fastapi-cache/issues/112) | [#124](https://github.com/agustin18/fastapi-cache/pull/124) **Draft**, decode-before-304 regression | Corruption/serialization/backend error policy, privacy and cancellation |
+| [#99](https://github.com/agustin18/fastapi-cache/issues/99), [#103](https://github.com/agustin18/fastapi-cache/issues/103) | RFC work underway, no new API published | Accept app/lifespan and non-HTTP contracts before #96/#50/#102 |
+| [#110](https://github.com/agustin18/fastapi-cache/issues/110) | Version-neutral release pipeline #113 merged | Fresh exact final 0.7.0 SHA + first-attempt 20-job Phase B, security/hashes and separate publication GO |
+
+The historical Redis timing difference between 0.5 and 0.6 changed sign
+across GitHub CI sessions. **No performance superiority or regression claim**
+follows. Published 0.6.0 is unaffected by draft changes.
+
+The [0.7.0 candidate checklist](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_CANDIDATE_0.7.0.md),
+[performance preregistration protocol](https://github.com/agustin18/fastapi-cache/blob/stable/benchmarks/REGRESSION_BUDGET_PROTOCOL.md)
+and [counteraudit packet](https://github.com/agustin18/fastapi-cache/blob/stable/docs/audit/COUNTERAUDIT_0.7.0_HANDOFF.md)
+are **planning templates** until accepted and backed by exact evidence.
+
+### Current release decision: NO-GO
+
+First approve #111/#112 functional and security contracts, then #99/#103
+architectural dependencies. Next qualify real-network/independent-host
+performance and individually reviewed opt-in candidates #96/#50/basic #102,
+deferring unsafe scope to 0.7.x. Last, freeze selected PRs and repeat the
+**exact final SHA** 20-job Phase B, wheel/sdist hash, security and
+TestPyPI/PyPI workflow with explicit approval. Never publish from the
+historical 0.6.0 artifact, a PR synthetic merge SHA, or CI alone.
+
+---
+
+## Historical starting point (2026-11-22; superseded by status above)
 
 | PR | PR status | Related issue | Issue status | What the PR establishes | What it does **not** establish |
 |---|---|---|---|---|---|
@@ -38,7 +66,7 @@ a documentation/public-visibility dependency for optional outreach
 mandatory PyPI release gate. Backend conformance (#111) also informs basic
 Redis resilience (#102).
 
-## Performance protocol for the next implementation PR
+## Performance protocol (infrastructure merged; qualification incomplete)
 
 Start with a **published-distribution-only** baseline from
 [issue #100](https://github.com/agustin18/fastapi-cache/issues/100).
@@ -79,6 +107,7 @@ decision changes it. Hidden tenant and identity contexts
 ([#53](https://github.com/agustin18/fastapi-cache/issues/53)) do not
 become automatically safe.
 
-**Operational next PR after this documentation reconciliation:** an isolated
-`#100` benchmark harness and its reproducible 0.6.0 baseline. Close or
-retitle issues based on demonstrated acceptance, not merely on merged code.
+**Completed since the original plan:** #120–#122 provide the published
+wheel baseline and historical comparator. Remaining #100 work is
+independent-hardware and real-network qualification with agreed budgets.
+Close issues based on demonstrated acceptance, not merely on merged code.
