@@ -53,9 +53,12 @@ Never publish a superiority claim or treat different CI machines as a controlled
   cumulative high-water mark including imports, all earlier scenarios and
   benchmark recording overhead, NOT isolated backend heap size. Redis `INFO`
   memory/CPU start/end samples cover the standalone CI server, not exclusive
-  per-request allocations; resource measurements are descriptive.
+  per-request allocations. Redis client connection counts are recorded because
+  the pool can grow to 1,000 sockets and its buffers contribute to server
+  memory. These are descriptive resource measurements, not cache-only usage.
 - The HTTP case performs an end-of-run full **random prefix** cleanup, including
-  Vary, slow and TTL entries; no `FLUSHDB` or other tenants are touched.
+  Vary, slow and TTL entries; scoped Redis SCAN assertions fail if benchmark
+  keys remain after cleanup. No `FLUSHDB` or other tenants are touched.
   *Real network* HTTP p99, timeout/failure behavior and controlled **0.5.0
   historical comparator** are still pending. Do not close #100 on merge.
 - Concurrency latencies are individual task wall times, not serialized server
