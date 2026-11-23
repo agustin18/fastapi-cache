@@ -77,7 +77,8 @@ def main() -> None:
             "repeats": args.repeats,
             "samples_per_case_per_run": args.iterations,
             "isolated_python": "3.12",
-            "source_sha": os.environ.get("GITHUB_SHA", "local-unrecorded"),
+            "workflow_trigger_sha": os.environ.get("GITHUB_SHA", "local-unrecorded"),
+            "checkout_sha": os.environ.get("BENCHMARK_CHECKOUT_SHA", "local-unrecorded"),
             "workflow_run_id": os.environ.get("GITHUB_RUN_ID", "local-unrecorded"),
             "scope": "description only; shared CI runner is not independent hardware",
         }

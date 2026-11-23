@@ -10,6 +10,7 @@ def test_real_http_uses_verified_published_wheel_not_checkout() -> None:
     workload = (ROOT / "benchmarks/socket_workload.py").read_text(encoding="utf-8")
     assert "WHEEL_SHA256" in runner
     assert "sha != WHEEL_SHA256" in runner
+    assert "BENCHMARK_CHECKOUT_SHA" in runner
     assert "pip" in runner
     assert '"-I"' in runner
     assert '"site-packages" not in imported.parts' in workload

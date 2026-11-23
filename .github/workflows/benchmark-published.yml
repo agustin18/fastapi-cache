@@ -148,10 +148,13 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.12"
       - name: Measure standalone Uvicorn over loopback TCP, no ASGITransport
+        env:
+          BENCHMARK_CHECKOUT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           python benchmarks/socket_runner.py --repeats 2 --iterations 120 \
             --redis-url redis://127.0.0.1:6379/15 \

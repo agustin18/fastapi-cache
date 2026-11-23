@@ -224,27 +224,39 @@ async def exercise(
     for size in ("small", "medium", "large"):
         fixed = "/payload/" + size + "?nonce=777"
         first = await request(None, fixed, "MISS")
+        if len(first.json()["data"]) != {"small": 128, "medium": 4096, "large": 65536}[size]:
+            raise RuntimeError("Wrong response size on cold HTTP MISS")
         tag = first.headers["etag"]
-        await request(None, fixed, "HIT")
+        warm_hit = await request(None, fixed, "HIT")
+        if warm_hit.json() != first.json():
+            raise RuntimeError("Cached HIT payload differed from MISS")
         for index in range(iterations):
             await request("hit_" + size, fixed, "HIT")
-            await request(
+            miss = await request(
                 "miss_" + size, f"/payload/{size}?nonce={index + 1000}", "MISS"
             )
+            if miss.json()["nonce"] != index + 1000:
+                raise RuntimeError("Cache key mixed unrelated HTTP response values")
             await request(
                 "304_" + size, fixed, "HIT",
                 headers={"If-None-Match": tag}, code=304,
             )
 
-    await request(None, "/vary", "MISS", {"Accept-Language": "en"})
-    await request(None, "/vary", "MISS", {"Accept-Language": "de"})
-    await request(None, "/vary", "HIT", {"Accept-Language": "en"})
+    en = await request(None, "/vary", "MISS", {"Accept-Language": "en"})
+    de = await request(None, "/vary", "MISS", {"Accept-Language": "de"})
+    hit_en = await request(None, "/vary", "HIT", {"Accept-Language": "en"})
+    if (en.json(), de.json(), hit_en.json()) != (
+        {"language": "en"}, {"language": "de"}, {"language": "en"}
+    ):
+        raise RuntimeError("HTTP Vary returned incorrect payload")
 
     for _index in range(iterations):
-        await request(
+        bypass = await request(
             "auth_bypass", "/payload/small?nonce=777", None,
             {"Authorization": "Bearer synthetic-test-only"},
         )
+        if bypass.json()["nonce"] != 777:
+            raise RuntimeError("Authenticated bypass returned wrong payload")
     await request(None, "/slow?nonce=31415", "MISS")
     for _ in range(iterations):
         await request("slow_hit", "/slow?nonce=31415", "HIT")
