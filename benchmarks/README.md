@@ -61,15 +61,18 @@ Never publish a superiority claim or treat different CI machines as a controlled
 - The HTTP case performs an end-of-run full **random prefix** cleanup, including
   Vary, slow and TTL entries; scoped Redis SCAN assertions fail if benchmark
   keys remain after cleanup. No `FLUSHDB` or other tenants are touched.
-  *Real network* HTTP p99, timeout/failure behavior and controlled **0.5.0
-  historical comparator** are still pending. Do not close #100 on merge.
+  *Real-network* HTTP p99, timeout/failure behavior, replication on
+  independent controlled hardware and agreed regression budgets remain
+  pending. The historical 0.5.0 comparison is implemented below, but its
+  GitHub-hosted results are descriptive. Do not close #100 on merge.
 - Concurrency latencies are individual task wall times, not serialized server
   time. `full` uses bounded batches to avoid an unbounded number of tasks.
 - `aggregate.json` includes per-run p50/p95/p99 medians, standard deviation
   and coefficient of variation (CV) **across processes**. Cases with fewer than
   100 samples per run explicitly warn that a stable p99 claim is unsupported.
   Full workloads repeat three times; additional warmup, independent-host
-  replication, 0.5.0 comparisons and accepted thresholds are future work.
+  replication and pre-agreed regression thresholds remain future work. The
+  historical 0.5.0 comparison below runs as a separate controlled protocol.
 
 ## Release boundaries
 
