@@ -78,6 +78,38 @@ Never publish a superiority claim or treat different CI machines as a controlled
   replication and pre-agreed regression thresholds remain future work. The
   historical 0.5.0 comparison below runs as a separate controlled protocol.
 
+## Candidate-wheel comparison without publication (#100 infrastructure)
+
+The same isolated HTTP socket workload can be run against an **unpublished**
+candidate wheel, for a later controlled same-host paired comparison. This is
+strictly an instrumentation capability: the two versions must be installed
+from distinct, reviewed, SHA-verified wheels and compared on the **same**
+controlled independent hardware with a **preapproved** budget and recorded
+CPU/OS/dependency/environment. The runner does not fetch or build candidate
+source, does not generate an RC, and never publishes anything.
+
+After independently obtaining a reviewed wheel from exact candidate evidence:
+
+```console
+python3.12 benchmarks/socket_runner.py --candidate-wheel /reviewed/dist/fastapi_cache_stable-0.7.0.dev0-py3-none-any.whl \
+  --candidate-version 0.7.0.dev0 --candidate-sha256 YOUR_REVIEWED_64_HEX_DIGEST \
+  --repeats 2 --iterations 120 --redis-url redis://127.0.0.1:6379/15 \
+  --output benchmark-results/candidate-socket
+```
+
+The wheel filename, metadata (distribution/version) and SHA-256 are checked
+before and after copying into the isolated environment. Both its client and
+separately launched Uvicorn servers must import that installed version via
+`python -I`; co-installation with `fastapi-cache2` fails closed. The public
+0.6.0 baseline command and its pinned SHA remain unchanged.
+
+**Not qualified:** a run of 120 requests on GitHub's shared runner is still
+descriptive. This does not compare 0.6 versus 0.7 automatically or implement
+balanced AB/BA pairing; the operator must approve and document order, pinned
+host, sample sufficiency, budget, raw data and dependency parity **before**
+making a regression claim. 0.7.0 final release evidence must use the frozen
+final wheel, not reuse a `.dev0` benchmark as the final result.
+
 ## Release boundaries
 
 This workflow runs no release, tag, publishing, Pages or outreach actions. It

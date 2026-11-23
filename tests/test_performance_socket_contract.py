@@ -14,7 +14,11 @@ def test_real_http_uses_verified_published_wheel_not_checkout() -> None:
     assert "pip" in runner
     assert '"-I"' in runner
     assert '"site-packages" not in imported.parts' in workload
-    assert 'metadata.version("fastapi-cache-stable") != "0.6.0"' in workload
+    assert 'metadata.version("fastapi-cache-stable") != expected_version' in workload
+    assert '"--expected-version", args.expected_version' in workload
+    assert "verify_candidate_wheel" in runner
+    assert '"--candidate-sha256"' in runner
+    assert "shutil.copyfile" in runner
     assert "ASGITransport" not in workload
     assert "uvicorn.Server" in workload
     assert 'host="127.0.0.1"' in workload
