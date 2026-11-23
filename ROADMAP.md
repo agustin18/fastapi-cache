@@ -36,6 +36,30 @@ application-owned hidden tenant/context/cardinality limitations and future
 reproducible package-controlled issues. No independent consumer quota,
 third-party security certification or hosted-docs requirement applies.
 
+## 0.7.0 readiness snapshot — 2026-11-23
+
+The current **published** package remains 0.6.0; the `stable` branch may
+contain post-publication infrastructure changes. [#120](https://github.com/agustin18/fastapi-cache/pull/120),
+[#121](https://github.com/agustin18/fastapi-cache/pull/121) and
+[#122](https://github.com/agustin18/fastapi-cache/pull/122) have merged;
+the published-wheel smoke/full suite and balanced 0.5.0/0.6.0 comparator
+are available as **measurement infrastructure**, not a performance certification.
+[#100](https://github.com/agustin18/fastapi-cache/issues/100) remains open:
+independent fixed hardware, real socket HTTP, failure cases and pre-agreed
+budgets are not complete.
+
+[#123](https://github.com/agustin18/fastapi-cache/pull/123) proposes an
+inclusive InMemory TTL deadline under [#111](https://github.com/agustin18/fastapi-cache/issues/111).
+[#124](https://github.com/agustin18/fastapi-cache/pull/124) proposes
+decode-before-304 under [#112](https://github.com/agustin18/fastapi-cache/issues/112).
+Both are unmerged Draft PRs and require separate contract/security acceptance.
+Do not advertise either behavior in 0.6.0 docs.
+
+The [candidate 0.7.0 acceptance checklist](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_CANDIDATE_0.7.0.md)
+and [counteraudit handoff](https://github.com/agustin18/fastapi-cache/blob/stable/docs/audit/COUNTERAUDIT_0.7.0_HANDOFF.md)
+record remaining decisions; these documents are proposals until merged.
+No 0.7.0 release date, promotion, tag or upload is approved.
+
 ## Immediate P0/P1 — 0.7.0 qualification status
 
 See the [separate 0.7.0 execution and issue-alignment page](site_docs/plan-0-7.md). It is a plan, not a release promise.
@@ -63,7 +87,9 @@ See the [separate 0.7.0 execution and issue-alignment page](site_docs/plan-0-7.m
 - **Corrupt data and serialization:** [#112](https://github.com/agustin18/fastapi-cache/issues/112)
   defines fail-open/closed, trust, privacy and error propagation.
 - **Benchmarks:** [#100](https://github.com/agustin18/fastapi-cache/issues/100)
-  starts with installed, published 0.6.0 and reproducible performance results.
+  has a verified published-wheel 0.6.0 harness and historical AB/BA
+  0.5.0/0.6.0 comparator (merged #120–#122). Independent hardware,
+  network HTTP, failure injection and agreed thresholds remain open.
 - **Architecture RFCs:** [#99](https://github.com/agustin18/fastapi-cache/issues/99)
   (app/lifespan-scoped configuration) and [#103](https://github.com/agustin18/fastapi-cache/issues/103)
   (non-HTTP cache scope) must be accepted before implementing

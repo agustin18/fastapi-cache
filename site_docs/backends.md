@@ -8,8 +8,8 @@ Pick based on where your FastAPI workers run. The backend affects operational be
 | Shared across processes? | No | Yes |
 | Persistent across worker restart? | No | Redis configuration-dependent |
 | Production multiworker use | No shared cache | Recommended path |
-| Published 0.5.0 capacity bound | No | Configure Redis eviction separately |
-| Unreleased `stable` source | Optional per-instance fixed `max_entries` from [#85](https://github.com/agustin18/fastapi-cache/pull/85) | Redis memory policies remain separate |
+| Published 0.6.0 entry-count bound | Opt-in immutable per-instance `max_entries` (unbounded by default); not a byte or per-worker-group cap | Configure Redis eviction separately |
+| Previously published 0.5.0 | Unbounded InMemory; no `max_entries` | Redis memory policies remain separate |
 | Cache expiry | TTL / optional no-expiry | Redis TTL |
 | Scoped namespace clearing | Yes | Yes for supported standalone mode |
 | Recommended for | Dev, tests, single worker | Servers with multiple workers |

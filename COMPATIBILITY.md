@@ -16,10 +16,11 @@ source provenance; a source checkout alone is not publication evidence. The
 The published 0.6.0 package retains `Requires-Python >=3.8,<3.14`, documented
 Python-conditional Redis client bounds, imports and ordinary default keys.
 It adds optional bounded InMemory and targeted private HTTP response
-corrections. Final installed-artifact verification is pending under
-[#92](https://github.com/agustin18/fastapi-cache/issues/92); the matrix
-below is the published 0.6.0 contract. No new backend or Python
-version is qualified by this promotion.
+corrections. Final release artifact verification is recorded in
+[RELEASE_STATUS_0.6.0.md](docs/releases/RELEASE_STATUS_0.6.0.md) with the
+annotated tag, wheel/sdist SHA-256 and successful Phase B/TestPyPI/PyPI runs.
+The matrix below describes the published 0.6.0 contract; no new backend
+or Python version is qualified by later unreleased source changes.
 
 ## Redis client support in 0.6.0
 
@@ -280,9 +281,9 @@ Status definitions:
 | `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
 | Redis standalone | Verified for conditional client ranges | Redis 6.2/7.0/7.4/8.0 services; redis-py 4.6.0, 5.2.1, 6.1.x, 7.0.1/7.2.1 and 8.1.0 across the Python-conditional matrix; key-only clear and namespace boundary tested. TLS/Sentinel/Cluster/failover not certified |
 | Redis Cluster | Unsupported for namespace clear | Key-only clear is supported; namespace clear raises `NotImplementedError`; no complete namespace clearing |
-| InMemory | Verified for basic operations, clear semantics, `expire=None` and instance isolation | Unit tests; each instance owns its store and lock; no size cap yet |
+| InMemory | Verified for basic operations, clear semantics, `expire=None`, instance isolation and opt-in bounded capacity | Published 0.6.0 `max_entries` fixes a **per-instance entry count**, not memory bytes; unbounded remains the default |
 | Memcached | Experimental | Unit tests with a fake client; `get_with_ttl` returns a fixed `3600` instead of the real remaining time; `clear` raises `NotImplementedError` |
-| DynamoDB | Experimental; Python >=3.10 only for target `0.6.0` | `dynamodb` extra requires aiobotocore and aiohttp >=3.14.4; the extra omits those dependencies on Python 3.8/3.9. Unit tests use a fake client; `clear` raises `NotImplementedError`; no real-service integration |
+| DynamoDB | Experimental; Python >=3.10 only for published `0.6.0` | `dynamodb` extra requires aiobotocore and aiohttp >=3.14.4; the extra omits those dependencies on Python 3.8/3.9. Unit tests use a fake client; `clear` raises `NotImplementedError`; no real-service integration |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
 
 ### Bounded InMemory in published 0.6.0
@@ -303,8 +304,8 @@ published 0.6.0. The published 0.5.0 backend remains unbounded.
   and k matches the bound is O(N + k log N).
 - There is no background sweeper, bytes-based cap or thread/cross-event-loop
   sharing guarantee. Existing cache privacy/tenant boundaries remain
-  application responsibilities, and the feature cannot be installed with
-  `fastapi-cache-stable==0.6.0`.
+  application responsibilities. This feature **is available** in published
+  `fastapi-cache-stable==0.6.0` (but was absent from 0.5.0).
 - The cap is per instance and counts entries, not bytes or workers.
 
 > Verified Redis integration covers Redis 7 with redis-py 4.6.0. Other
