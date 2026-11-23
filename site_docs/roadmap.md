@@ -1,7 +1,7 @@
 # Roadmap: what is next?
 
-**Published:** [fastapi-cache-stable 0.6.0](reference/releases.md), released
-2026-11-21. `stable` contains subsequent docs and infrastructure; changes
+**0.6.0 is published.** [fastapi-cache-stable 0.6.0](reference/releases.md)
+was released 2026-11-21. `stable` contains subsequent docs and infrastructure; changes
 in an unmerged PR are **not installed**. This page describes proposals, not
 a shipping date, certification or approval to publish.
 
