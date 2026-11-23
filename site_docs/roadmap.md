@@ -1,5 +1,17 @@
 # Roadmap: what is next?
 
+> **Updated 2026-11-23 (supersedes the old 0.7 feature table):**
+> On GitHub, `stable=0c306a6` is **0.7.0.dev0 source**, not a published
+> artifact. #130–#134 merged; #133 actually tested Redis 7.4 server
+> stop/restart on an installed wheel with **retries explicitly disabled**.
+> For 0.7 we seek a proportionate no-performance-claim #100 deferral
+> **only by express reviewer/maintainer acceptance**; first-attempt
+> final Phase B 20/20 and exact-artifact audit are non-deferrable.
+> Longer-term target: true app/lifespan isolation, safe local
+> single-flight, privacy-minimal events, tags, app cache and resilient HTTP
+> behavior, always opt-in and backwards compatible where possible.
+
+
 **0.6.0 is published.** [fastapi-cache-stable 0.6.0](reference/releases.md)
 was released 2026-11-21. `stable` contains subsequent docs and infrastructure; changes
 in an unmerged PR are **not installed**. This page describes proposals, not
@@ -21,18 +33,22 @@ or threshold is inferred from that evidence. #100 remains open.
 
 [Detailed 0.7.0 execution plan and evidence boundaries](plan-0-7.md).
 
-## Candidate scope — not a commitment
+## Proposed sequencing — user-visible capability before breadth
 
-| Target | Candidate features | Mandatory design or quality boundary |
+| Train | What would be different for a consumer | Non-negotiable test before claiming it |
 |---|---|---|
-| 0.7.0 | Accepted #111/#112 correctness slices, [#96 local single-flight](https://github.com/agustin18/fastapi-cache/issues/96), [#50 optional events](https://github.com/agustin18/fastapi-cache/issues/50), basic [#102 standalone Redis resilience](https://github.com/agustin18/fastapi-cache/issues/102) **only if qualified** | Contracts #99/#103/#112 first; default-off options, privacy/cancellation/latency tests; defer unready features to 0.7.x |
-| 0.7.x | Python 3.14 (#51) and FIPS (#55) if qualified, experimental-provider corrections | Installed artifacts, version/security evidence, no blanket backend parity |
-| 0.8+ | Opt-in per-app config (#99), application cache API (#103) if needed, tags (#97), safe filtering (#49) | App lifecycle isolation, key compatibility and tenant safety |
-| 0.9+ | Bounded stale (#98), advanced Redis HA/TLS/Sentinel/Cluster research (#102) | Independent service E2E, no implied Cluster namespace-clear support |
-| 1.0 | Public API and support-policy maturity | Explicit ongoing maintenance commitment and independent review |
+| **0.7.0** | Correct exact InMemory TTL boundary, fail-closed decode before HTTP 304, Redis tuple API and a better error-test envelope; **no new public caching feature** | Security/privacy/compatibility risk review, no speed claims, final installed wheel/sdist and 20-job Phase B; no unauthorized tag |
+| **0.8.0** | Opt-in app-scoped lifecycle (#99), local bounded same-key single-flight (#96), optional typed privacy-safe events (#50), scoped failure semantics | Two independent concurrent apps, auth/tenant cross-key tests, cancellation creator/waiter tests, unbounded memory/task regressions, disabled-by-default overhead |
+| **0.8.x** | FIPS (#55), safe key exclusions (#49), Python 3.14 (#51) only when qualified | Preserve ordinary legacy keys and Python/Redis matrix; do not imply version support without installed evidence |
+| **0.9.0** | Tags and invalidation (#97), practical application cache (#103), possibly bounded stale (#98) | TTL/index/clear and invalidate-in-flight race, per-app namespace, stale private-response bypass, stampede/refresh failure and no cross-tenant replay |
+| **0.9.x** | Individually qualified standalone/managed/TLS/Sentinel/Cluster profiles (#102) | Real service trials for each topology, lease/fencing review for distributed coordination, no untested namespace-clear guarantee |
+| **1.0.0** | Stable core API, migration contract, governance and long-term maintenance commitment | Independent source+artifact audit, supported security and compatibility matrix, runnable examples, explicit LTS policy; no feature parity assertion |
+| **1.x** | Additional atomic primitives, distributed leases, telemetry and storage options only if validated | Separate evidence/owner support and clear opt-in boundaries |
 
-A *smaller* 0.7.0 with approved correctness changes is preferable to shipping
-unsafe concurrency, observability or distributed behavior by a date.
+Competing products expose more functionality today. **Our distinction is
+safe drop-in migration from fastapi-cache2 plus independent negative
+security tests**, not a promise to surpass every feature of CacheX,
+cashews, aiocache or the Redis SDK. See [roadmap issue #95](https://github.com/agustin18/fastapi-cache/issues/95).
 
 The authoritative published [0.6.0 provenance](reference/releases.md),
 [compatibility](reference/compatibility.md) and

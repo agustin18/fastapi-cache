@@ -1,5 +1,21 @@
 # Roadmap — fastapi-cache-stable
 
+> **Roadmap actual (2026-11-23):** `stable=0c306a6` carries
+> **unpublished `0.7.0.dev0`**, while PyPI is **0.6.0**. Merged
+> #114/#123/#124 and tests/infrastructure #130–#134 make 0.7 a **small
+> correctness/quality release**, not a single-flight/events feature
+> release. See the [proposed 0.7 risk disposition](docs/releases/SCOPE_0.7.0_DECISION.md)
+> and the [evidence handoff](docs/audit/COUNTERAUDIT_0.7.0_HANDOFF.md).
+> The next versions prioritize **tenant-safe integration, local concurrency,
+> invalidation, app-level ergonomics and verifiable operations**, not
+> blindly copying competitors. This heading supersedes older 0.7 stretch
+> goals below.
+
+**Competitive feature strategy:** [0.8–1.0 sourced plan](docs/strategy/COMPETITIVE_ROADMAP_0.8_TO_1.0.md).
+Dates are never a substitute for per-capability security/correctness,
+real-user migration checks and approved release evidence.
+
+
 **Current published release:** [0.6.0](https://pypi.org/project/fastapi-cache-stable/0.6.0/)
 on **2026-11-21**. It adds opt-in bounded InMemory and the 0.6.0
 authentication/HTTP privacy corrections. See
@@ -97,21 +113,30 @@ See the [separate 0.7.0 execution and issue-alignment page](site_docs/plan-0-7.m
   [#96](https://github.com/agustin18/fastapi-cache/issues/96) local single-flight
   or [#50](https://github.com/agustin18/fastapi-cache/issues/50) events.
 
-## Staged capability releases — proposals, not dates
+## Active staged capability releases — proposals, not delivery dates
 
-| Release | Focus | Non-negotiable boundary |
+| Train | Primary goal | Work items / acceptance |
 |---|---|---|
-| **0.7.0** | #100 published baseline, opt-in #96 single-flight and #50 privacy-safe events, #102 **basic** Redis timeout/reconnect/cancellation; conditional #51 Python 3.14 | #110 + RFCs #99/#103 + #112 first; split features to 0.7.x if not ready |
-| **0.7.x** | #55 FIPS and evidence-backed nonbreaking experimental backend corrections | Legacy default keys and published support boundaries unchanged |
-| **0.8.0** | #99 optional per-app lifecycle, #97 tags, #103 application cache only if justified, #49 parameter exclusions | Tenant isolation, TTL indexes, race tests and explicit opt-in |
-| **0.9.0** | #98 bounded stale, #102 advanced TLS/Sentinel/Cluster/HA qualification, distributed coordination research | Separate backend profiles; no blanket HA or stale safety claims |
-| **1.0.0** | Public API and maintenance-contract maturity | Support duration decision separate; do not promise 24 months without sustainable maintenance |
+| **0.7.0 quality** | 3 small runtime correctness fixes; honest migration, docs and safe artifact release | #114 Redis tuple, #123 InMemory TTL, #124 decode-before-304; #131/#133 failure characterization; #100 no-speed-claim deferral requires express reviewer + maintainer decision; #111/#112/#53 risk review; first-attempt Phase B 20/20 and exact-artifact independent GO |
+| **0.7.x patch** | Postrelease P0/P1 corrections only | No new high-risk features, no silent defaults or legacy key changes; each patch has wheel/sdist security/migration evidence |
+| **0.8.0 safety + concurrency** | First visible competitive leap, opt-in APIs only | #99 app/lifespan isolation design and negative cross-tenant tests; #96 local bounded single-flight; #50 privacy-minimal callbacks; #112 failure policy per supported backend; choose only independently reviewable slices |
+| **0.8.x incremental** | Fix interoperability, FIPS portability and Python version support if qualified | #55 FIPS, #51 Python 3.14 if full matrix; #49 guarded exclude_params after key safety review; #45 experimental backend fixes only after real repro |
+| **0.9.0 invalidation + app cache** | End-to-end developer capabilities vs CacheX | #97 TTL-consistent tags and race-safe invalidation; #103 application cache ergonomics and clear ownership; #98 bounded stale only after privacy/HTTP/RFC and cancellation qualification; optional atomic primitives by explicit need |
+| **0.9.x Redis profiles** | Reliability and specialized deployments by evidence | #102 separate TLS, Sentinel, Cluster and managed Redis each with real-service E2E; never silently promise Redis Cluster namespace clear |
+| **1.0.0 core contract** | Stable, maintainable public API with credible support, migration, security, docs and performance | Backward-compat policy and support lifecycle explicitly funded/approved; independent installed-artifact compatibility/security, portable API and no dishonest experimental parity. Feature backlog may remain open |
+| **1.x optional** | Selective advanced features | Distributed leases/locks with ownership/fencing, client-cache, multi-backend governance, optional telemetry integrations — each subject to threat model and measurable demand |
 
-Every feature release requires reproducible exact wheel/sdist installation,
-supported-runtime/Redis matrix, risk triage, concurrency/error tests,
-benchmark budgets and accurate browsable documentation. Do not publish
-unimplemented features in the public API guide.
+**Critical path:** accepted #112 failure/privacy behavior → scoped #99 lifecycle
+→ #96 single-flight and #50 events; tags/app cache after key/tenant
+correctness; stale/HA after invalidation/concurrency proof. No automatic
+multiapp/tenant isolation, no unbounded callbacks, no redis-py retry
+latency guarantees, and no performance "faster than CacheX" without
+independent, preregistered measured workloads.
 
+**Discipline:** Prioritize consumer migrations and real failures over
+feature count. A feature can be deferred to the next train without
+blocking patches or making a capability claim. Separate QA and
+commercial benchmarks from shipping semantics.
 ## 0.4.0 — delivered Redis compatibility (2026-11-20)
 
 Shipped:
