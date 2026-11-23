@@ -1,74 +1,57 @@
 # Choose a caching approach
 
-Caching choices depend on application requirements, migration cost,
-operational maturity, HTTP semantics, security and actual test evidence.
-A feature count or an unverified speed comparison is **not** a reason
-to claim a library is better. The capability matrix here is our own
-project's published contract, not a comparison or endorsement of
-other projects.
+Choose a cache based on your application's migration requirements,
+operational maturity, key/tenant isolation, resource limits and measured
+correctness. Feature counts and unstable CI performance comparisons
+cannot prove that one library is faster, safer or better.
 
-!!! info "Published vs candidate"
-    **0.5.0** is the latest publicly available `fastapi-cache-stable`
-    distribution. Optional bounded InMemory exists in merged source
-    and in the proposed **0.6.0 candidate** only; it is not available
-    in the published 0.5.0 wheel.
+!!! info "Published release versus proposed changes"
+    **fastapi-cache-stable 0.6.0 is published**. It includes optional
+    bounded InMemory and the current documented authentication and HTTP
+    response handling. Published 0.5.0 was unbounded. The TTL deadline
+    correction [#123](https://github.com/agustin18/fastapi-cache/pull/123)
+    and decode-before-304 correction
+    [#124](https://github.com/agustin18/fastapi-cache/pull/124)
+    remain **Draft PRs**, not features of 0.6.0.
 
-## At a glance
+## What the published 0.6.0 package offers
 
-| Application requirement | Available in published 0.5.0 | Proposed 0.6.0 | Limits to check |
-|---|---|---|---|
-| Low-friction migration from an existing installation | Yes, for verified ordinary keys/API | Preserve | Test auth, special encodings and private namespaces before live traffic |
-| HTTP GET response caching with TTL/ETag/304 | Yes | Preserve | Response types, conditional headers and custom coders require testing |
-| Real standalone Redis shared across workers | Yes | Preserve | Configure client/server memory, access and failure handling |
-| Simple process-local InMemory | Yes, unbounded | Preserve | No shared state across workers |
-| Bounded process-local InMemory | No | Yes, opt-in `max_entries`, merged code | Counts entries, not payload bytes; readonly after construction |
-| Header-based public variants | Yes, opt-in `vary_headers` | Preserve | Only declared headers; no automatic tenant/role discovery |
-| Authenticated requests and private data | Default Authorization/Cookie bypass | Preserve | Other auth schemes need a reviewed identity-aware key or bypass |
-| Observability callbacks | Not shipped | Out of scope | No automatic metrics/event export |
-| Tag-based invalidation / stale serving / single-flight | Not shipped | Out of scope | Requires independent correctness and concurrency design |
-| Redis Cluster-wide namespace invalidation | Unsupported | Unsupported | Never confuse with individual key clearing |
-| Python 3.14 and later | Unsupported | Unsupported pending qualification | Legacy 3.8–3.10 functional only, not security-maintained |
+| Requirement | Published 0.6.0 | Important boundary |
+|---|---|---|
+| Migration from `fastapi-cache2` | Tested import and ordinary cache key compatibility | Review authentication, response types, explicit Vary and rollback |
+| HTTP GET response caching | Cache MISS/HIT, TTL, ETag and conditional 304 | Hidden identity and permission context are not automatically partitioned |
+| Shared cache across workers | Standalone Redis | Requires a managed Redis service and failure controls |
+| Single-process local cache | Per-instance InMemory | No sharing between workers or independent processes |
+| Bounded InMemory | **Shipped**, opt-in `max_entries`, read-only after construction | An entry-count limit is not a payload-byte, total memory or multiworker cap |
+| Header variants | Opt-in `vary_headers` | Does not infer tenant or user identity |
+| Authenticated requests | Conservative Authorization/Cookie bypass by default | Unrecognized auth context remains an application-owned risk |
+| Optional typed JSON | `TypedJsonCoder` | Pydantic v2 typed validation; default JSON remains legacy-decoded |
+| Cache event callbacks | **Not shipped** | [#50](https://github.com/agustin18/fastapi-cache/issues/50) design gated |
+| Local single-flight | **Not shipped** | [#96](https://github.com/agustin18/fastapi-cache/issues/96) requires correctness/cancellation proof |
+| Tags, stale serving, distributed locks | **Not shipped** | More complex invalidation, retention and lease semantics |
+| Redis Cluster namespace clear | **Unsupported** | Individual key clearing is not parity with namespace clear |
+| Python 3.14 | **Unsupported** | CPython 3.8–3.10 functional legacy only; 3.11–3.13 security-supported server targets |
 
-## What we prioritize for 0.6.0
+## Release quality and limitations
 
-- **Predictable migration:** preserve ordinary keys and imports, verify
-  a real Redis migration and narrowly scoped rollback using exact installed
-  distribution files.
-- **Safety and transparency:** keep private-response guards, document
-  the library/application responsibility boundary and validate installed
-  package behavior with reproducible integration and security evidence.
-- **Bounded local caching:** [#85](https://github.com/agustin18/fastapi-cache/pull/85)
-  adds an optional read-only constructor cap with indexed expiry tracking
-  and least-recently-used eviction. **No published 0.6.0 artifact exists yet.**
-- **Release-quality docs:** show version-accurate usage, package metadata
-  and working install/migration examples instead of promising unshipped APIs.
+Published 0.6.0 has archived wheel/sdist hashes, migration and
+security evidence in [release provenance](releases.md). The
+historical published-wheel 0.5.0/0.6.0 AB/BA benchmark
+[#122](https://github.com/agustin18/fastapi-cache/pull/122)
+is merged, but Redis timings changed sign between CI sessions:
+**do not claim an observed speedup or regression**.
+Further independent hardware measurements and real HTTP socket
+tests are tracked under [#100](https://github.com/agustin18/fastapi-cache/issues/100).
 
-## Deliberately not promised
+For a new application start with the [installation guide](../getting-started.md).
+For an existing application, use [migration](../migration.md),
+[privacy](../guides/privacy.md) and the [API reference](api.md).
+Multiple apps in one process are **not** automatically isolated;
+[#99](https://github.com/agustin18/fastapi-cache/issues/99) and
+[#103](https://github.com/agustin18/fastapi-cache/issues/103) are
+still design issues. Optional single-flight/events/basic Redis resilience
+for 0.7.0 are not committed or available.
 
-A local entry limit is not a memory-byte or total distributed-memory cap.
-A `Vary` header does not magically create application tenant isolation.
-There is no general tag invalidation, coalescing, distributed lock, stale
-serving or monitoring export contract today. A project needing those
-capabilities should evaluate its architectural requirements separately
-rather than assuming this library implements them.
-
-## How to decide
-
-**Maintaining an existing app?** Follow the
-[migration guide](../migration.md) and run its explicit privacy, key,
-Redis and rollback checks.
-
-**Starting a new app?** Start with the
-[five-minute install](../getting-started.md), check
-[the public API](api.md), [privacy boundaries](../guides/privacy.md)
-and [backend comparison](../backends.md). Prefer standalone Redis when
-multiple workers need shared data. Use a process-local backend for tests,
-development and explicitly accepted single-worker scenarios.
-
-**Need a currently unsupported capability?** Consult the
-[roadmap](../roadmap.md) and open a use-case-specific issue with
-reproduction, security constraints and expected compatibility rather
-than relying on tentative plans.
-
-**Evidence:** [published package provenance](releases.md) and
-[0.6.0 release acceptance](https://github.com/agustin18/fastapi-cache/issues/92).
+See the [current roadmap](../roadmap.md) and
+[compatibility matrix](compatibility.md) before choosing a
+backend or adapting any new proposal.

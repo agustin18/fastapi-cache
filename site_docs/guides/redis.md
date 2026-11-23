@@ -5,7 +5,7 @@ Use standalone Redis when separate FastAPI workers need to share cache entries. 
 ## Install with explicit version pins
 
 ```console
-python -m pip install "fastapi-cache-stable[redis]==0.5.0" "redis==4.6.0" uvicorn
+python -m pip install "fastapi-cache-stable[redis]==0.6.0" "redis==4.6.0" uvicorn
 python -m pip check
 ```
 
@@ -55,7 +55,7 @@ curl -i http://127.0.0.1:8000/catalog
 
 Keep **`decode_responses=False`**. JSON or PickleCoder values are stored as bytes; automatic text decoding can corrupt binary entries.
 
-| Server-side CPython | redis-py versions allowed in 0.5.0 metadata |
+| Server-side CPython | redis-py versions allowed in 0.6.0 metadata |
 |---|---|
 | 3.8 (legacy) | `>=4.2.0rc1,<6.2` |
 | 3.9 (legacy) | `>=4.2.0rc1,<7.1` |
