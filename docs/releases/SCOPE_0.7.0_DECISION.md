@@ -1,7 +1,7 @@
 # 0.7.0 narrow-scope decision packet — REVIEWABLE / #100 DEFERRAL ACCEPTED / NOT RELEASED
 
 This document prevents issue-count-driven release planning. Source `stable`
-at `0c306a67a6adb4ed098e96e70dd0da192c8fbf85` has version
+at `fb989a06b959b1a6c894cb2c56c0e67722faa543` has version
 `0.7.0` release candidate; the **published** package is still `0.6.0`.
 Neither this file nor a green CI implies a release GO.
 
