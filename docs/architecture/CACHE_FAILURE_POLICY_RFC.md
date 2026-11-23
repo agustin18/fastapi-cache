@@ -41,7 +41,7 @@ No changes to the published 0.6.0 artifact.
 
 ## Characterization-only evidence for the 0.7 candidate
 
-Draft #131 adds negative tests for current backend-read fallback, write failure
+Merged PR #131 adds negative tests for current backend-read fallback, write failure
 without a cached HIT, coder-encode exceptions and cancellation propagation.
 It does not adopt a general fallback policy or modify HTTP status/ETag
 semantics. Local pool recycle after explicit disconnect is **not** evidence

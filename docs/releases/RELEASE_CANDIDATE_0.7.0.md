@@ -4,6 +4,9 @@
 tag, TestPyPI/PyPI upload, or independent final counteraudit. The latest
 published version is 0.6.0 with [immutable release evidence](RELEASE_STATUS_0.6.0.md).
 Every unchecked box is an unsatisfied gate, not a claimed completion.
+See the [0.7 narrow-scope decision proposal](SCOPE_0.7.0_DECISION.md)
+for explicit boundaries; the proposal is not maintainer acceptance or release GO.
+Merged #130/#131/#132 do not constitute a frozen final candidate.
 
 ## 1. Scope and behavioral contracts
 
@@ -21,9 +24,11 @@ Every unchecked box is an unsatisfied gate, not a claimed completion.
 - [ ] #100 fixed independent hardware, real HTTP network, Redis
       failure profiles, and **regression budgets signed before measurement**;
       historical AB/BA comparator is not a performance certification.
-- [ ] Each candidate #96 local single-flight, #50 events, basic #102
-      Redis resilience ships only with independent security, concurrency,
-      cancellation and opt-in performance evidence; defer unready candidates.
+- [ ] Approve/reject the narrow-scope proposal: **new #96 single-flight,
+      #50 typed events and #99/#103 public APIs do not ship in 0.7.0**.
+      #102 may supply standalone Redis failure *test evidence*, but no new
+      resilience policy, HA/TLS/Cluster guarantee or public feature ships
+      without separately approved tests and contracts. Keep issues open.
 - [ ] Preserve import `fastapi_cache`, ordinary key identity,
       compatibility of documented flows and real migration rollback.
       Redis Cluster namespace clearing remains unsupported; Memcached
@@ -31,8 +36,11 @@ Every unchecked box is an unsatisfied gate, not a claimed completion.
 
 ## 2. Candidate source and documentation
 
-- [ ] Approved PRs merged; finalized `pyproject.toml` version, release notes,
-      changelog fragments and migration docs all agree. No history overwrite.
+- [ ] Approved PRs merged; source currently `0.7.0.dev0` (#130 merged).
+      Prepare a separate final promotion PR setting `0.7.0`, release notes,
+      Towncrier changelog and candidate compatibility notes, **without
+      incorrectly changing published `docs/releases/PUBLISHED_VERSION`
+      (remains `0.6.0` until registry publication)**. No history overwrite.
 - [ ] **Frozen final stable source SHA: TBD.** No unreviewed source edits afterward.
 - [ ] Full supported and legacy Python matrix plus real Redis 7.4,
       installed wheel/sdist compatibility, security, privacy and TTL tests green.

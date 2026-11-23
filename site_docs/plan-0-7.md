@@ -5,6 +5,12 @@ Latest published artifact remains [fastapi-cache-stable 0.6.0](reference/release
 Source merged after publication is not an installable 0.7.0 release.
 The development source identity is `0.7.0.dev0`; published installation examples
 continue to pin verified `0.6.0` until 0.7.0 is actually released.
+#130 (development identity), #131 (error/ownership tests), and #132
+(candidate wheel socket measurement support) are now **merged** on
+`stable` `1d78154`. They do not deliver independent physical performance
+qualification, real Redis process outages or a 0.7.0 release.
+See the [narrow-scope pre-audit decision](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/SCOPE_0.7.0_DECISION.md)
+once reviewed and merged.
 
 ## Actual progress (supersedes historical status below)
 
