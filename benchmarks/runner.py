@@ -13,7 +13,6 @@ import venv
 from pathlib import Path
 from urllib.parse import urlsplit
 
-
 PACKAGE = "fastapi-cache-stable"
 VERSION = "0.6.0"
 WHEEL_SHA256 = "60be61f68908bb8621a53c902baed2b61c9e894cffa95d8df0e9dd71c5bc4b5e"
