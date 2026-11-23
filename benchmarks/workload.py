@@ -221,7 +221,11 @@ async def http_cases(rec: Measurements, backend: object, label: str,
         try:
             # Remove all HTTP namespaces (payload, vary, slow and TTL), not only
             # the payload namespace. The prefix is random and scoped to this run.
+            prefix = FastAPICache.get_prefix()
             await FastAPICache.clear()
+            if isinstance(backend, RedisBackend):
+                async for _ in backend.redis.scan_iter(match=f"{prefix}:*"):
+                    raise RuntimeError("HTTP benchmark left keys in its own Redis prefix")
         finally:
             rec.stage_resources[f"http_{label}"] = {
                 **resource_footprint(),
@@ -246,6 +250,7 @@ async def redis_cases(rec: Measurements, url: str, profile: str) -> dict[str, ob
         backend = RedisBackend(redis)
         server_cpu_start = await redis.info("cpu")
         server_memory_start = await redis.info("memory")
+        server_clients_start = await redis.info("clients")
         await http_cases(rec, backend, "redis", 12 if profile == "smoke" else 100)
         prefix = "perf-" + uuid.uuid4().hex
         levels = (1, 10) if profile == "smoke" else (1, 10, 100, 1000)
@@ -270,20 +275,25 @@ async def redis_cases(rec: Measurements, url: str, profile: str) -> dict[str, ob
                                   time.perf_counter() - t)
             finally:
                 await backend.clear(namespace=prefix)
+                async for _ in redis.scan_iter(match=f"{prefix}:*"):
+                    raise RuntimeError("Direct benchmark left keys in its own Redis prefix")
         server_cpu_end = await redis.info("cpu")
         server_memory_end = await redis.info("memory")
+        server_clients_end = await redis.info("clients")
         rec.stage_resources["redis"] = {
             **resource_footprint(),
             "process_cpu_seconds": time.process_time() - stage_cpu_start,
             "redis_used_memory_start_bytes": int(server_memory_start["used_memory"]),
             "redis_used_memory_end_bytes": int(server_memory_end["used_memory"]),
+            "redis_connected_clients_start": int(server_clients_start["connected_clients"]),
+            "redis_connected_clients_end": int(server_clients_end["connected_clients"]),
             "redis_server_cpu_user_delta_seconds": (
                 float(server_cpu_end["used_cpu_user"]) - float(server_cpu_start["used_cpu_user"])
             ),
             "redis_server_cpu_sys_delta_seconds": (
                 float(server_cpu_end["used_cpu_sys"]) - float(server_cpu_start["used_cpu_sys"])
             ),
-            "scope": "shared Redis INFO deltas (only isolated CI service gives attribution)",
+            "scope": "Redis INFO includes idle client pool/buffers; not a pure key-value memory delta",
         }
         return {"redis_server_version": version, "redis_profile": "standalone loopback /15"}
     finally:
