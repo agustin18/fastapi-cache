@@ -55,14 +55,22 @@ def _venv_python(folder: Path) -> Path:
 
 
 def main() -> None:
+    # Executable script has benchmarks/ on sys.path; module import in tests does not.
+    from aggregate import aggregate_results
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile", choices=("smoke", "full"), default="smoke")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--redis-url", default="redis://127.0.0.1:6379/15")
+    parser.add_argument("--repeats", type=int, default=None,
+                        help="Fresh workload processes (default: smoke=1, full=3; max 5)")
     args = parser.parse_args()
     if sys.version_info[:2] != (3, 12):
         raise SystemExit("Reproducibility requires CPython 3.12 for this benchmark profile")
     url = validate_redis_url(args.redis_url)
+    repeats = args.repeats if args.repeats is not None else (3 if args.profile == "full" else 1)
+    if not 1 <= repeats <= 5:
+        parser.error("--repeats must be between 1 and 5")
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
 
@@ -95,6 +103,7 @@ def main() -> None:
             "wheel_sha256": digest,
             "framework_pins": list(FRAMEWORK),
             "profile": args.profile,
+            "repeats": repeats,
             "python": sys.version.split()[0],
             "workflow_source_sha": os.environ.get("GITHUB_SHA", "local-unrecorded"),
             "workflow_run_id": os.environ.get("GITHUB_RUN_ID", "local-unrecorded"),
@@ -102,8 +111,15 @@ def main() -> None:
         (output / "provenance.json").write_text(
             json.dumps(provenance, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
-        print(_run([str(python), "-I", str(WORKLOAD), "--profile", args.profile,
-                    "--output", str(output), "--redis-url", url], root), end="")
+        for index in range(repeats):
+            destination = (output if index == 0 else output / "runs" / f"run-{index + 1:02d}")
+            destination.mkdir(parents=True, exist_ok=True)
+            print(f"Running {args.profile} iteration {index + 1}/{repeats}", flush=True)
+            _run([str(python), "-I", str(WORKLOAD), "--profile", args.profile,
+                  "--output", str(destination), "--redis-url", url], root)
+        result = aggregate_results(output, repeats)
+        print(f"Completed {repeats} isolated workload process(es), "
+              f"{len(result['cases'])} comparable cases; aggregate.json written")
     print("Published wheel SHA-256 verified; isolated benchmark environment removed")
 
 

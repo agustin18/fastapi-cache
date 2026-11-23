@@ -31,11 +31,26 @@ from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
 
+def resource_footprint() -> dict[str, int | None]:
+    """Linux process measurements; peak RSS is cumulative since process start."""
+    current: int | None = None
+    peak: int | None = None
+    status = Path("/proc/self/status")
+    if sys.platform == "linux" and status.is_file():
+        for line in status.read_text(encoding="utf-8").splitlines():
+            if line.startswith("VmRSS:"):
+                current = int(line.split()[1])
+            elif line.startswith("VmHWM:"):
+                peak = int(line.split()[1])
+    return {"rss_kib": current, "peak_rss_kib": peak}
+
+
 class Measurements:
     def __init__(self) -> None:
         self.samples: dict[str, list[int]] = defaultdict(list)
         self.wall_seconds: dict[str, float] = defaultdict(float)
         self.operations: dict[str, int] = defaultdict(int)
+        self.stage_resources: dict[str, dict[str, object]] = {}
 
     def record(self, case: str, ns: int) -> None:
         self.samples[case].append(ns)
@@ -65,6 +80,7 @@ class Measurements:
                 "wall_seconds": seconds if seconds else None,
                 "throughput_ops_s": self.operations[case] / seconds if seconds else None,
             }
+        extra["stage_resources"] = self.stage_resources
         document = {"metadata": extra, "cases": cases}
         (out / "summary.json").write_text(
             json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -95,6 +111,7 @@ async def inmemory_cases(rec: Measurements, profile: str) -> None:
     capacities = (1000,) if profile == "smoke" else (1000, 10000, 100000)
     value = b"x" * 512
     for capacity in capacities:
+        stage_cpu_start = time.process_time()
         backend = InMemoryBackend(max_entries=capacity)
         for stage in ("fill", "lru_churn", "read"):
             start = time.perf_counter()
@@ -120,11 +137,17 @@ async def inmemory_cases(rec: Measurements, profile: str) -> None:
         await ttl.set("expire:fresh", value, expire=60)
         rec.record(f"inmemory_ttl_reclaim_n{capacity}", time.perf_counter_ns() - start)
         require(await ttl.get("expire:old") is None, "Expired item was returned")
+        rec.stage_resources[f"inmemory_n{capacity}"] = {
+            **resource_footprint(),
+            "process_cpu_seconds": time.process_time() - stage_cpu_start,
+            "scope": "process snapshot: cumulative peak RSS; CPU includes this capacity",
+        }
 
 
 async def http_cases(rec: Measurements, backend: object, label: str,
                      iterations: int) -> None:
     FastAPICache.reset()
+    stage_cpu_start = time.process_time()
     FastAPICache.init(backend, prefix="perf-" + uuid.uuid4().hex)
     app = FastAPI()
     sizes = {"small": 128, "medium": 4096, "large": 65536}
@@ -195,7 +218,21 @@ async def http_cases(rec: Measurements, backend: object, label: str,
             require(removed > 0, "Expected only benchmark namespace entries to clear")
             await request("after_clear", "/payload/small?nonce=99999", "MISS")
     finally:
-        FastAPICache.reset()
+        try:
+            # Remove all HTTP namespaces (payload, vary, slow and TTL), not only
+            # the payload namespace. The prefix is random and scoped to this run.
+            prefix = FastAPICache.get_prefix()
+            await FastAPICache.clear()
+            if isinstance(backend, RedisBackend):
+                async for _ in backend.redis.scan_iter(match=f"{prefix}:*"):
+                    raise RuntimeError("HTTP benchmark left keys in its own Redis prefix")
+        finally:
+            rec.stage_resources[f"http_{label}"] = {
+                **resource_footprint(),
+                "process_cpu_seconds": time.process_time() - stage_cpu_start,
+                "scope": "ASGI in-process HTTP; RSS high water includes previous stages",
+            }
+            FastAPICache.reset()
 
 
 async def redis_cases(rec: Measurements, url: str, profile: str) -> dict[str, object]:
@@ -204,12 +241,16 @@ async def redis_cases(rec: Measurements, url: str, profile: str) -> dict[str, ob
             and parsed.path == "/15" and parsed.port is not None and not parsed.password,
             "Redis target must be localhost database 15")
     redis = Redis.from_url(url, decode_responses=False)
+    stage_cpu_start = time.process_time()
     try:
         require(bool(await redis.ping()), "Redis ping failed")
         info = await redis.info("server")
         version = str(info["redis_version"])
         require(version.startswith("7.4."), f"Expected standalone Redis 7.4, got {version}")
         backend = RedisBackend(redis)
+        server_cpu_start = await redis.info("cpu")
+        server_memory_start = await redis.info("memory")
+        server_clients_start = await redis.info("clients")
         await http_cases(rec, backend, "redis", 12 if profile == "smoke" else 100)
         prefix = "perf-" + uuid.uuid4().hex
         levels = (1, 10) if profile == "smoke" else (1, 10, 100, 1000)
@@ -234,6 +275,26 @@ async def redis_cases(rec: Measurements, url: str, profile: str) -> dict[str, ob
                                   time.perf_counter() - t)
             finally:
                 await backend.clear(namespace=prefix)
+                async for _ in redis.scan_iter(match=f"{prefix}:*"):
+                    raise RuntimeError("Direct benchmark left keys in its own Redis prefix")
+        server_cpu_end = await redis.info("cpu")
+        server_memory_end = await redis.info("memory")
+        server_clients_end = await redis.info("clients")
+        rec.stage_resources["redis"] = {
+            **resource_footprint(),
+            "process_cpu_seconds": time.process_time() - stage_cpu_start,
+            "redis_used_memory_start_bytes": int(server_memory_start["used_memory"]),
+            "redis_used_memory_end_bytes": int(server_memory_end["used_memory"]),
+            "redis_connected_clients_start": int(server_clients_start["connected_clients"]),
+            "redis_connected_clients_end": int(server_clients_end["connected_clients"]),
+            "redis_server_cpu_user_delta_seconds": (
+                float(server_cpu_end["used_cpu_user"]) - float(server_cpu_start["used_cpu_user"])
+            ),
+            "redis_server_cpu_sys_delta_seconds": (
+                float(server_cpu_end["used_cpu_sys"]) - float(server_cpu_start["used_cpu_sys"])
+            ),
+            "scope": "Redis INFO includes idle client pool/buffers; not a pure key-value memory delta",
+        }
         return {"redis_server_version": version, "redis_profile": "standalone loopback /15"}
     finally:
         await redis.aclose()
@@ -255,6 +316,8 @@ def main() -> None:
     verify_installed()
     args.output.mkdir(parents=True, exist_ok=True)
     rec = Measurements()
+    wall_start = time.perf_counter()
+    cpu_start = time.process_time()
     details = asyncio.run(execute(rec, args.redis_url, args.profile))
     metadata_record: dict[str, object] = {
         "scope": "in-process ASGITransport (not HTTP network), direct backend operations",
@@ -269,8 +332,14 @@ def main() -> None:
         "payload_bytes": {"small": 128, "medium": 4096, "large": 65536,
                           "direct_backend": 512},
         "sampling": "nearest-rank percentiles over individual operation durations",
-        "rss_note": "Not measured in this first phase; entry count is not a byte cap",
-        "limitations": "No TLS, Cluster, Sentinel, HA, failure injection, external HTTP network or comparisons",
+        "resource_usage": {
+            **resource_footprint(),
+            "process_cpu_seconds": time.process_time() - cpu_start,
+            "process_wall_seconds": time.perf_counter() - wall_start,
+            "scope": "one fresh Python process (imports, InMemory, HTTP, Redis); Linux /proc RSS",
+        },
+        "rss_note": "Peak RSS cumulative across whole process; NOT per-backend memory; entries are not byte caps",
+        "limitations": "No TLS, Cluster, Sentinel, HA, failure injection, external HTTP network or historical comparisons",
         **details,
     }
     rec.save(args.output, metadata_record)
