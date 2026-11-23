@@ -12,7 +12,15 @@ import venv
 from pathlib import Path
 
 from aggregate import aggregate_results
-from runner import FRAMEWORK, PACKAGE, VERSION, WHEEL_SHA256, _run, _venv_python, validate_redis_url
+from runner import (
+    FRAMEWORK,
+    PACKAGE,
+    VERSION,
+    WHEEL_SHA256,
+    _run,
+    _venv_python,
+    validate_redis_url,
+)
 
 WORKLOAD = Path(__file__).with_name("socket_workload.py").resolve()
 UVICORN = "uvicorn==0.34.2"

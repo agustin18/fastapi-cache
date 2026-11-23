@@ -240,7 +240,7 @@ async def exercise(
     await request(None, "/vary", "MISS", {"Accept-Language": "de"})
     await request(None, "/vary", "HIT", {"Accept-Language": "en"})
 
-    for index in range(iterations):
+    for _index in range(iterations):
         await request(
             "auth_bypass", "/payload/small?nonce=777", None,
             {"Authorization": "Bearer synthetic-test-only"},
