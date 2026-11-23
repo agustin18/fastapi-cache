@@ -32,7 +32,7 @@ def test_reject_unbalanced_or_unbounded_repeats(invalid: int) -> None:
 
 
 def _fixture(out: Path, version: str, pair: int, ms: float) -> None:
-    folder = out / version / ("pair-%02d" % pair)
+    folder = out / version / f"pair-{pair:02d}"
     folder.mkdir(parents=True, exist_ok=True)
     payload = {
         "metadata": {"cache_distribution": version},

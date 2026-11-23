@@ -40,7 +40,7 @@ def aggregate_comparison(output: Path, repeats: int) -> dict[str, Any]:
     summaries: dict[str, list[dict[str, Any]]] = {version: [] for version in VERSIONS}
     for pair_index, _ in enumerate(schedule, start=1):
         for version in VERSIONS:
-            path = output / version / ("pair-%02d" % pair_index) / "summary.json"
+            path = output / version / f"pair-{pair_index:02d}" / "summary.json"
             summary = json.loads(path.read_text(encoding="utf-8"))
             if summary["metadata"]["cache_distribution"] != version:
                 raise ValueError("Installed version disagrees with recorded scenario")
@@ -154,7 +154,7 @@ def main() -> None:
 
         for index, pair in enumerate(order, start=1):
             for version in pair:
-                destination = out / version / ("pair-%02d" % index)
+                destination = out / version / f"pair-{index:02d}"
                 destination.mkdir(parents=True, exist_ok=True)
                 print(f"Compare pair {index}/{len(order)}: wheel {version}", flush=True)
                 _run([str(executables[version]), "-I", str(WORKLOAD),
