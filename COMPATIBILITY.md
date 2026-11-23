@@ -286,6 +286,20 @@ Status definitions:
 | DynamoDB | Experimental; Python >=3.10 only for published `0.6.0` | `dynamodb` extra requires aiobotocore and aiohttp >=3.14.4; the extra omits those dependencies on Python 3.8/3.9. Unit tests use a fake client; `clear` raises `NotImplementedError`; no real-service integration |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
 
+### Exact InMemory TTL boundary in published 0.6.0
+
+Published 0.6.0 evaluates the integer-second deadline using
+`ttl_ts < int(time.time())`, so a value can remain available with a
+reported remaining TTL of **zero** at the exact deadline. This is not an
+automatic safety/TTL parity guarantee with Redis. InMemory stores with
+`expire=0` or a negative TTL may still yield a same-second hit in 0.6.0,
+whereas Redis rejects `SET EX 0` or a negative EX value. [Draft PR #123](https://github.com/agustin18/fastapi-cache/pull/123)
+proposes inclusive expiry `ttl_ts <= now`, **not yet published**.
+Because this implementation uses the wall clock rather than monotonic
+elapsed time, backward clock changes can also increase the remaining TTL
+of a still-live entry. Choose and test a backend for your actual freshness
+contract before relying on equality or clock-skew behavior.
+
 ### Bounded InMemory in published 0.6.0
 
 `InMemoryBackend(max_entries: Optional[int] = None)` is available in
