@@ -18,6 +18,8 @@
 > [Support](https://github.com/agustin18/fastapi-cache/blob/stable/SUPPORT.md) ·
 > [Changelog](https://github.com/agustin18/fastapi-cache/blob/stable/CHANGELOG.md).
 > **0.6.0:** published technical release with opt-in bounded InMemory.
+> `stable` may carry unreleased `0.7.0.dev0` source; build artifacts from
+> `stable` are **not** the published 0.6.0 distribution or an approved 0.7.0 release.
 > Pre-releases must be independently evaluated before production deployment.
 >
 > Installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has
@@ -67,7 +69,7 @@ See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blo
 | **Already on fastapi-cache2** | [Migration walkthrough](site_docs/migration.md) · [Full migration contract](MIGRATION.md) | Remove the old distribution, validate privacy, migrate namespaces, rollback |
 | **Comparing features/backends** | [Feature matrix](site_docs/reference/features.md) · [Backend choice](site_docs/backends.md) | What's actually in 0.6.0 and what remains proposed |
 | **Checking security** | [Tenant and request safety](site_docs/guides/privacy.md) · [Security policy](SECURITY.md) | Default auth bypass, custom headers, cache-key isolation |
-| **Looking ahead** | [Next release plan](site_docs/roadmap.md) · [#86 tracker](https://github.com/agustin18/fastapi-cache/issues/86) | post-0.6 work, not publication promises |
+| **Looking ahead** | [Next release plan](site_docs/roadmap.md) · [#95 roadmap](https://github.com/agustin18/fastapi-cache/issues/95) | post-0.6 work, not publication promises |
 
 **Try it:** [one-command before/after migration demo](examples/migration/README.md) (two isolated published environments, no Redis or credentials).
 

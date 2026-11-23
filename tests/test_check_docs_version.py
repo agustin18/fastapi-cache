@@ -3,20 +3,28 @@ from pathlib import Path
 
 import pytest
 from scripts.check_docs_version import published_version, validate
+from scripts.release_contract import package_version
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_package_is_single_current_version_source() -> None:
-    assert published_version().count(".") == 2
-    assert published_version() in (ROOT / "README.md").read_text(encoding="utf-8")
+def test_published_docs_identity_is_separate_from_development_source() -> None:
+    published = published_version()
+    source = package_version(allow_development=True)
+    assert published.count(".") == 2
+    assert source.startswith("0.7.0")
+    assert published in (ROOT / "README.md").read_text(encoding="utf-8")
+    assert published in (ROOT / "docs/releases/RELEASE_STATUS_0.6.0.md").read_text(encoding="utf-8")
 
 
 def test_missing_current_version_fails_closed(tmp_path: Path) -> None:
-    project = tmp_path / "pyproject.toml"
-    project.write_text('[tool.poetry]\nname = "example"\n', encoding="utf-8")
+    marker = tmp_path / "PUBLISHED_VERSION"
+    marker.write_text("0.7.0.dev0\n", encoding="utf-8")
     with pytest.raises(ValueError, match="Missing final"):
-        published_version(project)
+        published_version(marker)
+    marker.write_text("0.6.0\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="Missing release status"):
+        published_version(marker)
 
 
 def test_current_docs_metadata_cannot_drift(tmp_path: Path) -> None:
@@ -57,6 +65,10 @@ def test_public_reference_markers_cannot_revert_to_old_release(
         (ROOT / "pyproject.toml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
+    for name in ("docs/releases/PUBLISHED_VERSION", "docs/releases/RELEASE_STATUS_0.6.0.md"):
+        destination = tmp_path / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text((ROOT / name).read_text(encoding="utf-8"), encoding="utf-8")
     version = published_version()
     for name in files:
         destination = tmp_path / name
@@ -114,6 +126,10 @@ def test_stale_redis_and_troubleshooting_claims_are_rejected(
         (ROOT / "pyproject.toml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
+    for name in ("docs/releases/PUBLISHED_VERSION", "docs/releases/RELEASE_STATUS_0.6.0.md"):
+        destination = tmp_path / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text((ROOT / name).read_text(encoding="utf-8"), encoding="utf-8")
     for name in files:
         target = tmp_path / name
         target.parent.mkdir(parents=True, exist_ok=True)

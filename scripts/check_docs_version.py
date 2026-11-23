@@ -1,4 +1,4 @@
-"""Check user-visible current release docs from the single package version source.
+"""Check public release docs against the last verified published version marker.
 
 Run against built Zensical HTML. Historical release notes, archived guides
 and changelogs intentionally retain their original version numbers.
@@ -10,18 +10,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def published_version(project=None):
-    project = ROOT / "pyproject.toml" if project is None else Path(project)
-    content = project.read_text(encoding="utf-8")
-    part = content.split("[tool.poetry]\n", 1)[1].split("\n[", 1)[0]
-    match = re.search(r'(?m)^version\s*=\s*"(\d+\.\d+\.\d+)"\s*$', part)
-    if match is None:
-        raise ValueError("Missing final package release version in pyproject.toml")
-    return match.group(1)
+def published_version(marker=None):
+    # This marker changes only after a verified public registry promotion.
+    # In development pyproject.toml intentionally names the next dev wheel.
+    marker = ROOT / "docs/releases/PUBLISHED_VERSION" if marker is None else Path(marker)
+    version = marker.read_text(encoding="utf-8").strip()
+    if re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version) is None:
+        raise ValueError("Missing final published version in PUBLISHED_VERSION")
+    if not (marker.parent / ("RELEASE_STATUS_" + version + ".md")).is_file():
+        raise ValueError("Missing release status evidence for published " + version)
+    return version
 
 
 def validate(site, root=ROOT):
-    version = published_version(root / "pyproject.toml")
+    version = published_version(root / "docs/releases/PUBLISHED_VERSION")
     sources = {
         "README.md": "**Latest published stable:** [" + version,
         "docs/QUICKSTART.md": "fastapi-cache-stable==" + version,

@@ -47,7 +47,14 @@ jobs:
           python-version: "3.12"
       - name: Resolve release identity from package metadata
         id: release
-        run: python scripts/release_contract.py github-output --github-output "$GITHUB_OUTPUT"
+        run: |
+          # Dev artifacts are allowed only on PRs; manual release evidence
+          # still requires a final X.Y.Z version and rejects dev identifiers.
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            python scripts/release_contract.py github-output --allow-development --github-output "$GITHUB_OUTPUT"
+          else
+            python scripts/release_contract.py github-output --github-output "$GITHUB_OUTPUT"
+          fi
       - name: Build and verify both immutable candidate files
         env:
           EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}

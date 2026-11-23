@@ -1,9 +1,19 @@
 # Reusable release pipeline contract
 
-The package's final release version comes from `pyproject.toml`. The
-release-owned script `scripts/release_contract.py` validates the package
-identity and final `X.Y.Z` version and derives the immutable Phase B bundle
-name. Workflows do **not** store the current release version or artifact ID.
+The source distribution identity comes from `pyproject.toml`: while 0.7.0
+is being developed it is `0.7.0.dev0`, distinct from the last published
+`0.6.0`. The independently verified published-docs pointer lives in
+`docs/releases/PUBLISHED_VERSION` and changes **only after** registry promotion.
+README, install pins and the public docs describe that published artifact.
+
+The release-owned script `scripts/release_contract.py` defaults to **final
+`X.Y.Z` only** and derives the immutable Phase B bundle name. PR Phase B
+explicitly passes `--allow-development` to test exact dev wheel/sdist builds,
+but the `workflow_dispatch` final evidence path rejects dev versions.
+A release promotion must first move `pyproject.toml` to the final
+`0.7.0`, run tests, freeze SHA, and obtain fresh manual first-attempt
+20-job Phase B plus independent artifact verification. Workflows do **not**
+store the current release version or artifact ID.
 
 ## Safe dry-run before preparing 0.7.0
 

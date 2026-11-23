@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from scripts.release_contract import package_version
+from scripts.check_docs_version import published_version
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "migration-candidate-phase-b.yml"
@@ -27,6 +28,8 @@ def test_phase_b_builds_exact_sha_once_and_checks_candidate_files() -> None:
     ):
         assert fragment in workflow, fragment
     assert "pypa/gh-action-pypi-publish" not in workflow
+    assert '"$GITHUB_EVENT_NAME" = "pull_request"' in workflow
+    assert "--allow-development" in workflow
     assert "id-token: write" not in workflow
 
 
@@ -67,12 +70,13 @@ def test_candidate_source_metadata_and_published_history() -> None:
     ).read_text(encoding="utf-8")
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
-    version = package_version()
+    version = package_version(allow_development=True)
+    published = published_version()
     assert f'version = "{version}"' in pyproject
-    assert f'fastapi-cache-stable[redis]=={version}' in readme
+    assert f'fastapi-cache-stable[redis]=={published}' in readme
     assert "pypi.org/project/fastapi-cache-stable/" in readme
     assert "0.5.0 is a source candidate, not on PyPI" not in readme
-    assert f"**Latest published stable:** [{version}" in readme
+    assert f"**Latest published stable:** [{published}" in readme
     assert "candidate only, not published" not in support
     assert "PREPUBLICATION DRAFT" not in notes
     assert "NOT RELEASED" not in checklist
