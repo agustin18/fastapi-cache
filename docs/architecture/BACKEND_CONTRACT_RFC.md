@@ -6,6 +6,9 @@ Published 0.6.0 is unchanged.**
 Tracked under [#111](https://github.com/agustin18/fastapi-cache/issues/111).
 The reusable `tests/test_backend_contract.py` test verifies a conservative
 shared subset on InMemory and a **loopback, test-only** standalone Redis server.
+The draft #131 evidence expansion additionally covers empty bytes distinct
+from misses, nonpositive TTL divergence, and client ownership after pool recycle.
+These tests do **not** simulate a true Redis server outage.
 It does not promote experimental providers to supported status.
 
 ## Shared contract and capability table

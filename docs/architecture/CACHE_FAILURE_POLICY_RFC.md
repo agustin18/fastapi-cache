@@ -39,6 +39,14 @@ No changes to the published 0.6.0 artifact.
    new hidden process-global setting. Plain function caching (#103) must not
    inherit HTTP-only 304 rules.
 
+## Characterization-only evidence for the 0.7 candidate
+
+Draft #131 adds negative tests for current backend-read fallback, write failure
+without a cached HIT, coder-encode exceptions and cancellation propagation.
+It does not adopt a general fallback policy or modify HTTP status/ETag
+semantics. Local pool recycle after explicit disconnect is **not** evidence
+of Redis daemon crash, outage/recovery budgets or reconnect under load.
+
 ## Mandatory tests before any broader fallback
 
 Invalid JSON, invalid UTF-8, incompatible typed models, conditional 304
