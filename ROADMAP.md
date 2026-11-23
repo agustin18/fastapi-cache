@@ -117,7 +117,7 @@ See the [separate 0.7.0 execution and issue-alignment page](site_docs/plan-0-7.m
 
 | Train | Primary goal | Work items / acceptance |
 |---|---|---|
-| **0.7.0 quality** | 3 small runtime correctness fixes; honest migration, docs and safe artifact release | #114 Redis tuple, #123 InMemory TTL, #124 decode-before-304; #131/#133 failure characterization; #100 no-speed-claim deferral requires express reviewer + maintainer decision; #111/#112/#53 risk review; first-attempt Phase B 20/20 and exact-artifact independent GO |
+| **0.7.0 quality** | 3 small runtime correctness fixes; honest migration, docs and safe artifact release | #114 Redis tuple, #123 InMemory TTL, #124 decode-before-304; #131/#133 failure characterization; #100 no-speed-claim deferral requires express reviewer + maintainer decision; #111/#112/#53 risk review; first-attempt Phase B with all twenty mandatory jobs and exact-artifact independent GO |
 | **0.7.x patch** | Postrelease P0/P1 corrections only | No new high-risk features, no silent defaults or legacy key changes; each patch has wheel/sdist security/migration evidence |
 | **0.8.0 safety + concurrency** | First visible competitive leap, opt-in APIs only | #99 app/lifespan isolation design and negative cross-tenant tests; #96 local bounded single-flight; #50 privacy-minimal callbacks; #112 failure policy per supported backend; choose only independently reviewable slices |
 | **0.8.x incremental** | Fix interoperability, FIPS portability and Python version support if qualified | #55 FIPS, #51 Python 3.14 if full matrix; #49 guarded exclude_params after key safety review; #45 experimental backend fixes only after real repro |
