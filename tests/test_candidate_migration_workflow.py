@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from scripts.release_contract import package_version
 from scripts.check_docs_version import published_version
+from scripts.release_contract import package_version
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "migration-candidate-phase-b.yml"
