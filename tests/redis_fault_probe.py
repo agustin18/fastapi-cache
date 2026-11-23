@@ -9,6 +9,7 @@ import io
 import logging
 import os
 import re
+import socket
 import subprocess
 import sys
 import uuid
@@ -113,6 +114,7 @@ async def exercise(name, port):
         assert "sample" not in logs
 
         docker("start", name)
+        assert docker("port", name, "6379/tcp") == f"127.0.0.1:{port}"
         await wait_ready(client)
         # Ephemeral Redis explicitly disables snapshots/AOF.
         assert await backend.get(key) is None
@@ -127,6 +129,14 @@ async def exercise(name, port):
         await client.aclose()
 
 
+def unused_port():
+    # Docker must keep the SAME explicit host-port mapping on restart.
+    # An anonymous '-p 127.0.0.1::6379' mapping may change after restart.
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as guard:
+        guard.bind(("127.0.0.1", 0))
+        return int(guard.getsockname()[1])
+
+
 def main():
     if os.environ.get("REDIS_FAULT_DISPOSABLE") != "1":
         raise SystemExit("Refusing without REDIS_FAULT_DISPOSABLE=1")
@@ -135,18 +145,15 @@ def main():
         raise SystemExit("Explicit tested CANDIDATE_VERSION is mandatory")
     assert_installed(version)
     name = "fastapi-cache-fault-070-" + uuid.uuid4().hex[:12]
+    port = unused_port()
+    if not (1024 <= port <= 65535):
+        raise RuntimeError("Unsafe port")
     try:
         docker(
-            "run", "-d", "--name", name, "-p", "127.0.0.1::6379",
+            "run", "-d", "--name", name, "-p", f"127.0.0.1:{port}:6379",
             "redis:7.4", "redis-server", "--save", "", "--appendonly", "no",
         )
-        mapping = docker("port", name, "6379/tcp")
-        match = re.fullmatch(r"127\.0\.0\.1:(\d+)", mapping)
-        if match is None:
-            raise RuntimeError("Unsafe Docker port mapping")
-        port = int(match.group(1))
-        if not (1024 <= port <= 65535):
-            raise RuntimeError("Unsafe port")
+        assert docker("port", name, "6379/tcp") == f"127.0.0.1:{port}"
         asyncio.run(exercise(name, port))
     finally:
         try:
