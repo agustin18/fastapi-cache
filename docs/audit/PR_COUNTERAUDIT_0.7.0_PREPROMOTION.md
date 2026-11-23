@@ -7,12 +7,11 @@ Read the canonical 0.7 [risk register](../releases/RISK_REGISTER_0.7.0.md),
 [artifact checklist](../releases/RELEASE_CANDIDATE_0.7.0.md), and
 [final-artifact handoff](COUNTERAUDIT_0.7.0_HANDOFF.md).
 
-**Stable anchor before these PRs:** `0c306a67a6adb4ed098e96e70dd0da192c8fbf85`.
-**PR under review:** #135 release risk + proportional no-claim performance
-deferral.
+**Stable anchor before the promotion PR:** `fb989a06b959b1a6c894cb2c56c0e67722faa543`.
+**PR under review:** #137 final 0.7.0 promotion (it incorporates the merged #135 release-risk decision).
 The auditor must fetch the **current live PR HEAD SHA**, not use a hardcoded
-SHAs from a moving branch. No source promotion to `0.7.0`,
-tag, TestPyPI, PyPI, or release workflow is authorized by this review.
+SHAs from a moving branch. No tag, TestPyPI, PyPI or release workflow
+is authorized by this review.
 
 ## First phase: adversarial review of merged runtime source
 
@@ -44,12 +43,12 @@ Falsify at least:
 
 ## Second phase: critique the PR decisions and future strategy
 
-1. Inspect PR #135 for unintended release authorization, metadata
+1. Inspect PR #137 for unintended release authorization, metadata
    changes, fabricated benchmark limits or hashes, unsubstantiated
    PASS claims, misleading 0.7 install snippets, stale `#133` status
-   or `1d78154` as latest. Published pointer must be exactly
-   `docs/releases/PUBLISHED_VERSION=0.6.0`. The PR must NOT change
-   version from `0.7.0` or produce a tag.
+   or an old stable SHA as latest. Published pointer must be exactly
+   `docs/releases/PUBLISHED_VERSION=0.6.0`. The promotion PR must set
+   the final `0.7.0` version, not a dev identifier, and must not tag.
 2. #100 no-claim fixed-host deferral: the maintainer **accepted** this
    release-specific deferral on 2026-11-23. The independent reviewer must
    still verify the limited runtime delta, no performance feature, honest
@@ -65,7 +64,7 @@ Falsify at least:
    artifact/release-contract tests, supported and legacy Python/Redis
    smoke on the **exact PR HEADs**; independently inspect mandatory
    workflows and explain any missing credentials or NOT RUN evidence.
-5. Re-run the **#135 diff** conceptually on latest `stable`; verify it
+5. Re-run the **#137 diff** conceptually on latest `stable`; verify it
    does not create contradictory headings/links or claim a release.
 
 ## Expected independent report
@@ -76,7 +75,7 @@ or file/line/CI run URL, severity `P0/P1/P2`, scope
 what evidence would convert NOT RUN to PASS.
 
 Return separately:
-- **PR merge recommendation** for #135: GO / CONDITIONAL / NO-GO.
+- **PR merge recommendation** for #137: GO / CONDITIONAL / NO-GO.
 - **Release readiness today**: should remain NO-GO until a *separate*
   final `0.7.0` source promotion PR is reviewed and merged, the
   source SHA is frozen, first-attempt **20** Phase B jobs succeed,

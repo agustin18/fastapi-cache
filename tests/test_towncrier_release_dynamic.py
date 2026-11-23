@@ -12,7 +12,7 @@ def test_exact_release_changelog_gate_is_version_independent() -> None:
 
     # A final promotion must regenerate CHANGELOG from the unmodified base
     # fragment inventory and compare every byte of the checked-in result.
-    assert "previous == current" in workflow
+    assert 'previous == current or previous.startswith(current + ".dev")' in workflow
     assert "assert previous == current == \"0.5.0\"" not in workflow
     assert "assert f\"## [{current}]\" not in base_changelog" in workflow
     assert "datetime.date.fromisoformat(release_date)" in workflow

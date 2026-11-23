@@ -61,7 +61,9 @@ jobs:
           )
           previous = tomllib.loads(base.decode())["tool"]["poetry"]["version"]
           current = tomllib.loads(Path("pyproject.toml").read_text())["tool"]["poetry"]["version"]
-          assert previous == current, (previous, current)
+          assert previous == current or previous.startswith(current + ".dev"), (
+              previous, current
+          )
           parts = current.split(".")
           assert len(parts) == 3 and all(p.isdigit() for p in parts), current
 
