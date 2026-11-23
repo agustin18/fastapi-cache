@@ -77,3 +77,33 @@ This workflow runs no release, tag, publishing, Pages or outreach actions. It
 adds no package runtime dependency and does not modify the published 0.6.0
 artifact. Python 3.14, experimental backend parity, Redis HA/TLS/Cluster and
 security certification are explicitly out of scope.
+
+## Controlled 0.5.0 versus 0.6.0 (historical comparison)
+
+The historical pairwise benchmark is intentionally separate from the 0.6.0-only
+bounded-InMemory/large-concurrency full suite. Both versions are downloaded as
+**published PyPI wheels**, checked against their release SHA-256 hashes and
+installed into **distinct** CPython 3.12 virtual environments with exactly
+the same dependency versions (verified by installed pip-freeze comparison).
+
+For a local Redis 7.4 listening only at redis://127.0.0.1:6379/15:
+
+    python3.12 benchmarks/compare_versions.py --repeats 4 --output benchmark-results/historical
+
+The protocol alternates order AB/BA over four paired runs per version on the
+**same runner** and exercises only common behavior: unbounded InMemory
+set/get; anonymous HTTP MISS/HIT/ETag-304 with small/medium JSON over in-process
+ASGITransport; and Redis standalone direct set/get plus HTTP cache.
+It excludes 0.6-only bounded storage, authentication policy changes, tenant
+security variations and advanced Redis/HA functionality. Each fresh process
+uses a random Redis namespace and clears that namespace on exit, never
+FLUSHDB. Only Redis loopback DB 15 is permitted.
+
+Each run produces raw.csv and summary.json; comparison.json stores paired
+p50/p95/p99 ratios, provenance.json stores both verified wheel hashes and
+the balanced ordering, and both pip-freeze files are preserved. Results are
+**descriptive**: shared-runner scheduling, warmup, transport and cache keys may
+confound small differences. No automatically accepted regression threshold,
+superiority advertising, published-version downgrade or 0.7.0 release GO
+follows from this comparison. Repeat on controlled independent hardware and
+agree on budgets *before* qualifying new opt-in features.

@@ -140,7 +140,7 @@ def main() -> None:
             (out / version / "pip-freeze.txt").write_text(freeze, encoding="utf-8")
             freezes[version] = sorted(
                 line for line in freeze.splitlines()
-                if not line.lower().startswith("fastapi-cache-stable==")
+                if not line.lower().startswith("fastapi-cache-stable")
             )
             provenance["wheels"][version] = {
                 "filename": wheels[0].name, "sha256": digest,
