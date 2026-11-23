@@ -82,7 +82,9 @@ def test_get_set_ttl_and_scoped_clear_contract(kind: str) -> None:
                 assert await backend.get(immediate_key) is None
                 assert await backend.get_with_ttl(immediate_key) == (0, None)
             else:
-                with pytest.raises(Exception):
+                from redis.exceptions import DataError, ResponseError
+
+                with pytest.raises((DataError, ResponseError)):
                     await backend.set(immediate_key, b"value", expire=0)
                 assert await backend.get(immediate_key) is None
 
