@@ -45,7 +45,7 @@ contain post-publication infrastructure changes. [#120](https://github.com/agust
 the published-wheel smoke/full suite and balanced 0.5.0/0.6.0 comparator
 are available as **measurement infrastructure**, not a performance certification.
 [#100](https://github.com/agustin18/fastapi-cache/issues/100) remains open:
-Draft #128 adds real localhost socket HTTP evidence, but independent
+Merged #128 (`f81e60b`) adds descriptive real localhost socket HTTP evidence, but independent
 fixed hardware, fault/disconnect cases and pre-agreed budgets are incomplete.
 
 [#123](https://github.com/agustin18/fastapi-cache/pull/123) is **merged** as

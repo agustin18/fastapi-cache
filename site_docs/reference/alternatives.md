@@ -40,7 +40,7 @@ historical published-wheel 0.5.0/0.6.0 AB/BA benchmark
 [#122](https://github.com/agustin18/fastapi-cache/pull/122)
 is merged, but Redis timings changed sign between CI sessions:
 **do not claim an observed speedup or regression**.
-Draft [#128](https://github.com/agustin18/fastapi-cache/pull/128) adds
+Merged [#128](https://github.com/agustin18/fastapi-cache/pull/128) (`f81e60b`) adds
 **descriptive** real loopback HTTP socket tests; independent controlled
 hardware, fault profiles and preregistered numeric budgets are still tracked
 under [#100](https://github.com/agustin18/fastapi-cache/issues/100).

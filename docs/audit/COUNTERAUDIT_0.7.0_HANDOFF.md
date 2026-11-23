@@ -16,7 +16,7 @@ Never substitute those hashes for a 0.7.0 candidate.
 - #120/#121/#122 merged (published-wheel smoke/full and 0.5/0.6 AB/BA).
   Historical Redis timing changes sign across hosted runners.
   [#100](https://github.com/agustin18/fastapi-cache/issues/100)
-  has Draft #128 real loopback HTTP socket evidence; fixed independent
+  has merged #128 (`f81e60b`) real loopback HTTP socket evidence; fixed independent
   hardware, Redis fault/recovery and pre-approved budgets remain.
 - [#123](https://github.com/agustin18/fastapi-cache/pull/123)
   **merged** (`612e9d6`) for inclusive InMemory TTL; verify final candidate
