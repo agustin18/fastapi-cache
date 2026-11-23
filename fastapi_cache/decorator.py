@@ -602,6 +602,11 @@ def cache(
                         result.headers.update(headers)
 
             else:  # cache hit
+                # Validate cached bytes BEFORE conditional HTTP handling.
+                # If-None-Match must not make undecodable bytes a valid 304.
+                result = cast(
+                    R, effective_coder.decode_as_type(cached, type_=return_type)
+                )
                 if response:
                     etag = _etag_for(cached)
                     headers = {
@@ -622,9 +627,6 @@ def cache(
                         response.status_code = HTTP_304_NOT_MODIFIED
                         return response
 
-                result = cast(
-                    R, effective_coder.decode_as_type(cached, type_=return_type)
-                )
                 if (
                     normalized_vary_headers or private_http_cache
                 ) and isinstance(result, Response):

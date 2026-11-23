@@ -44,7 +44,7 @@ def test_indexed_heap_exactness_under_direct_arbitrary_mutations(seed: int) -> N
             actual = index.oldest_expired(now)
             wanted = (
                 earliest[1]
-                if earliest is not None and earliest[0] < now
+                if earliest is not None and earliest[0] <= now
                 else None
             )
             assert actual == wanted
@@ -105,19 +105,18 @@ def test_cancelled_waiter_cannot_modify_heap_or_store() -> None:
     asyncio.run(run())
 
 
-def test_same_second_ttl_boundary_matches_existing_contract(
+def test_zero_ttl_is_not_replayed_at_exact_deadline(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Exact TTL timestamp is still accessible, then expires one second later."""
+    """At the deadline a zero-TTL value must not be returned as a cache hit."""
     now = [1000]
     monkeypatch.setattr("fastapi_cache.backends.inmemory.time.time", lambda: now[0])
 
     async def run() -> None:
         backend = InMemoryBackend(max_entries=1)
         await backend.set("n:edge", b"edge", expire=0)
-        assert await backend.get_with_ttl("n:edge") == (0, b"edge")
-        now[0] = 1001
         assert await backend.get("n:edge") is None
+        assert await backend.get_with_ttl("n:edge") == (0, None)
         assert len(backend._store) == 0  # pyright: ignore[reportPrivateUsage]
         assert backend._expiry_index is not None  # pyright: ignore[reportPrivateUsage]
         assert len(backend._expiry_index) == 0  # pyright: ignore[reportPrivateUsage]
