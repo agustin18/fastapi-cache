@@ -36,6 +36,30 @@ application-owned hidden tenant/context/cardinality limitations and future
 reproducible package-controlled issues. No independent consumer quota,
 third-party security certification or hosted-docs requirement applies.
 
+## 0.7.0 readiness snapshot — 2026-11-23
+
+The current **published** package remains 0.6.0; the `stable` branch may
+contain post-publication infrastructure changes. [#120](https://github.com/agustin18/fastapi-cache/pull/120),
+[#121](https://github.com/agustin18/fastapi-cache/pull/121) and
+[#122](https://github.com/agustin18/fastapi-cache/pull/122) have merged;
+the published-wheel smoke/full suite and balanced 0.5.0/0.6.0 comparator
+are available as **measurement infrastructure**, not a performance certification.
+[#100](https://github.com/agustin18/fastapi-cache/issues/100) remains open:
+independent fixed hardware, real socket HTTP, failure cases and pre-agreed
+budgets are not complete.
+
+[#123](https://github.com/agustin18/fastapi-cache/pull/123) proposes an
+inclusive InMemory TTL deadline under [#111](https://github.com/agustin18/fastapi-cache/issues/111).
+[#124](https://github.com/agustin18/fastapi-cache/pull/124) proposes
+decode-before-304 under [#112](https://github.com/agustin18/fastapi-cache/issues/112).
+Both are unmerged Draft PRs and require separate contract/security acceptance.
+Do not advertise either behavior in 0.6.0 docs.
+
+The [candidate 0.7.0 acceptance checklist](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_CANDIDATE_0.7.0.md)
+and [counteraudit handoff](https://github.com/agustin18/fastapi-cache/blob/stable/docs/audit/COUNTERAUDIT_0.7.0_HANDOFF.md)
+record remaining decisions; these documents are proposals until merged.
+No 0.7.0 release date, promotion, tag or upload is approved.
+
 ## Immediate P0/P1 — 0.7.0 qualification status
 
 See the [separate 0.7.0 execution and issue-alignment page](site_docs/plan-0-7.md). It is a plan, not a release promise.
@@ -63,7 +87,9 @@ See the [separate 0.7.0 execution and issue-alignment page](site_docs/plan-0-7.m
 - **Corrupt data and serialization:** [#112](https://github.com/agustin18/fastapi-cache/issues/112)
   defines fail-open/closed, trust, privacy and error propagation.
 - **Benchmarks:** [#100](https://github.com/agustin18/fastapi-cache/issues/100)
-  starts with installed, published 0.6.0 and reproducible performance results.
+  has a verified published-wheel 0.6.0 harness and historical AB/BA
+  0.5.0/0.6.0 comparator (merged #120–#122). Independent hardware,
+  network HTTP, failure injection and agreed thresholds remain open.
 - **Architecture RFCs:** [#99](https://github.com/agustin18/fastapi-cache/issues/99)
   (app/lifespan-scoped configuration) and [#103](https://github.com/agustin18/fastapi-cache/issues/103)
   (non-HTTP cache scope) must be accepted before implementing
@@ -162,7 +188,7 @@ remain targeted maintenance candidates, potentially `0.5.x`, after real
 reproduction. Python 3.14 must not enter published metadata without a
 full compatible matrix.
 
-### Focused PR sequence — current release train
+### Historical 0.5.0 promotion sequence — archived, not the current release train
 
 1. **Completed:** #67 docs-only gate (#71/#76/#77) and #68 generated-handler key fix,
    shipped and verified in 0.4.1.
@@ -178,10 +204,11 @@ full compatible matrix.
    Dependabot delta; annotated tag `v0.5.0`, TestPyPI and PyPI publication
    are recorded in [0.5.0 release status](docs/releases/RELEASE_STATUS_0.5.0.md).
 
-The current [release-specific checklist](docs/releases/RELEASE_CANDIDATE_0.5.0.md)
-is authoritative for remaining gates. **Optional #49/#54/#50**
-are now deferred to a separately reviewed future minor release; none
-blocks 0.5.0.
+The historical [0.5.0 release-specific checklist](docs/releases/RELEASE_CANDIDATE_0.5.0.md)
+records its completed release gate, **not** pending 0.7.0 requirements.
+See the separate [candidate 0.7.0 checklist](docs/releases/RELEASE_CANDIDATE_0.7.0.md).
+Optional #49/#50 were deferred; bounded InMemory #54/#85 subsequently
+shipped in published 0.6.0.
 
 Additional confirmed security or backend bugs warrant their own focused
 PRs. Do not artificially expand the scope with distributed locks, tags,
@@ -202,7 +229,7 @@ matrix. None of them reopens the published 0.5.0 signoff.
 | **P1 — correctness** | [#45](https://github.com/agustin18/fastapi-cache/issues/45) DynamoDB expired-value and client-lifecycle correctness | Experimental backend; needs a real-service reproduction |
 | **P1 — portability** | [#55](https://github.com/agustin18/fastapi-cache/issues/55) FIPS/restricted-MD5 key compatibility | Preserve legacy digests on non-FIPS profiles |
 | **P2 — API** | [#49](https://github.com/agustin18/fastapi-cache/issues/49) deterministic argument filtering | Must never silently drop identity or response-defining inputs |
-| **Source merged, release pending** | [#54 / #85](https://github.com/agustin18/fastapi-cache/pull/85) bounded InMemory | Read-only cap, default unchanged; **not** in 0.5.0 |
+| **Shipped in 0.6.0 (historical backlog)** | [#54 / #85](https://github.com/agustin18/fastapi-cache/pull/85) bounded InMemory | Read-only per-instance cap; **absent from 0.5.0**, published in 0.6.0 |
 | **P2 — observability** | [#50](https://github.com/agustin18/fastapi-cache/issues/50) typed HIT/MISS/BYPASS/STORE/ERROR events | Opt-in, privacy-safe and no mandatory telemetry dependency |
 | **P3 — compatibility** | [#51](https://github.com/agustin18/fastapi-cache/issues/51) Python 3.14 qualification | Only after a full functional/security matrix passes |
 | **P3 — documentation** | [#48](https://github.com/agustin18/fastapi-cache/issues/48) versioned documentation site | A separately hosted site is optional; migration guides remain authoritative here |
@@ -240,8 +267,8 @@ claims of feature/performance/security parity.
 
 | Capability / application need | Current contract | Evidence required to claim readiness | Target |
 |---|---|---|---|
-| Legacy migration and stable response identity | Published 0.5.0, pinned CI; release candidate in progress | Controlled installed-package integration, ordinary key goldens, selective rollback and secret-safe key changes | 0.6.0 |
-| Entry-count limit for one InMemory instance | Source merged in #85, not shipped in 0.5.0 | Real installed 0.6 artifact, TTL/LRU/fuzz/concurrency, 10k/100k scaling and byte-memory caveat | 0.6.0 |
+| Legacy migration and stable response identity | Published 0.6.0, final Phase B and PyPI provenance archived | Maintain exact installed-package migration/rollback and privacy tests in future candidates | 0.6.0 shipped |
+| Entry-count limit for one InMemory instance | **Published in 0.6.0** (not in 0.5.0) | Retain installed-wheel TTL/LRU/fuzz/concurrency, 10k/100k scaling and byte-memory caveat | 0.6.0 shipped |
 | Auth/private-request isolation | Conservative defaults and opt-in header variation | #53 library vs app ownership decision; independent negative privacy cases | 0.6.0 gate |
 | Privacy-safe callbacks | Not implemented | Typed opt-in signal, data minimization, callback isolation and overhead profile | Next feature train |
 | Local single-flight on same key | Not implemented | Independent callers, cancellation, exception propagation, nonblocking behavior and cache miss bounds | Next feature train |

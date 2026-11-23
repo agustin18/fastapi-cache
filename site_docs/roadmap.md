@@ -1,45 +1,40 @@
 # Roadmap: what is next?
 
-**0.6.0 is published.** It includes optional per-instance bounded InMemory,
-conservative credential-header handling and the exact-artifact release
-pipeline. See the [published evidence](reference/releases.md) and
-[compatibility](reference/compatibility.md). Features listed below are
-**planned**, not available with a 0.6.0 install.
+**0.6.0 is published.** [fastapi-cache-stable 0.6.0](reference/releases.md)
+was released 2026-11-21. `stable` contains subsequent docs and infrastructure; changes
+in an unmerged PR are **not installed**. This page describes proposals, not
+a shipping date, certification or approval to publish.
 
-**Implementation status (2026-11-22):** Documentation corrections
-([#109](https://github.com/agustin18/fastapi-cache/pull/109)), the
-version-neutral release pipeline ([#113](https://github.com/agustin18/fastapi-cache/pull/113))
-and a focused Redis return-type contract correction
-([#114](https://github.com/agustin18/fastapi-cache/pull/114)) are **merged into
-`stable` after publication**. The site is now live at
-<https://agustin18.github.io/fastapi-cache/> and deploys from `stable`; this
-does not create a new PyPI release. The full backend contract and future final
-artifact checks remain separate acceptance work.
+## Current 0.7.0 readiness (2026-11-23)
 
-[Read the separate 0.7.0 execution and issue-alignment plan](plan-0-7.md).
-
-## Release priorities (proposals, not deadlines)
-
-| Target | Work | Quality boundary |
+| Track | Verified state | Unfinished acceptance |
 |---|---|---|
-| 0.7.0 | [#100 installed benchmarks](https://github.com/agustin18/fastapi-cache/issues/100), [#96 local single-flight](https://github.com/agustin18/fastapi-cache/issues/96), [#50 opt-in events](https://github.com/agustin18/fastapi-cache/issues/50) | Complete release-pipeline refactor and designs [#99](https://github.com/agustin18/fastapi-cache/issues/99)/[#103](https://github.com/agustin18/fastapi-cache/issues/103) **first**; bounded cancellation and no private data in events |
-| 0.7.x | [#51 Python 3.14](https://github.com/agustin18/fastapi-cache/issues/51) when compatible, [#55 FIPS](https://github.com/agustin18/fastapi-cache/issues/55), bounded backend corrections | Preserve documented ordinary cache keys and old Python functional-compatibility lanes |
-| 0.8.0 | [#99 app-scoped configuration](https://github.com/agustin18/fastapi-cache/issues/99), [#97 tags](https://github.com/agustin18/fastapi-cache/issues/97), [#103 app caching](https://github.com/agustin18/fastapi-cache/issues/103), [#49 safe parameter filtering](https://github.com/agustin18/fastapi-cache/issues/49) | Opt-in compatibility, independent lifespans, key/tenant correctness, invalidation races |
-| 0.9.0 | [#98 bounded stale](https://github.com/agustin18/fastapi-cache/issues/98), advanced Redis resilience/HA and distributed coordination research [#102](https://github.com/agustin18/fastapi-cache/issues/102) | Never assume Cluster namespace clear, unlimited stale retention or automatic tenant isolation |
-| 1.0 | Stable public API and reviewable support policy | Co-maintainer/support commitments are separate decisions; no unsupported long-term guarantees |
+| [#100](https://github.com/agustin18/fastapi-cache/issues/100) performance | Merged [#120](https://github.com/agustin18/fastapi-cache/pull/120), [#121](https://github.com/agustin18/fastapi-cache/pull/121), [#122](https://github.com/agustin18/fastapi-cache/pull/122): installed 0.6.0 full/smoke and balanced published 0.5.0/0.6.0 comparison | Independent hardware, real HTTP sockets, faults, regression budgets approved before using them |
+| [#111](https://github.com/agustin18/fastapi-cache/issues/111) backend | Basic InMemory/Redis capability smoke exists; [#123](https://github.com/agustin18/fastapi-cache/pull/123) **Draft** corrects exact InMemory TTL deadline | Explicit cross-backend contract, experimental-provider limitations, clock skew and ownership review |
+| [#112](https://github.com/agustin18/fastapi-cache/issues/112) failures | [#124](https://github.com/agustin18/fastapi-cache/pull/124) **Draft** addresses malformed cached HIT/304 and proposes a failure-policy RFC | Approved corruption/serialization/backend error policy, security tests and opt-in recovery decision |
+| [#99](https://github.com/agustin18/fastapi-cache/issues/99) / [#103](https://github.com/agustin18/fastapi-cache/issues/103) architecture | Design issues open; process-global singleton is current | Accepted app-context and non-HTTP contracts before events, local single-flight or invalidation |
+| [#110](https://github.com/agustin18/fastapi-cache/issues/110) release | Version-neutral Phase B infrastructure merged in [#113](https://github.com/agustin18/fastapi-cache/pull/113) | Exact *final* 0.7.0 wheel/sdist, 20-job first-attempt Phase B, independent hash and security verification, separately approved publishing |
 
-Basic Redis timeout, disconnect and cancellation qualification under #102 is
-a candidate for 0.7.0, not a claim of TLS, Sentinel or Cluster support.
+The observed Redis performance difference between historical 0.5.0 and 0.6.0
+**changed sign across GitHub-hosted CI sessions**, so no speedup, regression
+or threshold is inferred from that evidence. #100 remains open.
 
-## How we decide what ships
+[Detailed 0.7.0 execution plan and evidence boundaries](plan-0-7.md).
 
-Reproducible installed wheel/sdist tests, supported-runtime compatibility,
-privacy and failure/cancellation tests, performance baselines, truthful
-documentation and explicit maintainer approval are release gates. There is
-**no external adoption quota** or required hosted site for publication.
+## Candidate scope — not a commitment
 
-[Project roadmap](https://github.com/agustin18/fastapi-cache/blob/stable/ROADMAP.md)
-contains historical details and proposed work.
-[#48](https://github.com/agustin18/fastapi-cache/issues/48) now tracks the
-remaining immutable historical documentation routes; the current site is live
-at <https://agustin18.github.io/fastapi-cache/>.
+| Target | Candidate features | Mandatory design or quality boundary |
+|---|---|---|
+| 0.7.0 | Accepted #111/#112 correctness slices, [#96 local single-flight](https://github.com/agustin18/fastapi-cache/issues/96), [#50 optional events](https://github.com/agustin18/fastapi-cache/issues/50), basic [#102 standalone Redis resilience](https://github.com/agustin18/fastapi-cache/issues/102) **only if qualified** | Contracts #99/#103/#112 first; default-off options, privacy/cancellation/latency tests; defer unready features to 0.7.x |
+| 0.7.x | Python 3.14 (#51) and FIPS (#55) if qualified, experimental-provider corrections | Installed artifacts, version/security evidence, no blanket backend parity |
+| 0.8+ | Opt-in per-app config (#99), application cache API (#103) if needed, tags (#97), safe filtering (#49) | App lifecycle isolation, key compatibility and tenant safety |
+| 0.9+ | Bounded stale (#98), advanced Redis HA/TLS/Sentinel/Cluster research (#102) | Independent service E2E, no implied Cluster namespace-clear support |
+| 1.0 | Public API and support-policy maturity | Explicit ongoing maintenance commitment and independent review |
+
+A *smaller* 0.7.0 with approved correctness changes is preferable to shipping
+unsafe concurrency, observability or distributed behavior by a date.
+
+The authoritative published [0.6.0 provenance](reference/releases.md),
+[compatibility](reference/compatibility.md) and
+[security/tenant limits](guides/privacy.md) are unchanged. Docs on `stable`
+must never describe a proposed 0.7.0 behavior as already published.
