@@ -8,6 +8,40 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.7.0](https://github.com/agustin18/fastapi-cache/tree/v0.7.0) - 2026-11-23
+
+### Bugfixes
+
+- Make RedisBackend.get_with_ttl return the documented (TTL, bytes-or-None) tuple rather than forwarding redis-py's pipeline list; preserve Redis TTL sentinels and the cache value without changing key formats. [#111](https://github.com/agustin18/fastapi-cache/issues/111)
+
+### Improved Documentation
+
+- Use the published package version as the validation authority for the navigable docs and manual Pages checks, refresh the public roadmap and hosting runbook, and repin the isolated published-before/after migration demonstration to 0.6.0 without deploying a website. [#48](https://github.com/agustin18/fastapi-cache/issues/48)
+- Correct the published 0.6.0 documentation archive and add a dedicated 0.7.0 execution and issue-alignment page. [#115](https://github.com/agustin18/fastapi-cache/issues/115)
+- Publish the Zensical documentation site from stable through GitHub Pages, with a read-only build, restricted deploy job, link and current-release checks, automatic documentation deployment, improved backend navigation and edit links. [#116](https://github.com/agustin18/fastapi-cache/issues/116)
+- Record the live GitHub Pages documentation URL, update the hosting guide and package documentation metadata, and add the PyPI social link. [#117](https://github.com/agustin18/fastapi-cache/issues/117)
+- Record the live GitHub Pages deployment in the roadmap and 0.7.0 execution plan, and keep immutable version routes as the remaining documentation follow-up. [#118](https://github.com/agustin18/fastapi-cache/issues/118)
+- Render Material and other icon shortcodes in the documentation site, and fail docs CI if raw icon shortcodes leak into built HTML. [#119](https://github.com/agustin18/fastapi-cache/issues/119)
+- Put the documentation link at the top of the README and add the Python compatibility badge; the repository home page now points to the live documentation site. [#127](https://github.com/agustin18/fastapi-cache/issues/127)
+- Align unreleased 0.7.0 roadmap and public guidance after merging scoped InMemory TTL and cache-HIT conditional 304 fixes, while preserving the published 0.6.0 contract and deferred app/non-HTTP API decisions. [#129](https://github.com/agustin18/fastapi-cache/issues/129)
+- Prepare a narrow 0.7.0 scope and pre-audit decision packet, clarify missing evidence versus release authorization, and distinguish pre-tag independent review from post-tag verification. [#134](https://github.com/agustin18/fastapi-cache/issues/134)
+- Document proposed proportionate 0.7.0 release gates, risk decisions and honest draft notes without approving tag or registry promotion. [#135](https://github.com/agustin18/fastapi-cache/issues/135)
+
+### Misc
+
+- Add a published 0.6.0 wheel SHA-verified real loopback TCP/Uvicorn HTTP performance profile with InMemory and standalone Redis, correctness checks, raw timings and provenance; independent hardware and regression budgets remain out of scope. [#100](https://github.com/agustin18/fastapi-cache/issues/100)
+- Make the immutable Phase B and both publish workflows derive release version and artifact identity from package metadata; preserve fail-closed source, job, attempt, hash and TestPyPI checks, with a no-upload 0.7.0 synthetic dry-run. [#110](https://github.com/agustin18/fastapi-cache/issues/110)
+- Introduce a test-only shared InMemory/standalone Redis backend contract smoke suite and an explicit capability RFC for TTL, selective clearing and experimental backend limitations; no backend implementation change. [#111](https://github.com/agustin18/fastapi-cache/issues/111)
+- Validate cached data before returning a conditional 304 on a cache HIT, preventing corrupt cache bytes from satisfying an HTTP validator; no general error recovery policy change. [#112](https://github.com/agustin18/fastapi-cache/issues/112)
+- Extend the published 0.6.0 performance harness with bounded full-profile repetitions, process and Redis resource evidence, aggregate variance reporting and complete temporary HTTP namespace cleanup; no runtime change. [#121](https://github.com/agustin18/fastapi-cache/issues/121)
+- Add isolated SHA-256-verified historical 0.5.0 versus 0.6.0 installed-wheel comparison with balanced AB/BA runs on common InMemory, HTTP and standalone Redis workloads; report descriptive paired ratios only. [#122](https://github.com/agustin18/fastapi-cache/issues/122)
+- Expire InMemory entries at their integer-second TTL deadline (inclusive) for both bounded and unbounded storage, with deterministic clock and heap-reclamation regressions; no changes to published 0.6.0 artifacts. [#123](https://github.com/agustin18/fastapi-cache/issues/123)
+- Update published 0.6.0 compatibility and proposed 0.7.0 release documentation, including architecture RFCs, independent counteraudit handoff and performance pre-registration protocol. [#125](https://github.com/agustin18/fastapi-cache/issues/125)
+- Distinguish the unpublished 0.7.0 development wheel from the immutable 0.6.0 published distribution, while retaining fail-closed final release identity checks and version-correct public documentation. [#130](https://github.com/agustin18/fastapi-cache/issues/130)
+- Expand cross-backend conformance and characterize cache error/cancellation paths without adopting a new recovery policy or claiming real Redis outage resilience. [#131](https://github.com/agustin18/fastapi-cache/issues/131)
+- Permit SHA-verified local candidate wheel measurements with the existing loopback HTTP socket harness without changing the immutable 0.6.0 published baseline or claiming performance qualification. [#132](https://github.com/agustin18/fastapi-cache/issues/132)
+- Add disposable installed-wheel Redis 7.4 real daemon stop/restart, concurrent failure and recovery qualification without changing backend error policy or claiming HA. [#133](https://github.com/agustin18/fastapi-cache/issues/133)
+
 ## [0.6.0](https://github.com/agustin18/fastapi-cache/tree/v0.6.0) - 2026-11-21
 
 ### Features

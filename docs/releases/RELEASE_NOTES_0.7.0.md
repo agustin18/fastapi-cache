@@ -1,9 +1,8 @@
-# Draft 0.7.0 release notes — UNPUBLISHED / NOT A RELEASE
+# fastapi-cache-stable 0.7.0 — release notes
 
-**Published distribution:** `fastapi-cache-stable==0.6.0`.
-**Unreleased source:** `0.7.0.dev0` until a separate promotion PR changes
-`pyproject.toml` to final `0.7.0`. Do not use this file as proof of PyPI
-availability, final hashes, or source freeze.
+**Status:** release candidate prepared for publication. The latest published
+distribution remains `fastapi-cache-stable==0.6.0` until the annotated tag,
+exact Phase B artifacts and registry promotion are separately verified.
 
 ## Candidate user-visible behavior versus 0.6.0
 
@@ -44,14 +43,7 @@ from the no-retry outage probe.
 
 ## Publication state and evidence
 
-- Candidate commit SHA: **TBD (will change on release promotion)**.
-- Phase B manual first-attempt 20/20: **NOT RUN for final 0.7**.
-- Wheel/sdist SHA-256 and provenance: **TBD**.
-- Final security delta and independent artifact review: **NOT DONE**.
-- Maintainer GO / annotated `v0.7.0` tag / TestPyPI / PyPI: **NOT GIVEN /
-  NOT CREATED / NOT PUBLISHED**.
-
-Do not remove these caveats or publish install snippets before the
-verified registry promotion. See [candidate checklist](RELEASE_CANDIDATE_0.7.0.md),
-[risk register](RISK_REGISTER_0.7.0.md) and
-[counteraudit handoff](../audit/COUNTERAUDIT_0.7.0_HANDOFF.md).
+Exact artifact hashes, Phase B evidence, security delta and registry
+verification are recorded in the release status and GitHub release after a
+separate publication GO. See the [candidate checklist](RELEASE_CANDIDATE_0.7.0.md)
+and [risk register](RISK_REGISTER_0.7.0.md).

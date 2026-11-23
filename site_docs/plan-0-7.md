@@ -14,7 +14,7 @@
 **Status: 2026-11-23 — planning, no release date, no tag, no registry GO.**
 Latest published artifact remains [fastapi-cache-stable 0.6.0](reference/releases.md).
 Source merged after publication is not an installable 0.7.0 release.
-The development source identity is `0.7.0.dev0`; published installation examples
+The promotion candidate source identity is `0.7.0`; published installation examples
 continue to pin verified `0.6.0` until 0.7.0 is actually released.
 #130 (development identity), #131 (error/ownership tests), and #132
 (candidate wheel socket measurement support) are now **merged** on

@@ -1,7 +1,7 @@
 # Reusable release pipeline contract
 
-The source distribution identity comes from `pyproject.toml`: while 0.7.0
-is being developed it is `0.7.0.dev0`, distinct from the last published
+The source distribution identity comes from `pyproject.toml`: while the 0.7.0
+promotion candidate is prepared it is `0.7.0`, distinct from the last published
 `0.6.0`. The independently verified published-docs pointer lives in
 `docs/releases/PUBLISHED_VERSION` and changes **only after** registry promotion.
 README, install pins and the public docs describe that published artifact.

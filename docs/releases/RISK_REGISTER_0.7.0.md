@@ -1,6 +1,6 @@
 # 0.7.0 security, correctness and compatibility risk register — MAINTAINER DECISION RECORDED; INDEPENDENT REVIEW PENDING
 
-**Scope:** source at pre-preparation `0c306a67a6adb4ed098e96e70dd0da192c8fbf85`
+**Scope:** source at pre-preparation `fb989a06b959b1a6c894cb2c56c0e67722faa543`
 only; will change if release-promotion PRs merge. Published artifact remains
 `fastapi-cache-stable==0.6.0`. This record is a **review request**, not
 maintainer acceptance or independent approval. Populate evidence with
