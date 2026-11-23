@@ -2,7 +2,7 @@
 
 > **Current decision (2026-11-23, proposed pending review):** 0.7.0
 > is a small correctness release. #133/#134 are merged into source
-> \`0c306a6\`. [Scope/risk decision](../docs/releases/SCOPE_0.7.0_DECISION.md)
+> `0c306a6`. [Scope/risk decision](../docs/releases/SCOPE_0.7.0_DECISION.md)
 > proposes keeping full controlled-hardware #100 certification open for
 > performance-focused 0.8+, with no performance claims and separate
 > signed acceptance. **No tag, final candidate, publication or audit GO.**
