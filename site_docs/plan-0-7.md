@@ -35,7 +35,7 @@ historical 0.6.0 artifact, a PR synthetic merge SHA, or CI alone.
 
 ---
 
-## Verified starting point
+## Historical starting point (2026-11-22; superseded by status above)
 
 | PR | PR status | Related issue | Issue status | What the PR establishes | What it does **not** establish |
 |---|---|---|---|---|---|

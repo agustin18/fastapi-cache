@@ -366,14 +366,16 @@ resolve from regular PyPI; do not mix TestPyPI and PyPI candidates via
 | `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
 | Redis standalone | Verified for documented profiles | Published 0.4.1, 0.5.0 and 0.6.0 retain Python-specific redis-py constraints: 3.8 `<6.2`, 3.9 `<7.1`, 3.10–3.13 `<8.2`, each with redis-py 4.x fallback. Real Redis server/client matrix covers the selected combinations; it does not certify all server configurations |
 | Redis Cluster | Unsupported | `clear` limitations documented; no complete namespace clearing |
-| InMemory | Verified for basic operations, clear semantics, `expire=None` and instance isolation | Unit tests; each instance owns its store and lock; no size cap yet |
+| InMemory | Verified for basic operations, clear semantics, `expire=None`, instance isolation and opt-in entry-count bound | Published 0.6.0 includes immutable per-instance `max_entries` (positive integer); default unbounded. An entry count is not a byte-memory cap |
 | Memcached | Experimental | No full `clear`/TTL parity |
 | DynamoDB | Experimental | `clear` is not implemented; the client cleanup issue remains open and is targeted for a future fix |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
 
-> The Redis integration job installs the resolver-selected `redis` version from the project
-> constraint (`^4.2.0rc1`), currently 4.6.0, and runs against a Redis 7 service. Other client
-> or server versions are not verified.
+> The published 0.6.0 Redis extra has **Python-conditional redis-py ranges**
+> (`>=4.2.0rc1,<6.2` on 3.8; `<7.1` on 3.9; `<8.2` on 3.10–3.13).
+> Qualification covers documented redis-py 4.x–8.1.x/client and Redis server
+> combinations, not every configuration; see [COMPATIBILITY.md](COMPATIBILITY.md)
+> and the exact release matrix. Redis Cluster namespace clear is unsupported.
 
 ## Behavior changes in 0.3.0
 
