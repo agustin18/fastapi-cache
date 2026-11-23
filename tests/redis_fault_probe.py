@@ -15,6 +15,8 @@ import uuid
 from pathlib import Path
 
 from redis.asyncio import Redis
+from redis.asyncio.retry import Retry
+from redis.backoff import NoBackoff
 from redis.exceptions import ConnectionError as RedisConnectionError
 from redis.exceptions import TimeoutError as RedisTimeoutError
 
@@ -25,8 +27,9 @@ from fastapi_cache.decorator import cache
 
 
 def docker(*args):
-    result = subprocess.run(
-        ["docker", *args], capture_output=True, text=True, check=True, timeout=90,
+    result = subprocess.run(  # noqa: S603 - fixed absolute Docker binary, owned container
+        ["/usr/bin/docker", *args],
+        capture_output=True, text=True, check=True, timeout=90,
     )
     return result.stdout.strip()
 
@@ -60,7 +63,9 @@ async def exercise(name, port):
     client = Redis(
         host="127.0.0.1", port=port, db=15, decode_responses=False,
         socket_timeout=0.4, socket_connect_timeout=0.4,
-        retry_on_timeout=False,
+        # Override redis-py >=6 default retries for a bounded single-attempt
+        # outage characterization. Not a recommended production retry policy.
+        retry=Retry(NoBackoff(), 0),
     )
     backend = RedisBackend(client)
     namespace = "fault-070-" + uuid.uuid4().hex
