@@ -27,7 +27,7 @@ until indexed, so source/artifact review remains documented.
 The previous `0.6.0` record remains immutable. This release makes no
 performance, p95/p99, default Redis retry-latency or HA claim.
 
-> **Known PyPI metadata caveat:** the published 0.7.0 long description was
-> built from the pre-publication README and still says the latest release is
-> 0.6.0. The repository README is corrected, but PyPI release metadata is
-> immutable; correcting the project page requires a future release.
+> **PyPI metadata note:** the published 0.7.0 long description was built
+> from the pre-publication README and still said the latest release was 0.6.0.
+> [0.7.1](RELEASE_STATUS_0.7.1.md) is the metadata-only correction; the 0.7.0
+> record and artifact remain immutable.
