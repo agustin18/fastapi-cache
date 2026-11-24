@@ -15,8 +15,10 @@ Release tags are immutable reference points. The repository's `stable` branch ma
 
 ## 0.7.1 provenance
 
-- Annotated tag `v0.7.1` (pending)
-- Phase B, TestPyPI, PyPI and hashes will be recorded after publication.
+- Annotated tag `v0.7.1` -> `c6f46da82595c808866c9b944a5f931e07ceeb4b`
+- Phase B `45302769038` (20 of 20); TestPyPI `45303059177`; PyPI `45303318025`
+- Wheel `54d64e3f24110f434d2a1b765006e528302d5550ad0b4ce20b8eb706a49e9aa3`
+- Sdist `c3fa245c9212ec292c43523e1402baad75da4571bbac0832380020c2205426d5`
 - [0.7.1 release status](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.7.1.md)
 
 ## 0.7.0 provenance
