@@ -8,6 +8,12 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.7.1](https://github.com/agustin18/fastapi-cache/tree/v0.7.1) - 2026-11-24
+
+### Improved Documentation
+
+- Rebuild the published package metadata from the corrected README so the PyPI long description no longer advertises 0.6.0. No runtime code, import or API changes; 0.7.0 remains a separate immutable artifact.
+
 ## [0.7.0](https://github.com/agustin18/fastapi-cache/tree/v0.7.0) - 2026-11-24
 
 ### Bugfixes

@@ -1,9 +1,10 @@
 # Published releases and evidence
 
-Release tags are immutable reference points. The repository's `stable` branch may contain later documentation or unreleased work. Bounded InMemory is published in **0.7.0**; it is not part of a 0.5.0 artifact.
+Release tags are immutable reference points. The repository's `stable` branch may contain later documentation or unreleased work. Bounded InMemory is published in **0.7.1**; it is not part of a 0.5.0 artifact.
 
 | Release | Status | Highlights |
 |---|---|---|
+| [0.7.1](https://pypi.org/project/fastapi-cache-stable/0.7.1/) | Published 2026-11-24 | Metadata-only correction over 0.7.0; rebuilds the PyPI long description |
 | [0.7.0](https://pypi.org/project/fastapi-cache-stable/0.7.0/) | Published 2026-11-24 | Exact TTL boundary, decode-before-304, Redis tuple contract and release-quality evidence |
 | [0.6.0](https://pypi.org/project/fastapi-cache-stable/0.6.0/) | Published 2026-11-21 | Bounded InMemory, targeted privacy fixes and exact release-bundle checks |
 | [0.5.0](https://pypi.org/project/fastapi-cache-stable/0.5.0/) | Published 2026-11-21 | Opt-in `vary_headers`, strict artifact migration and security gates |
@@ -11,6 +12,12 @@ Release tags are immutable reference points. The repository's `stable` branch ma
 | [0.4.0](https://pypi.org/project/fastapi-cache-stable/0.4.0/) | Published 2026-11-20 | Redis-py 4–8 conditional compatibility |
 | [0.3.1](https://pypi.org/project/fastapi-cache-stable/0.3.1/) | Historical | Explicit-Request/default-builder cache bypass |
 | [0.3.0](https://pypi.org/project/fastapi-cache-stable/0.3.0/) | Historical | Initial stable migration line |
+
+## 0.7.1 provenance
+
+- Annotated tag `v0.7.1` (pending)
+- Phase B, TestPyPI, PyPI and hashes will be recorded after publication.
+- [0.7.1 release status](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.7.1.md)
 
 ## 0.7.0 provenance
 

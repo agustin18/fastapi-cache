@@ -2,11 +2,14 @@
 
 ## Supported versions
 
-- `0.7.0` is the current published technical release (2026-11-24). The
+- `0.7.1` is the current published technical release (2026-11-24). The
   security support scope is server-side CPython 3.11–3.13; 3.8–3.10 is
   legacy functional only. See [security ledger #126](https://github.com/agustin18/fastapi-cache/issues/126).
 
-- `0.6.0` is the previous published line (released **2026-11-21**). It targets
+- `0.7.0` is the previous published line (released **2026-11-24**). It has the
+  same runtime code as 0.7.1 and targets best-effort security and critical
+  correctness fixes on server-side **CPython 3.11–3.13**.
+- `0.6.0` is an older published line (released **2026-11-21**). It targets
   best-effort security and critical correctness fixes on server-side
   **CPython 3.11–3.13**, within the 12-month target in
   [SUPPORT.md](SUPPORT.md) (until 2027-11-21, capacity permitting).
@@ -19,7 +22,7 @@
 - `0.3.0` and `0.3.1` remain the previous migration line, with the
   best-effort security/critical target recorded in
   [SUPPORT.md](SUPPORT.md) (until 2027-11-19).
-- Published `0.4.x`–`0.7.0` install on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy
+- Published `0.4.x`–`0.7.1` install on Python `>=3.8,<3.14`; Python 3.8–3.10 are legacy
   functional-compatibility targets only and have no security-support commitment
   for EOL runtimes or dependencies. Python 3.14 is not included until its full
   matrix passes.
@@ -97,7 +100,7 @@ such endpoints**; the published `0.3.0` wheel itself is immutable.
 
 ## Explicit Vary and hidden-context residual scope
 
-`@cache(vary_headers=(...))` is available in published 0.5.0, 0.6.0 and 0.7.0.
+`@cache(vary_headers=(...))` is available in published 0.5.0, 0.6.0 and 0.7.1.
 **Published 0.4.1 does not expose this API.** The feature is opt-in:
 an application must explicitly list every
 representation-determining request header. The default key format and
@@ -117,14 +120,14 @@ caching. Hashing does not authenticate, encrypt or prevent cardinality
 attacks. Rotate/clear pre-opt-in namespaces as documented in
 [MIGRATION.md](MIGRATION.md).
 
-**Release-specific security evidence:** the 0.7.0 release used exact-artifact
+**Release-specific security evidence:** the 0.7.1 release used exact-artifact
 installed audits on modern Python 3.11–3.13, a fresh authenticated Dependabot
 delta and an explicit maintainer-scoped risk decision recorded under
 [#126](https://github.com/agustin18/fastapi-cache/issues/126). The 21 historical
 alerts remain open where applicable; the all-extras profile resolved patched
 `urllib3==2.8.0`, and the tested security profiles reported zero known
 third-party findings. See
-[0.7.0 release status](docs/releases/RELEASE_STATUS_0.7.0.md) and
+[0.7.1 release status](docs/releases/RELEASE_STATUS_0.7.1.md) and
 [PyPI](https://pypi.org/project/fastapi-cache-stable/) for the published artifact.
 
 ## Factory-generated route key collisions (affected 0.4.0; fixed 0.4.1)
@@ -150,9 +153,9 @@ resource exhaustion. Validate Host using `TrustedHostMiddleware` or
 equivalent edge rules. Do not assume host isolation protects hidden
 `contextvars`, tenant identity, or separate apps sharing a prefix (#53).
 
-## 0.7.0 authentication and HTTP cache boundaries
+## 0.7.1 authentication and HTTP cache boundaries
 
-The 0.7.0 release checks all Authorization/Cookie header
+The 0.7.1 release checks all Authorization/Cookie header
 occurrences and keeps generated Cache-Control private, no-store on
 cached HTTP responses from routes with authenticated caching enabled
 (including MISS/HIT/304). This is an HTTP intermediary policy, not a
@@ -168,7 +171,7 @@ key. Rotate or purge historical affected namespaces and intermediary
 entries before migration. Cache configuration is process-global; do not
 share/reinitialize it between unrelated applications that require isolation.
 
-See the [0.7.0 security ledger](https://github.com/agustin18/fastapi-cache/issues/126); the [0.6.0 risk disposition](audit/security/RELEASE_RISK_DISPOSITION_0.6.0.md) remains historical.
+See the [0.7.1 security ledger](https://github.com/agustin18/fastapi-cache/issues/126); the [0.6.0 risk disposition](audit/security/RELEASE_RISK_DISPOSITION_0.6.0.md) remains historical.
 
 ## Reporting a vulnerability
 

@@ -1,6 +1,6 @@
 # Documentation site development
 
-The authoritative published package remains **fastapi-cache-stable 0.7.0**. The sources in site_docs/ are a searchable companion to MIGRATION.md, SECURITY.md, COMPATIBILITY.md, SUPPORT.md and the release archive.
+The authoritative published package remains **fastapi-cache-stable 0.7.1**. The sources in site_docs/ are a searchable companion to MIGRATION.md, SECURITY.md, COMPATIBILITY.md, SUPPORT.md and the release archive.
 
 ## Preview locally
 
@@ -34,7 +34,7 @@ Historical releases already remain navigable at [docs/releases](releases/README.
 - Migration walkthroughs cover uninstalling fastapi-cache2, application lockfiles, tenant safety, targeted namespace cleanup and bounded rollback.
 - Snippets declare dependencies and are runnable on the named Python/server profiles.
 - Mobile navigation, readable color schemes, accessible links/contrast and reduced-motion preferences are design requirements.
-- Compare the current published release against [RELEASE_STATUS_0.7.0.md](releases/RELEASE_STATUS_0.7.0.md). Use older provenance records only for historical artifacts; source on `stable` is not publication evidence.
+- Compare the current published release against [RELEASE_STATUS_0.7.1.md](releases/RELEASE_STATUS_0.7.1.md). Use older provenance records only for historical artifacts; source on `stable` is not publication evidence.
 
 The site uses [Zensical](https://zensical.org/) for search, responsive navigation and a modern theme.
 

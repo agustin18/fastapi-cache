@@ -6,17 +6,17 @@ correctness. Feature counts and unstable CI performance comparisons
 cannot prove that one library is faster, safer or better.
 
 !!! info "Published release versus proposed changes"
-    **fastapi-cache-stable 0.7.0 is published**. It includes optional
+    **fastapi-cache-stable 0.7.1 is published**. It includes optional
     bounded InMemory and the current documented authentication and HTTP
     response handling. Published 0.5.0 was unbounded. The TTL deadline
     correction [#123](https://github.com/agustin18/fastapi-cache/pull/123)
     and decode-before-304 correction
     [#124](https://github.com/agustin18/fastapi-cache/pull/124)
-    are included in published 0.7.0.
+    are included in published 0.7.1.
 
-## What the published 0.7.0 package offers
+## What the published 0.7.1 package offers
 
-| Requirement | Published 0.7.0 | Important boundary |
+| Requirement | Published 0.7.1 | Important boundary |
 |---|---|---|
 | Migration from `fastapi-cache2` | Tested import and ordinary cache key compatibility | Review authentication, response types, explicit Vary and rollback |
 | HTTP GET response caching | Cache MISS/HIT, TTL, ETag and conditional 304 | Hidden identity and permission context are not automatically partitioned |
@@ -34,7 +34,7 @@ cannot prove that one library is faster, safer or better.
 
 ## Release quality and limitations
 
-Published 0.7.0 has archived wheel/sdist hashes, migration and
+Published 0.7.1 has archived wheel/sdist hashes, migration and
 security evidence in [release provenance](releases.md). The
 historical published-wheel 0.5.0/0.6.0 AB/BA benchmark
 [#122](https://github.com/agustin18/fastapi-cache/pull/122)
@@ -52,7 +52,7 @@ Multiple apps in one process are **not** automatically isolated;
 [#99](https://github.com/agustin18/fastapi-cache/issues/99) and
 [#103](https://github.com/agustin18/fastapi-cache/issues/103) are
 still design issues. Optional single-flight/events/basic Redis resilience
-beyond 0.7.0 are not committed or available.
+beyond 0.7.1 are not committed or available.
 
 See the [current roadmap](../roadmap.md) and
 [compatibility matrix](compatibility.md) before choosing a

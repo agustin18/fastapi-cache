@@ -1,6 +1,6 @@
-# What ships in 0.7.0?
+# What ships in 0.7.1?
 
-This page describes features in the **published 0.7.0 wheel and sdist**. PRs and roadmap proposals are not installed features.
+This page describes features in the **published 0.7.1 wheel and sdist**. PRs and roadmap proposals are not installed features.
 
 ## Capabilities
 
@@ -8,7 +8,7 @@ This page describes features in the **published 0.7.0 wheel and sdist**. PRs and
 |---|---|---|
 | `fastapi_cache` drop-in import | :material-check-circle: Shipped | Import unchanged from `fastapi-cache2` |
 | GET/JSON response caching | :material-check-circle: Shipped | Legacy ordinary default keys preserved |
-| Per-process InMemory | :material-check-circle: Shipped | Per-instance; unbounded by default, opt-in `max_entries` in 0.7.0 |
+| Per-process InMemory | :material-check-circle: Shipped | Per-instance; unbounded by default, opt-in `max_entries` in 0.7.1 |
 | Standalone Redis | :material-check-circle: Shipped | Redis-py 4.x legacy path, conditional modern versions |
 | TTL and namespace/key clearing | :material-check-circle: Shipped | No global Redis `FLUSHDB` |
 | ETag / conditional 304 | :material-check-circle: Shipped | HTTP response metadata on tested paths |
@@ -25,7 +25,7 @@ This page describes features in the **published 0.7.0 wheel and sdist**. PRs and
 
 ## Release traceability
 
-0.5.0 remains tagged at commit `40c86d551b760315f3c6e99f383d6868c6294870`; 0.7.0 artifact provenance is recorded in the [release evidence](releases.md). See that page for SHA-256, checks and maintenance boundaries.
+0.5.0 remains tagged at commit `40c86d551b760315f3c6e99f383d6868c6294870`; 0.7.1 artifact provenance is recorded in the [release evidence](releases.md). See that page for SHA-256, checks and maintenance boundaries.
 
 !!! info "No implicit feature flags"
     The presence of a feature on `stable` after the release does **not** imply it exists in the immutable published package. Always check [PyPI](https://pypi.org/project/fastapi-cache-stable/) and the installed version.

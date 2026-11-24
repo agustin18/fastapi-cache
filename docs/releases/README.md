@@ -4,6 +4,8 @@ The root README points to the current release. Historical notes, provenance
 records and the release checklist live here so the repository root stays
 focused on current project documentation.
 
+- [0.7.1 published release notes](RELEASE_NOTES_0.7.1.md) — published 2026-11-24
+- [0.7.1 release status and provenance](RELEASE_STATUS_0.7.1.md) — final tag, hashes and workflow evidence
 - [0.7.0 published release notes](RELEASE_NOTES_0.7.0.md) — published 2026-11-24
 - [0.7.0 release status and provenance](RELEASE_STATUS_0.7.0.md) — final tag, hashes and workflow evidence
 - [0.7.0 candidate readiness checklist](RELEASE_CANDIDATE_0.7.0.md) — historical release gates retained for audit

@@ -26,6 +26,6 @@
     Redis Cluster namespace-wide `clear` is unsupported. Do not assume that standalone Redis prefix scanning applies to Cluster, Sentinel, TLS or managed failover.
 
 ??? question "Can I use Python 3.14 or older EOL versions?"
-    0.7.0 declares `>=3.8,<3.14`. Python 3.8–3.10 receive functional legacy tests only; modern security-maintained target is server-side 3.11–3.13. Python 3.14 is being evaluated under [#51](https://github.com/agustin18/fastapi-cache/issues/51).
+    0.7.1 declares `>=3.8,<3.14`. Python 3.8–3.10 receive functional legacy tests only; modern security-maintained target is server-side 3.11–3.13. Python 3.14 is being evaluated under [#51](https://github.com/agustin18/fastapi-cache/issues/51).
 
 For a reproducible problem, open an [issue](https://github.com/agustin18/fastapi-cache/issues) with Python/FastAPI/Redis version, a minimal endpoint, expected versus actual HIT/MISS, and whether credentials or request state influence the output. **Never paste real tokens or user data.**

@@ -21,7 +21,18 @@ contract.
 > security validation covers server-side CPython 3.11–3.13, while 3.8–3.10
 > are legacy functional-compatibility targets only.
 
-## Upgrade from 0.6.0 to 0.7.0
+## Upgrade from 0.7.0 to 0.7.1
+
+0.7.1 is a metadata-only release published on PyPI (2026-11-24). There are no
+runtime, import or public API changes from 0.7.0. It rebuilds the PyPI long
+description from the corrected README so the package page no longer advertises
+0.6.0. The 0.7.0 runtime corrections remain in place.
+
+- Keep the same imports, key formats, TTL behavior and Redis contract.
+- Pin `fastapi-cache-stable==0.7.1` and verify the exact artifact hashes.
+- See the [0.7.1 release notes](docs/releases/RELEASE_NOTES_0.7.1.md).
+
+## Upgrade from 0.6.0 to 0.7.0 (historical)
 
 0.7.0 is published on PyPI (2026-11-24). There are no import or public API signature
 changes from 0.6.0. The release tightens the InMemory TTL boundary to expire
@@ -333,7 +344,7 @@ For published `0.7.0` in a clean environment:
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
-python -m pip install "fastapi-cache-stable[redis]==0.7.0"
+python -m pip install "fastapi-cache-stable[redis]==0.7.1"
 python -m pip check
 python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 ```
@@ -786,7 +797,7 @@ Before live traffic, verify the **exact pinned distribution**:
 - [ ] Key and namespace invalidation, lifespan re-entry and rollback work.
 - [ ] Rollback does not restore unsafe shared caching of private responses.
 
-See [0.7.0 release evidence](docs/releases/RELEASE_STATUS_0.7.0.md) for the
+See [0.7.1 release evidence](docs/releases/RELEASE_STATUS_0.7.1.md) for the
 published artifact record, distinct from the historical release checklist
 and the earlier candidate gate log.
 
@@ -801,13 +812,13 @@ changes, real Redis 7.4 migration and compatible ordinary-data rollback,
 then tests the stable wheel with redis-py 8.1.0. See the
 [bounded Part A contract](audit/migration/PUBLISHED_022_TO_041_PHASE_A.md).
 This historical published-to-published comparison is **not** a test of the
-new 0.7.0 release, arbitrary consumer authentication, or unrestricted
-rollback. The independent [0.7.0 phase-B workflow](.github/workflows/migration-candidate-phase-b.yml)
+new 0.7.1 release, arbitrary consumer authentication, or unrestricted
+rollback. The independent [0.7.1 phase-B workflow](.github/workflows/migration-candidate-phase-b.yml)
 built the actual release wheel and sdist from the final source SHA,
 recorded their SHA-256, installed each in isolated environments across
 Python 3.8–3.13, ran Redis 7.4 migration, physically replaced the
 candidate with the upstream 0.2.2 package for bounded ordinary-data
-rollback, then ran a separate 0.7.0 InMemory/Vary consumer. See
+rollback, then ran a separate 0.7.1 InMemory/Vary consumer. See
 [#69](https://github.com/agustin18/fastapi-cache/issues/69) and
 [0.7.0 release evidence](docs/releases/RELEASE_STATUS_0.7.0.md).
 

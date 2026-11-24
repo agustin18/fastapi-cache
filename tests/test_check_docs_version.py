@@ -12,7 +12,7 @@ def test_published_docs_identity_is_separate_from_development_source() -> None:
     published = published_version()
     source = package_version(allow_development=True)
     assert published.count(".") == 2
-    assert source == published or source.startswith("0.7.0")
+    assert source == published or source.startswith(published.rsplit(".", 1)[0] + ".")
     assert published in (ROOT / "README.md").read_text(encoding="utf-8")
     assert published in (ROOT / f"docs/releases/RELEASE_STATUS_{published}.md").read_text(encoding="utf-8")
 
