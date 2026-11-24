@@ -3,7 +3,7 @@ title: FastAPI caching, without the migration headache
 description: Install fastapi-cache-stable or move safely from fastapi-cache2.
 ---
 
-<div class="landing-kicker">FASTAPI-CACHE-STABLE · CURRENT RELEASE 0.6.0</div>
+<div class="landing-kicker">FASTAPI-CACHE-STABLE · CURRENT RELEASE 0.7.0</div>
 
 # Response caching that respects your existing FastAPI app.
 
@@ -53,18 +53,18 @@ description: Install fastapi-cache-stable or move safely from fastapi-cache2.
 ## Install the published version
 
 ```console
-python -m pip install "fastapi-cache-stable==0.6.0" uvicorn
+python -m pip install "fastapi-cache-stable==0.7.0" uvicorn
 python -m pip check
 ```
 
-The package name is **`fastapi-cache-stable`**; imports remain **`fastapi_cache`**. Use `fastapi-cache-stable[redis]==0.6.0` for standalone Redis.
+The package name is **`fastapi-cache-stable`**; imports remain **`fastapi_cache`**. Use `fastapi-cache-stable[redis]==0.7.0` for standalone Redis.
 
 !!! warning "Do not install both packages"
     `fastapi-cache2` and `fastapi-cache-stable` own the same Python package files. `pip check` will **not** detect this collision. Uninstall the old distribution in a clean environment before migrating.
 
 ## What ships today?
 
-| Included in published 0.6.0 | Future / not shipped |
+| Included in published 0.7.0 | Future / not shipped |
 |---|---|
 | Default-key-compatible GET/JSON caching | Typed cache lifecycle events (#50) |
 | Standalone Redis and process-local InMemory | Single-flight and tag-based invalidation |

@@ -1,24 +1,20 @@
 # 0.7.0 execution plan and evidence gates
 
-> **Current decision (2026-11-23, proposed pending review):** 0.7.0
-> is a small correctness release. #133/#134 are merged into source
-> `0c306a6`. [Scope/risk decision](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/SCOPE_0.7.0_DECISION.md)
-> proposes keeping full controlled-hardware #100 certification open for
-> performance-focused 0.8+, with no performance claims and separate
-> signed acceptance. **No tag, final candidate, publication or audit GO.**
-> Historical descriptions below are retained as background and are
-> superseded where they assign #96/#50 to 0.7 or require fixed-hardware
-> numbers for a no-performance-claim release.
+> **Historical planning record — 0.7.0 published 2026-11-24.** The release
+> was a small correctness release from source `df884644f11eb0e36ae5d74721009fc8e4470c4b`.
+> The #100 no-performance-claim deferral was accepted; no speed/p95/p99/HA
+> claim is made. The plan below is retained for audit and is superseded by
+> the [published release evidence](reference/releases.md) where it describes
+> pre-release status.
 
 
-**Status: 2026-11-23 — planning, no release date, no tag, no registry GO.**
-Latest published artifact remains [fastapi-cache-stable 0.6.0](reference/releases.md).
+**Status: 2026-11-24 — published; historical planning record retained for audit.**
+Latest published artifact is [fastapi-cache-stable 0.7.0](reference/releases.md).
 Source merged after publication is not an installable 0.7.0 release.
-The promotion candidate source identity is `0.7.0`; published installation examples
-continue to pin verified `0.6.0` until 0.7.0 is actually released.
+The promotion candidate source identity is `0.7.0`; published installation examples use the verified `0.7.0` release.
 #130 (development identity), #131 (error/ownership tests), and #132
-(candidate wheel socket measurement support) are now **merged** on
-`stable` prior to #133/#134; current source SHA is `0c306a6`.
+(candidate wheel socket measurement support) were merged before the final
+0.7.0 source `df884644f11eb0e36ae5d74721009fc8e4470c4b`.
 #133 now adds real disposable Redis 7.4 daemon stop/restart testing,
 **explicitly with client retries disabled**. The maintainer accepted the
 #100 no-performance-claim deferral on 2026-11-23; independent reviewer
@@ -69,7 +65,7 @@ historical 0.6.0 artifact, a PR synthetic merge SHA, or CI alone.
 | [#114](https://github.com/agustin18/fastapi-cache/pull/114) | Merged (`ed50598`) | [#111](https://github.com/agustin18/fastapi-cache/issues/111) | Open | Redis `get_with_ttl()` returns the tuple required by the tested contract | Full conformance of InMemory, Redis, Memcached or DynamoDB |
 | [#116](https://github.com/agustin18/fastapi-cache/pull/116) / [#117](https://github.com/agustin18/fastapi-cache/pull/117) | Merged (`fbd90b5`) | [#48](https://github.com/agustin18/fastapi-cache/issues/48) | Open | Stable-only Pages deployment and verified public documentation URL | Immutable version routes, launch outreach or PyPI metadata changes |
 
-The [published 0.6.0 provenance](reference/releases.md) remains immutable.
+The [published 0.7.0 provenance](reference/releases.md) is immutable; 0.6.0 remains a historical release.
 Do not use source-only tests or post-release `stable` changes to describe its
 contents.
 
@@ -95,7 +91,7 @@ Redis resilience (#102).
 
 Start with a **published-distribution-only** baseline from
 [issue #100](https://github.com/agustin18/fastapi-cache/issues/100).
-Use isolated environments for historical 0.5.0 and current 0.6.0; identify
+Use isolated environments for historical 0.5.0/0.6.0 and current 0.7.0; identify
 wheels/sdists by package version and SHA-256. Test representative HTTP
 MISS/HIT/304, Authorization bypass, Vary, payload sizes, expiry and
 namespace clear. For bounded InMemory, cover 1k/10k/100k keys and LRU/TTL

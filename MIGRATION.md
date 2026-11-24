@@ -21,7 +21,25 @@ contract.
 > security validation covers server-side CPython 3.11–3.13, while 3.8–3.10
 > are legacy functional-compatibility targets only.
 
-## Upgrade from 0.5.0 to 0.6.0
+## Upgrade from 0.6.0 to 0.7.0
+
+0.7.0 is published on PyPI (2026-11-24). There are no import or public API signature
+changes from 0.6.0. The release tightens the InMemory TTL boundary to expire
+at the exact deadline, decodes cached HTTP bytes before returning a
+conditional `304`, and corrects Redis `get_with_ttl()` to return the
+documented `(ttl, bytes-or-None)` tuple.
+
+- Review tests for `expire=0`, negative InMemory TTLs and exact-deadline
+  behavior; those values now expire immediately.
+- If you return conditional `304` responses, verify malformed-cache behavior:
+  invalid JSON/UTF-8/typed data fails closed instead of reaching the validator.
+- Redis consumers that call `get_with_ttl()` should now receive a tuple.
+- Pin the exact 0.7.0 artifact, run `pip check`, and verify MISS/HIT/304,
+  authorization, variation and rollback as before.
+- See the [0.7.0 release notes](docs/releases/RELEASE_NOTES_0.7.0.md) and
+  [release evidence](docs/releases/RELEASE_STATUS_0.7.0.md).
+
+## Upgrade from 0.5.0 to 0.6.0 (historical)
 
 0.6.0 is published. Pin the version under test and verify the exact artifact. See [#92](https://github.com/agustin18/fastapi-cache/issues/92).
 
@@ -89,12 +107,12 @@ deciding whether to remain on these interpreters.
 and this fork both declare `redis ^4.2.0rc1` (redis-py 4.x). The upstream
 repository's later, *unreleased* `main` branch switched to redis-py 5.x.
 `0.3.1` remains the previous migration line and retains redis-py 4.x. Published
-`0.6.0` inherits Python-conditional metadata tested against real
+`0.7.0` inherits Python-conditional metadata tested against real
 standalone servers; it does not change RedisBackend runtime semantics.
 
-## Redis client upgrade checklist for 0.6.0
+## Redis client upgrade checklist for 0.7.0
 
-The published `0.6.0` metadata admits Redis client versions according to
+The published `0.7.0` metadata admits Redis client versions according to
 the supported Python interpreter:
 
 | Python | Optional redis-py range |
@@ -169,7 +187,7 @@ those routes; old Redis entries are not automatically deleted. Neither
 the global default key digest nor the key format for ordinary
 parameter-only endpoints is changed.
 
-**Residual scope:** Published 0.6.0 includes explicit opt-in `vary_headers` and
+**Residual scope:** Published 0.7.0 includes explicit opt-in `vary_headers` and
 correctly propagates `Vary` to returned responses, but arbitrary
 headers/state read by hidden dependencies, ambient `contextvars`, custom
 tenant/identity and user-supplied key cardinality remain the application's
@@ -229,7 +247,7 @@ value only enters middleware state or a `ContextVar`.
   SHA-256 for key identifiers hides raw header strings but is neither
   encryption, authentication nor cache-flood protection.
 
-**Version and verification:** this API is available in published 0.5.0 and 0.6.0
+**Version and verification:** this API is available in published 0.5.0, 0.6.0 and 0.7.0
 and is not part of 0.4.1. A successful test only proves the listed paths and
 configurations, not generic cross-tenant isolation. The
 [published 0.2.2→0.4.1 parity](audit/migration/PUBLISHED_022_TO_041_PHASE_A.md)
@@ -311,11 +329,11 @@ python -m pip install "fastapi-cache-stable[redis]==0.4.1"
 python -m pip check
 ```
 
-For published `0.6.0` in a clean environment:
+For published `0.7.0` in a clean environment:
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
-python -m pip install "fastapi-cache-stable[redis]==0.6.0"
+python -m pip install "fastapi-cache-stable[redis]==0.7.0"
 python -m pip check
 python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 ```
@@ -359,19 +377,19 @@ resolve from regular PyPI; do not mix TestPyPI and PyPI candidates via
 | Python 3.11–3.13 | Verified, security-supported | Main functional matrix and separate runtime security-audit profile |
 | Python 3.10 | Verified legacy compatibility | Main functional tests and Pydantic v1 migration job; EOL, no security-support commitment |
 | Python 3.8/3.9 | Verified legacy compatibility | Pinned FastAPI 0.111.1/Pydantic 1.10.27/2.8.2 matrix and wheel smoke; EOL, no security-support commitment |
-| Python 3.14 | Unsupported for `0.4.1`, `0.5.0` and `0.6.0` | Add and pass a full matrix before announcing support |
+| Python 3.14 | Unsupported for `0.4.1`, `0.5.0`, `0.6.0` and `0.7.0` | Add and pass a full matrix before announcing support |
 | FastAPI | Verified with 0.111.1 and current 0.x | Older 0.100.x is unverified; no upper pin yet (`fastapi = "*"`) |
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
 | `Response`/`JSONResponse` annotations | Legacy decoded behavior | No Pydantic schema generation; cache hits keep working |
-| Redis standalone | Verified for documented profiles | Published 0.4.1, 0.5.0 and 0.6.0 retain Python-specific redis-py constraints: 3.8 `<6.2`, 3.9 `<7.1`, 3.10–3.13 `<8.2`, each with redis-py 4.x fallback. Real Redis server/client matrix covers the selected combinations; it does not certify all server configurations |
+| Redis standalone | Verified for documented profiles | Published 0.4.1, 0.5.0, 0.6.0 and 0.7.0 retain Python-specific redis-py constraints: 3.8 `<6.2`, 3.9 `<7.1`, 3.10–3.13 `<8.2`, each with redis-py 4.x fallback. Real Redis server/client matrix covers the selected combinations; it does not certify all server configurations |
 | Redis Cluster | Unsupported | `clear` limitations documented; no complete namespace clearing |
-| InMemory | Verified for basic operations, clear semantics, `expire=None`, instance isolation and opt-in entry-count bound | Published 0.6.0 includes immutable per-instance `max_entries` (positive integer); default unbounded. An entry count is not a byte-memory cap |
+| InMemory | Verified for basic operations, clear semantics, `expire=None`, instance isolation and opt-in entry-count bound | Published 0.7.0 includes immutable per-instance `max_entries` (positive integer); default unbounded. An entry count is not a byte-memory cap |
 | Memcached | Experimental | No full `clear`/TTL parity |
 | DynamoDB | Experimental | `clear` is not implemented; the client cleanup issue remains open and is targeted for a future fix |
 | Import `fastapi_cache` | Verified | Covered by compatibility tests |
 
-> The published 0.6.0 Redis extra has **Python-conditional redis-py ranges**
+> The published 0.7.0 Redis extra has **Python-conditional redis-py ranges**
 > (`>=4.2.0rc1,<6.2` on 3.8; `<7.1` on 3.9; `<8.2` on 3.10–3.13).
 > Qualification covers documented redis-py 4.x–8.1.x/client and Redis server
 > combinations, not every configuration; see [COMPATIBILITY.md](COMPATIBILITY.md)
@@ -506,7 +524,7 @@ Every non-empty cookie bypasses caching by default, including anonymous analytic
 preference cookies. This is intentionally conservative and can reduce cache hits on public pages.
 Do not ignore a cookie in a custom key builder unless it cannot affect the response.
 
-The 0.6.0 release protects the application cache and additionally checks every Authorization/Cookie field occurrence
+The 0.7.0 release protects the application cache and additionally checks every Authorization/Cookie field occurrence
 and generates `Cache-Control: private, no-store` for cached HTTP responses
 on authenticated-cache opt-in routes (including anonymous requests to
 those routes). This does not replace application authorization or cache
@@ -768,7 +786,7 @@ Before live traffic, verify the **exact pinned distribution**:
 - [ ] Key and namespace invalidation, lifespan re-entry and rollback work.
 - [ ] Rollback does not restore unsafe shared caching of private responses.
 
-See [0.6.0 release evidence](docs/releases/RELEASE_STATUS_0.6.0.md) for the
+See [0.7.0 release evidence](docs/releases/RELEASE_STATUS_0.7.0.md) for the
 published artifact record, distinct from the historical release checklist
 and the earlier candidate gate log.
 
@@ -783,15 +801,15 @@ changes, real Redis 7.4 migration and compatible ordinary-data rollback,
 then tests the stable wheel with redis-py 8.1.0. See the
 [bounded Part A contract](audit/migration/PUBLISHED_022_TO_041_PHASE_A.md).
 This historical published-to-published comparison is **not** a test of the
-new 0.6.0 release, arbitrary consumer authentication, or unrestricted
-rollback. The independent [0.6.0 phase-B workflow](.github/workflows/migration-candidate-phase-b.yml)
+new 0.7.0 release, arbitrary consumer authentication, or unrestricted
+rollback. The independent [0.7.0 phase-B workflow](.github/workflows/migration-candidate-phase-b.yml)
 built the actual release wheel and sdist from the final source SHA,
 recorded their SHA-256, installed each in isolated environments across
 Python 3.8–3.13, ran Redis 7.4 migration, physically replaced the
 candidate with the upstream 0.2.2 package for bounded ordinary-data
-rollback, then ran a separate 0.6.0 InMemory/Vary consumer. See
+rollback, then ran a separate 0.7.0 InMemory/Vary consumer. See
 [#69](https://github.com/agustin18/fastapi-cache/issues/69) and
-[0.6.0 release evidence](docs/releases/RELEASE_STATUS_0.6.0.md).
+[0.7.0 release evidence](docs/releases/RELEASE_STATUS_0.7.0.md).
 
 
 The manual harness in [`tests/migration_redis_e2e.py`](tests/migration_redis_e2e.py) runs a legacy
