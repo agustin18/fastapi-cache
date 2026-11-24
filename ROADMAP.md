@@ -1,12 +1,10 @@
 # Roadmap — fastapi-cache-stable
 
-**Current published release:** [0.7.0](https://pypi.org/project/fastapi-cache-stable/0.7.0/)
-on **2026-11-24**. It keeps opt-in bounded InMemory and the 0.6.0
-authentication/HTTP privacy corrections, and adds inclusive InMemory TTL
-expiry, decode-before-304 validation and the documented Redis
-`get_with_ttl()` tuple. See
-[0.7.0 release evidence](docs/releases/RELEASE_STATUS_0.7.0.md).
-**0.6.0** remains the previous published line. Source version and
+**Current published release:** [0.7.1](https://pypi.org/project/fastapi-cache-stable/0.7.1/)
+on **2026-11-24**. It is a metadata-only correction over 0.7.0: no runtime
+or API changes. It rebuilds the PyPI long description from the corrected
+README. See [0.7.1 release evidence](docs/releases/RELEASE_STATUS_0.7.1.md).
+**0.7.0** remains the previous published line. **0.6.0** is older. Source version and
 merged PRs alone do not imply publication.
 **Do not reopen a completed publication gate without new material evidence.**
 
@@ -24,13 +22,14 @@ The primary product advantage remains conservative migration from
 cache keys and safe default HTTP/private-response behavior.
 
 
-## 0.7.0 — published 2026-11-24
+## 0.7.1 — metadata-only correction published 2026-11-24
 
-The final source is tagged at `df884644f11eb0e36ae5d74721009fc8e4470c4b`.
-The release includes the scoped correctness fixes from #123 and #124 and the
-Redis `get_with_ttl()` tuple correction, with exact artifact hashes and
-Phase B/TestPyPI/PyPI evidence in
-[release evidence](docs/releases/RELEASE_STATUS_0.7.0.md).
+The 0.7.1 source is the 0.7.0 runtime code with corrected package metadata.
+The previous 0.7.0 release (tag `df884644f11eb0e36ae5d74721009fc8e4470c4b`)
+included the scoped correctness fixes from #123 and #124 and the Redis
+`get_with_ttl()` tuple correction. 0.7.1 rebuilds the PyPI long description
+from the corrected README; exact artifact hashes and Phase B/TestPyPI/PyPI
+evidence are in [release evidence](docs/releases/RELEASE_STATUS_0.7.1.md).
 #100 remains a descriptive measurement program with **no** performance,
 p95/p99, Redis retry-latency or HA certification. #111, #112 and #53 remain
 open for broader backend, corruption/recovery and hidden-context contracts.
@@ -50,7 +49,7 @@ application-owned hidden tenant/context/cardinality limitations and future
 reproducible package-controlled issues. No independent consumer quota,
 third-party security certification or hosted-docs requirement applies.
 
-## Post-0.7.0 open work
+## Post-0.7.1 open work
 
 The following are candidates, not delivery promises:
 
@@ -58,7 +57,7 @@ The following are candidates, not delivery promises:
   first-attempt, tag, approved-hash and TestPyPI parity gates. Each new
   release needs its own final installed evidence and maintainer authorization.
 - **Public documentation:** the site deploys only from `stable` through the
-  merged Pages workflows. Versioned `/latest/` and immutable `/0.7.0/` routes
+  merged Pages workflows. Versioned `/latest/` and immutable `/0.7.1/` routes
   remain planned under [#48](https://github.com/agustin18/fastapi-cache/issues/48).
 - **Backend and data contracts:** [#111](https://github.com/agustin18/fastapi-cache/issues/111)
   and [#112](https://github.com/agustin18/fastapi-cache/issues/112) remain

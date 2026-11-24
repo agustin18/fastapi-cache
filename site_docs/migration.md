@@ -1,6 +1,6 @@
 # Migrate from fastapi-cache2
 
-For common GET/JSON endpoints backed by standalone Redis or InMemory, **0.7.0 keeps the `fastapi_cache` import and legacy default key builder**, but it intentionally corrects unsafe caching behavior.
+For common GET/JSON endpoints backed by standalone Redis or InMemory, **0.7.1 keeps the `fastapi_cache` import and legacy default key builder**, but it intentionally corrects unsafe caching behavior.
 
 <div class="grid cards" markdown>
 -   :material-check-circle-outline: **Likely simple**
@@ -30,7 +30,7 @@ In a clean environment:
 
 ```console
 python -m pip uninstall -y fastapi-cache2
-python -m pip install "fastapi-cache-stable[redis]==0.7.0"
+python -m pip install "fastapi-cache-stable[redis]==0.7.1"
 python -m pip check
 python -c "from importlib.metadata import version; print(version('fastapi-cache-stable'))"
 ```
@@ -50,12 +50,12 @@ from fastapi_cache.decorator import cache
 
 ## Intentional behavior changes
 
-| Area | What to check in 0.7.0 |
+| Area | What to check in 0.7.1 |
 |---|---|
 | Authentication | Authorization/Cookie requests bypass the default cache; do not opt into private caching without complete identity/permission keys |
 | Keys | Default builder's ordinary GET/JSON keys stay compatible; generated/factory route handlers are isolated since 0.4.1 |
 | Request/headers | Explicit `Request` + default builder bypasses; hidden context is **not** automatically keyed |
-| Headers | 0.7.0 offers opt-in `vary_headers` for listed **public** header dimensions |
+| Headers | 0.7.1 offers opt-in `vary_headers` for listed **public** header dimensions |
 | `init()` | A second call raises unless deliberately using `force=True`; clean up owned clients at lifespan teardown |
 | `clear()` | Per-key/namespace invalidation is narrower and safer; do not expect a global Redis flush |
 | Response models | Default JSON decoder preserves legacy dict/list shape; typed restoration is opt-in |
@@ -68,7 +68,7 @@ from fastapi_cache.decorator import cache
 
 The [runnable before/after demo](https://github.com/agustin18/fastapi-cache/blob/stable/examples/migration/README.md)
 starts the **same FastAPI source** in two disposable virtual environments:
-published `fastapi-cache2==0.2.2` and published `fastapi-cache-stable==0.7.0`.
+published `fastapi-cache2==0.2.2` and published `fastapi-cache-stable==0.7.1`.
 It proves an ordinary MISS/HIT and ETag/304 stay functional, and illustrates
 the intentional safer default for fictitious authenticated requests.
 It uses InMemory, **not** persisted Redis, and is not proof that arbitrary
