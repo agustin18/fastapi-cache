@@ -26,20 +26,17 @@ await FastAPICache.clear(namespace="public")
 The namespace is scoped under your configured prefix, not a command to clear every backend key. `expire=None` preserves entries until explicit clear or process exit; finite TTL entries are discarded on access after expiration.
 
 !!! warning "Exact expiry deadline in the published wheel"
-    Published 0.6.0 uses integer wall-clock seconds and a strict
-    `ttl_ts < now` comparison. A value may be readable at the exact
-    deadline with remaining TTL zero, including `expire=0`. A negative
-    InMemory TTL expires immediately; Redis rejects nonpositive EX values.
-    [Merged source #123](https://github.com/agustin18/fastapi-cache/pull/123)
-    implements the inclusive `<=` boundary for a future release. It has
-    **not** changed the published 0.6.0 wheel. A backward wall-clock jump
-    can extend the apparent remaining TTL of a still-live entry; there
-    is no monotonic expiration guarantee from this process-local backend.
+    Published 0.7.0 uses integer wall-clock seconds and an inclusive
+    `ttl_ts <= now` comparison. A value is expired at the exact deadline,
+    including `expire=0`; a negative InMemory TTL also expires immediately.
+    Redis rejects nonpositive EX values. A backward wall-clock jump can
+    extend the apparent remaining TTL of a still-live entry; there is no
+    monotonic expiration guarantee from this process-local backend.
 
-## Capacity in published 0.6.0
+## Capacity in published 0.7.0
 
 !!! warning "Unbounded when omitted"
-    Published 0.6.0 keeps the historical unbounded default; expired entries are removed lazily. A stream of never-revisited unique keys can grow memory. Set `max_entries` when you need a hard per-process bound, and use Redis for high-cardinality shared traffic.
+    Published 0.7.0 keeps the historical unbounded default; expired entries are removed lazily. A stream of never-revisited unique keys can grow memory. Set `max_entries` when you need a hard per-process bound, and use Redis for high-cardinality shared traffic.
 
 ```python
 from fastapi_cache import FastAPICache

@@ -65,7 +65,11 @@ def test_public_reference_markers_cannot_revert_to_old_release(
         (ROOT / "pyproject.toml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
-    for name in ("docs/releases/PUBLISHED_VERSION", "docs/releases/RELEASE_STATUS_0.6.0.md"):
+    version = published_version()
+    for name in (
+        "docs/releases/PUBLISHED_VERSION",
+        f"docs/releases/RELEASE_STATUS_{version}.md",
+    ):
         destination = tmp_path / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text((ROOT / name).read_text(encoding="utf-8"), encoding="utf-8")
@@ -88,18 +92,18 @@ def test_public_reference_markers_cannot_revert_to_old_release(
     [
         (
             "site_docs/guides/redis.md",
+            'fastapi-cache-stable[redis]=={version}',
             'fastapi-cache-stable[redis]==0.6.0',
-            'fastapi-cache-stable[redis]==0.5.0',
         ),
         (
             "site_docs/guides/redis.md",
+            "redis-py versions allowed in {version} metadata",
             "redis-py versions allowed in 0.6.0 metadata",
-            "redis-py versions allowed in 0.5.0 metadata",
         ),
         (
             "site_docs/guides/troubleshooting.md",
+            "{version} declares `>=3.8,<3.14`",
             "0.6.0 declares `>=3.8,<3.14`",
-            "0.5.0 declares `>=3.8,<3.14`",
         ),
     ],
 )
@@ -126,10 +130,16 @@ def test_stale_redis_and_troubleshooting_claims_are_rejected(
         (ROOT / "pyproject.toml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
-    for name in ("docs/releases/PUBLISHED_VERSION", "docs/releases/RELEASE_STATUS_0.6.0.md"):
+    version = published_version()
+    for name in (
+        "docs/releases/PUBLISHED_VERSION",
+        f"docs/releases/RELEASE_STATUS_{version}.md",
+    ):
         destination = tmp_path / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text((ROOT / name).read_text(encoding="utf-8"), encoding="utf-8")
+    version = published_version()
+    current_marker = current_marker.format(version=version)
     for name in files:
         target = tmp_path / name
         target.parent.mkdir(parents=True, exist_ok=True)

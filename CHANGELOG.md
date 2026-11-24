@@ -8,7 +8,7 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
-## [0.7.0](https://github.com/agustin18/fastapi-cache/tree/v0.7.0) - 2026-11-23
+## [0.7.0](https://github.com/agustin18/fastapi-cache/tree/v0.7.0) - 2026-11-24
 
 ### Bugfixes
 

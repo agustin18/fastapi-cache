@@ -1,10 +1,9 @@
 # fastapi-cache-stable 0.7.0 — release notes
 
-**Status:** release candidate prepared for publication. The latest published
-distribution remains `fastapi-cache-stable==0.6.0` until the annotated tag,
-exact Phase B artifacts and registry promotion are separately verified.
+**Published:** 2026-11-24 on PyPI. Install the exact released artifact with
+`python -m pip install "fastapi-cache-stable==0.7.0"`.
 
-## Candidate user-visible behavior versus 0.6.0
+## User-visible changes versus 0.6.0
 
 - **Fix:** InMemory TTL now expires **at** the integer-second deadline
   (inclusive), consistently for bounded and unbounded caches. Zero and
@@ -43,7 +42,7 @@ from the no-retry outage probe.
 
 ## Publication state and evidence
 
-Exact artifact hashes, Phase B evidence, security delta and registry
-verification are recorded in the release status and GitHub release after a
-separate publication GO. See the [candidate checklist](RELEASE_CANDIDATE_0.7.0.md)
-and [risk register](RISK_REGISTER_0.7.0.md).
+Exact artifact hashes, Phase B evidence, security review and registry
+verification are recorded in the [release status](RELEASE_STATUS_0.7.0.md),
+the [GitHub release](https://github.com/agustin18/fastapi-cache/releases/tag/v0.7.0)
+and [#126](https://github.com/agustin18/fastapi-cache/issues/126).

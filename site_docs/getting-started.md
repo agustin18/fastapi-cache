@@ -1,9 +1,9 @@
 # Install from scratch
 
-Get from zero to a working FastAPI cache in five minutes. The examples use **published fastapi-cache-stable 0.6.0**.
+Get from zero to a working FastAPI cache in five minutes. The examples use **published fastapi-cache-stable 0.7.0**.
 
 !!! tip "Which Python?"
-    Use server-side **Python 3.11–3.13** for the project's security-supported test profiles. Python 3.8–3.10 work as legacy functional migration bridges; **3.14 is not supported** by 0.6.0.
+    Use server-side **Python 3.11–3.13** for the project's security-supported test profiles. Python 3.8–3.10 work as legacy functional migration bridges; **3.14 is not supported** by 0.7.0.
 
 ## 1. Create a virtual environment
 
@@ -12,7 +12,7 @@ Get from zero to a working FastAPI cache in five minutes. The examples use **pub
     ```console
     python3 -m venv .venv
     source .venv/bin/activate
-    python -m pip install "fastapi-cache-stable==0.6.0" uvicorn
+    python -m pip install "fastapi-cache-stable==0.7.0" uvicorn
     python -m pip check
     ```
 
@@ -21,7 +21,7 @@ Get from zero to a working FastAPI cache in five minutes. The examples use **pub
     ```powershell
     py -3 -m venv .venv
     .\.venv\Scripts\Activate.ps1
-    python -m pip install "fastapi-cache-stable==0.6.0" uvicorn
+    python -m pip install "fastapi-cache-stable==0.7.0" uvicorn
     python -m pip check
     ```
 
@@ -84,7 +84,7 @@ The first response has `X-FastAPI-Cache: MISS`; the second identical request wit
 | Several workers / processes | [RedisBackend](guides/redis.md) |
 | DynamoDB or Memcached | Experimental: read [compatibility](reference/compatibility.md) first |
 
-Published 0.6.0 InMemory keeps the historical unbounded default and accepts an optional `max_entries` constructor argument. See the [InMemory guide](guides/inmemory.md); pass `max_entries` only with the 0.6.0 install command above.
+Published 0.7.0 InMemory keeps the historical unbounded default and accepts an optional `max_entries` constructor argument. See the [InMemory guide](guides/inmemory.md); pass `max_entries` only with the 0.7.0 install command above.
 
 ## 5. Before production
 
