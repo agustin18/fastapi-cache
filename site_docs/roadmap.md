@@ -21,14 +21,36 @@ or threshold is inferred from that evidence. #100 remains open.
 
 [Historical 0.7.0 execution plan and evidence boundaries](plan-0-7.md).
 
+## Next priority: CPython 3.14 qualification
+
+[#51](https://github.com/agustin18/fastapi-cache/issues/51) is the first
+technical track after 0.7.1. A compatibility-only 0.7.2 is conditional on
+successful core and standalone Redis 7.4 qualification, installed wheel
+and sdist evidence, and preserved existing tests. Published 0.7.1 still
+requires `>=3.8,<3.14`; no 3.14 support is currently promised.
+
+Memcached and DynamoDB remain experimental. Report optional-provider
+installation and test limitations rather than claiming parity. Security
+support on 3.14 requires separate passing installed dependency audit evidence;
+without it, any narrower functional-only claim needs explicit acceptance.
+Python 3.8–3.10 remain functional legacy targets. Free-threaded 3.14t and
+Python 3.15 are outside this candidate. No API, key, ETag or serialization
+change belongs in a compatibility patch; a material behavior or dependency
+major change requires re-scoping instead. Fresh exact release-artifact
+validation and separate publication approval remain mandatory.
+
 ## Candidate scope — not a commitment
 
 | Target | Candidate features | Mandatory design or quality boundary |
 |---|---|---|
-| 0.7.x | Python 3.14 (#51) and FIPS (#55) if qualified, experimental-provider corrections | Installed artifacts, version/security evidence, no blanket backend parity |
-| 0.8 | #99 per-app config, #103 app cache scope if justified, #97 tags, #49 safe filtering | Contracts and tenant/key-compatibility review before implementation |
-| 0.9+ | Bounded stale (#98), advanced Redis HA/TLS/Sentinel/Cluster research (#102) | Independent service E2E, no implied Cluster namespace-clear support |
+| 0.7.2 (conditional) | #51 standard CPython 3.14 compatibility only | Core + real Redis, installed artifacts, existing contract intact; no unsupported extra or security claim |
+| 0.8 | #99 app-scoped configuration/lifecycle RFC with #111 backend and #112 error/serialization contracts; #103 only if justified | Backward-compatible opt-in, privacy, lifecycle, ownership and cancellation design before implementation |
+| 0.9+ | #97 tags, #49 safe filtering, bounded stale (#98), advanced Redis HA/TLS/Sentinel/Cluster research (#102) | Tenant-safe keys, race/TTL-index tests, separate service E2E; no implied Cluster namespace-clear support |
 | 1.0 | Public API and support-policy maturity | Explicit ongoing maintenance commitment and independent review |
+
+FIPS (#55) and experimental-provider corrections (#45) remain separate
+maintenance tracks, not automatic additions to 0.7.2. Local single-flight
+(#96) and events (#50) follow accepted contracts; outreach (#88) is separate.
 
 A *smaller*, evidence-backed next release is preferable to shipping unsafe
 concurrency, observability or distributed behavior by a date.
