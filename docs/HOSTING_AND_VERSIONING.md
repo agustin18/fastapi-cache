@@ -1,6 +1,6 @@
 # Hosting and versioning the documentation
 
-The published package remains [fastapi-cache-stable 0.7.1](https://pypi.org/project/fastapi-cache-stable/0.7.1/). The documentation site is live at <https://agustin18.github.io/fastapi-cache/> and deploys from `stable`; a merge does not create a package release or change the immutable 0.7.1 artifact.
+The published package remains [fastapi-cache-stable 0.7.2](https://pypi.org/project/fastapi-cache-stable/0.7.2/). The documentation site is live at <https://agustin18.github.io/fastapi-cache/> and deploys from `stable`; a merge does not create a package release or change the immutable 0.7.1 or 0.7.2 artifacts.
 
 ## Why GitHub Pages?
 
@@ -16,12 +16,12 @@ GitHub Pages can serve our Zensical-built static documentation without a separat
 2. In the GitHub repository settings, enable **Pages → Build and deployment → Source: GitHub Actions**. In **Settings → Environments → github-pages**, restrict deployment branches to **only `stable`** (selected branches), and optionally require reviewer approval. **The environment branch restriction is a security requirement**, not merely an optional approval: a maintainer with write access can dispatch a workflow from another branch, including a workflow that changes its own `if` guard.
 3. A docs merge to `stable` triggers the deployment automatically; a maintainer may also run it explicitly. Both jobs refuse to run unless `github.ref == 'refs/heads/stable'`. The **read-only** build job installs pinned Zensical, generates static HTML, checks **all local links/anchors**, verifies the install/migration/reference entry points, and uploads the Pages artifact. Only the separate deploy job can request `pages: write` and `id-token: write`; it runs after the build and any required environment approval.
 4. Inspect the GitHub Actions published deployment URL and open the actual website. Do **not** assume the expected URL is reachable: Pages' unique-domain setting can affect the final address.
-5. Independently check the home page, `getting-started/`, `migration/`, `reference/api/`, `reference/alternatives/`, site search, mobile dark mode, and links to the real 0.7.1 PyPI artifact and GitHub release. Verify navigation from a phone-sized viewport; confirm the information in every page matches the released artifact.
-6. The verified website URL is in the root README. PyPI metadata can only change in a future release; do not republish the immutable 0.7.1 artifact. Social posts and launch tracker [#88](https://github.com/agustin18/fastapi-cache/issues/88) remain separate decisions.
+5. Independently check the home page, `getting-started/`, `migration/`, `reference/api/`, `reference/alternatives/`, site search, mobile dark mode, and links to the real 0.7.2 PyPI artifact and GitHub release. Verify navigation from a phone-sized viewport; confirm the information in every page matches the released artifact.
+6. The verified website URL is in the root README. PyPI metadata can only change in a future release; do not republish the immutable 0.7.2 artifact. Social posts and launch tracker [#88](https://github.com/agustin18/fastapi-cache/issues/88) remain separate decisions.
 
 ## Historical versions
 
-The current root documentation documents **published 0.7.1**. Don't edit it to advertise future APIs before their own versions ship. A site update on `stable` is not evidence that a new PyPI version was released.
+The current root documentation documents **published 0.7.2**. Don't edit it to advertise future APIs before their own versions ship. A site update on `stable` is not evidence that a new PyPI version was released.
 
 **Do not overwrite the historical 0.5.0 docs silently**. Evaluate a reproducible snapshot built from Git tag `v0.5.0` and hosted at a separate `/v0.5.0/` path, and keep an unambiguous current-version alias. Validate all relative links inside both snapshots and the navigation between versions before adding a selector.
 
@@ -44,7 +44,7 @@ Zensical currently supports a **transitional fork of `mike`** for versioned MkDo
 ## Immutable version URL design (not yet deployed)
 
 Proposed navigation: `/latest/` tracks the approved current release and
-`/0.7.1/` is a **built-once, verified snapshot** of the tagged 0.7.1
+`/0.7.2/` is a **built-once, verified snapshot** of the tagged 0.7.2
 documentation. A future version gets its own immutable URL; do not rewrite
 historical snapshots or point their links silently to latest.
 
