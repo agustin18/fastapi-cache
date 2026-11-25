@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-cache-stable"
-version = "0.7.1"
+version = "0.7.2"
 description = "Community-maintained, drop-in stable fork of fastapi-cache2"
 authors = ["Agustin Saiz <agustinsaiz02@gmail.com>"]
 license = "Apache-2.0"
@@ -20,6 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Typing :: Typed",
 ]
 packages = [
@@ -38,7 +39,7 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.14"
+python = ">=3.8,<3.15"
 fastapi = "*"
 jinja2 = ">=3.0"
 # Redis client releases drop old Python versions at different minor series.
@@ -46,7 +47,7 @@ jinja2 = ">=3.0"
 redis = [
     { version = ">=4.2.0rc1,<6.2", python = ">=3.8,<3.9", optional = true },
     { version = ">=4.2.0rc1,<7.1", python = ">=3.9,<3.10", optional = true },
-    { version = ">=4.2.0rc1,<8.2", python = ">=3.10,<3.14", optional = true },
+    { version = ">=4.2.0rc1,<8.2", python = ">=3.10,<3.15", optional = true },
 ]
 typing-extensions = { version = ">=4.1.0" }
 importlib-metadata = { version = "^6.6.0", python = "<3.8" }
