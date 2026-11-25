@@ -17,8 +17,8 @@ contract.
 > **Release channels:** Use [PyPI](https://pypi.org/project/fastapi-cache-stable/)
 > for current publications and [CHANGELOG.md](CHANGELOG.md) for historical
 > versions. This guide describes the maintained behavior, not individual
-> alpha/beta milestones. The installation range is Python `>=3.8,<3.14`;
-> security validation covers server-side CPython 3.11–3.13, while 3.8–3.10
+> alpha/beta milestones. The installation range is Python `>=3.8,<3.15`;
+> security validation covers server-side CPython 3.11–3.14, while 3.8–3.10
 > are legacy functional-compatibility targets only.
 
 ## Upgrade from 0.7.0 to 0.7.1
@@ -31,6 +31,17 @@ description from the corrected README so the package page no longer advertises
 - Keep the same imports, key formats, TTL behavior and Redis contract.
 - Pin `fastapi-cache-stable==0.7.1` and verify the exact artifact hashes.
 - See the [0.7.1 release notes](docs/releases/RELEASE_NOTES_0.7.1.md).
+
+## Upgrade from 0.7.1 to 0.7.2
+
+0.7.2 is a compatibility release: no runtime, import or public API changes from
+0.7.1. It extends the published Python metadata to `>=3.8,<3.15` (standard
+CPython 3.14 included) and the Redis modern marker through 3.14.
+
+- Pin `fastapi-cache-stable==0.7.2` and verify the exact artifact hashes.
+- Python 3.8–3.10 remain functional legacy; 3.11–3.14 are the server-side
+  security-qualified range for 0.7.2.
+- See the [0.7.2 release notes](docs/releases/RELEASE_NOTES_0.7.2.md).
 
 ## Upgrade from 0.6.0 to 0.7.0 (historical)
 
@@ -105,7 +116,7 @@ automatically remove vulnerabilities in FastAPI/Starlette/AnyIO or your
 application's other dependencies. For any vulnerable dependency,
 exposure depends on the installed version and the code the application
 actually executes; both distributions do **not** necessarily resolve
-identical versions. For production, prefer CPython 3.11–3.13 with
+identical versions. For production, prefer CPython 3.11–3.14 with
 compatible patched dependency versions.
 
 In Python 3.8/3.9, verified legacy profiles include AnyIO 4.5.2 and
@@ -149,7 +160,7 @@ the supported Python interpreter:
 
 - You are migrating `fastapi-cache2==0.2.2` to a version supported by the documented Python matrix.
 - Python 3.8–3.10 remain legacy functional-compatibility targets. They are EOL and do not
-  receive a stable security-support commitment; Python 3.11–3.13 form the security-supported
+  receive a stable security-support commitment; Python 3.11–3.14 form the security-supported
   matrix.
 - You use `InMemoryBackend` or `RedisBackend` (standalone Redis).
 - Your endpoints are GET and return JSON, Pydantic models, dataclasses or standard types.
@@ -344,7 +355,7 @@ For published `0.7.0` in a clean environment:
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
-python -m pip install "fastapi-cache-stable[redis]==0.7.1"
+python -m pip install "fastapi-cache-stable[redis]==0.7.2"
 python -m pip check
 python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 ```
@@ -385,7 +396,7 @@ resolve from regular PyPI; do not mix TestPyPI and PyPI candidates via
 
 | Component | Status | Notes |
 |---|---|---|
-| Python 3.11–3.13 | Verified, security-supported | Main functional matrix and separate runtime security-audit profile |
+| Python 3.11–3.14 | Verified, security-supported | Main functional matrix and separate runtime security-audit profile |
 | Python 3.10 | Verified legacy compatibility | Main functional tests and Pydantic v1 migration job; EOL, no security-support commitment |
 | Python 3.8/3.9 | Verified legacy compatibility | Pinned FastAPI 0.111.1/Pydantic 1.10.27/2.8.2 matrix and wheel smoke; EOL, no security-support commitment |
 | Python 3.14 | Unsupported for `0.4.1`, `0.5.0`, `0.6.0` and `0.7.0` | Add and pass a full matrix before announcing support |
@@ -741,8 +752,8 @@ for support boundaries.
 (1.10.27 is the final release) and receives no new security fixes. Typed restoration requires
 Pydantic v2.
 **Does stable `0.4.1` support Python 3.8–3.10?** Yes, for the documented legacy functional
-matrix and installation range `>=3.8,<3.14`. Those EOL interpreters are outside the
-security-support matrix; Python 3.11–3.13 are security-supported.
+matrix and installation range `>=3.8,<3.15`. Those EOL interpreters are outside the
+security-support matrix; Python 3.11–3.14 are security-supported.
 **Is Redis Cluster supported?** Only with the documented limitations; complete namespace
 clearing is not promised.
 **Are Memcached and DynamoDB supported?** Experimental until they have parity tests.

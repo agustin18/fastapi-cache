@@ -1,9 +1,9 @@
 # Roadmap — fastapi-cache-stable
 
-**Current published release:** [0.7.1](https://pypi.org/project/fastapi-cache-stable/0.7.1/)
+**Current published release:** [0.7.2](https://pypi.org/project/fastapi-cache-stable/0.7.2/)
 on **2026-11-24**. It is a metadata-only correction over 0.7.0: no runtime
 or API changes. It rebuilds the PyPI long description from the corrected
-README. See [0.7.1 release evidence](docs/releases/RELEASE_STATUS_0.7.1.md).
+README. See [0.7.2 release evidence](docs/releases/RELEASE_STATUS_0.7.2.md).
 **0.7.0** remains the previous published line. **0.6.0** is older. Source version and
 merged PRs alone do not imply publication.
 **Do not reopen a completed publication gate without new material evidence.**
@@ -24,6 +24,13 @@ The primary product advantage remains conservative migration from
 `fastapi-cache2==0.2.2`, preserved `fastapi_cache` imports, predictable
 cache keys and safe default HTTP/private-response behavior.
 
+
+## 0.7.2 — Python 3.14 compatibility published 2026-11-25
+
+0.7.2 is a compatibility patch with no runtime, import or public API changes.
+It extends the published metadata to `>=3.8,<3.15`, includes standard CPython
+3.14 and the Redis extra through 3.14. Exact-artifact Phase B and registry
+evidence are recorded in [RELEASE_STATUS_0.7.2.md](docs/releases/RELEASE_STATUS_0.7.2.md).
 
 ## 0.7.1 — metadata-only correction published 2026-11-24
 
@@ -52,12 +59,12 @@ application-owned hidden tenant/context/cardinality limitations and future
 reproducible package-controlled issues. No independent consumer quota,
 third-party security certification or hosted-docs requirement applies.
 
-## Post-0.7.1 open work
+## Post-0.7.2 open work
 
 **First priority: [#51 — CPython 3.14 qualification](https://github.com/agustin18/fastapi-cache/issues/51).**
 Diagnostic qualification [#142](https://github.com/agustin18/fastapi-cache/pull/142)
-passed and is merged; 0.7.2 staging is in progress. Published 0.7.1 continues
-to require `>=3.8,<3.14`. Do not advertise published 3.14 support before
+and 0.7.2 are published. Published 0.7.2 supports `>=3.8,<3.15`, including
+standard CPython 3.14; 3.8–3.10 remain functional legacy only. Do not advertise
 all final-artifact and publication gates pass.
 
 1. **Qualification PR (completed):** record the unmodified-source baseline and exact base SHA;
@@ -103,7 +110,7 @@ The following other tracks remain candidates, not delivery promises:
   additional exact-artifact coverage and a consistent strict verifier.
   Each release needs fresh security evidence and maintainer authorization.
 - **Public documentation:** the site deploys only from `stable` through the
-  merged Pages workflows. Versioned `/latest/` and immutable `/0.7.1/` routes
+  merged Pages workflows. Versioned `/latest/` and immutable `/0.7.2/` routes
   remain planned under [#48](https://github.com/agustin18/fastapi-cache/issues/48).
 - **Backend and data contracts:** [#111](https://github.com/agustin18/fastapi-cache/issues/111)
   and [#112](https://github.com/agustin18/fastapi-cache/issues/112) remain
@@ -256,7 +263,7 @@ fix can be shipped with verified compatibility.
 
 ## Post-0.5.0 backlog and legacy references
 
-Historical planning context only; the post-0.7.1 ordering above supersedes
+Historical planning context only; the post-0.7.2 ordering above supersedes
 older target versions and priorities in this section.
 
 These are candidates, not commitments. New public API work starts from a

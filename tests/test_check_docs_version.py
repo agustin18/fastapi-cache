@@ -102,7 +102,7 @@ def test_public_reference_markers_cannot_revert_to_old_release(
         ),
         (
             "site_docs/guides/troubleshooting.md",
-            "{version} declares `>=3.8,<3.14`",
+            "{version} declares `>=3.8,<3.15`",
             "0.6.0 declares `>=3.8,<3.14`",
         ),
     ],
