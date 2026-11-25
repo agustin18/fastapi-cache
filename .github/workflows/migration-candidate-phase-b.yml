@@ -136,7 +136,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
         format: ["wheel", "sdist"]
     services:
       redis:
@@ -194,7 +194,12 @@ jobs:
           fi
           test -n "$candidate"
           echo "CANDIDATE_ARTIFACT=$RUNNER_TEMP/phase-b-dist/${candidate#./}" >> "$GITHUB_ENV"
-          if [[ "$PY_VERSION" == 3.13 ]]; then
+          if [[ "$PY_VERSION" == 3.14 ]]; then
+            echo "FASTAPI_VERSION=0.165.0" >> "$GITHUB_ENV"
+            echo "PYDANTIC_VERSION=2.14.4" >> "$GITHUB_ENV"
+            echo "HTTPX_VERSION=0.28.1" >> "$GITHUB_ENV"
+            echo "HTTPX2_VERSION=2.16.2" >> "$GITHUB_ENV"
+          elif [[ "$PY_VERSION" == 3.13 ]]; then
             echo "FASTAPI_VERSION=0.115.12" >> "$GITHUB_ENV"
             echo "PYDANTIC_VERSION=2.11.7" >> "$GITHUB_ENV"
           elif [[ "$PY_VERSION" == 3.11 || "$PY_VERSION" == 3.12 ]]; then
@@ -222,12 +227,12 @@ jobs:
             python -m venv "$RUNNER_TEMP/$env"
             "$RUNNER_TEMP/$env/bin/python" -m pip install --upgrade pip
           done
+          framework=("fastapi==$FASTAPI_VERSION" "pydantic==$PYDANTIC_VERSION" "httpx==${HTTPX_VERSION:-0.27.0}")
+          if [[ -n "${HTTPX2_VERSION:-}" ]]; then framework+=("httpx2==$HTTPX2_VERSION"); fi
           "$RUNNER_TEMP/legacy/bin/python" -m pip install \
-            "$legacy_wheel[redis]" "redis==4.6.0" \
-            "fastapi==$FASTAPI_VERSION" "pydantic==$PYDANTIC_VERSION" "httpx==0.27.0"
+            "$legacy_wheel[redis]" "redis==4.6.0" "${framework[@]}"
           "$RUNNER_TEMP/candidate/bin/python" -m pip install \
-            "$CANDIDATE_ARTIFACT[redis]" "redis==4.6.0" \
-            "fastapi==$FASTAPI_VERSION" "pydantic==$PYDANTIC_VERSION" "httpx==0.27.0"
+            "$CANDIDATE_ARTIFACT[redis]" "redis==4.6.0" "${framework[@]}"
           for env in legacy candidate; do
             "$RUNNER_TEMP/$env/bin/python" -m pip check
             "$RUNNER_TEMP/$env/bin/python" -m pip freeze \
@@ -280,9 +285,10 @@ jobs:
           fi
           python -m venv "$RUNNER_TEMP/consumer"
           "$RUNNER_TEMP/consumer/bin/python" -m pip install --upgrade pip
+          framework=("fastapi==$FASTAPI_VERSION" "pydantic==$PYDANTIC_VERSION" "httpx==${HTTPX_VERSION:-0.27.0}")
+          if [[ -n "${HTTPX2_VERSION:-}" ]]; then framework+=("httpx2==$HTTPX2_VERSION"); fi
           "$RUNNER_TEMP/consumer/bin/python" -m pip install \
-            "$CANDIDATE_ARTIFACT[redis]" "redis==$CONSUMER_REDIS" \
-            "fastapi==$FASTAPI_VERSION" "pydantic==$PYDANTIC_VERSION" "httpx==0.27.0"
+            "$CANDIDATE_ARTIFACT[redis]" "redis==$CONSUMER_REDIS" "${framework[@]}"
           "$RUNNER_TEMP/consumer/bin/python" -m pip check
           "$RUNNER_TEMP/consumer/bin/python" -m pip freeze \
             > "$RUNNER_TEMP/phase-b-evidence/consumer-pip-freeze.txt"

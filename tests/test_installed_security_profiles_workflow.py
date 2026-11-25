@@ -10,16 +10,17 @@ WORKFLOW = (
 
 def test_required_extra_and_sdist_lanes_are_present() -> None:
     workflow = WORKFLOW.read_text()
-    for version in ("3.11", "3.12", "3.13"):
+    for version in ("3.11", "3.12", "3.13", "3.14"):
         for extra in ("none", "redis"):
             assert (
                 f'{{python: "{version}", extra: "{extra}", distribution: "wheel"}}'
                 in workflow
             )
-    assert (
-        '{python: "3.12", extra: "all", distribution: "sdist"}'
-        in workflow
-    )
+    for version in ("3.12", "3.14"):
+        assert (
+            f'{{python: "{version}", extra: "all", distribution: "sdist"}}'
+            in workflow
+        )
 
 
 def test_profiles_install_and_audit_real_distribution() -> None:

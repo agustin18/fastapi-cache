@@ -154,17 +154,18 @@ def job_record() -> Dict[str, Any]:
     names = [BUILD_JOB]
     names.extend(
         f"Py {version} / {kind} / real Redis 7.4 / rollback"
-        for version in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13")
+        for version in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14")
         for kind in ("wheel", "sdist")
     )
     names.extend(
         f"Exact artifact security / Python {version} / {extra} / wheel"
-        for version in ("3.11", "3.12", "3.13")
+        for version in ("3.11", "3.12", "3.13", "3.14")
         for extra in ("none", "redis")
     )
     names.append("Exact artifact security / Python 3.12 / all / sdist")
+    names.append("Exact artifact security / Python 3.14 / all / sdist")
     return {
-        "total_count": 20,
+        "total_count": 25,
         "jobs": [
             {"name": name, "run_id": 100, "status": "completed", "conclusion": "success"}
             for name in names
@@ -174,6 +175,15 @@ def job_record() -> Dict[str, Any]:
 
 def test_complete_first_attempt_jobs() -> None:
     validate_jobs(job_record(), RUN_ID)
+
+
+def test_reject_historical_matrix_without_314() -> None:
+    payload = job_record()
+    payload["jobs"] = [job for job in payload["jobs"] if "3.14" not in job["name"]]
+    payload["total_count"] = len(payload["jobs"])
+    assert payload["total_count"] == 20
+    with pytest.raises(ValueError, match="Phase B job"):
+        validate_jobs(payload, RUN_ID)
 
 
 @pytest.mark.parametrize("mutation", ["missing", "extra", "duplicate", "wrong_run", "failure", "skipped", "incomplete"])
