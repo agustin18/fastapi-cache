@@ -7,6 +7,9 @@ README. See [0.7.1 release evidence](docs/releases/RELEASE_STATUS_0.7.1.md).
 **0.7.0** remains the previous published line. **0.6.0** is older. Source version and
 merged PRs alone do not imply publication.
 **Do not reopen a completed publication gate without new material evidence.**
+The completed 0.7.0 and 0.7.1 publication records are historical; their
+successful release gates do not authorize any subsequent candidate.
+The live planning umbrella is [#95](https://github.com/agustin18/fastapi-cache/issues/95).
 
 **0.5.0 release record:** #67/#68 closed; #69 Phase A [#80](https://github.com/agustin18/fastapi-cache/pull/80)
 and Part B [#82](https://github.com/agustin18/fastapi-cache/pull/82) complete;
@@ -25,7 +28,7 @@ cache keys and safe default HTTP/private-response behavior.
 ## 0.7.1 — metadata-only correction published 2026-11-24
 
 The 0.7.1 source is the 0.7.0 runtime code with corrected package metadata.
-The previous 0.7.0 release (tag `df884644f11eb0e36ae5d74721009fc8e4470c4b`)
+The previous 0.7.0 release (`v0.7.0`, source `df884644f11eb0e36ae5d74721009fc8e4470c4b`)
 included the scoped correctness fixes from #123 and #124 and the Redis
 `get_with_ttl()` tuple correction. 0.7.1 rebuilds the PyPI long description
 from the corrected README; exact artifact hashes and Phase B/TestPyPI/PyPI
@@ -33,7 +36,7 @@ evidence are in [release evidence](docs/releases/RELEASE_STATUS_0.7.1.md).
 #100 remains a descriptive measurement program with **no** performance,
 p95/p99, Redis retry-latency or HA certification. #111, #112 and #53 remain
 open for broader backend, corruption/recovery and hidden-context contracts.
-New #99/#103 APIs remain deferred beyond 0.7.
+New #99/#103 APIs were deferred beyond 0.7; #103 remains a separate design discussion after 0.8.
 
 ## 0.6.0 — historical published release
 
@@ -51,11 +54,53 @@ third-party security certification or hosted-docs requirement applies.
 
 ## Post-0.7.1 open work
 
-The following are candidates, not delivery promises:
+**First priority: [#51 — CPython 3.14 qualification](https://github.com/agustin18/fastapi-cache/issues/51).**
+A compatibility-only 0.7.2 is a candidate, not a commitment. Published 0.7.1
+continues to require `>=3.8,<3.14`. Do not advertise 3.14 support or widen
+published metadata until the following independently reviewable gates pass.
 
-- **Release infrastructure:** preserve the exact-artifact, 20-job
-  first-attempt, tag, approved-hash and TestPyPI parity gates. Each new
-  release needs its own final installed evidence and maintainer authorization.
+1. **Qualification PR:** record the unmodified-source baseline and exact base SHA;
+   reproduce failures before fixes. Use a temporary, isolated metadata relaxation
+   only to enable the 3.14 experiment; never publish or commit it as support.
+   Require core and real standalone Redis 7.4 tests, clean wheel and sdist builds
+   and installs, `twine check`, `pip check`, a modern security-profile attempt,
+   and a 3.11 control. Preserve all existing functional and legacy lanes. Keep
+   existing Poetry lock profiles intact; no silent skips or allowed failures.
+2. **Optional providers:** Memcached and DynamoDB remain experimental. Attempt
+   dependency installation and fake-client tests on 3.14; report failures or
+   unrun lanes explicitly and document any unsupported extras. Do not claim
+   real-service conformance based on fake clients.
+3. **Release-staging PR only after qualification:** reconcile the top-level
+   Python requirement, interpreter-specific Redis markers, classifiers, support
+   tables, lock consistency and actual wheel/sdist dependency metadata. Keep
+   Python 3.8–3.10 functional-only. Include 3.14 in the security-supported matrix
+   only with a passing applicable installed-artifact audit. Otherwise explicitly
+   scope it as functional-only if that narrower release is separately accepted.
+   Standard GIL-enabled CPython 3.14 only; free-threaded 3.14t and 3.15 are out of scope.
+4. **Exact final-artifact gates:** preserve all existing Phase B lanes and the
+   strict publication verifier. Add and validate the 3.14 installed wheel/sdist
+   and Redis evidence on the exact release source/artifacts; do not silently
+   reuse the historical 20-job count as proof of 3.14 coverage. Review the
+   release-job matrix, verifier and negative tests together if the required
+   matrix expands. If historical migration fixtures cannot install on 3.14,
+   document the limitation and qualify a separate cross-interpreter migration
+   scenario rather than mislabeling a skipped or incompatible lane as passed.
+   No tag or package upload without fresh separate authorization.
+
+A patch release is appropriate only for nonbreaking compatibility work.
+Stop and re-scope if qualification would require a new public API, observable
+behavior change, key/ETag/serialization changes, a dependency major upgrade,
+or a weakening of existing release gates. Consider 0.8 instead. If core or
+standalone Redis cannot be qualified, leave #51 open and do not promote 0.7.2.
+A separate evidence record must distinguish PASS, FAIL and NOT RUN.
+
+The following other tracks remain candidates, not delivery promises:
+
+- **Release infrastructure:** preserve the exact-artifact, first-attempt,
+  complete required-job matrix, tag, approved-hash and TestPyPI parity gates.
+  The historical 0.7.0/0.7.1 Phase B had 20 jobs; a new interpreter requires
+  additional exact-artifact coverage and a consistent strict verifier.
+  Each release needs fresh security evidence and maintainer authorization.
 - **Public documentation:** the site deploys only from `stable` through the
   merged Pages workflows. Versioned `/latest/` and immutable `/0.7.1/` routes
   remain planned under [#48](https://github.com/agustin18/fastapi-cache/issues/48).
@@ -68,23 +113,38 @@ The following are candidates, not delivery promises:
   independent hardware, network HTTP, failure injection and agreed thresholds
   remain open.
 - **Architecture RFCs:** [#99](https://github.com/agustin18/fastapi-cache/issues/99)
-  and [#103](https://github.com/agustin18/fastapi-cache/issues/103) must be
-  accepted before implementing [#96](https://github.com/agustin18/fastapi-cache/issues/96)
+  with #111/#112 is the 0.8 design track. Review the relevant architecture
+  and error-policy contracts before implementing [#96](https://github.com/agustin18/fastapi-cache/issues/96)
   local single-flight or [#50](https://github.com/agustin18/fastapi-cache/issues/50)
-  events.
+  events. [#103](https://github.com/agustin18/fastapi-cache/issues/103)
+  remains a separate design discussion after 0.8, not an 0.8 requirement.
 
 ## Staged capability releases — proposals, not dates
 
 | Release | Focus | Non-negotiable boundary |
 |---|---|---|
-| **0.7.x** | #55 FIPS and evidence-backed nonbreaking experimental backend corrections | Legacy default keys and published support boundaries unchanged |
-| **0.8.0** | #99 optional per-app lifecycle, #97 tags, #103 application cache only if justified, #49 parameter exclusions | Tenant isolation, TTL indexes, race tests and explicit opt-in |
-| **0.9.0** | #98 bounded stale, #102 advanced TLS/Sentinel/Cluster/HA qualification, distributed coordination research | Separate backend profiles; no blanket HA or stale safety claims |
+| **0.7.2 (conditional)** | #51 standard CPython 3.14 compatibility only | Qualification and exact-artifact gates above; unchanged existing APIs, key/ETag/serialization behavior and legacy support |
+| **0.8.0** | #99 app-scoped lifecycle/config RFC with #111 backend and #112 error/serialization contracts | Design and privacy review first; backward-compatible opt-in, explicit ownership and cancellation; no promised automatic tenant isolation |
+| **0.9.0** | #97 tags and #49 safe parameter filtering | Explicit opt-in, tenant-safe keys, TTL index/race tests and independently reviewed invalidation scope |
+| **Later, if justified** | #98 bounded stale | Separate threat model, expiry, failure and cancellation contract; no stale-safety promise |
 | **1.0.0** | Public API and maintenance-contract maturity | Support duration decision separate; do not promise 24 months without sustainable maintenance |
 
+[#103](https://github.com/agustin18/fastapi-cache/issues/103) remains a separate
+design discussion after 0.8. Advanced Redis HA/TLS/Sentinel/Cluster qualification
+under [#102](https://github.com/agustin18/fastapi-cache/issues/102) is **not a core
+release candidate**. Document unsupported configurations and consider a plugin
+or separate integration only if justified and independently qualified. Existing
+standalone Redis support is unchanged; no Cluster namespace-clear or HA claim.
+
+#45 experimental-provider corrections and #55 FIPS portability remain
+separate evidence-driven maintenance tracks, not automatic additions to 0.7.2.
+#96 local single-flight and #50 events follow the accepted architecture and
+error-policy contracts; no date is promised. #88 outreach requires separate
+maintainer authorization and is not a compatibility gate.
+
 Every feature release requires reproducible exact wheel/sdist installation,
-supported-runtime/Redis matrix, risk triage, concurrency/error tests,
-benchmark budgets and accurate browsable documentation. Do not publish
+supported-runtime/Redis matrix, risk triage, relevant concurrency/error tests,
+applicable performance budgets and accurate browsable documentation. Do not publish
 unimplemented features in the public API guide.
 
 ## 0.4.0 — delivered Redis compatibility (2026-11-20)
@@ -114,7 +174,7 @@ header cardinality and authentication/HTTP-cache safety review. Neither explicit
 bypass nor `vary_headers` automatically makes an application's
 unknown identity dimensions safe.
 
-## 0.4.x — maintenance candidates (no release date promised)
+## 0.4.x — historical maintenance planning (archived; current order above)
 
 | Priority | Focused issue | Deliverable / acceptance |
 |---|---|---|
@@ -195,6 +255,9 @@ fix can be shipped with verified compatibility.
 
 ## Post-0.5.0 backlog and legacy references
 
+Historical planning context only; the post-0.7.1 ordering above supersedes
+older target versions and priorities in this section.
+
 These are candidates, not commitments. New public API work starts from a
 focused issue, a privacy/key-compatibility review and tests on the supported
 matrix. None of them reopens the published 0.5.0 signoff.
@@ -235,7 +298,7 @@ Do not reuse their approvals for a different source SHA.
   study POST opt-in, stale-while-revalidate, cache headers and CDN
   interactions only after explicit threat modeling.
 
-## Capability gaps and objective adoption criteria (2026-11-21)
+## Capability gaps and objective adoption criteria (historical 2026-11-21 snapshot)
 
 Assess the library against **application needs and measured behavior**,
 not named third-party projects, marketing comparisons or unverifiable
@@ -286,11 +349,18 @@ Python-conditional Redis client range; unshipped source and Redis
 
 ## Proposed PR order
 
-Use the [post-0.5.0 backlog](#post-050-backlog-and-legacy-references) for
-the next focused PRs. Handle any proven #53 privacy defect immediately;
-preserve the 0.5.0 migration contract until a deliberately opt-in key
-migration is tested. Investigate #45/#55 in standalone maintenance PRs;
-do not block security remediation waiting for feature work.
+1. Reconcile the completed 0.7 release records and roadmap in a docs-only PR.
+2. Open the #51 qualification PR against the reviewed, merged roadmap base;
+   recognition can begin in an isolated worktree without modifying `stable`.
+3. Only after the qualification is merged and green, stage 0.7.2 in a separate
+   PR with verified support metadata and release gates. Do not release if
+   the required compatibility scope fails.
+4. Begin the 0.8 architecture RFC (#99 with #111/#112); defer larger API
+   and distributed changes until the required contracts are accepted.
+
+Handle any proven package-owned #53 privacy defect immediately, regardless
+of this ordering. Investigate #45/#55 in standalone maintenance PRs when
+justified; do not block security remediation waiting for feature work.
 
 A final change log, tested distribution and tagged release are needed
 for **each new published version**, but are **not a reason to re-open
