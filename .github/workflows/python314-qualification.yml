@@ -1,0 +1,301 @@
+name: CPython 3.14 qualification (experimental)
+
+on:
+  pull_request:
+    branches: [stable]
+    paths:
+      - ".github/workflows/python314-qualification.yml"
+      - "docs/audit/PYTHON_3_14_QUALIFICATION.md"
+      - "fastapi_cache/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "poetry.lock"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: py314-qualification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  functional:
+    name: Qualification / Python ${{ matrix.python }} / ${{ matrix.format }} / ${{ matrix.profile }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {python: "3.11", format: wheel, profile: redis}
+          - {python: "3.14", format: wheel, profile: redis}
+          - {python: "3.14", format: sdist, profile: redis}
+          - {python: "3.14", format: wheel, profile: optional}
+    services:
+      redis:
+        image: redis:7.4
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PY_VERSION: ${{ matrix.python }}
+      FORMAT: ${{ matrix.format }}
+      PROFILE: ${{ matrix.profile }}
+      REDIS_URL: redis://localhost:6379/0
+      REQUIRE_REDIS: "1"
+    steps:
+      - name: Initialize evidence directory
+        run: |
+          mkdir -p "$RUNNER_TEMP/qualification-evidence"
+          echo "EVIDENCE_DIR=$RUNNER_TEMP/qualification-evidence" >> "$GITHUB_ENV"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Record environment and original metadata
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE_DIR"
+          git rev-parse HEAD | tee "$EVIDENCE_DIR/source-sha.txt"
+          python -VV | tee "$EVIDENCE_DIR/python.txt"
+          python - <<'PY'
+          import sys
+          import sysconfig
+          assert sys.implementation.name == "cpython"
+          assert not sysconfig.get_config_var("Py_GIL_DISABLED")
+          PY
+          cp pyproject.toml "$EVIDENCE_DIR/original-pyproject.toml"
+          python -m pip install --upgrade pip build twine
+          python -m pip --version | tee "$EVIDENCE_DIR/pip-version.txt"
+      - name: Build original source and isolated diagnostic distributions
+        run: |
+          set -euo pipefail
+          original="$RUNNER_TEMP/original-dist"
+          diagnostic="$RUNNER_TEMP/diagnostic-dist"
+          python -m build --outdir "$original" 2>&1 | tee "$EVIDENCE_DIR/original-build.log"
+          python -m twine check "$original"/*
+          if [ "$PY_VERSION" = "3.14" ]; then
+            source="$RUNNER_TEMP/diagnostic-source"
+            mkdir -p "$source"
+            git archive HEAD | tar -x -C "$source"
+            python - "$source/pyproject.toml" <<'PY'
+          import sys
+          from pathlib import Path
+          path = Path(sys.argv[1])
+          original = path.read_text()
+          replacements = {
+              'python = ">=3.8,<3.14"': 'python = ">=3.8,<3.15"',
+              'python = ">=3.10,<3.14", optional = true': 'python = ">=3.10,<3.15", optional = true',
+          }
+          for before, after in replacements.items():
+              assert original.count(before) == 1, before
+              original = original.replace(before, after)
+          path.write_text(original)
+          PY
+            cp "$source/pyproject.toml" "$EVIDENCE_DIR/diagnostic-pyproject.toml"
+            python -m build "$source" --outdir "$diagnostic" 2>&1 | tee "$EVIDENCE_DIR/diagnostic-build.log"
+          else
+            mkdir -p "$diagnostic"
+            cp "$original"/* "$diagnostic/"
+          fi
+          python -m twine check "$diagnostic"/* | tee "$EVIDENCE_DIR/twine.log"
+          (cd "$original" && sha256sum *.whl *.tar.gz) > "$EVIDENCE_DIR/original-sha256.txt"
+          (cd "$diagnostic" && sha256sum *.whl *.tar.gz) > "$EVIDENCE_DIR/diagnostic-sha256.txt"
+          git diff --exit-code -- pyproject.toml poetry.lock
+      - name: Clean diagnostic install and dependency resolution
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/consumer"
+          consumer="$RUNNER_TEMP/consumer/bin/python"
+          "$consumer" -m pip install --upgrade pip
+          if [ "$FORMAT" = wheel ]; then
+            artifact="$(realpath "$RUNNER_TEMP"/diagnostic-dist/*.whl)"
+          else
+            artifact="$(realpath "$RUNNER_TEMP"/diagnostic-dist/*.tar.gz)"
+          fi
+          extra=redis
+          if [ "$PROFILE" = optional ]; then extra=all; fi
+          "$consumer" -m pip install "$artifact[$extra]" pytest pytest-cov httpx httpx2 packaging 2>&1 \
+            | tee "$EVIDENCE_DIR/install.log"
+          "$consumer" -m pip check | tee "$EVIDENCE_DIR/pip-check.log"
+          "$consumer" -m pip freeze > "$EVIDENCE_DIR/consumer-freeze.txt"
+          "$consumer" -I - <<'PY' | tee "$EVIDENCE_DIR/redis-service.txt"
+          import importlib.metadata as metadata
+          import os
+          import redis
+          from pathlib import Path
+          import fastapi_cache
+
+          assert "site-packages" in Path(fastapi_cache.__file__).resolve().parts
+          assert metadata.version("fastapi-cache-stable") == fastapi_cache.__version__
+          client = redis.Redis.from_url(os.environ["REDIS_URL"])
+          try:
+              assert client.ping()
+              version = client.info("server")["redis_version"]
+              assert version.startswith("7.4."), version
+              print("Redis server", version, "client", metadata.version("redis"))
+          finally:
+              client.close()
+          PY
+      - name: Installed wheel or sdist consumer probes
+        if: matrix.profile == 'redis'
+        run: |
+          set -euo pipefail
+          consumer="$RUNNER_TEMP/consumer/bin/python"
+          export MIGRATION_E2E_CANDIDATE_VERSION="$("$consumer" -I -c 'import importlib.metadata as m; print(m.version("fastapi-cache-stable"))')"
+          cd "$RUNNER_TEMP"
+          "$consumer" -I "$GITHUB_WORKSPACE/tests/candidate_inmemory_probe.py" \
+            | tee "$EVIDENCE_DIR/inmemory-probe.log"
+          "$consumer" -I "$GITHUB_WORKSPACE/tests/redis_vary_probe.py" \
+            | tee "$EVIDENCE_DIR/redis-probe.log"
+      - name: Full unchanged source suite with original metadata
+        if: matrix.profile == 'redis'
+        run: |
+          set -euo pipefail
+          consumer="$RUNNER_TEMP/consumer/bin/python"
+          # Keep metadata regression tests unchanged. Only the diagnostic
+          # environment bypasses the original project's interpreter guard;
+          # all third-party dependencies were resolved normally above.
+          if [ "$PY_VERSION" = "3.14" ]; then
+            "$consumer" -m pip install --force-reinstall --no-deps --ignore-requires-python \
+              "$RUNNER_TEMP"/original-dist/*.whl
+          fi
+          "$consumer" -m pip freeze > "$EVIDENCE_DIR/source-suite-freeze.txt"
+          "$consumer" -m pytest -q -rs --junitxml="$EVIDENCE_DIR/suite.xml" 2>&1 \
+            | tee "$EVIDENCE_DIR/suite.log"
+          git diff --exit-code -- pyproject.toml poetry.lock
+      - name: Optional backend fake-client probes (not service qualification)
+        if: matrix.profile == 'optional'
+        run: |
+          set -euo pipefail
+          consumer="$RUNNER_TEMP/consumer/bin/python"
+          "$consumer" -I -c 'import aiomcache, aiobotocore, aiohttp'
+          "$consumer" -m pytest -q -rs --junitxml="$EVIDENCE_DIR/optional.xml" \
+            tests/test_memcached_backend.py tests/test_dynamodb_backend.py \
+            tests/test_dynamodb_transport.py 2>&1 | tee "$EVIDENCE_DIR/optional.log"
+      - name: Upload diagnostic evidence, including failures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: qualification-${{ matrix.python }}-${{ matrix.format }}-${{ matrix.profile }}
+          path: ${{ runner.temp }}/qualification-evidence/
+          if-no-files-found: error
+          retention-days: 30
+
+  security:
+    name: Qualification security / Python 3.14 / ${{ matrix.extra }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        extra: [none, redis, all]
+    env:
+      PROFILE_EXTRA: ${{ matrix.extra }}
+    steps:
+      - name: Initialize evidence directory
+        run: |
+          mkdir -p "$RUNNER_TEMP/qualification-security"
+          echo "EVIDENCE_DIR=$RUNNER_TEMP/qualification-security" >> "$GITHUB_ENV"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.14"
+      - name: Build isolated diagnostic wheel
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE_DIR" "$RUNNER_TEMP/diagnostic-source"
+          git rev-parse HEAD > "$EVIDENCE_DIR/source-sha.txt"
+          python -VV > "$EVIDENCE_DIR/python.txt"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/diagnostic-source"
+          python - "$RUNNER_TEMP/diagnostic-source/pyproject.toml" <<'PY'
+          import sys
+          from pathlib import Path
+          path = Path(sys.argv[1])
+          content = path.read_text()
+          for before, after in (
+              ('python = ">=3.8,<3.14"', 'python = ">=3.8,<3.15"'),
+              ('python = ">=3.10,<3.14", optional = true', 'python = ">=3.10,<3.15", optional = true'),
+          ):
+              assert content.count(before) == 1, before
+              content = content.replace(before, after)
+          path.write_text(content)
+          PY
+          cp "$RUNNER_TEMP/diagnostic-source/pyproject.toml" "$EVIDENCE_DIR/diagnostic-pyproject.toml"
+          python -m pip install --upgrade pip build
+          python -m build --wheel "$RUNNER_TEMP/diagnostic-source" --outdir "$RUNNER_TEMP/diagnostic-dist"
+          (cd "$RUNNER_TEMP/diagnostic-dist" && sha256sum *.whl) > "$EVIDENCE_DIR/wheel.sha256"
+          git diff --exit-code -- pyproject.toml poetry.lock
+      - name: Resolve isolated runtime only
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/consumer"
+          consumer="$RUNNER_TEMP/consumer/bin/python"
+          "$consumer" -m pip install --upgrade pip
+          wheel="$(realpath "$RUNNER_TEMP"/diagnostic-dist/*.whl)"
+          if [ "$PROFILE_EXTRA" = none ]; then
+            "$consumer" -m pip install "$wheel"
+          else
+            "$consumer" -m pip install "$wheel[$PROFILE_EXTRA]"
+          fi
+          "$consumer" -m pip check | tee "$EVIDENCE_DIR/pip-check.log"
+          "$consumer" -m pip freeze --all > "$EVIDENCE_DIR/installed-freeze.txt"
+          "$consumer" -I - <<'PY'
+          import importlib.metadata as metadata
+          import json
+          import os
+          import sysconfig
+          from pathlib import Path
+
+          import fastapi_cache
+          from fastapi_cache.backends.inmemory import InMemoryBackend
+
+          target = sysconfig.get_paths()["purelib"]
+          evidence = Path(os.environ["EVIDENCE_DIR"])
+          assert "site-packages" in Path(fastapi_cache.__file__).resolve().parts
+          assert InMemoryBackend() is not None
+          packages = sorted(
+              ({"name": d.metadata["Name"], "version": d.version}
+               for d in metadata.distributions(path=[target])),
+              key=lambda item: item["name"].lower(),
+          )
+          names = {item["name"].lower() for item in packages}
+          assert ("redis" in names) == (os.environ["PROFILE_EXTRA"] != "none")
+          if os.environ["PROFILE_EXTRA"] == "all":
+              assert {"aiomcache", "aiobotocore", "aiohttp"} <= names
+          (evidence / "installed-packages.json").write_text(json.dumps(packages, indent=2))
+          (evidence / "installed-METADATA.txt").write_text(
+              metadata.distribution("fastapi-cache-stable").read_text("METADATA")
+          )
+          (evidence / "site-packages-path.txt").write_text(target)
+          PY
+      - name: Independently audit installed runtime and validate completeness
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/auditor"
+          auditor="$RUNNER_TEMP/auditor/bin/python"
+          "$auditor" -m pip install --upgrade pip
+          "$auditor" -m pip install pip-audit==2.10.1
+          "$RUNNER_TEMP/auditor/bin/pip-audit" --version > "$EVIDENCE_DIR/pip-audit-version.txt"
+          "$RUNNER_TEMP/auditor/bin/pip-audit" --path "$(cat "$EVIDENCE_DIR/site-packages-path.txt")" \
+            --aliases off --format json --output "$EVIDENCE_DIR/pip-audit.json"
+          python scripts/validate_security_audit.py "$EVIDENCE_DIR/pip-audit.json" \
+            --installed-packages "$EVIDENCE_DIR/installed-packages.json" \
+            --wheel-metadata "$EVIDENCE_DIR/installed-METADATA.txt"
+      - name: Upload diagnostic security evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: qualification-security-3.14-${{ matrix.extra }}
+          path: ${{ runner.temp }}/qualification-security/
+          if-no-files-found: error
+          retention-days: 30
