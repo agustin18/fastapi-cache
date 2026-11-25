@@ -1,13 +1,13 @@
-# Public API reference · published 0.7.1
+# Public API reference · published 0.7.2
 
 This page documents public entry points present in **the published
-fastapi-cache-stable 0.7.1 wheel and sdist**. It does not advertise
+fastapi-cache-stable 0.7.2 wheel and sdist**. It does not advertise
 experimental internal APIs, future backend parity, or unreleased
 source-only behavior. The exact TTL boundary and decode-before-304 fixes
 from [#123](https://github.com/agustin18/fastapi-cache/pull/123) and
 [#124](https://github.com/agustin18/fastapi-cache/pull/124) are included
 in this tagged release. For exact signatures inspect the
-[source at annotated tag v0.7.1](https://github.com/agustin18/fastapi-cache/tree/v0.7.1/fastapi_cache)
+[source at annotated tag v0.7.2](https://github.com/agustin18/fastapi-cache/tree/v0.7.2/fastapi_cache)
 and [artifact provenance](releases.md).
 
 ## FastAPICache lifecycle
@@ -34,7 +34,7 @@ async def items():
     return {"ok": True}
 ```
 
-| Argument | Published 0.7.1 meaning |
+| Argument | Published 0.7.2 meaning |
 |---|---|
 | `expire: Optional[int]` | Seconds of TTL; None uses configured default, potentially unlimited |
 | `namespace: str` | Namespace under the configured **process-global prefix**, not implicit app/tenant isolation |
@@ -48,7 +48,7 @@ async def items():
 FastAPI route decorators must be **above** `@cache`. An HTTP `Vary`
 header by itself does not partition a cached object by identity.
 
-## InMemoryBackend — published 0.7.1
+## InMemoryBackend — published 0.7.2
 
 ```python
 from fastapi_cache import FastAPICache
@@ -59,7 +59,7 @@ FastAPICache.init(backend, prefix="demo")
 ```
 
 `InMemoryBackend(*, max_entries: Optional[int] = None)` is **shipped in
-0.7.1**, but not present in published 0.5.0. `None` retains the
+0.7.2**, but not present in published 0.5.0. `None` retains the
 unbounded, process-local default. A positive integer caps **entry count
 per backend instance**, never bytes, workers or total process RSS.
 `bool`, zero, negative and non-integer capacities fail validation.
@@ -68,7 +68,7 @@ is reclaimed if possible, else the least-recently-used key is evicted.
 There is no background sweeper; explicit namespace clearing may still
 scan all local keys under the async lock.
 
-**TTL note:** the published 0.7.1 InMemory implementation uses
+**TTL note:** the published 0.7.2 InMemory implementation uses
 integer wall-clock seconds and an inclusive `ttl_ts <= now` expiry test;
 zero and negative TTLs are expired consistently, and a backward wall-clock
 jump is not a monotonicity guarantee. See the
@@ -97,7 +97,7 @@ are not certified by the standalone service matrix.
   of conditional HTTP decoding requires its own security review.
 
 Malformed cached HIT bytes are decoded before a conditional
-`304` in published 0.7.1. Invalid JSON/UTF-8/typed data fails closed and does
+`304` in published 0.7.2. Invalid JSON/UTF-8/typed data fails closed and does
 not automatically invalidate or retry. The broader corruption/retry policy
 remains open under [#112](https://github.com/agustin18/fastapi-cache/issues/112).
 

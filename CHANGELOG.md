@@ -8,6 +8,16 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.7.2](https://github.com/agustin18/fastapi-cache/tree/v0.7.2) - 2026-11-25
+
+### Improved Documentation
+
+- Stage standard CPython 3.14 compatibility, extending the Python and Redis metadata ranges and exact-artifact release validation while preserving the legacy functional profiles. Publication remains separately gated. [#51](https://github.com/agustin18/fastapi-cache/issues/51)
+
+### Misc
+
+- Add an experimental CPython 3.14 qualification workflow with isolated diagnostic metadata, real Redis 7.4, installed consumer probes and runtime security evidence. This does not expand published Python support. [#51](https://github.com/agustin18/fastapi-cache/issues/51)
+
 ## [0.7.1](https://github.com/agustin18/fastapi-cache/tree/v0.7.1) - 2026-11-24
 
 ### Improved Documentation

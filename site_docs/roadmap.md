@@ -1,9 +1,18 @@
 # Roadmap: what is next?
 
-**0.7.1 is published.** [fastapi-cache-stable 0.7.1](reference/releases.md)
-was released 2026-11-24 as a metadata-only correction over 0.7.0. `stable` contains subsequent docs and infrastructure; changes
+**0.7.2 is published.** [fastapi-cache-stable 0.7.2](reference/releases.md)
+was released 2026-11-25 with standard CPython 3.14 compatibility and no runtime
+or API changes from 0.7.1. `stable` contains subsequent docs and infrastructure; changes
 in an unmerged PR are **not installed**. This page describes proposals, not
 a shipping date, certification or approval to publish.
+
+## 0.7.2 release status (2026-11-25)
+
+Python 3.14 is included in the published `>=3.8,<3.15` metadata range. The
+functional matrix is 3.8–3.14; the server-side security target is 3.11–3.14.
+No runtime, import or public API change belongs to this patch. Exact-artifact
+Phase B, registry hashes and provenance are recorded in the
+[release evidence](reference/releases.md).
 
 ## 0.7.1 release status (2026-11-24)
 
@@ -24,11 +33,11 @@ or threshold is inferred from that evidence. #100 remains open.
 ## Next priority: CPython 3.14 release staging
 
 [#51](https://github.com/agustin18/fastapi-cache/issues/51) is the first
-technical track after 0.7.1. Diagnostic core, standalone Redis 7.4, wheel/sdist
+technical track after 0.7.2. Diagnostic core, standalone Redis 7.4, wheel/sdist
 and installed security qualification passed in [#142](https://github.com/agustin18/fastapi-cache/pull/142).
 Compatibility-only 0.7.2 staging is in progress, conditional on exact-artifact
-release gates. Published 0.7.1 still requires `>=3.8,<3.14`; no published
-3.14 support is currently promised.
+release gates. Published 0.7.2 supports `>=3.8,<3.15`, including standard
+CPython 3.14; 3.8–3.10 remain functional legacy only.
 
 Memcached and DynamoDB remain experimental. Report optional-provider
 installation and test limitations rather than claiming parity. Security
@@ -44,7 +53,7 @@ validation and separate publication approval remain mandatory.
 
 | Target | Candidate features | Mandatory design or quality boundary |
 |---|---|---|
-| 0.7.2 (conditional) | #51 standard CPython 3.14 compatibility only | Core + real Redis, installed artifacts, existing contract intact; no unsupported extra or security claim |
+| 0.7.2 (published 2026-11-25) | #51 standard CPython 3.14 compatibility only | Core + real Redis, installed artifacts, existing contract intact; no unsupported extra or security claim |
 | 0.8 | #99 app-scoped configuration/lifecycle RFC with #111 backend and #112 error/serialization contracts | Backward-compatible opt-in, privacy, lifecycle, ownership and cancellation design before implementation |
 | 0.9 | #97 tags and #49 safe filtering | Tenant-safe keys, race/TTL-index tests and independently reviewed invalidation scope |
 | Later, if justified | #98 bounded stale | Separate expiry, failure and cancellation contract; no stale-safety promise |
@@ -64,7 +73,7 @@ maintenance tracks, not automatic additions to 0.7.2. Local single-flight
 A *smaller*, evidence-backed next release is preferable to shipping unsafe
 concurrency, observability or distributed behavior by a date.
 
-The authoritative published [0.7.1 provenance](reference/releases.md),
+The authoritative published [0.7.2 provenance](reference/releases.md),
 [compatibility](reference/compatibility.md) and
 [security/tenant limits](guides/privacy.md) are unchanged. Docs on `stable`
 must describe only shipped behavior; future proposals must not be described

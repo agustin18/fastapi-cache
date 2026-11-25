@@ -1,20 +1,20 @@
 # Support policy
 
-**Unreleased 0.7.2 candidate:** standard CPython 3.14 diagnostic qualification
-passed in [#142](https://github.com/agustin18/fastapi-cache/pull/142).
-The proposed functional range is 3.8–3.14 and server-side security target
-3.11–3.14, conditional on final installed-artifact security evidence and
-release approval. The published 0.7.1 support policy below is unchanged.
+**Published 0.7.2:** standard CPython 3.14 support with `>=3.8,<3.15` metadata.
+The functional range is 3.8–3.14 and the server-side security target is
+3.11–3.14, subject to the exact-artifact evidence in the
+[0.7.2 release status](docs/releases/RELEASE_STATUS_0.7.2.md).
 
 `fastapi-cache-stable` is a community-maintained, drop-in stable fork of
 fastapi-cache2.
 
 ## Supported lines
 
-- `0.7.x`: `0.7.1` published **2026-11-24**. Best-effort server-side CPython
-  3.11–3.13 security/critical correctness maintenance targets
-  **2027-11-24**, subject to capacity; 3.8–3.10 functional legacy only.
-  See [release evidence](docs/releases/RELEASE_STATUS_0.7.1.md).
+- `0.7.x`: `0.7.2` published **2026-11-25**; `0.7.1` published 2026-11-24.
+  Best-effort server-side CPython 3.11–3.14 security/critical correctness
+  maintenance targets **2027-11-25**, subject to capacity; 3.8–3.10 functional
+  legacy only. See [0.7.2 release evidence](docs/releases/RELEASE_STATUS_0.7.2.md).
+- `0.7.1`: metadata-only predecessor of 0.7.2; same runtime code.
 - `0.7.0`: metadata predecessor of 0.7.1; no runtime difference.
 
 - `0.6.x`: `0.6.0` published **2026-11-21**; previous release line.
@@ -34,21 +34,22 @@ fastapi-cache2.
   runtimes must assess redirects themselves.
 - Check [PyPI](https://pypi.org/project/fastapi-cache-stable/) and
   [CHANGELOG.md](CHANGELOG.md) for current versions. The published `0.4.x`
-  and published `0.5.0`/`0.6.0`/`0.7.1` install on Python `>=3.8,<3.14`. Python 3.8–3.10 have a tested legacy
+  and published `0.5.0`/`0.6.0`/`0.7.1` install on Python `>=3.8,<3.14`;
+  `0.7.2` installs on `>=3.8,<3.15`. Python 3.8–3.10 have a tested legacy
   functional-compatibility lane, but receive no security-support commitment
   for EOL runtimes or dependency versions. A critical advisory applicable to
   package-controlled behavior must be mitigated before release. If it applies
   only to a specific application-enabled feature or optional backend, the
   trigger and residual risk must be documented and explicitly accepted; EOL
   status alone is not a disposition.
-- In published `0.4.x`–`0.7.1`, the experimental DynamoDB extra requires Python
+- In published `0.4.x`–`0.7.2`, the experimental DynamoDB extra requires Python
   `>=3.10`; Python 3.8/3.9 legacy compatibility is limited to Redis/InMemory
   and the documented core APIs.
 - Redis client support is Python-conditional: 4.x through 6.1.x on Python
-  3.8, through 7.0.x on 3.9 and through 8.1.x on 3.10–3.13. Redis standalone
+  3.8, through 7.0.x on 3.9 and through 8.1.x on 3.10–3.14. Redis standalone
   is verified; TLS/Sentinel/Cluster/failover are not certified.
-- Python 3.14 remains outside the published `0.4.x`–`0.7.1` metadata ranges until the full
-  functional matrix passes.
+- Python 3.14 is included in the published `0.7.2` metadata range; it remains
+  outside the older `0.4.x`–`0.7.1` ranges.
 - `1.x` (planned): if and when `1.0.0` is released with a co-maintainer in
   place, security and critical correctness fixes for 24 months after that
   release. This is a conditional plan, not an active commitment.

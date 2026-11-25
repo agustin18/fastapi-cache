@@ -92,11 +92,11 @@ Tool versions:
 
 - Ruff is pinned to the `0.17.x` series in `pyproject.toml` and `poetry.lock`; CI uses
   `0.17.5`.
-- Candidate source metadata is `>=3.8,<3.15`; published 0.7.1 stays `>=3.8,<3.14`.
+- Candidate source metadata is `>=3.8,<3.15`; published 0.7.2 stays `>=3.8,<3.15`.
   Mypy/Pyright target Python 3.11.
 - Python 3.8–3.10 are legacy functional-compatibility targets with no security-support
   commitment. The proposed 0.7.2 security matrix is CPython 3.11–3.14;
-  the published 0.7.1 security matrix is 3.11–3.13 until publication changes.
+  the published 0.7.2 security matrix is 3.11–3.14.
 - `httpx2` is a test-only dependency for the modern Starlette TestClient profile; do not add it
   to runtime dependencies. The legacy 3.8/3.9 jobs use pinned `httpx` and FastAPI instead.
 - `stable` requires a pull request and the CI checks; force pushes and branch deletion are

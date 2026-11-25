@@ -37,7 +37,7 @@ def validate(site, root=ROOT):
             "fastapi-cache-stable[redis]==" + version,
             "redis-py versions allowed in " + version + " metadata",
         ),
-        "site_docs/guides/troubleshooting.md": version + " declares `>=3.8,<3.14`",
+        "site_docs/guides/troubleshooting.md": version + " declares `>=3.8,<3.15`",
         "site_docs/reference/features.md": "# What ships in " + version + "?",
         "docs/DOCS_SITE.md": "published package remains **fastapi-cache-stable " + version + "**",
         "docs/releases/README.md": "[" + version + " published release notes]",
