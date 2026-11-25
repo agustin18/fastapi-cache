@@ -285,8 +285,8 @@ jobs:
           auditor="$RUNNER_TEMP/auditor/bin/python"
           "$auditor" -m pip install --upgrade pip
           "$auditor" -m pip install pip-audit==2.10.1
-          "$auditor" -m pip-audit --version > "$EVIDENCE_DIR/pip-audit-version.txt"
-          "$auditor" -m pip-audit --path "$(cat "$EVIDENCE_DIR/site-packages-path.txt")" \
+          "$RUNNER_TEMP/auditor/bin/pip-audit" --version > "$EVIDENCE_DIR/pip-audit-version.txt"
+          "$RUNNER_TEMP/auditor/bin/pip-audit" --path "$(cat "$EVIDENCE_DIR/site-packages-path.txt")" \
             --aliases off --format json --output "$EVIDENCE_DIR/pip-audit.json"
           python scripts/validate_security_audit.py "$EVIDENCE_DIR/pip-audit.json" \
             --installed-packages "$EVIDENCE_DIR/installed-packages.json" \
