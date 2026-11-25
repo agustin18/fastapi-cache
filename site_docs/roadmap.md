@@ -21,13 +21,14 @@ or threshold is inferred from that evidence. #100 remains open.
 
 [Historical 0.7.0 execution plan and evidence boundaries](plan-0-7.md).
 
-## Next priority: CPython 3.14 qualification
+## Next priority: CPython 3.14 release staging
 
 [#51](https://github.com/agustin18/fastapi-cache/issues/51) is the first
-technical track after 0.7.1. A compatibility-only 0.7.2 is conditional on
-successful core and standalone Redis 7.4 qualification, installed wheel
-and sdist evidence, and preserved existing tests. Published 0.7.1 still
-requires `>=3.8,<3.14`; no 3.14 support is currently promised.
+technical track after 0.7.1. Diagnostic core, standalone Redis 7.4, wheel/sdist
+and installed security qualification passed in [#142](https://github.com/agustin18/fastapi-cache/pull/142).
+Compatibility-only 0.7.2 staging is in progress, conditional on exact-artifact
+release gates. Published 0.7.1 still requires `>=3.8,<3.14`; no published
+3.14 support is currently promised.
 
 Memcached and DynamoDB remain experimental. Report optional-provider
 installation and test limitations rather than claiming parity. Security

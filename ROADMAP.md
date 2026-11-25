@@ -55,11 +55,12 @@ third-party security certification or hosted-docs requirement applies.
 ## Post-0.7.1 open work
 
 **First priority: [#51 — CPython 3.14 qualification](https://github.com/agustin18/fastapi-cache/issues/51).**
-A compatibility-only 0.7.2 is a candidate, not a commitment. Published 0.7.1
-continues to require `>=3.8,<3.14`. Do not advertise 3.14 support or widen
-published metadata until the following independently reviewable gates pass.
+Diagnostic qualification [#142](https://github.com/agustin18/fastapi-cache/pull/142)
+passed and is merged; 0.7.2 staging is in progress. Published 0.7.1 continues
+to require `>=3.8,<3.14`. Do not advertise published 3.14 support before
+all final-artifact and publication gates pass.
 
-1. **Qualification PR:** record the unmodified-source baseline and exact base SHA;
+1. **Qualification PR (completed):** record the unmodified-source baseline and exact base SHA;
    reproduce failures before fixes. Use a temporary, isolated metadata relaxation
    only to enable the 3.14 experiment; never publish or commit it as support.
    Require core and real standalone Redis 7.4 tests, clean wheel and sdist builds
@@ -70,7 +71,7 @@ published metadata until the following independently reviewable gates pass.
    dependency installation and fake-client tests on 3.14; report failures or
    unrun lanes explicitly and document any unsupported extras. Do not claim
    real-service conformance based on fake clients.
-3. **Release-staging PR only after qualification:** reconcile the top-level
+3. **Release-staging PR (in progress):** reconcile the top-level
    Python requirement, interpreter-specific Redis markers, classifiers, support
    tables, lock consistency and actual wheel/sdist dependency metadata. Keep
    Python 3.8–3.10 functional-only. Include 3.14 in the security-supported matrix
