@@ -49,7 +49,7 @@ pytest -q tests/test_memcached_backend.py tests/test_dynamodb_backend.py
 Blocking for every pull request:
 
 - `ruff check .`
-- Functional `pytest` on Python 3.10–3.13
+- Functional `pytest` on Python 3.10–3.14 (candidate source matrix)
 - `legacy-compat` on Python 3.8/3.9 with FastAPI 0.111.1 and Pydantic 1.10.27/2.8.2, plus
   Python 3.10/3.11 with Pydantic 1.10.27
 - Poetry lock profiles on Python 3.8/3.9/3.10/3.12: legacy installs omit the DynamoDB extra;
@@ -58,7 +58,7 @@ Blocking for every pull request:
 - `redis-clear`: Redis 7 integration tests (CI service)
 - `optional-backends`: Memcached and DynamoDB unit tests with fake clients
 - `security-audit`: fresh runtime+extras profile with FastAPI standard runtime extras on
-  Python 3.11–3.13; development-only packages are excluded
+  Python 3.11–3.14 for candidate source; development-only packages are excluded
 - changed-line coverage with `diff-cover` for runtime changes
 - `python -m build` and `twine check`
 - clean-install smoke test for wheel and sdist
@@ -92,10 +92,11 @@ Tool versions:
 
 - Ruff is pinned to the `0.17.x` series in `pyproject.toml` and `poetry.lock`; CI uses
   `0.17.5`.
-- Stable package metadata is `>=3.8,<3.14`. Mypy/Pyright target Python 3.11.
+- Candidate source metadata is `>=3.8,<3.15`; published 0.7.1 stays `>=3.8,<3.14`.
+  Mypy/Pyright target Python 3.11.
 - Python 3.8–3.10 are legacy functional-compatibility targets with no security-support
-  commitment; Python 3.11–3.13 are the security-supported matrix. Python 3.14 is excluded
-  until its full functional matrix passes.
+  commitment. The proposed 0.7.2 security matrix is CPython 3.11–3.14;
+  the published 0.7.1 security matrix is 3.11–3.13 until publication changes.
 - `httpx2` is a test-only dependency for the modern Starlette TestClient profile; do not add it
   to runtime dependencies. The legacy 3.8/3.9 jobs use pinned `httpx` and FastAPI instead.
 - `stable` requires a pull request and the CI checks; force pushes and branch deletion are

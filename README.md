@@ -22,12 +22,19 @@
 > This patch rebuilds the PyPI long description from the corrected README.
 > Pre-releases must be independently evaluated before production deployment.
 >
-> Installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has
+> Published 0.7.1 installation: Python `>=3.8,<3.14`. CPython 3.11–3.13 (server-side) has
 > security validation; Python 3.8–3.10 is functional legacy compatibility only.
 > DynamoDB/Memcached remain experimental. Browser/Pyodide/Node are untested.
 > Independent project, not endorsed by the upstream maintainer.
 >
 > `stable` is the release branch; `main` tracks upstream.
+
+**Unreleased source candidate 0.7.2:** standard CPython 3.14 qualification
+passed in [#142](https://github.com/agustin18/fastapi-cache/pull/142).
+Source metadata proposes `>=3.8,<3.15`, including the Redis extra on 3.14;
+final installed security and exact-artifact release gates remain pending.
+This is not a support claim for the published 0.7.1 distribution.
+See the [candidate checklist](docs/releases/RELEASE_CANDIDATE_0.7.2.md).
 
 [![pypi](https://img.shields.io/pypi/v/fastapi-cache-stable.svg?style=flat)](https://pypi.org/p/fastapi-cache-stable)
 [![Python](https://img.shields.io/pypi/pyversions/fastapi-cache-stable.svg)](https://pypi.org/project/fastapi-cache-stable/)

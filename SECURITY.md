@@ -1,5 +1,11 @@
 # Security policy
 
+**Unreleased 0.7.2 candidate:** standard CPython 3.14 diagnostic qualification
+passed in [#142](https://github.com/agustin18/fastapi-cache/pull/142).
+The proposed functional range is 3.8–3.14 and server-side security target
+3.11–3.14, conditional on final installed-artifact security evidence and
+release approval. The published 0.7.1 support policy below is unchanged.
+
 ## Supported versions
 
 - `0.7.1` is the current published technical release (2026-11-24). The
