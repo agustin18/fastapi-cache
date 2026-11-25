@@ -45,6 +45,7 @@ def test_phase_b_uses_isolated_old_new_consumers_and_scoped_redis() -> None:
         "HTTPX2_VERSION=2.16.2",
         "image: redis:7.4",
         "fastapi-cache2==0.2.2",
+        '"$legacy_wheel[redis]" "redis==4.6.0" "${framework[@]}" "jinja2"',
         "redis==4.6.0",
         "MIGRATION_E2E_CONFIRM_ISOLATED_REDIS",
         "MIGRATION_E2E_CANDIDATE_VERSION: ${{ needs.build-exact-artifacts.outputs.version }}",

@@ -229,8 +229,10 @@ jobs:
           done
           framework=("fastapi==$FASTAPI_VERSION" "pydantic==$PYDANTIC_VERSION" "httpx==${HTTPX_VERSION:-0.27.0}")
           if [[ -n "${HTTPX2_VERSION:-}" ]]; then framework+=("httpx2==$HTTPX2_VERSION"); fi
+          # fastapi-cache2 0.2.2 imports starlette.templating without declaring jinja2;
+          # Starlette 1.x requires jinja2 eagerly.
           "$RUNNER_TEMP/legacy/bin/python" -m pip install \
-            "$legacy_wheel[redis]" "redis==4.6.0" "${framework[@]}"
+            "$legacy_wheel[redis]" "redis==4.6.0" "${framework[@]}" "jinja2"
           "$RUNNER_TEMP/candidate/bin/python" -m pip install \
             "$CANDIDATE_ARTIFACT[redis]" "redis==4.6.0" "${framework[@]}"
           for env in legacy candidate; do
