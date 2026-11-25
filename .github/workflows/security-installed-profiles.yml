@@ -38,6 +38,9 @@ jobs:
           - {python: "3.12", extra: "all", distribution: "sdist"}
           - {python: "3.13", extra: "none", distribution: "wheel"}
           - {python: "3.13", extra: "redis", distribution: "wheel"}
+          - {python: "3.14", extra: "none", distribution: "wheel"}
+          - {python: "3.14", extra: "redis", distribution: "wheel"}
+          - {python: "3.14", extra: "all", distribution: "sdist"}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:

@@ -10,6 +10,12 @@
 | Security-maintained server-side target | CPython 3.11–3.13 |
 | Legacy functional migration bridge | CPython 3.8–3.10 |
 | Python 3.14 | Unsupported; no metadata claim |
+
+**Unreleased 0.7.2 candidate:** standard CPython 3.14 diagnostic qualification
+passed ([#142](https://github.com/agustin18/fastapi-cache/pull/142)). Candidate
+metadata proposes `>=3.8,<3.15`, including the modern Redis extra on 3.14;
+exact-artifact release and security gates remain pending. Published 0.7.1
+is unchanged. No free-threaded 3.14t or 3.15 support claim.
 | FastAPI / Pydantic | Tested across pinned legacy and modern CI profiles |
 
 !!! note "Functional compatibility is not a security support promise"

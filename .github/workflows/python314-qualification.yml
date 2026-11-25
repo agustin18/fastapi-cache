@@ -1,4 +1,4 @@
-name: CPython 3.14 qualification (experimental)
+name: CPython 3.14 qualification (candidate)
 
 on:
   pull_request:
@@ -74,37 +74,15 @@ jobs:
           cp pyproject.toml "$EVIDENCE_DIR/original-pyproject.toml"
           python -m pip install --upgrade pip build twine
           python -m pip --version | tee "$EVIDENCE_DIR/pip-version.txt"
-      - name: Build original source and isolated diagnostic distributions
+      - name: Build unmodified candidate distributions
         run: |
           set -euo pipefail
           original="$RUNNER_TEMP/original-dist"
           diagnostic="$RUNNER_TEMP/diagnostic-dist"
           python -m build --outdir "$original" 2>&1 | tee "$EVIDENCE_DIR/original-build.log"
           python -m twine check "$original"/*
-          if [ "$PY_VERSION" = "3.14" ]; then
-            source="$RUNNER_TEMP/diagnostic-source"
-            mkdir -p "$source"
-            git archive HEAD | tar -x -C "$source"
-            python - "$source/pyproject.toml" <<'PY'
-          import sys
-          from pathlib import Path
-          path = Path(sys.argv[1])
-          original = path.read_text()
-          replacements = {
-              'python = ">=3.8,<3.14"': 'python = ">=3.8,<3.15"',
-              'python = ">=3.10,<3.14", optional = true': 'python = ">=3.10,<3.15", optional = true',
-          }
-          for before, after in replacements.items():
-              assert original.count(before) == 1, before
-              original = original.replace(before, after)
-          path.write_text(original)
-          PY
-            cp "$source/pyproject.toml" "$EVIDENCE_DIR/diagnostic-pyproject.toml"
-            python -m build "$source" --outdir "$diagnostic" 2>&1 | tee "$EVIDENCE_DIR/diagnostic-build.log"
-          else
-            mkdir -p "$diagnostic"
-            cp "$original"/* "$diagnostic/"
-          fi
+          mkdir -p "$diagnostic"
+          cp "$original"/* "$diagnostic/"
           python -m twine check "$diagnostic"/* | tee "$EVIDENCE_DIR/twine.log"
           (cd "$original" && sha256sum *.whl *.tar.gz) > "$EVIDENCE_DIR/original-sha256.txt"
           (cd "$diagnostic" && sha256sum *.whl *.tar.gz) > "$EVIDENCE_DIR/diagnostic-sha256.txt"
@@ -155,18 +133,11 @@ jobs:
             | tee "$EVIDENCE_DIR/inmemory-probe.log"
           "$consumer" -I "$GITHUB_WORKSPACE/tests/redis_vary_probe.py" \
             | tee "$EVIDENCE_DIR/redis-probe.log"
-      - name: Full unchanged source suite with original metadata
+      - name: Full source suite with candidate metadata
         if: matrix.profile == 'redis'
         run: |
           set -euo pipefail
           consumer="$RUNNER_TEMP/consumer/bin/python"
-          # Keep metadata regression tests unchanged. Only the diagnostic
-          # environment bypasses the original project's interpreter guard;
-          # all third-party dependencies were resolved normally above.
-          if [ "$PY_VERSION" = "3.14" ]; then
-            "$consumer" -m pip install --force-reinstall --no-deps --ignore-requires-python \
-              "$RUNNER_TEMP"/original-dist/*.whl
-          fi
           "$consumer" -m pip freeze > "$EVIDENCE_DIR/source-suite-freeze.txt"
           "$consumer" -m pytest -q -rs --junitxml="$EVIDENCE_DIR/suite.xml" 2>&1 \
             | tee "$EVIDENCE_DIR/suite.log"
@@ -210,29 +181,15 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.14"
-      - name: Build isolated diagnostic wheel
+      - name: Build unmodified candidate wheel
         run: |
           set -euo pipefail
-          mkdir -p "$EVIDENCE_DIR" "$RUNNER_TEMP/diagnostic-source"
+          mkdir -p "$EVIDENCE_DIR"
           git rev-parse HEAD > "$EVIDENCE_DIR/source-sha.txt"
           python -VV > "$EVIDENCE_DIR/python.txt"
-          git archive HEAD | tar -x -C "$RUNNER_TEMP/diagnostic-source"
-          python - "$RUNNER_TEMP/diagnostic-source/pyproject.toml" <<'PY'
-          import sys
-          from pathlib import Path
-          path = Path(sys.argv[1])
-          content = path.read_text()
-          for before, after in (
-              ('python = ">=3.8,<3.14"', 'python = ">=3.8,<3.15"'),
-              ('python = ">=3.10,<3.14", optional = true', 'python = ">=3.10,<3.15", optional = true'),
-          ):
-              assert content.count(before) == 1, before
-              content = content.replace(before, after)
-          path.write_text(content)
-          PY
-          cp "$RUNNER_TEMP/diagnostic-source/pyproject.toml" "$EVIDENCE_DIR/diagnostic-pyproject.toml"
+          cp pyproject.toml "$EVIDENCE_DIR/original-pyproject.toml"
           python -m pip install --upgrade pip build
-          python -m build --wheel "$RUNNER_TEMP/diagnostic-source" --outdir "$RUNNER_TEMP/diagnostic-dist"
+          python -m build --wheel --outdir "$RUNNER_TEMP/diagnostic-dist"
           (cd "$RUNNER_TEMP/diagnostic-dist" && sha256sum *.whl) > "$EVIDENCE_DIR/wheel.sha256"
           git diff --exit-code -- pyproject.toml poetry.lock
       - name: Resolve isolated runtime only

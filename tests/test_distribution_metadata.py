@@ -6,7 +6,7 @@ from packaging.version import Version
 
 
 def test_requires_python_matches_stable_support_policy() -> None:
-    assert metadata("fastapi-cache-stable")["Requires-Python"] == ">=3.8,<3.14"
+    assert metadata("fastapi-cache-stable")["Requires-Python"] == ">=3.8,<3.15"
 
 
 def test_python_classifiers_match_stable_support_policy() -> None:
@@ -24,6 +24,7 @@ def test_python_classifiers_match_stable_support_policy() -> None:
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
     }
 
 
@@ -79,7 +80,7 @@ def test_dynamodb_extra_is_excluded_from_legacy_python_profiles() -> None:
         assert not has_requirement("aiobotocore", "all", python_version)
         assert not has_requirement("aiohttp", "all", python_version)
 
-    for python_version in ("3.10", "3.11", "3.12", "3.13"):
+    for python_version in ("3.10", "3.11", "3.12", "3.13", "3.14"):
         assert has_requirement("aiobotocore", "dynamodb", python_version)
         assert has_requirement("aiohttp", "dynamodb", python_version)
         assert has_requirement("aiobotocore", "all", python_version)
@@ -126,6 +127,7 @@ def test_redis_extra_has_exactly_one_python_conditional_requirement() -> None:
         "3.11": (Version("8.1.0"), Version("8.2.0")),
         "3.12": (Version("8.1.0"), Version("8.2.0")),
         "3.13": (Version("8.1.0"), Version("8.2.0")),
+        "3.14": (Version("8.1.0"), Version("8.2.0")),
     }
 
     for python, (latest_allowed, first_excluded) in cases.items():
@@ -152,8 +154,9 @@ def test_redis_extra_has_exactly_one_python_conditional_requirement() -> None:
         ("3.9", ""),
         ("3.10", ""),
         ("3.13", ""),
-        ("3.14", "redis"),
-        ("3.14", "all"),
+        ("3.14", ""),
+        ("3.15", "redis"),
+        ("3.15", "all"),
     ):
         environment = {
             "python_version": python,
@@ -173,7 +176,7 @@ def test_redis_is_never_mandatory_without_an_extra() -> None:
         for value in metadata("fastapi-cache-stable").get_all("Requires-Dist") or []
         if canonicalize_name(Requirement(value).name) == "redis"
     ]
-    for python in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13"):
+    for python in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"):
         assert not any(
             requirement.marker is None
             or requirement.marker.evaluate(

@@ -47,15 +47,16 @@ def validate_jobs(payload: Dict[str, Any], run_id: str) -> None:
     expected = {BUILD_JOB}
     expected.update(
         f"Py {version} / {kind} / real Redis 7.4 / rollback"
-        for version in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13")
+        for version in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14")
         for kind in ("wheel", "sdist")
     )
     expected.update(
         f"Exact artifact security / Python {version} / {extra} / wheel"
-        for version in ("3.11", "3.12", "3.13")
+        for version in ("3.11", "3.12", "3.13", "3.14")
         for extra in ("none", "redis")
     )
     expected.add("Exact artifact security / Python 3.12 / all / sdist")
+    expected.add("Exact artifact security / Python 3.14 / all / sdist")
     jobs = payload["jobs"]
     require(
         payload["total_count"] == len(expected) == len(jobs)

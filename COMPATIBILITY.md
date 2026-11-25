@@ -23,6 +23,19 @@ annotated tag, wheel/sdist SHA-256 and successful Phase B/TestPyPI/PyPI runs.
 The matrix below describes the published 0.7.1 contract; no new backend or
 Python version is qualified by merged-but-unreleased source changes.
 
+## Unreleased 0.7.2 candidate
+
+The diagnostic [Python 3.14 qualification](docs/audit/PYTHON_3_14_QUALIFICATION.md)
+passed on standard CPython 3.14.10 with real Redis 7.4 and installed security
+profiles. Source metadata for 0.7.2 declares `>=3.8,<3.15` and extends the
+existing Redis client constraint `>=4.2.0rc1,<8.2` to Python 3.14. The
+candidate functional matrix is 3.8–3.14; the proposed security target is
+server-side CPython 3.11–3.14, subject to exact-artifact validation and release
+approval. Python 3.8–3.10 remain functional legacy only. Memcached/DynamoDB
+remain experimental; fake-client tests do not establish service conformance.
+Free-threaded 3.14t and 3.15 are not qualified. Published 0.7.1 remains
+unchanged; the tables below describe that release.
+
 ## 0.6.0 compatibility (historical)
 
 The 0.6.0 package introduced optional bounded InMemory and targeted private
@@ -246,7 +259,7 @@ its documented legacy decoded behavior, but receives no new upstream security fi
 | 3.8–3.9 | Verified legacy matrix, core Redis/InMemory | **No** | Legacy profiles can resolve vulnerable AnyIO 4.5.2 and Starlette 0.44.0 |
 | 3.10 | Verified legacy matrix | **No** | EOL interpreter; security fixes depend on the consuming app and compatible dependencies |
 | **3.11–3.13** | **Verified** | **Best-effort, recommended** | Verified modern runtime wheel profiles; not a claim about all consumer packages |
-| 3.14 | Not verified | No | Not in 0.7.1 metadata range |
+| 3.14 | Not supported by published 0.7.1 | No for 0.7.1 | Diagnostic qualification passed; separate 0.7.2 release gates pending |
 
 A legacy Python installation can work correctly and still retain dependency
 vulnerabilities. Neither an installation on EOL Python nor a switch from
@@ -267,7 +280,7 @@ compatible dependencies for production**, not EOL interpreters.
 
 > Stable `0.7.1` metadata is `python = ">=3.8,<3.14"`. Functional compatibility and security
 > support are separate: Python 3.8–3.10 are legacy-tested only; security support is Python
-> server-side CPython 3.11–3.13. Python 3.14 remains unsupported pending a full matrix.
+> server-side CPython 3.11–3.13. Python 3.14 remains unsupported by 0.7.1.
 
 Status definitions:
 
@@ -281,7 +294,7 @@ Status definitions:
 | CPython 3.11–3.13 | Security-supported | Full functional and security-audit matrices |
 | Python 3.10 | Legacy functional compatibility | Main functional CI plus Pydantic v1 compatibility; EOL, no security-support commitment |
 | Python 3.8–3.9 | Legacy functional compatibility | Pinned FastAPI/Pydantic matrix and Python 3.8 wheel smoke; EOL, no security-support commitment |
-| Python 3.14 | Unsupported for `0.7.1` | Requires a full CI matrix before support is announced |
+| Python 3.14 | Unsupported for `0.7.1` | Separate candidate 0.7.2 qualification and publication gates |
 | FastAPI | Verified with 0.111.1 and current 0.x | Older 0.100.x is unverified; no upper pin yet (`fastapi = "*"`) |
 | Pydantic 2.x | Verified | Typed restoration is opt-in via `TypedJsonCoder`; default `JsonCoder` keeps legacy behavior |
 | Pydantic v1 | Verified for migration | Tested with 1.10.27; EOL, no new security fixes; typed restoration is not applied |
@@ -438,8 +451,8 @@ key isolation with deletion.
 - InMemory tests for `expire=None`, instance isolation, clear isolation, and decorator
   default-expire behavior.
 - Regression tests for every behavior change.
-- Functional CI tests Python 3.10–3.13 with resolver-selected FastAPI and Pydantic versions.
-- A separate security-audit profile scans Python 3.11–3.13 with the project extras and
+- Candidate functional CI tests Python 3.10–3.14 with resolver-selected FastAPI and Pydantic versions.
+- Candidate security-audit profiles scan Python 3.11–3.14 with the project extras and
   FastAPI's standard runtime extras; development-only tools are excluded.
 - A Pydantic v1 migration-compatibility job remains on Python 3.11 with FastAPI 0.111.1 and
   Pydantic 1.10.27; this does not expand the security-support policy to Pydantic v1.

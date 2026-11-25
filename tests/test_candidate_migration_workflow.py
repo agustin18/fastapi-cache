@@ -35,12 +35,17 @@ def test_phase_b_builds_exact_sha_once_and_checks_candidate_files() -> None:
 
 def test_phase_b_uses_isolated_old_new_consumers_and_scoped_redis() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
-    for py in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13"):
+    for py in ("3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"):
         assert '"' + py + '"' in workflow
     for item in (
         'format: ["wheel", "sdist"]',
+        'if [[ "$PY_VERSION" == 3.14 ]]; then',
+        "FASTAPI_VERSION=0.165.0",
+        "PYDANTIC_VERSION=2.14.4",
+        "HTTPX2_VERSION=2.16.2",
         "image: redis:7.4",
         "fastapi-cache2==0.2.2",
+        '"$legacy_wheel[redis]" "redis==4.6.0" "${framework[@]}" "jinja2"',
         "redis==4.6.0",
         "MIGRATION_E2E_CONFIRM_ISOLATED_REDIS",
         "MIGRATION_E2E_CANDIDATE_VERSION: ${{ needs.build-exact-artifacts.outputs.version }}",
