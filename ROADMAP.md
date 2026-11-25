@@ -36,7 +36,7 @@ evidence are in [release evidence](docs/releases/RELEASE_STATUS_0.7.1.md).
 #100 remains a descriptive measurement program with **no** performance,
 p95/p99, Redis retry-latency or HA certification. #111, #112 and #53 remain
 open for broader backend, corruption/recovery and hidden-context contracts.
-New #99/#103 APIs remain deferred beyond 0.7.
+New #99/#103 APIs were deferred beyond 0.7; #103 remains a separate design discussion after 0.8.
 
 ## 0.6.0 — historical published release
 
@@ -113,19 +113,28 @@ The following other tracks remain candidates, not delivery promises:
   independent hardware, network HTTP, failure injection and agreed thresholds
   remain open.
 - **Architecture RFCs:** [#99](https://github.com/agustin18/fastapi-cache/issues/99)
-  and [#103](https://github.com/agustin18/fastapi-cache/issues/103) must be
-  accepted before implementing [#96](https://github.com/agustin18/fastapi-cache/issues/96)
+  with #111/#112 is the 0.8 design track. Review the relevant architecture
+  and error-policy contracts before implementing [#96](https://github.com/agustin18/fastapi-cache/issues/96)
   local single-flight or [#50](https://github.com/agustin18/fastapi-cache/issues/50)
-  events.
+  events. [#103](https://github.com/agustin18/fastapi-cache/issues/103)
+  remains a separate design discussion after 0.8, not an 0.8 requirement.
 
 ## Staged capability releases — proposals, not dates
 
 | Release | Focus | Non-negotiable boundary |
 |---|---|---|
 | **0.7.2 (conditional)** | #51 standard CPython 3.14 compatibility only | Qualification and exact-artifact gates above; unchanged existing APIs, key/ETag/serialization behavior and legacy support |
-| **0.8.0** | #99 app-scoped lifecycle/config RFC with #111 backend and #112 error/serialization contracts; #103 only if independently justified | Design and privacy review first; backward-compatible opt-in, explicit ownership and cancellation; no promised automatic tenant isolation |
-| **0.9.0+** | #97 tags, #49 safe parameter filtering, #98 bounded stale, #102 advanced TLS/Sentinel/Cluster/HA qualification, distributed coordination research | Separate reviewed scopes; TTL index/race tests, tenant-safe keys, service-backed evidence; no blanket HA or stale safety claims |
+| **0.8.0** | #99 app-scoped lifecycle/config RFC with #111 backend and #112 error/serialization contracts | Design and privacy review first; backward-compatible opt-in, explicit ownership and cancellation; no promised automatic tenant isolation |
+| **0.9.0** | #97 tags and #49 safe parameter filtering | Explicit opt-in, tenant-safe keys, TTL index/race tests and independently reviewed invalidation scope |
+| **Later, if justified** | #98 bounded stale | Separate threat model, expiry, failure and cancellation contract; no stale-safety promise |
 | **1.0.0** | Public API and maintenance-contract maturity | Support duration decision separate; do not promise 24 months without sustainable maintenance |
+
+[#103](https://github.com/agustin18/fastapi-cache/issues/103) remains a separate
+design discussion after 0.8. Advanced Redis HA/TLS/Sentinel/Cluster qualification
+under [#102](https://github.com/agustin18/fastapi-cache/issues/102) is **not a core
+release candidate**. Document unsupported configurations and consider a plugin
+or separate integration only if justified and independently qualified. Existing
+standalone Redis support is unchanged; no Cluster namespace-clear or HA claim.
 
 #45 experimental-provider corrections and #55 FIPS portability remain
 separate evidence-driven maintenance tracks, not automatic additions to 0.7.2.

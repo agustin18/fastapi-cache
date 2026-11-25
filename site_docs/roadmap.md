@@ -44,9 +44,17 @@ validation and separate publication approval remain mandatory.
 | Target | Candidate features | Mandatory design or quality boundary |
 |---|---|---|
 | 0.7.2 (conditional) | #51 standard CPython 3.14 compatibility only | Core + real Redis, installed artifacts, existing contract intact; no unsupported extra or security claim |
-| 0.8 | #99 app-scoped configuration/lifecycle RFC with #111 backend and #112 error/serialization contracts; #103 only if justified | Backward-compatible opt-in, privacy, lifecycle, ownership and cancellation design before implementation |
-| 0.9+ | #97 tags, #49 safe filtering, bounded stale (#98), advanced Redis HA/TLS/Sentinel/Cluster research (#102) | Tenant-safe keys, race/TTL-index tests, separate service E2E; no implied Cluster namespace-clear support |
+| 0.8 | #99 app-scoped configuration/lifecycle RFC with #111 backend and #112 error/serialization contracts | Backward-compatible opt-in, privacy, lifecycle, ownership and cancellation design before implementation |
+| 0.9 | #97 tags and #49 safe filtering | Tenant-safe keys, race/TTL-index tests and independently reviewed invalidation scope |
+| Later, if justified | #98 bounded stale | Separate expiry, failure and cancellation contract; no stale-safety promise |
 | 1.0 | Public API and support-policy maturity | Explicit ongoing maintenance commitment and independent review |
+
+[#103](https://github.com/agustin18/fastapi-cache/issues/103) remains a separate
+design discussion after 0.8. Advanced Redis HA/TLS/Sentinel/Cluster qualification
+([#102](https://github.com/agustin18/fastapi-cache/issues/102)) is not a core
+release candidate. Document unsupported configurations; consider a plugin or
+separate integration only if justified and independently qualified. Existing
+standalone Redis support is unchanged; no Cluster namespace-clear or HA claim.
 
 FIPS (#55) and experimental-provider corrections (#45) remain separate
 maintenance tracks, not automatic additions to 0.7.2. Local single-flight
