@@ -48,8 +48,11 @@ jobs:
       PROFILE: ${{ matrix.profile }}
       REDIS_URL: redis://localhost:6379/0
       REQUIRE_REDIS: "1"
-      EVIDENCE_DIR: ${{ runner.temp }}/qualification-evidence
     steps:
+      - name: Initialize evidence directory
+        run: |
+          mkdir -p "$RUNNER_TEMP/qualification-evidence"
+          echo "EVIDENCE_DIR=$RUNNER_TEMP/qualification-evidence" >> "$GITHUB_ENV"
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -196,8 +199,11 @@ jobs:
         extra: [none, redis, all]
     env:
       PROFILE_EXTRA: ${{ matrix.extra }}
-      EVIDENCE_DIR: ${{ runner.temp }}/qualification-security
     steps:
+      - name: Initialize evidence directory
+        run: |
+          mkdir -p "$RUNNER_TEMP/qualification-security"
+          echo "EVIDENCE_DIR=$RUNNER_TEMP/qualification-security" >> "$GITHUB_ENV"
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
