@@ -494,9 +494,8 @@ It accepted the directions below, requested D2 precision before C1,
 and deferred owned mode. The revision above resolves that requested
 detail as a concrete design proposal. This records the supplied audit
 verdict, **not** a maintainer signature or approval of the revised SHA.
-The maintainer requested the RFC corrections; explicit ratification
-of these new details and independent review of the revised HEAD remain
-required. No C1 or implementation approval is inferred.
+The revised design was independently reviewed and merged as recorded below.
+The design acceptance authorizes C1 preparation, not approval of its code.
 
 | ID | Auditor disposition on prior HEAD | Revised decision proposed for maintainer ratification / later gate |
 | --- | --- | --- |

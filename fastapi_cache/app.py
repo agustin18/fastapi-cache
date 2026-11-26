@@ -89,6 +89,8 @@ def _validate_config(config: CacheConfig) -> None:
     if not isinstance(config.scope_id, str) or not _SCOPE_ID.fullmatch(config.scope_id):
         raise CacheScopeError("Invalid cache scope identifier")
     _hash_text(config.prefix)
+    if not isinstance(config.enable, bool) or not isinstance(config.cache_authenticated, bool):
+        raise CacheScopeError("Invalid cache configuration")
     from fastapi_cache.backends.inmemory import InMemoryBackend
 
     if type(config.backend) is InMemoryBackend:
@@ -218,6 +220,10 @@ def _resolve_handle(request: Optional[Request], explicit: Optional[CacheHandle])
     if not isinstance(app, Starlette):
         raise CacheScopeError("Cache app binding is unavailable")
     bound = getattr(app.state, _SLOT, _ABSENT)
-    if not isinstance(bound, CacheHandle) or (explicit is not None and explicit is not bound):
+    if (
+        not isinstance(bound, CacheHandle)
+        or bound._app is not app
+        or (explicit is not None and explicit is not bound)
+    ):
         raise CacheScopeError("Cache app binding is unavailable")
     return bound

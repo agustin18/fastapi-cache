@@ -1,0 +1,59 @@
+name: C1 installed app scope (Redis 7.4)
+
+on:
+  pull_request:
+    branches: [stable]
+    paths:
+      - "fastapi_cache/**"
+      - "tests/test_app_scope.py"
+      - ".github/workflows/app-scope.yml"
+      - "pyproject.toml"
+      - "poetry.lock"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  app-scope:
+    name: Installed wheel app scope Python ${{ matrix.python }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+    services:
+      redis:
+        image: redis:7.4
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "${{ matrix.python }}"
+      - name: Build and install candidate wheel outside checkout
+        run: |
+          set -euo pipefail
+          python -m pip install build==1.2.2
+          python -m build --wheel --outdir /tmp/c1-wheel
+          python -m venv /tmp/c1-installed
+          wheel=$(find /tmp/c1-wheel -name '*.whl' -print -quit)
+          sha256sum "$wheel"
+          /tmp/c1-installed/bin/python -m pip install "$wheel[redis]" pytest httpx
+          /tmp/c1-installed/bin/python -m pip check
+          cp tests/test_app_scope.py /tmp/test_app_scope.py
+      - name: Exercise installed app scope with real Redis 7.4
+        env:
+          REDIS_URL: redis://localhost:6379/0
+          REQUIRE_REDIS: "1"
+        run: |
+          cd /tmp
+          /tmp/c1-installed/bin/python -c "import pathlib, fastapi_cache; assert 'site-packages' in str(pathlib.Path(fastapi_cache.__file__).resolve())"
+          /tmp/c1-installed/bin/python -m pytest -q -rs /tmp/test_app_scope.py
