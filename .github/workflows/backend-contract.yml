@@ -1,0 +1,111 @@
+name: C2 installed backend contracts (Redis 7.4)
+
+on:
+  pull_request:
+    branches: [stable]
+    paths:
+      - "fastapi_cache/**"
+      - "tests/test_backend_contract*.py"
+      - "tests/test_inmemory_ttl_boundary.py"
+      - "tests/test_backend_fault_characterization.py"
+      - "tests/test_app_scope.py"
+      - ".github/workflows/backend-contract.yml"
+      - "pyproject.toml"
+      - "poetry.lock"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c2-contract-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  supported:
+    name: Installed backend contracts Python ${{ matrix.python }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+    services:
+      redis:
+        image: redis:7.4
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "${{ matrix.python }}"
+      - name: Build wheel and sdist from exact candidate
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          python -m pip install build==1.2.2
+          python -m build --outdir /tmp/c2-dist
+          sha256sum /tmp/c2-dist/*
+          mkdir /tmp/c2-tests
+          cp tests/test_backend_contract.py tests/test_backend_contract_d4.py \
+            tests/test_inmemory_ttl_boundary.py tests/test_backend_fault_characterization.py \
+            tests/test_app_scope.py /tmp/c2-tests/
+      - name: Install wheel and run supported contract
+        env:
+          REDIS_URL: redis://localhost:6379/0
+          REQUIRE_REDIS: "1"
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/c2-wheel
+          artifact=$(find /tmp/c2-dist -name '*.whl' -print -quit)
+          /tmp/c2-wheel/bin/python -m pip install "$artifact[redis]" pytest httpx
+          /tmp/c2-wheel/bin/python -m pip check
+          cd /tmp/c2-tests
+          /tmp/c2-wheel/bin/python -c "import pathlib, fastapi_cache; assert 'site-packages' in str(pathlib.Path(fastapi_cache.__file__).resolve())"
+          /tmp/c2-wheel/bin/python -m pytest -q -rs -o 'markers=redis: real Redis integration'
+      - name: Install sdist and run supported contract
+        env:
+          REDIS_URL: redis://localhost:6379/0
+          REQUIRE_REDIS: "1"
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/c2-sdist
+          artifact=$(find /tmp/c2-dist -name '*.tar.gz' -print -quit)
+          /tmp/c2-sdist/bin/python -m pip install "$artifact[redis]" pytest httpx
+          /tmp/c2-sdist/bin/python -m pip check
+          cd /tmp/c2-tests
+          /tmp/c2-sdist/bin/python -c "import pathlib, fastapi_cache; assert 'site-packages' in str(pathlib.Path(fastapi_cache.__file__).resolve())"
+          /tmp/c2-sdist/bin/python -m pytest -q -rs -o 'markers=redis: real Redis integration'
+  experimental:
+    name: Installed experimental adapter characterization (not service parity)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Build and install wheel with experimental extras
+        run: |
+          set -euo pipefail
+          python -m pip install build==1.2.2
+          python -m build --wheel --outdir /tmp/c2-experimental-dist
+          sha256sum /tmp/c2-experimental-dist/*
+          python -m venv /tmp/c2-experimental
+          wheel=$(find /tmp/c2-experimental-dist -name '*.whl' -print -quit)
+          /tmp/c2-experimental/bin/python -m pip install "$wheel[memcache,dynamodb]" pytest
+          /tmp/c2-experimental/bin/python -m pip check
+          mkdir /tmp/c2-experimental-tests
+          cp tests/test_backend_contract_experimental.py tests/test_memcached_backend.py tests/test_dynamodb_backend.py /tmp/c2-experimental-tests/
+      - name: Characterize installed adapters without external services
+        run: |
+          set -euo pipefail
+          cd /tmp/c2-experimental-tests
+          /tmp/c2-experimental/bin/python -c "import pathlib, fastapi_cache, aiomcache, aiobotocore; assert 'site-packages' in str(pathlib.Path(fastapi_cache.__file__).resolve())"
+          /tmp/c2-experimental/bin/python -m pytest -q -rs
