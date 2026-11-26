@@ -5,6 +5,7 @@ import hashlib
 import logging
 import os
 import sys
+import threading
 import uuid
 from dataclasses import FrozenInstanceError
 from typing import Any, Dict, Generator
@@ -518,7 +519,8 @@ def test_real_pipeline_golden_and_distinct_configuration() -> None:
                     assert hit.headers["Cache-Control"] == "private, no-store"
                     key = _physical_key(private_config, "orders", principal)
                     data = await store.get(key)
-                    assert data is not None and PickleCoder.decode(data) == "private"
+                    assert data is not None
+                    assert PickleCoder.decode(data) == "private"
         finally:
             await ha.aclose()
             await hb.aclose()
@@ -568,5 +570,44 @@ def test_cancellation_releases_every_operation_lease(
                 await task
             await asyncio.wait_for(closer, 5)
             assert not hasattr(app.state, _SLOT)
+
+    asyncio.run(verify())
+
+
+def test_sync_endpoint_cancellation_does_not_store_after_lease() -> None:
+    async def verify() -> None:
+        backend = InMemoryBackend()
+        app = FastAPI()
+        handle = CacheHandle(_config(backend, "sync"))
+        await handle.start(app)
+        loop = asyncio.get_running_loop()
+        entered, finished = asyncio.Event(), asyncio.Event()
+        release = threading.Event()
+
+        @app.get("/sync")
+        @cache(scope="app")
+        def sync_endpoint() -> str:
+            loop.call_soon_threadsafe(entered.set)
+            try:
+                if not release.wait(5):
+                    raise RuntimeError("Synthetic test barrier timed out")
+                return "completed"
+            finally:
+                loop.call_soon_threadsafe(finished.set)
+
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
+                                     base_url="http://app.test") as client:
+            task = asyncio.create_task(client.get("/sync"))
+            try:
+                await asyncio.wait_for(entered.wait(), 5)
+                task.cancel()
+                await asyncio.sleep(0)
+            finally:
+                release.set()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+            await asyncio.wait_for(finished.wait(), 5)
+            await handle.aclose()
+            assert not backend._store
 
     asyncio.run(verify())

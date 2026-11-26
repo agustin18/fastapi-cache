@@ -29,6 +29,7 @@ caller cancellation does not close the backend or cancel admitted operations.
 Wait for successful drain before releasing a borrowed client. No owned mode,
 plain-function scoped caching, new error policy or advanced Redis support.
 
-C1 evidence: source CI and installed wheel matrix on standard CPython
+C1 evidence plan: source CI, exact published 0.7.2 legacy singleton reproduction
+on 3.12, and installed wheel matrix on standard CPython
 3.8–3.14 with loopback Redis 7.4. The final release, sdist migration,
 performance and broader contracts remain separate gates.

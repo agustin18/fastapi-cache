@@ -6,6 +6,7 @@ on:
     paths:
       - "fastapi_cache/**"
       - "tests/test_app_scope.py"
+      - "tests/test_app_scope_legacy_baseline.py"
       - ".github/workflows/app-scope.yml"
       - "pyproject.toml"
       - "poetry.lock"
@@ -57,3 +58,17 @@ jobs:
           cd /tmp
           /tmp/c1-installed/bin/python -c "import pathlib, fastapi_cache; assert 'site-packages' in str(pathlib.Path(fastapi_cache.__file__).resolve())"
           /tmp/c1-installed/bin/python -m pytest -q -rs /tmp/test_app_scope.py
+      - name: Reproduce singleton limitation on exact published 0.7.2 wheel
+        if: matrix.python == '3.12'
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/c1-baseline
+          /tmp/c1-baseline/bin/python -m pip download --no-deps --only-binary=:all: --dest /tmp/c1-baseline-dist fastapi-cache-stable==0.7.2
+          wheel=$(find /tmp/c1-baseline-dist -name '*.whl' -print -quit)
+          echo "31257d8de8e5b36b13f50d233c72bf3a53d99b8eb3376264112be9072abf5fa0  $wheel" | sha256sum -c -
+          /tmp/c1-baseline/bin/python -m pip install "$wheel" pytest httpx
+          /tmp/c1-baseline/bin/python -m pip check
+          cp tests/test_app_scope_legacy_baseline.py /tmp/test_app_scope_legacy_baseline.py
+          cd /tmp
+          /tmp/c1-baseline/bin/python -c "import pathlib, fastapi_cache; assert 'site-packages' in str(pathlib.Path(fastapi_cache.__file__).resolve())"
+          /tmp/c1-baseline/bin/python -m pytest -q /tmp/test_app_scope_legacy_baseline.py

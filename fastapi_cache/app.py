@@ -30,7 +30,7 @@ def _text_bytes(value: str) -> bytes:
     if not isinstance(value, str):
         raise CacheScopeError("Invalid cache scope text")
     try:
-        return value.encode("utf-8")
+        return str.encode(value, "utf-8")
     except UnicodeEncodeError:
         raise CacheScopeError("Invalid cache scope text") from None
 
@@ -90,7 +90,7 @@ class CacheConfig:
 def _validate_config(config: CacheConfig) -> None:
     if not isinstance(config, CacheConfig):
         raise CacheScopeError("Invalid cache configuration")
-    if not isinstance(config.scope_id, str) or not _SCOPE_ID.fullmatch(config.scope_id):
+    if type(config.scope_id) is not str or not _SCOPE_ID.fullmatch(config.scope_id):
         raise CacheScopeError("Invalid cache scope identifier")
     _text_bytes(config.prefix)
     if not isinstance(config.enable, bool) or not isinstance(config.cache_authenticated, bool):
@@ -115,7 +115,7 @@ class CacheHandle:
         self._state = "NEW"
         self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._app: Optional[Starlette] = None
-        self._drained: Optional[asyncio.Event] = None
+        self._drained: Optional["asyncio.Future[None]"] = None
         self._leases = 0
         self._binding_lost = False
 
@@ -126,7 +126,7 @@ class CacheHandle:
         _validate_config(self._config)
         if not isinstance(app, Starlette) or getattr(app.state, _SLOT, _ABSENT) is not _ABSENT:
             raise CacheScopeError("Cache app binding is unavailable")
-        drained = asyncio.Event()
+        drained: "asyncio.Future[None]" = loop.create_future()
         setattr(app.state, _SLOT, self)
         self._loop = loop
         self._app = app
@@ -165,7 +165,7 @@ class CacheHandle:
             self._binding_lost = True
         self._app = None
         self._state = "CLOSED"
-        drained.set()
+        drained.set_result(None)
 
     async def aclose(self, *, timeout: float = 30.0) -> None:
         if (
@@ -190,7 +190,9 @@ class CacheHandle:
             # A timeout or cancellation affects only this waiter. The last
             # admitted operation finalizes the handle; no task is spawned
             # to close resources and no borrowed client is ever closed.
-            await asyncio.wait_for(drained.wait(), timeout=timeout)
+            done, _ = await asyncio.wait({drained}, timeout=timeout)
+            if not done:
+                raise asyncio.TimeoutError("Cache drain timed out")
         if self._binding_lost:
             raise CacheScopeError("Cache app binding is unavailable")
 
@@ -200,7 +202,7 @@ class CacheHandle:
         with self._lease() as config:
             prefix = _scope_prefix(config.scope_id)
             if key is not None:
-                if namespace is not None or not isinstance(key, str):
+                if namespace is not None or type(key) is not str:
                     raise CacheScopeError("Invalid scoped cache clear")
                 fields = key.split(":")
                 if (
