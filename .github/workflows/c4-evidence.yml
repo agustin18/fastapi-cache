@@ -122,10 +122,11 @@ jobs:
           "$b" -m pip check
           "$b" -m pip freeze --exclude fastapi-cache-stable > /tmp/c4-perf/evidence/candidate-dependencies.txt
           diff -u /tmp/c4-perf/evidence/dependencies.txt /tmp/c4-perf/evidence/candidate-dependencies.txt
-          cp benchmarks/c4_workload.py benchmarks/c4_aggregate.py /tmp/c4-perf/
+          cp benchmarks/c4_workload.py benchmarks/c4_aggregate.py benchmarks/c4_versions.py /tmp/c4-perf/
       - name: Run fresh processes in preregistered rotating order
         run: |
           set -euo pipefail
+          candidate_version=$(python scripts/release_contract.py version)
           cd /tmp/c4-perf
           modes=(published candidate-legacy scoped-off scoped-on)
           for round in 0 1 2 3; do
@@ -133,7 +134,9 @@ jobs:
               mode=${modes[$(((round + offset) % 4))]}
               py=/tmp/c4-perf/b/bin/python
               if [[ "$mode" == published ]]; then py=/tmp/c4-perf/a/bin/python; fi
-              "$py" -I /tmp/c4-perf/c4_workload.py --mode "$mode" --output "/tmp/c4-perf/evidence/round-$((round + 1))/$mode"
+              "$py" -I /tmp/c4-perf/c4_workload.py --mode "$mode" \
+                --candidate-version "$candidate_version" \
+                --output "/tmp/c4-perf/evidence/round-$((round + 1))/$mode"
             done
           done
           python /tmp/c4-perf/c4_aggregate.py /tmp/c4-perf/evidence

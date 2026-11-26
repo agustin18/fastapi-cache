@@ -2,19 +2,41 @@
 from pathlib import Path
 
 import pytest
+from packaging.version import Version
 from scripts.check_docs_version import published_version, validate
 from scripts.release_contract import package_version
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def source_may_advance(source: str, published: str) -> bool:
+    """Source metadata may move ahead while public docs keep the published pin."""
+    return Version(source) >= Version(published)
+
+
 def test_published_docs_identity_is_separate_from_development_source() -> None:
     published = published_version()
     source = package_version(allow_development=True)
     assert published.count(".") == 2
-    assert source == published or source.startswith(published.rsplit(".", 1)[0] + ".")
+    assert source_may_advance(source, published)
     assert published in (ROOT / "README.md").read_text(encoding="utf-8")
     assert published in (ROOT / f"docs/releases/RELEASE_STATUS_{published}.md").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    ("source", "published", "allowed"),
+    [
+        ("0.8.0", "0.7.2", True),
+        ("0.8.0.dev0", "0.7.2", True),
+        ("0.7.2", "0.7.2", True),
+        ("0.7.1", "0.7.2", False),
+        ("0.6.9", "0.7.2", False),
+    ],
+)
+def test_source_version_policy_allows_forward_progress_only(
+    source: str, published: str, allowed: bool
+) -> None:
+    assert source_may_advance(source, published) is allowed
 
 
 def test_missing_current_version_fails_closed(tmp_path: Path) -> None:
