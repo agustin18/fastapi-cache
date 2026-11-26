@@ -65,7 +65,7 @@ HA, real Memcached/DynamoDB parity or universal tenant safety.
 - [x] TestPyPI exact-byte check.
 - [x] Separate PyPI authorization, annotated `v0.8.0` tag and GitHub Release.
 - [x] Published-byte verification.
-- [ ] Docs deployment and provenance record (post-release PR).
+- [x] Docs deployment and provenance record (post-release PR #156; Pages run `45879453889`).
 
 ## Publication sequence
 
@@ -75,6 +75,6 @@ HA, real Memcached/DynamoDB parity or universal tenant safety.
 4. Created annotated `v0.8.0` and published to TestPyPI.
 5. Verified exact bytes, then obtained separate PyPI authorization.
 6. Published to PyPI and created the GitHub Release.
-7. Post-release docs/provenance PR deploys docs and records the final state.
+7. Merged post-release docs/provenance PR #156; Pages deployment `45879453889` verified the live site.
 
 No tag or upload was part of the promotion PR; no rebuild occurred.

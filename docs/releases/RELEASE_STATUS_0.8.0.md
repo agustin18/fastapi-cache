@@ -14,6 +14,7 @@ and the GitHub Releases page.
 | TestPyPI | [run 45874246420](https://github.com/agustin18/fastapi-cache/actions/runs/45874246420), hashes matched |
 | PyPI | [run 45874503519](https://github.com/agustin18/fastapi-cache/actions/runs/45874503519), hashes matched |
 | GitHub Release | [v0.8.0](https://github.com/agustin18/fastapi-cache/releases/tag/v0.8.0), created 2026-11-26 |
+| Docs deployment | [run 45879453889](https://github.com/agustin18/fastapi-cache/actions/runs/45879453889), stable docs commit `1431f54370cd7a14af0263355a0a980741e928da`; live site verified |
 | Wheel SHA-256 | `4a7d200744424f88bfaee2a4b1fc6958e138aa86236c1906964d3cda41861bd1` |
 | Sdist SHA-256 | `3eae593e5bc78f901c3b6ed7fd852b3910bb713a273e12cc9f5eecdac05e3d8b` |
 | Phase B artifact | `migration-phase-b-0.8.0-distributions`, digest `sha256:df6afd570e24b15b91e1d9ee8c36ab0a694be63cf0e0be27c2c818d7f2b0f948` |
