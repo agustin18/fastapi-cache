@@ -1,8 +1,10 @@
-# C1 application-scoped caching — implementation candidate, not published
+# C1 application-scoped caching — merged, staged for 0.8.0, not published
 
-This branch implements the accepted D1–D3 design in
-[ARCHITECTURE_0.8_RFC.md](ARCHITECTURE_0.8_RFC.md). It is not available in
-published 0.7.2. Existing imports and singleton initialization remain the default.
+This implements the accepted D1–D3 design in
+[ARCHITECTURE_0.8_RFC.md](ARCHITECTURE_0.8_RFC.md). It merged as
+`3ddedba3347f1050f86784d3bad14ad1ce331ca1` and is staged for 0.8.0; it is
+not available in published 0.7.2. Existing imports and singleton initialization
+remain the default.
 
 Use a new CacheHandle(CacheConfig(backend, scope_id="orders-v1")) per lifespan.
 Start with await handle.start(app); use @cache(scope="app") on HTTP endpoints;

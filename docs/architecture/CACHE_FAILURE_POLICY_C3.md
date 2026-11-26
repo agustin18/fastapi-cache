@@ -1,8 +1,8 @@
-# C3 / D5–D7 failure policy — merged, not released
+# C3 / D5–D7 failure policy — merged, staged for 0.8.0, not published
 
 This records the C3 decision for #112, independently audited on
 29ff7f254c6643ab5fb801c8799ec170145fcb8e and merged as b57d320.
-It remains unreleased until separate 0.8 publication authorization.
+It is staged for 0.8.0; publication requires separate authorization.
 No global configuration or default behavior changes.
 
 ```python

@@ -1,8 +1,9 @@
-# C2 / D4 backend contract — implementation candidate
+# C2 / D4 backend contract — merged, staged for 0.8.0, not published
 
-Status: proposed C2 implementation on top of accepted RFC #147 and merged C1
-#148; not released. Scope: #111 supported built-in contracts only; the
-descriptor shape below is submitted for independent review. No API or
+Status: accepted C2 implementation merged as
+`2aa9a031a5ad6c1a92759314d5e9d6172cb224e6` on accepted RFC #147 and merged
+C1 #148; staged for 0.8.0, not released. Scope: #111 supported built-in
+contracts only. No API or
 behavior changes to legacy Backend, TTL values, cache keys, coder or retry
 policy. C3 (#112) owns decorator failure/serialization policy.
 
