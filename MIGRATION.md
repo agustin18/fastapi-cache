@@ -32,16 +32,22 @@ description from the corrected README so the package page no longer advertises
 - Pin `fastapi-cache-stable==0.7.1` and verify the exact artifact hashes.
 - See the [0.7.1 release notes](docs/releases/RELEASE_NOTES_0.7.1.md).
 
-## Upgrade from 0.7.1 to 0.7.2
+## Upgrade from 0.7.1 to 0.8.0
 
-0.7.2 is a compatibility release: no runtime, import or public API changes from
-0.7.1. It extends the published Python metadata to `>=3.8,<3.15` (standard
-CPython 3.14 included) and the Redis modern marker through 3.14.
+0.8.0 adds opt-in APIs; it does not change legacy imports, default keys or
+singleton behavior. It adds `CacheConfig`/`CacheHandle` app scope,
+`CacheFailurePolicy` and internal backend contracts, while retaining the 0.7.2
+Python `>=3.8,<3.15` metadata and CPython 3.14 support.
 
-- Pin `fastapi-cache-stable==0.7.2` and verify the exact artifact hashes.
+- Pin `fastapi-cache-stable==0.8.0` and verify the exact artifact hashes.
+- Existing `@cache()` and `FastAPICache.init()` deployments need no migration.
+- Adopt app scope per app/lifespan with a unique `scope_id`; keep an
+  identity-aware key builder and explicit `vary_headers` where needed.
+- `CacheFailurePolicy` flags default to `False`; enable only the policies you
+  have tested. Scoped entries use a distinct physical-key envelope.
 - Python 3.8–3.10 remain functional legacy; 3.11–3.14 are the server-side
-  security-qualified range for 0.7.2.
-- See the [0.7.2 release notes](docs/releases/RELEASE_NOTES_0.7.2.md).
+  security-qualified range for 0.8.0.
+- See the [0.8.0 release notes](docs/releases/RELEASE_NOTES_0.8.0.md).
 
 ## Upgrade from 0.6.0 to 0.7.0 (historical)
 
@@ -355,7 +361,7 @@ For published `0.7.0` in a clean environment:
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
-python -m pip install "fastapi-cache-stable[redis]==0.7.2"
+python -m pip install "fastapi-cache-stable[redis]==0.8.0"
 python -m pip check
 python -c "import fastapi_cache; print(fastapi_cache.__version__)"
 ```

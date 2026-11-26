@@ -1,9 +1,10 @@
 # Published releases and evidence
 
-Release tags are immutable reference points. The repository's `stable` branch may contain later documentation or unreleased work. Bounded InMemory is published in **0.7.2**; it is not part of a 0.5.0 artifact.
+Release tags are immutable reference points. The repository's `stable` branch may contain later documentation or unreleased work. Bounded InMemory is published in **0.8.0**; it is not part of a 0.5.0 artifact.
 
 | Release | Status | Highlights |
 |---|---|---|
+| [0.8.0](https://pypi.org/project/fastapi-cache-stable/0.8.0/) | Published 2026-11-26 | Opt-in app scope, failure policies, backend contracts and C4 isolation evidence |
 | [0.7.2](https://pypi.org/project/fastapi-cache-stable/0.7.2/) | Published 2026-11-25 | Standard CPython 3.14 compatibility; no runtime or API changes |
 | [0.7.1](https://pypi.org/project/fastapi-cache-stable/0.7.1/) | Published 2026-11-24 | Metadata-only correction over 0.7.0; rebuilds the PyPI long description |
 | [0.7.0](https://pypi.org/project/fastapi-cache-stable/0.7.0/) | Published 2026-11-24 | Exact TTL boundary, decode-before-304, Redis tuple contract and release-quality evidence |
@@ -13,6 +14,14 @@ Release tags are immutable reference points. The repository's `stable` branch ma
 | [0.4.0](https://pypi.org/project/fastapi-cache-stable/0.4.0/) | Published 2026-11-20 | Redis-py 4–8 conditional compatibility |
 | [0.3.1](https://pypi.org/project/fastapi-cache-stable/0.3.1/) | Historical | Explicit-Request/default-builder cache bypass |
 | [0.3.0](https://pypi.org/project/fastapi-cache-stable/0.3.0/) | Historical | Initial stable migration line |
+
+## 0.8.0 provenance
+
+- Annotated tag `v0.8.0` -> `92380fa915ab16837a12bf9634838aae14c315a4` (tag object `97092369a34d4bfa03001261677c8df2c92fc9d3`)
+- Phase B `45870303265` (25 of 25); TestPyPI `45874246420`; PyPI `45874503519`
+- Wheel `4a7d200744424f88bfaee2a4b1fc6958e138aa86236c1906964d3cda41861bd1`
+- Sdist `3eae593e5bc78f901c3b6ed7fd852b3910bb713a273e12cc9f5eecdac05e3d8b`
+- [0.8.0 release status](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.8.0.md)
 
 ## 0.7.2 provenance
 

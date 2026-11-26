@@ -1,19 +1,20 @@
 # Security policy
 
-**Published 0.7.2:** standard CPython 3.14 support with `>=3.8,<3.15` metadata.
+**Published 0.8.0:** opt-in app-scoped configuration/lifecycle and failure
+policies, with standard CPython 3.14 support and `>=3.8,<3.15` metadata.
 The server-side security target is CPython 3.11–3.14, subject to the exact-artifact
-evidence in the [0.7.2 release status](docs/releases/RELEASE_STATUS_0.7.2.md).
-The published 0.7.2 support policy below applies; 0.7.1 remains historical.
+evidence in the [0.8.0 release status](docs/releases/RELEASE_STATUS_0.8.0.md).
+The published 0.8.0 support policy below applies; 0.7.1 remains historical.
 
 ## Supported versions
 
-- `0.7.2` is the current published technical release (2026-11-25). The
+- `0.8.0` is the current published technical release (2026-11-26). The
   security support scope is server-side CPython 3.11–3.14; 3.8–3.10 is
-  legacy functional only. See the [0.7.2 release status](docs/releases/RELEASE_STATUS_0.7.2.md)
+  legacy functional only. See the [0.8.0 release status](docs/releases/RELEASE_STATUS_0.8.0.md)
   and [security ledger #126](https://github.com/agustin18/fastapi-cache/issues/126).
 
 - `0.7.1` is the previous published line (released **2026-11-24**); it has the
-  same runtime code as 0.7.2 and targeted server-side CPython 3.11–3.13.
+  same runtime code as 0.8.0 and targeted server-side CPython 3.11–3.13.
 
 - `0.7.0` is the previous published line (released **2026-11-24**). It has the
   same runtime code as 0.7.1 and targets best-effort security and critical
@@ -31,7 +32,7 @@ The published 0.7.2 support policy below applies; 0.7.1 remains historical.
 - `0.3.0` and `0.3.1` remain the previous migration line, with the
   best-effort security/critical target recorded in
   [SUPPORT.md](SUPPORT.md) (until 2027-11-19).
-- Published `0.4.x`–`0.7.1` install on Python `>=3.8,<3.14`; `0.7.2` installs on
+- Published `0.4.x`–`0.7.1` install on Python `>=3.8,<3.14`; `0.8.0` installs on
   `>=3.8,<3.15`. Python 3.8–3.10 are legacy functional-compatibility targets
   only and have no security-support commitment for EOL runtimes or dependencies.
 - On every maintained release, critical/high findings require a scoped
@@ -108,7 +109,7 @@ such endpoints**; the published `0.3.0` wheel itself is immutable.
 
 ## Explicit Vary and hidden-context residual scope
 
-`@cache(vary_headers=(...))` is available in published 0.5.0 through 0.7.2.
+`@cache(vary_headers=(...))` is available in published 0.5.0 through 0.8.0.
 **Published 0.4.1 does not expose this API.** The feature is opt-in:
 an application must explicitly list every
 representation-determining request header. The default key format and
@@ -161,9 +162,12 @@ resource exhaustion. Validate Host using `TrustedHostMiddleware` or
 equivalent edge rules. Do not assume host isolation protects hidden
 `contextvars`, tenant identity, or separate apps sharing a prefix (#53).
 
-## 0.7.2 authentication and HTTP cache boundaries
+## 0.8.0 authentication and HTTP cache boundaries
 
-The 0.7.2 release checks all Authorization/Cookie header
+The 0.8.0 release adds opt-in app scope and failure policies; it still does not
+automatically detect hidden tenant, identity or locale context, and the C4
+comparison is descriptive rather than a performance certification. The legacy
+singleton default remains. The 0.8.0 release checks all Authorization/Cookie header
 occurrences and keeps generated Cache-Control private, no-store on
 cached HTTP responses from routes with authenticated caching enabled
 (including MISS/HIT/304). This is an HTTP intermediary policy, not a

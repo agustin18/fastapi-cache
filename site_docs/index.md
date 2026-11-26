@@ -3,7 +3,7 @@ title: FastAPI caching, without the migration headache
 description: Install fastapi-cache-stable or move safely from fastapi-cache2.
 ---
 
-<div class="landing-kicker">FASTAPI-CACHE-STABLE · CURRENT RELEASE 0.7.2</div>
+<div class="landing-kicker">FASTAPI-CACHE-STABLE · CURRENT RELEASE 0.8.0</div>
 
 # Response caching that respects your existing FastAPI app.
 
@@ -53,27 +53,28 @@ description: Install fastapi-cache-stable or move safely from fastapi-cache2.
 ## Install the published version
 
 ```console
-python -m pip install "fastapi-cache-stable==0.7.2" uvicorn
+python -m pip install "fastapi-cache-stable==0.8.0" uvicorn
 python -m pip check
 ```
 
-The package name is **`fastapi-cache-stable`**; imports remain **`fastapi_cache`**. Use `fastapi-cache-stable[redis]==0.7.2` for standalone Redis.
+The package name is **`fastapi-cache-stable`**; imports remain **`fastapi_cache`**. Use `fastapi-cache-stable[redis]==0.8.0` for standalone Redis.
 
 !!! warning "Do not install both packages"
     `fastapi-cache2` and `fastapi-cache-stable` own the same Python package files. `pip check` will **not** detect this collision. Uninstall the old distribution in a clean environment before migrating.
 
 ## What ships today?
 
-| Included in published 0.7.2 | Future / not shipped |
+| Included in published 0.8.0 | Future / not shipped |
 |---|---|
 | Default-key-compatible GET/JSON caching | Typed cache lifecycle events (#50) |
 | Standalone Redis and process-local InMemory | Single-flight and tag-based invalidation |
 | Safe default Authorization/Cookie bypass | Arbitrary hidden tenant/context autodetection (#53 residual) |
-| Opt-in `vary_headers`, ETag and HTTP 304 | Python 3.14 certification |
-| Python 3.8–3.13 functional compatibility; opt-in bounded InMemory | — |
+| Opt-in app scope (`CacheConfig`/`CacheHandle`) and failure policies (`CacheFailurePolicy`) | 0.9 tags and safe parameter filtering |
+| Opt-in `vary_headers`, ETag and HTTP 304 | — |
+| Python 3.8–3.14 functional compatibility; opt-in bounded InMemory | — |
 
-**Security-maintained target:** server-side CPython **3.11–3.13**. Python 3.8–3.10 are legacy **functional migration** targets, not security-supported runtimes. DynamoDB and Memcached remain experimental.
+**Security-maintained target:** server-side CPython **3.11–3.14**. Python 3.8–3.10 are legacy **functional migration** targets, not security-supported runtimes. DynamoDB and Memcached remain experimental.
 
 <div class="landing-rail" markdown>
-**Release evidence:** [artifact provenance](reference/releases.md) · **Next work:** [0.7 roadmap](roadmap.md) · **Source:** [GitHub](https://github.com/agustin18/fastapi-cache)
+**Release evidence:** [artifact provenance](reference/releases.md) · **Next work:** [0.9 roadmap](roadmap.md) · **Source:** [GitHub](https://github.com/agustin18/fastapi-cache)
 </div>

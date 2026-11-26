@@ -1,17 +1,18 @@
 # Roadmap: what is next?
 
-**0.7.2 is published.** [fastapi-cache-stable 0.7.2](reference/releases.md)
-was released 2026-11-25 with standard CPython 3.14 compatibility and no runtime
-or API changes from 0.7.1. `stable` contains subsequent docs and infrastructure; changes
+**0.8.0 is published.** [fastapi-cache-stable 0.8.0](reference/releases.md)
+was released 2026-11-26 with opt-in app-scoped configuration/lifecycle, backend
+contracts, failure policies and installed isolation evidence. The legacy
+singleton default remains compatible. `stable` contains subsequent docs and infrastructure; changes
 in an unmerged PR are **not installed**. This page describes proposals, not
 a shipping date, certification or approval to publish.
 
-## 0.7.2 release status (2026-11-25)
+## 0.8.0 release status (2026-11-26)
 
-Python 3.14 is included in the published `>=3.8,<3.15` metadata range. The
-functional matrix is 3.8–3.14; the server-side security target is 3.11–3.14.
-No runtime, import or public API change belongs to this patch. Exact-artifact
-Phase B, registry hashes and provenance are recorded in the
+0.8.0 ships opt-in `CacheConfig`/`CacheHandle`, backend contracts and
+`CacheFailurePolicy`; existing singleton users keep the default. C4 evidence
+is descriptive and #100 remains open; no performance certification is claimed.
+The 25-job Phase B, TestPyPI/PyPI parity and provenance are recorded in the
 [release evidence](reference/releases.md).
 
 ## 0.7.1 release status (2026-11-24)
@@ -30,9 +31,9 @@ or threshold is inferred from that evidence. #100 remains open.
 
 [Historical 0.7.0 execution plan and evidence boundaries](plan-0-7.md).
 
-## Next priority: 0.8 architecture design
+## Next priority: 0.9
 
-The next track is a reviewed design RFC for [#99](https://github.com/agustin18/fastapi-cache/issues/99), [#111](https://github.com/agustin18/fastapi-cache/issues/111) and [#112](https://github.com/agustin18/fastapi-cache/issues/112), with #53 privacy and #100 descriptive performance evidence. No new runtime API is approved or shipped.
+The next track is [#97](https://github.com/agustin18/fastapi-cache/issues/97) tag invalidation and [#49](https://github.com/agustin18/fastapi-cache/issues/49) safe parameter filtering, with the remaining #53/#100/#111/#112 residual scopes kept explicit. No 0.9 runtime API is approved yet.
 
 [#51](https://github.com/agustin18/fastapi-cache/issues/51) is completed for standard CPython 3.14 in published 0.7.2. Final Phase B passed 25/25 jobs; see the [release evidence](reference/releases.md). Python 3.8–3.10 remain functional legacy targets; 3.11–3.14 are the security target. Free-threaded 3.14t and 3.15 are outside scope; Memcached and DynamoDB remain experimental. Each future release still requires fresh exact-artifact evidence and separate authorization.
 
@@ -40,8 +41,8 @@ The next track is a reviewed design RFC for [#99](https://github.com/agustin18/f
 
 | Target | Candidate features | Mandatory design or quality boundary |
 |---|---|---|
-| 0.7.2 (published 2026-11-25) | #51 standard CPython 3.14 compatibility only | Core + real Redis, installed artifacts, existing contract intact; no unsupported extra or security claim |
-| 0.8 | #99 app-scoped configuration/lifecycle RFC with #111 backend and #112 error/serialization contracts | Backward-compatible opt-in, privacy, lifecycle, ownership and cancellation design before implementation |
+| 0.8.0 (published 2026-11-26) | #99 app scope, #111 backend contracts, #112 failure policies and #53/#100 C4 evidence | Backward-compatible opt-in, explicit ownership, cancellation and no automatic tenant isolation |
+| 0.9 (proposed) | #97 tags and #49 safe filtering | Tenant-safe keys, bounded indexes, race/TTL tests and reviewed invalidation scope |
 | 0.9 | #97 tags and #49 safe filtering | Tenant-safe keys, race/TTL-index tests and independently reviewed invalidation scope |
 | Later, if justified | #98 bounded stale | Separate expiry, failure and cancellation contract; no stale-safety promise |
 | 1.0 | Public API and support-policy maturity | Explicit ongoing maintenance commitment and independent review |
@@ -60,7 +61,7 @@ maintenance tracks, not automatic additions to 0.8. Local single-flight
 A *smaller*, evidence-backed next release is preferable to shipping unsafe
 concurrency, observability or distributed behavior by a date.
 
-The authoritative published [0.7.2 provenance](reference/releases.md),
+The authoritative published [0.8.0 provenance](reference/releases.md),
 [compatibility](reference/compatibility.md) and
 [security/tenant limits](guides/privacy.md) are unchanged. Docs on `stable`
 must describe only shipped behavior; future proposals must not be described

@@ -4,9 +4,9 @@ The root README points to the current release. Historical notes, provenance
 records and the release checklist live here so the repository root stays
 focused on current project documentation.
 
-- [0.8.0 promotion release notes](RELEASE_NOTES_0.8.0.md) — not published; release candidate
-- [0.8.0 promotion checklist](RELEASE_CANDIDATE_0.8.0.md) — review and publication gates pending
-- [0.8.0 promotion status](RELEASE_STATUS_0.8.0.md) — no tag, hashes or registry upload yet
+- [0.8.0 published release notes](RELEASE_NOTES_0.8.0.md) — published 2026-11-26
+- [0.8.0 release checklist](RELEASE_CANDIDATE_0.8.0.md) — final gates and release evidence
+- [0.8.0 release status and provenance](RELEASE_STATUS_0.8.0.md) — final tag, hashes and workflow evidence
 - [0.7.2 published release notes](RELEASE_NOTES_0.7.2.md) — published 2026-11-25
 - [0.7.2 release status and provenance](RELEASE_STATUS_0.7.2.md) — final tag, hashes and workflow evidence
 - [0.7.2 candidate and promotion checklist](RELEASE_CANDIDATE_0.7.2.md) — final gates and release evidence
