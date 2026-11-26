@@ -1,14 +1,15 @@
 # Backend contract RFC — testable scope before widening support
 
-**Status: #123 narrow InMemory TTL behavior accepted and merged in
-unreleased `stable`; broader backend contract remains proposed.
-Published 0.6.0 is unchanged.**
+**Status: #123 narrow InMemory TTL behavior and #114 Redis tuple correction
+shipped in 0.7.0 and remain in 0.7.2; broader backend contract remains proposed
+for 0.8. Published 0.6.0 is unchanged.**
 Tracked under [#111](https://github.com/agustin18/fastapi-cache/issues/111).
 The reusable `tests/test_backend_contract.py` test verifies a conservative
 shared subset on InMemory and a **loopback, test-only** standalone Redis server.
 Merged PR #131 additionally covers empty bytes distinct
 from misses, nonpositive TTL divergence, and client ownership after pool recycle.
-These tests do **not** simulate a true Redis server outage.
+These particular tests do **not** simulate a true Redis server outage;
+#133 separately characterized daemon stop/restart with retries disabled.
 It does not promote experimental providers to supported status.
 
 ## Shared contract and capability table
@@ -57,15 +58,14 @@ A real Redis 7.4 profile is required before claiming standalone parity.
    TLS/Sentinel/Cluster/HA is a later, separately qualified track.
 4. Record operation-specific capability flags or explicit exceptions before
    exposing a public API that assumes equivalent backends.
-5. Merged future-release InMemory TTL boundary (PR #123): an entry expires **at** its integer
+5. Published 0.7 InMemory TTL boundary (PR #123): an entry expires **at** its integer
    deadline (`ttl_ts <= now`), not one integer tick later (`ttl_ts < now`
    in published 0.6.0). Both unbounded reads and the bounded expiry index must
    agree. The exact deadline returns a cache miss (`get() is None`,
    `get_with_ttl() == (0, None)`) and zero/negative InMemory TTLs are
    immediate misses. Tests use an injected clock, never sleeps. Redis has
    independent server TTL semantics: `ex=0` or a negative `ex` is rejected
-   by Redis rather than normalized by this change. This is a *merged
-   source* behavioral adjustment for a future release, not a change
+   by Redis rather than normalized by this change. This adjustment shipped in 0.7.0, not a change
    to the published 0.6.0 wheel.
    A deterministic **still-live** entry test characterizes wall-clock rollback:
    remaining TTL can *increase*, because the existing integer timestamp is

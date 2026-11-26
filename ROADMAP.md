@@ -1,13 +1,13 @@
 # Roadmap — fastapi-cache-stable
 
 **Current published release:** [0.7.2](https://pypi.org/project/fastapi-cache-stable/0.7.2/)
-on **2026-11-24**. It is a metadata-only correction over 0.7.0: no runtime
-or API changes. It rebuilds the PyPI long description from the corrected
-README. See [0.7.2 release evidence](docs/releases/RELEASE_STATUS_0.7.2.md).
-**0.7.0** remains the previous published line. **0.6.0** is older. Source version and
+on **2026-11-25**. This compatibility patch extends standard CPython and
+Redis extra support through 3.14, without runtime, API, key, ETag or
+serialization changes from 0.7.1. See [0.7.2 release evidence](docs/releases/RELEASE_STATUS_0.7.2.md).
+**0.7.1** is the immediately preceding published release; **0.7.0** is historical. **0.6.0** is older. Source version and
 merged PRs alone do not imply publication.
 **Do not reopen a completed publication gate without new material evidence.**
-The completed 0.7.0 and 0.7.1 publication records are historical; their
+The completed 0.7.0, 0.7.1 and 0.7.2 publication records are historical; their
 successful release gates do not authorize any subsequent candidate.
 The live planning umbrella is [#95](https://github.com/agustin18/fastapi-cache/issues/95).
 
@@ -61,53 +61,16 @@ third-party security certification or hosted-docs requirement applies.
 
 ## Post-0.7.2 open work
 
-**First priority: [#51 — CPython 3.14 qualification](https://github.com/agustin18/fastapi-cache/issues/51).**
-Diagnostic qualification [#142](https://github.com/agustin18/fastapi-cache/pull/142)
-and 0.7.2 are published. Published 0.7.2 supports `>=3.8,<3.15`, including
-standard CPython 3.14; 3.8–3.10 remain functional legacy only. Do not advertise
-all final-artifact and publication gates pass.
+**Next priority: 0.8.0 design RFC** ([#99](https://github.com/agustin18/fastapi-cache/issues/99), #111, #112). Consolidate the existing architecture proposals and obtain independent review and maintainer approval before runtime work. #53 privacy and #100 descriptive performance evidence are cross-cutting; #96/#50/#103/#102 are outside 0.8 core scope.
 
-1. **Qualification PR (completed):** record the unmodified-source baseline and exact base SHA;
-   reproduce failures before fixes. Use a temporary, isolated metadata relaxation
-   only to enable the 3.14 experiment; never publish or commit it as support.
-   Require core and real standalone Redis 7.4 tests, clean wheel and sdist builds
-   and installs, `twine check`, `pip check`, a modern security-profile attempt,
-   and a 3.11 control. Preserve all existing functional and legacy lanes. Keep
-   existing Poetry lock profiles intact; no silent skips or allowed failures.
-2. **Optional providers:** Memcached and DynamoDB remain experimental. Attempt
-   dependency installation and fake-client tests on 3.14; report failures or
-   unrun lanes explicitly and document any unsupported extras. Do not claim
-   real-service conformance based on fake clients.
-3. **Release-staging PR (in progress):** reconcile the top-level
-   Python requirement, interpreter-specific Redis markers, classifiers, support
-   tables, lock consistency and actual wheel/sdist dependency metadata. Keep
-   Python 3.8–3.10 functional-only. Include 3.14 in the security-supported matrix
-   only with a passing applicable installed-artifact audit. Otherwise explicitly
-   scope it as functional-only if that narrower release is separately accepted.
-   Standard GIL-enabled CPython 3.14 only; free-threaded 3.14t and 3.15 are out of scope.
-4. **Exact final-artifact gates:** preserve all existing Phase B lanes and the
-   strict publication verifier. Add and validate the 3.14 installed wheel/sdist
-   and Redis evidence on the exact release source/artifacts; do not silently
-   reuse the historical 20-job count as proof of 3.14 coverage. Review the
-   release-job matrix, verifier and negative tests together if the required
-   matrix expands. If historical migration fixtures cannot install on 3.14,
-   document the limitation and qualify a separate cross-interpreter migration
-   scenario rather than mislabeling a skipped or incompatible lane as passed.
-   No tag or package upload without fresh separate authorization.
-
-A patch release is appropriate only for nonbreaking compatibility work.
-Stop and re-scope if qualification would require a new public API, observable
-behavior change, key/ETag/serialization changes, a dependency major upgrade,
-or a weakening of existing release gates. Consider 0.8 instead. If core or
-standalone Redis cannot be qualified, leave #51 open and do not promote 0.7.2.
-A separate evidence record must distinguish PASS, FAIL and NOT RUN.
+**Completed: [#51 — standard CPython 3.14 qualification](https://github.com/agustin18/fastapi-cache/issues/51).** Diagnostic qualification #142, staging #143 and final 0.7.2 publication are complete. The exact final Phase B run passed 25/25 jobs; see [release evidence](docs/releases/RELEASE_STATUS_0.7.2.md). Python 3.8–3.10 remain functional legacy only; 3.11–3.14 are the security target. Free-threaded 3.14t and 3.15 remain outside scope. Memcached/DynamoDB remain experimental, not real-service-qualified. Do not reopen publication gates without new material evidence; later releases require fresh evidence.
 
 The following other tracks remain candidates, not delivery promises:
 
 - **Release infrastructure:** preserve the exact-artifact, first-attempt,
   complete required-job matrix, tag, approved-hash and TestPyPI parity gates.
-  The historical 0.7.0/0.7.1 Phase B had 20 jobs; a new interpreter requires
-  additional exact-artifact coverage and a consistent strict verifier.
+  The historical 0.7.0/0.7.1 Phase B had 20 jobs; 0.7.2 has 25. Any future
+  matrix expansion requires additional exact-artifact coverage and a consistent strict verifier.
   Each release needs fresh security evidence and maintainer authorization.
 - **Public documentation:** the site deploys only from `stable` through the
   merged Pages workflows. Versioned `/latest/` and immutable `/0.7.2/` routes
@@ -131,7 +94,7 @@ The following other tracks remain candidates, not delivery promises:
 
 | Release | Focus | Non-negotiable boundary |
 |---|---|---|
-| **0.7.2 (conditional)** | #51 standard CPython 3.14 compatibility only | Qualification and exact-artifact gates above; unchanged existing APIs, key/ETag/serialization behavior and legacy support |
+| **0.7.2 (published)** | #51 standard CPython 3.14 compatibility only | Completed qualification and exact-artifact gates; unchanged existing APIs, key/ETag/serialization behavior and legacy support |
 | **0.8.0** | #99 app-scoped lifecycle/config RFC with #111 backend and #112 error/serialization contracts | Design and privacy review first; backward-compatible opt-in, explicit ownership and cancellation; no promised automatic tenant isolation |
 | **0.9.0** | #97 tags and #49 safe parameter filtering | Explicit opt-in, tenant-safe keys, TTL index/race tests and independently reviewed invalidation scope |
 | **Later, if justified** | #98 bounded stale | Separate threat model, expiry, failure and cancellation contract; no stale-safety promise |
@@ -145,7 +108,7 @@ or separate integration only if justified and independently qualified. Existing
 standalone Redis support is unchanged; no Cluster namespace-clear or HA claim.
 
 #45 experimental-provider corrections and #55 FIPS portability remain
-separate evidence-driven maintenance tracks, not automatic additions to 0.7.2.
+separate evidence-driven maintenance tracks, not automatic additions to 0.8.0.
 #96 local single-flight and #50 events follow the accepted architecture and
 error-policy contracts; no date is promised. #88 outreach requires separate
 maintainer authorization and is not a compatibility gate.

@@ -26,7 +26,7 @@ middleware/permission context in every cache key.
 | Design | Benefit | Unresolved failure mode |
 |---|---|---|
 | Keep only singleton for 0.7.x | Preserves every legacy behavior | Cannot honestly promise concurrent multi-app safety |
-| Explicit immutable per-app config handle, bound through FastAPI lifespan/request | Clear ownership and scope; existing singleton remains opt-in compatibility path | Need routing through decorator, background tasks and concurrent workers |
+| Explicit immutable per-app config handle, bound through FastAPI lifespan/request | Clear ownership and scope; existing singleton remains the default compatibility path | Need routing through decorator, background tasks and concurrent workers |
 | ContextVar carrying selected config | Convenient implicit selection for async requests | Inherited/stale context in tasks, spawn/teardown, threadpool and nested apps |
 | Implicit discovery of `request.app` | Avoids explicit propagation for HTTP calls | Absent Request for pure functions, ambiguity during composition and tests |
 
@@ -72,6 +72,6 @@ No auth/tenant identity is inferred from `request.app` alone.
 6. Installed wheel/sdist E2E, negative key/identity tests, no raw keys in
    logs, and a reproducible default-OFF/opt-in-ON overhead benchmark.
 
-**Open decision:** whether safe app-scoping is feasible in 0.7.x or
-deferred to 0.8+ / next major. No commitment to implement until the
+**Open decision for 0.8:** whether safe opt-in app-scoping is feasible
+without a breaking redesign; otherwise defer to a future major. No commitment to implement until the
 owner approves a coherent scope and an independent reviewer verifies it.

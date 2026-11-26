@@ -1,8 +1,8 @@
 # Cache failure policy RFC — safe boundaries for 0.7.x
 
-**Status: the narrow #124 decode-before-304 bugfix is merged in
-unreleased source; the general error/recovery policy is still proposed,
-not approved or published in 0.6.0.**
+**Status: the narrow #124 decode-before-304 bugfix shipped in 0.7.0
+and remains in 0.7.2; the general error/recovery policy is still proposed
+for 0.8, not approved or shipped.**
 Tracked in [#112](https://github.com/agustin18/fastapi-cache/issues/112)
 with dependencies on [#99](https://github.com/agustin18/fastapi-cache/issues/99)
 and [#103](https://github.com/agustin18/fastapi-cache/issues/103).
@@ -17,7 +17,7 @@ No changes to the published 0.6.0 artifact.
 | Coder cannot encode | Return response uncached | Header/status contract |
 | Coder encode error | Propagate | Potentially narrow safe fallback |
 | Coder decode error | Propagate (no invalidation) | Fail-closed vs opt-in recover |
-| Bad cached bytes + matching If-None-Match | Published 0.6.0 can return 304 before decoding | Fixed in unreleased source PR #124, no general fallback |
+| Bad cached bytes + matching If-None-Match | Published 0.6.0 can return 304 before decoding | Fixed in 0.7.0 by PR #124, no general fallback |
 | Cancellation | Normally propagates | Backends and per-version verification |
 | Untrusted PickleCoder data | Unsafe deserialization | Never auto-unpickle untrusted values |
 
@@ -39,7 +39,7 @@ No changes to the published 0.6.0 artifact.
    new hidden process-global setting. Plain function caching (#103) must not
    inherit HTTP-only 304 rules.
 
-## Characterization-only evidence for the 0.7 candidate
+## Characterization-only evidence from the published 0.7 line
 
 Merged PR #131 adds negative tests for current backend-read fallback, write failure
 without a cached HIT, coder-encode exceptions and cancellation propagation.
@@ -55,4 +55,4 @@ failed invalidation, simultaneous corrupt reads, user/tenant isolation,
 Redis loopback E2E, and log redaction. Pickle trust must be reviewed separately.
 
 **#112 remains open** until an approved matrix and tested implementation or
-an explicit documented rejection exist. No 0.7 release authorization.
+an explicit documented rejection exist. No 0.8 implementation or release authorization.
