@@ -156,7 +156,7 @@ async def exercise(client: httpx.AsyncClient, label: str,
 
     await batch()
     await batch()
-    values = []
+    values: list[int] = []
     wall = time.perf_counter_ns()
     for _ in range(SAMPLES // CONCURRENCY):
         values.extend(elapsed for elapsed, _ in await batch())

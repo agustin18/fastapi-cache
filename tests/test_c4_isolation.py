@@ -14,7 +14,12 @@ import httpx
 import pytest
 from fastapi import Depends, FastAPI, Header, Request
 
-from fastapi_cache import CacheConfig, CacheFailurePolicy, CacheHandle, FastAPICache
+from fastapi_cache import (
+    CacheConfig,
+    CacheFailurePolicy,
+    CacheHandle,
+    FastAPICache,
+)
 from fastapi_cache.app import _physical_key
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
