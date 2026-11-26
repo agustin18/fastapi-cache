@@ -125,6 +125,38 @@ class Coder:
         return result
 
 
+class _InvalidCachedJSON(Exception):
+    """Internal signal for syntax/UTF-8 failure, not a public coder error."""
+
+
+def _decode_json(value: bytes, *, recover_syntax: bool = False) -> Any:
+    # Keep the standard decoder and object hook; only distinguish parser
+    # errors from application/tag conversion errors in the opt-in path.
+    if not recover_syntax:
+        return json.loads(value.decode(), object_hook=object_hook)
+    try:
+        decoded = value.decode()
+    except UnicodeDecodeError:
+        raise _InvalidCachedJSON("utf8") from None
+
+    hook_failed = False
+
+    def guarded_hook(obj: Any) -> Any:
+        nonlocal hook_failed
+        try:
+            return object_hook(obj)
+        except Exception:
+            hook_failed = True
+            raise
+
+    try:
+        return json.loads(decoded, object_hook=guarded_hook)
+    except json.JSONDecodeError:
+        if hook_failed:
+            raise
+        raise _InvalidCachedJSON("syntax") from None
+
+
 class JsonCoder(Coder):
     @classmethod
     def can_encode(cls, value: Any) -> bool:
@@ -157,7 +189,7 @@ class JsonCoder(Coder):
         # explicitly decode from UTF-8 bytes first, as otherwise
         # json.loads() will first have to detect the correct UTF-
         # encoding used.
-        return json.loads(value.decode(), object_hook=object_hook)
+        return _decode_json(value)
 
 
 class TypedJsonCoder(JsonCoder):
@@ -165,7 +197,10 @@ class TypedJsonCoder(JsonCoder):
 
     @classmethod
     def decode_as_type(cls, value: bytes, *, type_: Any) -> Any:
-        result = cls.decode(value)
+        return cls._validate_decoded_value(cls.decode(value), type_=type_)
+
+    @classmethod
+    def _validate_decoded_value(cls, result: Any, *, type_: Any) -> Any:
         if type_ is None or _contains_pydantic_v1_model(type_):
             return result
 
@@ -206,3 +241,12 @@ class PickleCoder(Coder):
         # in paying an extra performance penalty for pydantic to discover
         # the same.
         return cls.decode(value)
+
+
+def _decode_recoverable_json(coder: Type[Coder], value: bytes, *, type_: Any) -> Any:
+    """Opt-in syntax recovery for exact built-ins; validators remain outside it."""
+    # The caller admits only exact JsonCoder/TypedJsonCoder classes.
+    result = _decode_json(value, recover_syntax=True)
+    if coder is TypedJsonCoder:
+        return TypedJsonCoder._validate_decoded_value(result, type_=type_)
+    return result

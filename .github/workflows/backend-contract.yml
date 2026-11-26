@@ -6,6 +6,8 @@ on:
     paths:
       - "fastapi_cache/**"
       - "tests/test_backend_contract*.py"
+      - "tests/test_memcached_backend.py"
+      - "tests/test_dynamodb_backend.py"
       - "tests/test_inmemory_ttl_boundary.py"
       - "tests/test_backend_fault_characterization.py"
       - "tests/test_app_scope.py"
