@@ -1,5 +1,6 @@
 # C4 — installed isolation and descriptive evidence (D8) — published in 0.8.0
-Scope: C1–C3 merged in unreleased stable; C4 merged as `6352016`; #53 and
+
+Scope: C1–C3 and C4 are published in 0.8.0; C4 merged as `6352016`; #53 and
 #100 remain open. This is the preregistration and record of a **descriptive**
 hosted-runner experiment, not a numerical regression budget or a release
 authorization. The original artifact showed a 3.02x p50 outlier in

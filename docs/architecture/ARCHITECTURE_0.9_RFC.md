@@ -11,7 +11,8 @@ Add keyword-only `exclude_params: Optional[Sequence[str]] = None` to
 opt-in uses the default builder only; reject a decorator-supplied custom
 builder and bypass caching if the resolved configured builder is custom.
 Do not cache authenticated opt-in routes with filtering; preserve existing
-auth/header and explicit Request bypass. Never change endpoint arguments.
+auth/header and explicit Request bypass. Also bypass filtering on explicit
+Response parameters; never change endpoint arguments.
 Validate names against the original signature, reject variadic exclusions,
 duplicates, Request/Response parameters, and common identity/authorization
 names as a conservative guard, not universal semantic detection. The caller
@@ -24,10 +25,12 @@ None/bool/int/finite float/str/bytes only; bypass unsupported retained values,
 variadic signatures, and binding/encoding failures rather than use repr or
 silently omit dimensions. Type-tag values; preserve float signed zero.
 Use a versioned SHA-256 logical key including function module/qualname,
-exclusion list and retained parameter names/values. Keep generated-route,
-Vary and app physical wrapping in their existing order. For HTTP include
-method, host, root_path and path; reject missing route identity rather than
-infer safety from object identity. Never log values. No automatic tenant
+exclusion list and retained parameter names/values. Filtered HTTP keys include
+method, lowercased host, root_path and path for all routes (including generated
+handlers); unfiltered routes retain the existing generated-route logic. Apply
+Vary and app physical wrapping afterward. Bypass missing route identity and
+non-HTTP generated/closure/wrapped handlers rather than infer safety from
+object identity. Never log values. No automatic tenant
 safety; #53 remains open. Rollback uses the old keys, so operators must rotate
 the namespace or clear relevant old entries if source data changed.
 
@@ -65,7 +68,7 @@ published 0.8.0 wheel SHA256
 with candidate options off/on; retain historical C4 baseline. Measure tag
 cardinality, TTL/LRU churn and invalidation scaling; no performance
 certification without #100 controlled hardware and preregistered budgets.
-Keep legacy defaults, public docs and PUBLISHED_VERSION unchanged until
-publication. Separate K1, T1, T2, V1, staging and promotion reviews.
+Keep legacy defaults and PUBLISHED_VERSION unchanged; public API docs must
+continue to describe only published features until publication. Separate K1, T1, T2, V1, staging and promotion reviews.
 Single-flight, events, stale, #103, HA/TLS/Cluster and new dependencies are
 out of scope. No historical gate authorizes a future publication.

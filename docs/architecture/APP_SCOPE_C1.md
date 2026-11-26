@@ -1,4 +1,5 @@
 # C1 application-scoped caching — published in 0.8.0
+
 This implements the accepted D1–D3 design in
 [ARCHITECTURE_0.8_RFC.md](ARCHITECTURE_0.8_RFC.md). It merged as
 `3ddedba3347f1050f86784d3bad14ad1ce331ca1` and is published in 0.8.0; it is
