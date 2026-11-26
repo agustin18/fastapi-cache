@@ -25,6 +25,19 @@ The primary product advantage remains conservative migration from
 cache keys and safe default HTTP/private-response behavior.
 
 
+## 0.8.0 — staging candidate, not published
+
+0.8.0 stages the opt-in app-scoped configuration/lifecycle (C1), internal
+built-in backend contracts (C2), opt-in failure/serialization policies (C3)
+and installed isolation/descriptive performance evidence (C4). Existing
+singleton behavior and the 0.7.2 published artifact remain unchanged. The
+staging records are [release notes](docs/releases/RELEASE_NOTES_0.8.0.md),
+[candidate checklist](docs/releases/RELEASE_CANDIDATE_0.8.0.md) and
+[staging status](docs/releases/RELEASE_STATUS_0.8.0.md). Publication is
+pending the focused Redis/TCP diagnostic, final Phase B, security delta,
+separate TestPyPI/PyPI authorization and final source freeze. `#53`, `#100`,
+`#111`, `#112`, `#45` and `#102` remain open residual scopes.
+
 ## 0.7.2 — Python 3.14 compatibility published 2026-11-25
 
 0.7.2 is a compatibility patch with no runtime, import or public API changes.
@@ -61,7 +74,11 @@ third-party security certification or hosted-docs requirement applies.
 
 ## Post-0.7.2 open work
 
-**Next priority: 0.8.0 design RFC** ([#99](https://github.com/agustin18/fastapi-cache/issues/99), #111, #112). Consolidate the existing architecture proposals and obtain independent review and maintainer approval before runtime work. #53 privacy and #100 descriptive performance evidence are cross-cutting; #96/#50/#103/#102 are outside 0.8 core scope.
+**0.8.0 staging:** C1–C4 are merged; the source is staged for review but not
+tagged or published. #99/#111/#112 implementation scopes are merged, while
+their broader residual issues remain open. #53 privacy and #100 descriptive
+performance evidence are cross-cutting; #96/#50/#103/#102 are outside 0.8
+core scope. See the [0.8.0 candidate checklist](docs/releases/RELEASE_CANDIDATE_0.8.0.md).
 
 **Completed: [#51 — standard CPython 3.14 qualification](https://github.com/agustin18/fastapi-cache/issues/51).** Diagnostic qualification #142, staging #143 and final 0.7.2 publication are complete. The exact final Phase B run passed 25/25 jobs; see [release evidence](docs/releases/RELEASE_STATUS_0.7.2.md). Python 3.8–3.10 remain functional legacy only; 3.11–3.14 are the security target. Free-threaded 3.14t and 3.15 remain outside scope. Memcached/DynamoDB remain experimental, not real-service-qualified. Do not reopen publication gates without new material evidence; later releases require fresh evidence.
 
