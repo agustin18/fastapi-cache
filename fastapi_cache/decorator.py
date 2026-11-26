@@ -40,7 +40,13 @@ from fastapi_cache import (
     FastAPICache,
 )
 from fastapi_cache.app import _physical_key, _resolve_handle, _text_bytes
-from fastapi_cache.coder import Coder, _InvalidCachedJSON, _decode_recoverable_json
+from fastapi_cache.coder import (
+    Coder,
+    JsonCoder,
+    TypedJsonCoder,
+    _InvalidCachedJSON,
+    _decode_recoverable_json,
+)
 from fastapi_cache.failure import CacheBackendReadError, _read_error_category
 from fastapi_cache.key_builder import default_key_builder
 from fastapi_cache.types import KeyBuilder
@@ -618,6 +624,7 @@ def cache(
                 and "no-cache" not in request_cache_control
                 and policy is not None
                 and policy.recover_json
+                and (effective_coder is JsonCoder or effective_coder is TypedJsonCoder)
             ):
                 try:
                     recovered_result = _decode_recoverable_json(

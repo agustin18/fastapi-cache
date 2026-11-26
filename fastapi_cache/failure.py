@@ -29,9 +29,8 @@ def _read_error_category(backend: Backend, exc: Exception) -> str:
     """Recognize exact Redis transport classes, not auth/config/programmer errors."""
     from fastapi_cache._backend_contract import Capability, backend_capabilities
 
-    if backend_capabilities(backend).ownership == "borrowed" and (
-        backend_capabilities(backend).app_scope is Capability.SUPPORTED
-    ):
+    capabilities = backend_capabilities(backend)
+    if capabilities.ownership == "borrowed" and capabilities.app_scope is Capability.SUPPORTED:
         from redis.exceptions import ConnectionError as RedisConnectionError
         from redis.exceptions import TimeoutError as RedisTimeoutError
 
