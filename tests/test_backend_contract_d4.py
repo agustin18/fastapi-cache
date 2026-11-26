@@ -86,12 +86,14 @@ def test_overwrite_and_literal_clear_contract(kind: str) -> None:
             await backend.set(target, b"\x00\xff", expire=60)
             assert await backend.get(target) == b"\x00\xff"
             ttl, value = await backend.get_with_ttl(target)
-            assert 0 < ttl <= 60 and value == b"\x00\xff"
+            assert 0 < ttl <= 60
+            assert value == b"\x00\xff"
             await backend.set(target, b"")
             assert await backend.get_with_ttl(target) == (-1, b"")
             await backend.set(target, b"new", expire=60)
             ttl, value = await backend.get_with_ttl(target)
-            assert 0 < ttl <= 60 and value == b"new"
+            assert 0 < ttl <= 60
+            assert value == b"new"
             for key in (sibling, bare, other):
                 await backend.set(key, b"retain", expire=60)
             assert await backend.clear() == 0
@@ -145,7 +147,8 @@ def test_redis_capability_boundary_and_server_expiry() -> None:
             assert await client.pexpire(key, 400)
             ttl, value = await backend.get_with_ttl(key)
             if value is not None:
-                assert ttl == 0 and value == b"live"
+                assert ttl == 0
+                assert value == b"live"
             else:
                 assert ttl == -2
             await client.pexpire(key, 0)
