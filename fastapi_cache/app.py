@@ -13,6 +13,7 @@ from starlette.requests import Request
 
 from fastapi_cache._backend_contract import Capability, backend_capabilities
 from fastapi_cache.coder import Coder, JsonCoder
+from fastapi_cache.failure import CacheFailurePolicy
 from fastapi_cache.key_builder import default_key_builder
 from fastapi_cache.types import Backend, KeyBuilder
 
@@ -63,6 +64,7 @@ class CacheConfig:
     cache_status_header: str
     enable: bool
     cache_authenticated: bool
+    failure_policy: CacheFailurePolicy
 
     def __init__(
         self,
@@ -76,6 +78,7 @@ class CacheConfig:
         cache_status_header: str = "X-FastAPI-Cache",
         enable: bool = True,
         cache_authenticated: bool = False,
+        failure_policy: CacheFailurePolicy = CacheFailurePolicy(),
     ) -> None:
         object.__setattr__(self, "backend", backend)
         object.__setattr__(self, "scope_id", scope_id)
@@ -86,6 +89,7 @@ class CacheConfig:
         object.__setattr__(self, "cache_status_header", cache_status_header)
         object.__setattr__(self, "enable", enable)
         object.__setattr__(self, "cache_authenticated", cache_authenticated)
+        object.__setattr__(self, "failure_policy", failure_policy)
 
 
 def _validate_config(config: CacheConfig) -> None:
@@ -105,6 +109,8 @@ def _validate_config(config: CacheConfig) -> None:
     if type(config.cache_status_header) is not str or not config.cache_status_header:
         raise CacheScopeError("Invalid cache configuration")
     _text_bytes(config.cache_status_header)
+    if type(config.failure_policy) is not CacheFailurePolicy:
+        raise CacheScopeError("Invalid cache failure policy")
     if backend_capabilities(config.backend).app_scope is not Capability.SUPPORTED:
         raise CacheScopeError("Unsupported app cache backend")
 
