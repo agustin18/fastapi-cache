@@ -1,9 +1,9 @@
 # RFC: 0.8.0 architecture foundations — application scope, backend and failure contracts
 
-**Status: DRAFT / revised after independent design feedback; maintainer ratification and revised-HEAD audit pending. Not implemented or released.**
+**Status: ACCEPTED design record for scoped implementation, not a release approval.**
 Baseline: published 0.7.2, tag source `8cb3f4fe82e3d02cb6ae7874c03d82f94d9df822`;
 planning snapshot `ad2f7038cf936b6b8d975d568f698c04de7277b1` (post-#146).
-Maintainer decision and independent security/compatibility review required before C1.
+Revised HEAD `dee1b5e6d049f6ed8d3a8be79760841a81b24feb` independently audited and merged as `14ad64b002aa17aa28db7325be76831de10e524f`; maintainer requested C1. Each implementation PR still requires review.
 No code, distribution metadata or publication changes in this RFC.
 
 Tracks [#99](https://github.com/agustin18/fastapi-cache/issues/99),
@@ -509,8 +509,7 @@ required. No C1 or implementation approval is inferred.
 | D7 | ACCEPT | ACCEPT trusted-only Pickle, no general recovery; concrete log categories and tests ratified before C3 |
 | D8 | ACCEPT | ACCEPT evidence framework; preregister thresholds/exclusions before C4, exact-artifact expansion and risk acceptance before release |
 
-Maintainer ratification: **PENDING** on this revised design.
-Independent delta audit: **PENDING** on revised PR HEAD.
+Maintainer authorized proceeding to C1 following merge of #147. Independent delta audit reported ACCEPT on `dee1b5e6d049f6ed8d3a8be79760841a81b24feb` (35/35 checks); squash `14ad64b002aa17aa28db7325be76831de10e524f`. This accepts the design direction, not C1 implementation, later detailed decisions or release.
 Record the ratifying reviewer/maintainer, disposition and exact reviewed
 SHA in PR review or linked issue comment; do not self-certify a commit
 from within its own contents. Any revised detail requires renewed

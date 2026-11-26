@@ -1,6 +1,7 @@
 from importlib.metadata import version
 from typing import ClassVar, Optional, Type
 
+from fastapi_cache.app import CacheConfig, CacheHandle, CacheScopeError
 from fastapi_cache.coder import Coder, JsonCoder, TypedJsonCoder
 from fastapi_cache.key_builder import default_key_builder
 from fastapi_cache.types import Backend, KeyBuilder
@@ -8,6 +9,9 @@ from fastapi_cache.types import Backend, KeyBuilder
 __version__ = version("fastapi-cache-stable")  # pyright: ignore[reportUnknownVariableType]
 __all__ = [
     "Backend",
+    "CacheConfig",
+    "CacheHandle",
+    "CacheScopeError",
     "Coder",
     "FastAPICache",
     "JsonCoder",
