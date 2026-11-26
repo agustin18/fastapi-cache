@@ -30,7 +30,7 @@ cannot prove that one library is faster, safer or better.
 | Local single-flight | **Not shipped** | [#96](https://github.com/agustin18/fastapi-cache/issues/96) requires correctness/cancellation proof |
 | Tags, stale serving, distributed locks | **Not shipped** | More complex invalidation, retention and lease semantics |
 | Redis Cluster namespace clear | **Unsupported** | Individual key clearing is not parity with namespace clear |
-| Python 3.14 | **Unsupported** | CPython 3.8–3.10 functional legacy only; 3.11–3.13 security-supported server targets |
+| Python 3.14 | **Supported** | Standard CPython 3.14 in 0.7.2 metadata; 3.8–3.10 functional legacy; 3.11–3.14 security-supported server targets; free-threaded 3.14t is outside scope |
 
 ## Release quality and limitations
 

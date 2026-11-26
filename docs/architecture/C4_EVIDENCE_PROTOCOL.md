@@ -3,9 +3,11 @@
 Scope: C1–C3 merged in unreleased stable; C4 merged as `6352016`; #53 and
 #100 remain open. This is the preregistration and record of a **descriptive**
 hosted-runner experiment, not a numerical regression budget or a release
-authorization. The complete artifact showed a 3.02x p50 outlier in
-`redis/tcp/concurrent-hit-8` (p95/p99 ~1.03x), so performance certification is
-INCONCLUSIVE and the focused TCP diagnosis remains pending. The protocol
+authorization. The original artifact showed a 3.02x p50 outlier in
+`redis/tcp/concurrent-hit-8` (p95/p99 ~1.03x). The 0.8.0 candidate re-run in
+#153 did not reproduce it (p50 -0.52%, p95 -1.00%, p99 -0.85%, throughput
++0.55%); the ~9ms regime moved to scoped-off. Performance certification
+remains INCONCLUSIVE; the focused A/A is optional and #100 stays open. The protocol
 in [REGRESSION_BUDGET_PROTOCOL.md](../../benchmarks/REGRESSION_BUDGET_PROTOCOL.md)
 requires separate maintainer/reviewer approval and controlled independent
 hardware before any performance certification.
