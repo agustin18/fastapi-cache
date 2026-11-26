@@ -44,8 +44,8 @@ from fastapi_cache.coder import (
     Coder,
     JsonCoder,
     TypedJsonCoder,
-    _InvalidCachedJSON,
     _decode_recoverable_json,
+    _InvalidCachedJSON,
 )
 from fastapi_cache.failure import CacheBackendReadError, _read_error_category
 from fastapi_cache.key_builder import default_key_builder

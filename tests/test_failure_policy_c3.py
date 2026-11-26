@@ -2,9 +2,9 @@
 
 import asyncio
 import json
-import pickle
 import logging
 import os
+import pickle
 import uuid
 from dataclasses import FrozenInstanceError
 from typing import Any, Dict, Type
@@ -42,7 +42,7 @@ def test_policy_validation() -> None:
     assert not policy.recover_json
     with pytest.raises(FrozenInstanceError):
         setattr(policy, "recover_json", True)  # noqa: B010
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Cache failure policy flags must be bool"):
         CacheFailurePolicy(recover_json=1)  # type: ignore[arg-type]
 
     async def verify() -> None:
@@ -116,7 +116,7 @@ class CustomJson(JsonCoder):
 
 
 @pytest.mark.parametrize(
-    "coder,payload,error",
+    ("coder", "payload", "error"),
     [
         (CustomJson, b"{", json.JSONDecodeError),
         (PickleCoder, b"not-a-pickle", pickle.UnpicklingError),
@@ -411,8 +411,8 @@ def test_real_redis_strict_and_corruption(
                 assert (await client.get("/value", headers={"If-None-Match": "*"})).json() == "computed"
                 assert await backend.get(key) == b"{"
                 for error in (RedisConnectionError, RedisTimeoutError, AuthenticationError):
-                    async def read(*args: Any, **kwargs: Any) -> Any:
-                        raise error("synthetic-secret")
+                    async def read(*args: Any, exc_type: Type[Exception] = error, **kwargs: Any) -> Any:
+                        raise exc_type("synthetic-secret")
 
                     with monkeypatch.context() as patch:
                         patch.setattr(backend, "get_with_ttl", read)

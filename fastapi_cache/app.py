@@ -22,6 +22,7 @@ _SLOT = "_fastapi_cache_app_handle_v1"
 _SCOPE_ID = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}")
 _DIGEST = re.compile(r"[0-9a-f]{64}")
 _ABSENT = object()
+_DEFAULT_FAILURE_POLICY = CacheFailurePolicy()
 
 
 class CacheScopeError(RuntimeError):
@@ -78,7 +79,7 @@ class CacheConfig:
         cache_status_header: str = "X-FastAPI-Cache",
         enable: bool = True,
         cache_authenticated: bool = False,
-        failure_policy: CacheFailurePolicy = CacheFailurePolicy(),
+        failure_policy: CacheFailurePolicy = _DEFAULT_FAILURE_POLICY,
     ) -> None:
         object.__setattr__(self, "backend", backend)
         object.__setattr__(self, "scope_id", scope_id)
