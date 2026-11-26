@@ -1,4 +1,5 @@
 from importlib.metadata import metadata
+from pathlib import Path
 
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
@@ -188,3 +189,23 @@ def test_redis_is_never_mandatory_without_an_extra() -> None:
             )
             for requirement in requirements
         )
+
+
+def test_packaged_readme_is_release_specific() -> None:
+    package = metadata("fastapi-cache-stable")
+    description = package.get_payload()
+    version = package["Version"]
+    assert f"fastapi-cache-stable {version}" in description
+    assert f"fastapi-cache-stable[redis]=={version}" in description
+    assert "CacheConfig" in description
+    assert "CacheFailurePolicy" in description
+    assert "Latest published stable" not in description
+    assert "fastapi-cache-stable==0.7.2" not in description
+
+
+def test_pyproject_points_poetry_at_release_readme() -> None:
+    source = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(
+        encoding="utf-8"
+    )
+    assert 'readme = "README_PYPI.md"' in source
+    assert '"README_PYPI.md",' in source
