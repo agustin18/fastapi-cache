@@ -33,7 +33,13 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.status import HTTP_304_NOT_MODIFIED
 
-from fastapi_cache import FastAPICache
+from fastapi_cache import (
+    CacheConfig,
+    CacheHandle,
+    CacheScopeError,
+    FastAPICache,
+)
+from fastapi_cache.app import _physical_key, _resolve_handle, _text_bytes
 from fastapi_cache.coder import Coder
 from fastapi_cache.key_builder import default_key_builder
 from fastapi_cache.types import KeyBuilder
@@ -141,7 +147,7 @@ def _cache_control_directives(values: Iterable[str]) -> Set[str]:
 
 
 def _uncacheable(
-    request: Optional[Request], request_cache_control: Set[str]
+    request: Optional[Request], request_cache_control: Set[str], enable: Optional[bool] = None
 ) -> bool:
     """Determine if this request should not be cached
 
@@ -154,7 +160,7 @@ def _uncacheable(
     effective cache_authenticated setting.
 
     """
-    if not FastAPICache.get_enable():
+    if not (FastAPICache.get_enable() if enable is None else enable):
         return True
     if request is None:
         return False
@@ -360,6 +366,9 @@ def cache(
     cache_authenticated: Optional[bool] = None,
     infer_response_model: bool = False,
     vary_headers: Optional[Sequence[str]] = None,
+    *,
+    scope: str = "legacy",
+    handle: Optional[CacheHandle] = None,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -380,6 +389,13 @@ def cache(
     :return:
     """
 
+    if scope not in ("legacy", "app") or (
+        handle is not None and (scope == "app" or not isinstance(handle, CacheHandle))
+    ):
+        raise CacheScopeError("Invalid cache scope options")
+    app_scoped = scope == "app" or handle is not None
+    if app_scoped:
+        _text_bytes(namespace)
     normalized_vary_headers = _normalize_vary_headers(vary_headers)
 
     injected_request = Parameter(
@@ -407,8 +423,9 @@ def cache(
         explicit_request = request_param not in to_inject
         return_type = get_typed_return_annotation(func)
 
-        @wraps(func)
-        async def inner(*args: P.args, **kwargs: P.kwargs) -> Union[R, Response]:
+        async def invoke(
+            config: Optional[CacheConfig], /, *args: P.args, **kwargs: P.kwargs
+        ) -> Union[R, Response]:
             async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
                 """Run cached sync functions in thread pool just like FastAPI."""
                 # if the wrapped function does NOT have request or response in
@@ -438,7 +455,7 @@ def cache(
                 )
 
             if _uncacheable(
-                request, request_cache_control
+                request, request_cache_control, config.enable if config is not None else None
             ) or _injected_response_cache_bypass(
                 response, normalized_vary_headers
             ):
@@ -450,12 +467,12 @@ def cache(
                 # fallback key when variation was explicitly requested.
                 return await ensure_async_func(*args, **kwargs)
 
-            prefix = FastAPICache.get_prefix()
+            prefix = config.prefix if config is not None else FastAPICache.get_prefix()
             has_auth_headers = _has_auth_headers(request)
             cache_authenticated_enabled = (
                 cache_authenticated
                 if cache_authenticated is not None
-                else FastAPICache.get_cache_authenticated()
+                else (config.cache_authenticated if config is not None else FastAPICache.get_cache_authenticated())
             )
             if has_auth_headers and not cache_authenticated_enabled:
                 return await ensure_async_func(*args, **kwargs)
@@ -464,9 +481,9 @@ def cache(
             # HTTP intermediaries can reuse its responses. Even anonymous
             # requests to an opt-in endpoint may share its URL with private ones.
             private_http_cache = request is not None and cache_authenticated_enabled
-            effective_coder = coder or FastAPICache.get_coder()
-            effective_expire = expire or FastAPICache.get_expire()
-            effective_key_builder = key_builder or FastAPICache.get_key_builder()
+            effective_coder = coder or (config.coder if config is not None else FastAPICache.get_coder())
+            effective_expire = expire or (config.expire if config is not None else FastAPICache.get_expire())
+            effective_key_builder = key_builder or (config.key_builder if config is not None else FastAPICache.get_key_builder())
             if (
                 has_auth_headers
                 and cache_authenticated_enabled
@@ -486,8 +503,8 @@ def cache(
                 # headers/state absent from args/kwargs. Do not serve any
                 # previous unsafe shared entry or store a new one.
                 return await ensure_async_func(*args, **kwargs)
-            backend = FastAPICache.get_backend()
-            cache_status_header = FastAPICache.get_cache_status_header()
+            backend = config.backend if config is not None else FastAPICache.get_backend()
+            cache_status_header = config.cache_status_header if config is not None else FastAPICache.get_cache_status_header()
             if_none_match = (
                 request.headers.get("if-none-match")
                 if request is not None
@@ -504,6 +521,10 @@ def cache(
             )
             if isawaitable(cache_key):
                 cache_key = await cache_key
+            if config is not None:
+                if not cache_key:
+                    raise CacheScopeError("Invalid logical cache key")
+                _text_bytes(cache_key)
             assert isinstance(cache_key, str)  # noqa: S101  # assertion is a type guard
 
             if request is not None and effective_key_builder is default_key_builder:
@@ -528,6 +549,9 @@ def cache(
                 ).hexdigest()
                 cache_key = f"{prefix}:{namespace}:vary-v1:{digest}"
 
+            if config is not None:
+                cache_key = _physical_key(config, namespace, cache_key)
+
             try:
                 ttl, cached = await backend.get_with_ttl(cache_key)
             except Exception as exc:
@@ -536,7 +560,7 @@ def cache(
                     "(backend error: %s)",
                     func.__module__,
                     func.__name__,
-                    namespace,
+                    namespace if config is None else "<app-scoped>",
                     type(exc).__name__,
                 )
                 ttl, cached = 0, None
@@ -570,7 +594,7 @@ def cache(
                         "(backend error: %s)",
                         func.__module__,
                         func.__name__,
-                        namespace,
+                        namespace if config is None else "<app-scoped>",
                         type(exc).__name__,
                     )
 
@@ -636,6 +660,15 @@ def cache(
                         result.headers.update(headers)
 
             return result
+
+        @wraps(func)
+        async def inner(*args: P.args, **kwargs: P.kwargs) -> Union[R, Response]:
+            if not app_scoped:
+                return await invoke(None, *args, **kwargs)
+            request: Optional[Request] = kwargs.get(request_param.name)  # type: ignore[assignment]
+            selected = _resolve_handle(request, handle)
+            with selected._lease() as config:
+                return await invoke(config, *args, **kwargs)
 
         # FastAPI's get_typed_signature omits the return annotation. Enabling
         # inference can make previously valid annotations (e.g. Union[Response,
