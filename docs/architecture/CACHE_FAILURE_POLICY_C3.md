@@ -1,7 +1,8 @@
-# C3 / D5–D7 failure policy — candidate, not released
+# C3 / D5–D7 failure policy — merged, not released
 
-This is the concrete C3 decision proposal for #112 on merged C2. It
-requires independent audit and maintainer acceptance before merge.
+This records the C3 decision for #112, independently audited on
+29ff7f254c6643ab5fb801c8799ec170145fcb8e and merged as b57d320.
+It remains unreleased until separate 0.8 publication authorization.
 No global configuration or default behavior changes.
 
 ```python
@@ -22,7 +23,7 @@ unchanged. No route override, no non-HTTP policy, no new dependencies.
 | Case | Opt-in decision |
 | --- | --- |
 | strict_read | Exact standalone Redis ConnectionError/TimeoutError (redis-py or exact built-in ConnectionError/TimeoutError) -> sanitized CacheBackendReadError, no endpoint or write, no attached backend exception |
-| Other read errors | Preserve existing fail-open recompute; fixed unclassified log for any active policy; no blanket error classification |
+| Other read errors | Preserve existing fail-open recompute; fixed classification log for any active policy (connection/timeout for exact classified errors even with strict_read off; unclassified otherwise); no blanket error classification |
 | conservative_write | On caught SET exception, return computed response, no library validator/304/freshness, no-store, MISS if no application-owned collision |
 | recover_json | Exact JsonCoder or TypedJsonCoder, invalid UTF-8 or JSON syntax only -> recompute once uncached; no encode, set, clear or retry |
 | Typed validation / tagged conversions | Propagate original errors; deferred because application validators/converters can fail for reasons unrelated to storage corruption |

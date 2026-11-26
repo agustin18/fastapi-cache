@@ -411,7 +411,7 @@ def test_real_redis_strict_and_corruption(
             ) as client:
                 assert (await client.get("/value", headers={"If-None-Match": "*"})).json() == "computed"
                 assert await backend.get(key) == b"{"
-                for error in (RedisConnectionError, RedisTimeoutError, AuthenticationError):
+                for error in (RedisConnectionError, RedisTimeoutError, ConnectionError, TimeoutError, AuthenticationError):
                     async def read(*args: Any, exc_type: Type[Exception] = error, **kwargs: Any) -> Any:
                         raise exc_type("synthetic-secret")
 
