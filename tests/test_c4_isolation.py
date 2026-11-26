@@ -192,11 +192,11 @@ def _redis_url() -> str:
 
 @pytest.mark.redis
 def test_real_redis_identity_scope_matrix() -> None:
+    url = _redis_url()
     from redis.asyncio import Redis
 
     from fastapi_cache.backends.redis import RedisBackend
 
-    url = _redis_url()
 
     async def verify() -> None:
         client = Redis.from_url(url, decode_responses=False)
@@ -247,11 +247,11 @@ def _worker(url: str, scope: str, expected: str, name: str) -> None:
 
 @pytest.mark.redis
 def test_cross_process_scope_reuse_and_separation() -> None:
+    url = _redis_url()
     from redis.asyncio import Redis
 
     from fastapi_cache.backends.redis import RedisBackend
 
-    url = _redis_url()
     scope = "c4-workers-" + uuid.uuid4().hex
     ctx = multiprocessing.get_context("spawn")
     try:
