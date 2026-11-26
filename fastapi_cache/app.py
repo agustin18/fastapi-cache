@@ -26,13 +26,17 @@ class CacheScopeError(RuntimeError):
     """Invalid, missing, conflicting or inactive application cache scope."""
 
 
-def _hash_text(value: str) -> str:
+def _text_bytes(value: str) -> bytes:
     if not isinstance(value, str):
         raise CacheScopeError("Invalid cache scope text")
     try:
-        return hashlib.sha256(value.encode("utf-8")).hexdigest()
+        return value.encode("utf-8")
     except UnicodeEncodeError:
         raise CacheScopeError("Invalid cache scope text") from None
+
+
+def _hash_text(value: str) -> str:
+    return hashlib.sha256(_text_bytes(value)).hexdigest()
 
 
 def _scope_prefix(scope_id: str) -> str:
@@ -88,7 +92,7 @@ def _validate_config(config: CacheConfig) -> None:
         raise CacheScopeError("Invalid cache configuration")
     if not isinstance(config.scope_id, str) or not _SCOPE_ID.fullmatch(config.scope_id):
         raise CacheScopeError("Invalid cache scope identifier")
-    _hash_text(config.prefix)
+    _text_bytes(config.prefix)
     if not isinstance(config.enable, bool) or not isinstance(config.cache_authenticated, bool):
         raise CacheScopeError("Invalid cache configuration")
     from fastapi_cache.backends.inmemory import InMemoryBackend

@@ -34,7 +34,7 @@ from starlette.responses import Response
 from starlette.status import HTTP_304_NOT_MODIFIED
 
 from fastapi_cache import CacheConfig, CacheHandle, CacheScopeError, FastAPICache
-from fastapi_cache.app import _hash_text, _physical_key, _resolve_handle
+from fastapi_cache.app import _physical_key, _resolve_handle, _text_bytes
 from fastapi_cache.coder import Coder
 from fastapi_cache.key_builder import default_key_builder
 from fastapi_cache.types import KeyBuilder
@@ -390,7 +390,7 @@ def cache(
         raise CacheScopeError("Invalid cache scope options")
     app_scoped = scope == "app" or handle is not None
     if app_scoped:
-        _hash_text(namespace)
+        _text_bytes(namespace)
     normalized_vary_headers = _normalize_vary_headers(vary_headers)
 
     injected_request = Parameter(
@@ -519,7 +519,7 @@ def cache(
             if config is not None:
                 if not cache_key:
                     raise CacheScopeError("Invalid logical cache key")
-                _hash_text(cache_key)
+                _text_bytes(cache_key)
             assert isinstance(cache_key, str)  # noqa: S101  # assertion is a type guard
 
             if request is not None and effective_key_builder is default_key_builder:

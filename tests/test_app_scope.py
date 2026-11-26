@@ -7,7 +7,8 @@ import os
 import sys
 import uuid
 from dataclasses import FrozenInstanceError
-from typing import Any, Dict, Generator, Optional
+from typing import Any, Dict, Generator
+from unittest.mock import AsyncMock
 from urllib.parse import urlsplit
 
 import httpx
@@ -222,7 +223,7 @@ def test_two_apps_shared_inmemory() -> None:
 
 
 @pytest.mark.redis
-def test_two_apps_shared_real_redis() -> None:
+def test_two_apps_shared_real_redis(monkeypatch: pytest.MonkeyPatch) -> None:
     url = os.environ.get("REDIS_URL")
     if not url:
         if os.environ.get("REQUIRE_REDIS") == "1":
@@ -243,10 +244,21 @@ def test_two_apps_shared_real_redis() -> None:
                 await CacheHandle(_config(backend, "cluster")).start(FastAPI())
             backend.is_cluster = False
             scope = "c1-" + uuid.uuid4().hex
-            await _exercise_shared_store(backend, scope, scope + "-b")
-            # Successful ping alone could reconnect; also spy that cache did
-            # not call the client's close or disconnect methods below.
-            assert await client.ping()
+            with monkeypatch.context() as patch:
+                disconnect = AsyncMock(wraps=client.connection_pool.disconnect)
+                patch.setattr(client.connection_pool, "disconnect", disconnect)
+                close_spies = []
+                for name in ("close", "aclose"):
+                    method = getattr(client, name, None)
+                    if method is not None:
+                        spy = AsyncMock(wraps=method)
+                        patch.setattr(client, name, spy)
+                        close_spies.append(spy)
+                await _exercise_shared_store(backend, scope, scope + "-b")
+                assert await client.ping()
+                disconnect.assert_not_awaited()
+                for spy in close_spies:
+                    spy.assert_not_awaited()
         finally:
             closer = getattr(client, "aclose", None)
             if closer is None:
@@ -452,5 +464,109 @@ def test_scoped_privacy_and_backend_failure_redaction(
         assert "synthetic-secret" not in caplog.text
         assert "synthetic-private-namespace" not in caplog.text
         await handle.aclose()
+
+    asyncio.run(verify())
+
+
+def test_real_pipeline_golden_and_distinct_configuration() -> None:
+    async def verify() -> None:
+        from fastapi_cache.coder import PickleCoder
+
+        store = InMemoryBackend()
+        a, b = FastAPI(), FastAPI()
+
+        def builder(*args: Any, **kwargs: Any) -> str:
+            return "raw"
+
+        def identity(*args: Any, **kwargs: Any) -> str:
+            request = kwargs["request"]
+            return request.headers.get("Authorization", "anonymous")
+
+        @a.get("/value")
+        @cache(scope="app", namespace="orders")
+        async def first() -> str:
+            return "public"
+
+        @b.get("/value")
+        @cache(scope="app", namespace="orders")
+        async def second() -> str:
+            return "private"
+
+        ha = CacheHandle(_config(store, "shop-a", key_builder=builder))
+        private_config = CacheConfig(
+            store, scope_id="shop-b", expire=123, coder=PickleCoder,
+            key_builder=identity, cache_authenticated=True,
+        )
+        hb = CacheHandle(private_config)
+        await ha.start(a)
+        await hb.start(b)
+        try:
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=a),
+                                         base_url="http://app.test") as ca, httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=b), base_url="http://app.test"
+            ) as cb:
+                assert (await ca.get("/value")).headers["Cache-Control"] == "max-age=60"
+                assert await store.get(GOLDEN) == b'"public"'
+                assert "X-FastAPI-Cache" not in (
+                    await ca.get("/value", headers={"Authorization": "Bearer synthetic"})
+                ).headers
+                for principal in ("Bearer synthetic-a", "Bearer synthetic-b"):
+                    first_response = await cb.get("/value", headers={"Authorization": principal})
+                    hit = await cb.get("/value", headers={"Authorization": principal})
+                    assert first_response.headers["X-FastAPI-Cache"] == "MISS"
+                    assert hit.headers["X-FastAPI-Cache"] == "HIT"
+                    assert hit.headers["Cache-Control"] == "private, no-store"
+                    key = _physical_key(private_config, "orders", principal)
+                    data = await store.get(key)
+                    assert data is not None and PickleCoder.decode(data) == "private"
+        finally:
+            await ha.aclose()
+            await hb.aclose()
+
+    asyncio.run(verify())
+
+
+@pytest.mark.parametrize("operation", ["builder", "read", "write", "clear"])
+def test_cancellation_releases_every_operation_lease(
+    operation: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def verify() -> None:
+        store = InMemoryBackend()
+        app = FastAPI()
+        entered = asyncio.Event()
+
+        async def blocked(*args: Any, **kwargs: Any) -> Any:
+            entered.set()
+            await asyncio.Event().wait()
+
+        config = _config(store, "cancel")
+        if operation == "builder":
+            config = _config(store, "cancel", key_builder=blocked)
+        elif operation in ("read", "write", "clear"):
+            method = {"read": "get_with_ttl", "write": "set", "clear": "clear"}[operation]
+            monkeypatch.setattr(store, method, blocked)
+        handle = CacheHandle(config)
+        await handle.start(app)
+
+        @app.get("/value")
+        @cache(scope="app")
+        async def value() -> str:
+            return "value"
+
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
+                                     base_url="http://app.test") as client:
+            if operation == "clear":
+                task: "asyncio.Task[Any]" = asyncio.create_task(handle.clear())
+            else:
+                task = asyncio.create_task(client.get("/value"))
+            await asyncio.wait_for(entered.wait(), 5)
+            closer = asyncio.create_task(handle.aclose())
+            await asyncio.sleep(0)
+            assert not closer.done()
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+            await asyncio.wait_for(closer, 5)
+            assert not hasattr(app.state, _SLOT)
 
     asyncio.run(verify())
