@@ -2,7 +2,7 @@
 
 Caching can return the wrong representation if the key does not include **every input that influences the response**. This is not limited to the usual URL, query string or JSON body.
 
-## Safe defaults in published 0.7.2
+## Safe defaults in published 0.8.0
 
 - Requests with **`Authorization`** or **`Cookie`** bypass caching by default.
 - An endpoint that explicitly declares `Request` and uses the default key builder bypasses, rather than guessing whether hidden request state affects its response.
@@ -48,18 +48,18 @@ async def greeting():
 
 ## Protect against cardinality attacks
 
-A client can send many distinct values and multiply entries. Validate and canonicalize externally supplied values, enforce limits and request rate controls, keep TTLs bounded and use backend capacity controls. The [bounded InMemory implementation](https://github.com/agustin18/fastapi-cache/pull/85) is available as an opt-in in **published 0.7.2**. Its entry-count limit does not replace header normalization, identity-aware cache keys, authorization checks or rate limiting.
+A client can send many distinct values and multiply entries. Validate and canonicalize externally supplied values, enforce limits and request rate controls, keep TTLs bounded and use backend capacity controls. The [bounded InMemory implementation](https://github.com/agustin18/fastapi-cache/pull/85) is available as an opt-in in **published 0.8.0**. Its entry-count limit does not replace header normalization, identity-aware cache keys, authorization checks or rate limiting.
 
 For private/tenant-sensitive caching, prefer an application-reviewed custom key builder incorporating **validated identity, permissions and all response dimensions**, or bypass caching.
 
-## 0.7.2 authentication and HTTP cache boundaries
+## 0.8.0 authentication and HTTP cache boundaries
 
-The 0.7.2 correction checks all Authorization/Cookie header
+The 0.8.0 correction checks all Authorization/Cookie header
 occurrences and keeps generated Cache-Control private, no-store on
 cached HTTP responses from routes with authenticated caching enabled
 (including MISS/HIT/304). This is an HTTP intermediary policy, not a
 replacement for an identity-aware server-side cache key. It is not
-available in the published 0.7.2 artifact. Applications must reject
+available in the published 0.8.0 artifact. Applications must reject
 ambiguous credentials and authorize before cache lookup. For bypassed
 responses, the application remains responsible for HTTP cache headers.
 
@@ -67,7 +67,9 @@ Do not rely on dynamic response headers evaluated after a cache lookup
 to prevent replay of an older shared entry. Bypass private caching unless
 the identity and permissions are explicitly captured in an appropriate
 key. Rotate or purge historical affected namespaces and intermediary
-entries before migration. Cache configuration is process-global; do not
-share/reinitialize it between unrelated applications that require isolation.
+entries before migration. The legacy singleton remains process-global; published 0.8.0 adds opt-in
+`CacheConfig`/`CacheHandle` app scope for supported backends. App scope does not
+automatically discover hidden tenant or identity context; use unique
+`scope_id` values and an identity-aware key builder.
 
 **Full contract:** [SECURITY.md](https://github.com/agustin18/fastapi-cache/blob/stable/SECURITY.md) · [#53 residual investigation](https://github.com/agustin18/fastapi-cache/issues/53).

@@ -1,8 +1,8 @@
-# fastapi-cache-stable 0.8.0 — release notes (promotion candidate)
+# fastapi-cache-stable 0.8.0 — release notes
 
-**Status:** promotion candidate; not published. The version, release notes and
-risk record are being prepared for review. No tag, TestPyPI or PyPI artifact
-is authorized by this document.
+**Published:** 2026-11-26 on PyPI. Install the exact released artifact with
+`python -m pip install "fastapi-cache-stable==0.8.0"` or
+`python -m pip install "fastapi-cache-stable[redis]==0.8.0"`.
 
 0.8.0 adds an **opt-in** application-scoped configuration and lifecycle,
 internal backend capability contracts, opt-in failure policies and
@@ -30,7 +30,7 @@ default.
   change legacy `Backend` signatures or promote experimental providers.
 - **C4 evidence:** installed wheel/sdist isolation, privacy matrix,
   cross-process scope checks and a descriptive 0.7.2 comparison are recorded.
-  The 0.8.0 re-run did not reproduce the earlier 3.02x concurrent p50 outlier
+  The 0.8.0 re-run did not reproduce the earlier 3.02× concurrent p50 outlier
   (p50 -0.52%, p95 -1.00%, p99 -0.85%, throughput +0.55%); the ~9ms regime
   moved to scoped-off. The comparison is **descriptive, not a performance
   certification**.
@@ -59,14 +59,15 @@ identity-aware key builder or explicit bypass; the C4 evidence includes a
 negative hidden-context example. `#100` remains open: the C4 comparison is
 descriptive; the 0.8.0 re-run did not reproduce the earlier outlier, but no
 latency, p95/p99, HA or no-regression claim is made. The focused A/A remains
-optional and #100 stays open. `#111`, `#112`, `#45`
-and `#102` remain open for their broader residual scopes. Pickle requires
-trusted storage; an ETag is not integrity or authorization.
+optional. `#111`, `#112`, `#45` and `#102` remain open for their broader
+residual scopes. Pickle requires trusted storage; an ETag is not integrity or
+authorization.
 
-## Evidence and publication state
+## Publication state and evidence
 
-The C4 evidence is recorded in `C4_EVIDENCE_PROTOCOL.md` and the C4 workflow
-artifact. Final source SHA, Phase B, security delta, exact artifact hashes,
-TestPyPI/PyPI and provenance are **pending separate release gates**. Do not
-reuse the C4 candidate artifact as publication evidence; the final Phase B
-must build the exact released source.
+Exact artifact hashes, Phase B evidence, TestPyPI/PyPI registry verification,
+security delta and provenance are recorded in
+[RELEASE_STATUS_0.8.0.md](RELEASE_STATUS_0.8.0.md), the
+[GitHub Release](https://github.com/agustin18/fastapi-cache/releases/tag/v0.8.0)
+and the [candidate checklist](RELEASE_CANDIDATE_0.8.0.md). The release uses
+the exact Phase B artifact; no rebuild or reuse of 0.7.2 approval occurred.

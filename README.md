@@ -6,11 +6,11 @@
 > The Python import stays `fastapi_cache`; intentional safety/behavior changes
 > are described in [MIGRATION.md](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md).
 >
-> **Latest published stable:** [0.7.2 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.7.2/)
-> (released 2026-11-25) ·
+> **Latest published stable:** [0.8.0 on PyPI](https://pypi.org/project/fastapi-cache-stable/0.8.0/)
+> (released 2026-11-26) ·
 > [Documentation](https://agustin18.github.io/fastapi-cache/) ·
-> [Release notes](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_NOTES_0.7.2.md) ·
-> [Release evidence](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.7.2.md) ·
+> [Release notes](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_NOTES_0.8.0.md) ·
+> [Release evidence](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.8.0.md) ·
 > [Quickstart](https://github.com/agustin18/fastapi-cache/blob/stable/docs/QUICKSTART.md) ·
 > [Migration](https://github.com/agustin18/fastapi-cache/blob/stable/MIGRATION.md) ·
 > [Compatibility](https://github.com/agustin18/fastapi-cache/blob/stable/COMPATIBILITY.md) ·
@@ -22,16 +22,18 @@
 > This patch rebuilds the PyPI long description from the corrected README.
 > Pre-releases must be independently evaluated before production deployment.
 >
-> Published 0.7.2 installation: Python `>=3.8,<3.15`. CPython 3.11–3.14 (server-side) has
+> Published 0.8.0 installation: Python `>=3.8,<3.15`. CPython 3.11–3.14 (server-side) has
 > security validation; Python 3.8–3.10 is functional legacy compatibility only.
 > DynamoDB/Memcached remain experimental. Browser/Pyodide/Node are untested.
 > Independent project, not endorsed by the upstream maintainer.
 >
 > `stable` is the release branch; `main` tracks upstream.
 
-**Published 0.7.2:** standard CPython 3.14 support, with `>=3.8,<3.15`
-metadata and the Redis extra through 3.14. Exact-artifact Phase B and
-registry evidence are recorded in the [release status](docs/releases/RELEASE_STATUS_0.7.2.md).
+**Published 0.8.0:** opt-in application-scoped configuration/lifecycle,
+internal backend contracts and opt-in failure policies, plus standard CPython
+3.14 support with `>=3.8,<3.15` metadata and the Redis extra through 3.14.
+Exact-artifact Phase B and registry evidence are recorded in the
+[release status](docs/releases/RELEASE_STATUS_0.8.0.md).
 
 [![pypi](https://img.shields.io/pypi/v/fastapi-cache-stable.svg?style=flat)](https://pypi.org/p/fastapi-cache-stable)
 [![Python](https://img.shields.io/pypi/pyversions/fastapi-cache-stable.svg)](https://pypi.org/project/fastapi-cache-stable/)
@@ -71,13 +73,13 @@ See [compatibility & risk matrix](https://github.com/agustin18/fastapi-cache/blo
 |---|---|---|
 | **Starting from zero** | [Install in 5 minutes](docs/QUICKSTART.md) · [Visual guide source](site_docs/getting-started.md) | Pinned package, InMemory, first HIT/MISS, Redis |
 | **Already on fastapi-cache2** | [Migration walkthrough](site_docs/migration.md) · [Full migration contract](MIGRATION.md) | Remove the old distribution, validate privacy, migrate namespaces, rollback |
-| **Comparing features/backends** | [Feature matrix](site_docs/reference/features.md) · [Backend choice](site_docs/backends.md) | What's actually in 0.7.2 and what remains proposed |
+| **Comparing features/backends** | [Feature matrix](site_docs/reference/features.md) · [Backend choice](site_docs/backends.md) | What's actually in 0.8.0 and what remains proposed |
 | **Checking security** | [Tenant and request safety](site_docs/guides/privacy.md) · [Security policy](SECURITY.md) | Default auth bypass, custom headers, cache-key isolation |
 | **Looking ahead** | [Next release plan](site_docs/roadmap.md) · [#95 roadmap](https://github.com/agustin18/fastapi-cache/issues/95) | post-0.7 work, not publication promises |
 
 **Try it:** [one-command before/after migration demo](examples/migration/README.md) (two isolated published environments, no Redis or credentials).
 
-**Published:** [fastapi-cache-stable 0.7.2](https://pypi.org/project/fastapi-cache-stable/0.7.2/). It includes the opt-in bounded `InMemoryBackend(max_entries=...)`, exact TTL expiry, decode-before-304 and the declared Redis tuple contract. Read the searchable [documentation site](https://agustin18.github.io/fastapi-cache/); source is in [site_docs/](site_docs/index.md).
+**Published:** [fastapi-cache-stable 0.8.0](https://pypi.org/project/fastapi-cache-stable/0.8.0/). It adds opt-in `CacheConfig`/`CacheHandle` app scope and `CacheFailurePolicy`, while preserving the legacy singleton default, bounded `InMemoryBackend(max_entries=...)`, exact TTL expiry, decode-before-304 and the declared Redis tuple contract. Read the searchable [documentation site](https://agustin18.github.io/fastapi-cache/); source is in [site_docs/](site_docs/index.md).
 
 
 ## Introduction
@@ -87,9 +89,9 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 ## Development roadmap
 
-The published 0.7.2 line prioritizes safe, low-friction migration over feature
+The published 0.8.0 line prioritizes safe, low-friction migration over feature
 count. See [the roadmap](https://github.com/agustin18/fastapi-cache/blob/stable/ROADMAP.md) and its linked issues for
-maintenance and later opt-in work. Roadmap items are **not** included in 0.7.2
+maintenance and later opt-in work. Roadmap items are **not** included in 0.8.0
 and are not delivery commitments.
 
 ## Features
@@ -97,6 +99,7 @@ and are not delivery commitments.
 - Same `fastapi_cache` imports and legacy default cache-key algorithm.
 - Correctness fixes for cache invalidation, error responses and HTTP cache headers.
 - Auth/Cookie privacy bypass by default; opt-in typed JSON decoding for Pydantic v2.
+- Opt-in `CacheConfig`/`CacheHandle` app scope and `CacheFailurePolicy`, with the legacy singleton default unchanged.
 - Opt-in `vary_headers` for explicitly declared public header dimensions, with versioned hashed keys.
 - Redis and InMemory backends; Memcached and DynamoDB remain experimental.
 - CI across Python versions, security profiles and published-wheel Redis migration.
@@ -114,11 +117,11 @@ Install the **published version** you have tested, pinned exactly:
 
 ```sh
 python -m pip uninstall -y fastapi-cache2
-python -m pip install "fastapi-cache-stable[redis]==0.7.2"
+python -m pip install "fastapi-cache-stable[redis]==0.8.0"
 python -m pip check
 ```
 
-The [0.7.2 release evidence](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.7.2.md)
+The [0.8.0 release evidence](https://github.com/agustin18/fastapi-cache/blob/stable/docs/releases/RELEASE_STATUS_0.8.0.md)
 records the published wheel/sdist hashes and workflows. Do not treat the
 repository version alone as publication evidence.
 
@@ -405,7 +408,7 @@ otherwise produce perpetual misses; see the migration checklist.
 ### Explicit request-header variants (0.5.0)
 
 **Versioned API:** `vary_headers` was introduced in published 0.5.0.
-It is **not part of published 0.4.1**. Pin the tested 0.7.2 distribution and
+It is **not part of published 0.4.1**. Pin the tested 0.8.0 distribution and
 review your application-specific cache-key/identity and namespace-migration
 requirements below.
 
@@ -581,7 +584,7 @@ The automatic bypass only detects `Authorization` and `Cookie`. If your app uses
 proxy-injected headers, `request.state`, or internal dependencies, review your cache strategy.
 `cache_authenticated=True` does not make an unsafe key builder safe.
 
-The 0.7.2 release protects the application cache and additionally checks every Authorization/Cookie field occurrence
+The 0.8.0 release protects the application cache and additionally checks every Authorization/Cookie field occurrence
 and generates `Cache-Control: private, no-store` for cached HTTP responses
 on authenticated-cache opt-in routes (including anonymous requests to
 those routes). This does not replace application authorization or cache
@@ -609,7 +612,7 @@ cross-process sharing. `expire=0` keeps the legacy fallback to the global `expir
 `get_with_ttl` returns `-1` for no-expiration entries; the decorator omits `max-age` for
 those entries and for `expire=None`.
 
-**Published 0.7.2 API:**
+**Published 0.8.0 API:**
 [PR #85](https://github.com/agustin18/fastapi-cache/pull/85) adds
 `InMemoryBackend(max_entries=1_000)`. This positive-integer, opt-in cap
 counts **entries per backend instance**, not bytes, processes or all workers;
@@ -618,7 +621,7 @@ property**, fixed at construction: assignments afterward raise
 `AttributeError`. When full, bounded mode evicts the LRU item, reclaiming
 an expired item first when available; no background sweeper is started.
 Explicit namespace clearing still scans local entries under the async lock.
-Install the exact 0.7.2 pin and validate your application's migration. See [InMemory version guide](site_docs/guides/inmemory.md)
+Install the exact 0.8.0 pin and validate your application's migration. See [InMemory version guide](site_docs/guides/inmemory.md)
 and [release acceptance #92](https://github.com/agustin18/fastapi-cache/issues/92).
 
 ### RedisBackend

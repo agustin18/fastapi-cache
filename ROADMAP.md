@@ -1,10 +1,10 @@
 # Roadmap — fastapi-cache-stable
 
-**Current published release:** [0.7.2](https://pypi.org/project/fastapi-cache-stable/0.7.2/)
-on **2026-11-25**. This compatibility patch extends standard CPython and
-Redis extra support through 3.14, without runtime, API, key, ETag or
-serialization changes from 0.7.1. See [0.7.2 release evidence](docs/releases/RELEASE_STATUS_0.7.2.md).
-**0.7.1** is the immediately preceding published release; **0.7.0** is historical. **0.6.0** is older. Source version and
+**Current published release:** [0.8.0](https://pypi.org/project/fastapi-cache-stable/0.8.0/)
+on **2026-11-26**. This minor release adds opt-in app-scoped configuration and
+lifecycle, backend contracts, failure policies and installed isolation evidence
+while preserving the legacy singleton default. See [0.8.0 release evidence](docs/releases/RELEASE_STATUS_0.8.0.md).
+**0.7.2** is the immediately preceding published release; **0.7.1** and **0.7.0** are historical. **0.6.0** is older. Source version and
 merged PRs alone do not imply publication.
 **Do not reopen a completed publication gate without new material evidence.**
 The completed 0.7.0, 0.7.1 and 0.7.2 publication records are historical; their
@@ -25,18 +25,17 @@ The primary product advantage remains conservative migration from
 cache keys and safe default HTTP/private-response behavior.
 
 
-## 0.8.0 — promotion candidate, not published
+## 0.8.0 — published 2026-11-26
 
-0.8.0 includes the opt-in app-scoped configuration/lifecycle (C1), internal
+0.8.0 ships the opt-in app-scoped configuration/lifecycle (C1), internal
 built-in backend contracts (C2), opt-in failure/serialization policies (C3)
-and installed isolation/descriptive performance evidence (C4). Existing
-singleton behavior and the 0.7.2 published artifact remain unchanged. The
-promotion records are [release notes](docs/releases/RELEASE_NOTES_0.8.0.md),
-[candidate checklist](docs/releases/RELEASE_CANDIDATE_0.8.0.md) and
-[promotion status](docs/releases/RELEASE_STATUS_0.8.0.md). Publication is
-pending external verification of the C4 evidence, final Phase B, security delta,
-separate TestPyPI/PyPI authorization and final source freeze. `#53`, `#100`,
-`#111`, `#112`, `#45` and `#102` remain open residual scopes.
+and installed isolation/descriptive performance evidence (C4). The legacy
+singleton default and 0.7.2 published artifact remain unchanged. Release
+records: [release notes](docs/releases/RELEASE_NOTES_0.8.0.md),
+[checklist](docs/releases/RELEASE_CANDIDATE_0.8.0.md) and
+[status/provenance](docs/releases/RELEASE_STATUS_0.8.0.md). `#53`, `#100`,
+`#111`, `#112`, `#45` and `#102` remain open residual scopes; no automatic
+tenant isolation or performance certification is claimed.
 
 ## 0.7.2 — Python 3.14 compatibility published 2026-11-25
 
@@ -74,8 +73,7 @@ third-party security certification or hosted-docs requirement applies.
 
 ## Post-0.7.2 open work
 
-**0.8.0 promotion:** C1–C4 are merged; the source is in the promotion PR but
-not tagged or published. #99/#111/#112 implementation scopes are merged, while
+**0.8.0 published:** C1–C4 are merged, tagged `v0.8.0` and published with exact Phase B, TestPyPI and PyPI evidence. #99/#111/#112 implementation scopes are merged, while
 their broader residual issues remain open. #53 privacy and #100 descriptive
 performance evidence are cross-cutting; #96/#50/#103/#102 are outside 0.8
 core scope. See the [0.8.0 candidate checklist](docs/releases/RELEASE_CANDIDATE_0.8.0.md).
@@ -112,7 +110,7 @@ The following other tracks remain candidates, not delivery promises:
 | Release | Focus | Non-negotiable boundary |
 |---|---|---|
 | **0.7.2 (published)** | #51 standard CPython 3.14 compatibility only | Completed qualification and exact-artifact gates; unchanged existing APIs, key/ETag/serialization behavior and legacy support |
-| **0.8.0** | #99 app-scoped lifecycle/config RFC with #111 backend and #112 error/serialization contracts | Design and privacy review first; backward-compatible opt-in, explicit ownership and cancellation; no promised automatic tenant isolation |
+| **0.8.0 (published)** | #99 app-scoped lifecycle/config with #111 backend and #112 error/serialization contracts | Backward-compatible opt-in, explicit ownership and cancellation; no promised automatic tenant isolation |
 | **0.9.0** | #97 tags and #49 safe parameter filtering | Explicit opt-in, tenant-safe keys, TTL index/race tests and independently reviewed invalidation scope |
 | **Later, if justified** | #98 bounded stale | Separate threat model, expiry, failure and cancellation contract; no stale-safety promise |
 | **1.0.0** | Public API and maintenance-contract maturity | Support duration decision separate; do not promise 24 months without sustainable maintenance |

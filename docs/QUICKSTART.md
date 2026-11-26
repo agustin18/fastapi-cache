@@ -1,14 +1,15 @@
-# Quickstart — fastapi-cache-stable 0.7.2
+# Quickstart — fastapi-cache-stable 0.8.0
 
 Five-minute example of response caching with
-[`fastapi-cache-stable`](https://pypi.org/project/fastapi-cache-stable/0.7.2/).
+[`fastapi-cache-stable`](https://pypi.org/project/fastapi-cache-stable/0.8.0/).
 The Python import remains `fastapi_cache`.
 
-## 0.7.2 release
+## 0.8.0 release
 
-The examples below pin the published 0.7.2 release. The same minimal app
-works; `max_entries` is opt-in on InMemory. See
-[0.7.2 notes](releases/RELEASE_NOTES_0.7.2.md).
+The examples below pin the published 0.8.0 release. The legacy singleton
+remains the default; `CacheConfig`/`CacheHandle` app scope and
+`CacheFailurePolicy` are opt-in, and `max_entries` is opt-in on InMemory.
+See [0.8.0 notes](releases/RELEASE_NOTES_0.8.0.md).
 
 ## Install
 
@@ -18,7 +19,7 @@ environment. Create a clean virtual environment:
 ```sh
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install "fastapi-cache-stable==0.7.2" "uvicorn"
+python -m pip install "fastapi-cache-stable==0.8.0" "uvicorn"
 python -m pip check
 ```
 
@@ -69,7 +70,7 @@ next identical request within the TTL should show `HIT`.
 The decorator order matters: `@app.get` is **above** `@cache`.
 
 **InMemory is per Python process**, not shared between workers; it
-has no size cap by default in 0.7.2. Use Redis standalone when workers must
+has no size cap by default in 0.8.0. Use Redis standalone when workers must
 share cached values.
 
 ## Redis standalone
@@ -77,11 +78,11 @@ share cached values.
 First install the tested Redis client line:
 
 ```sh
-python -m pip install "fastapi-cache-stable[redis]==0.7.2"
+python -m pip install "fastapi-cache-stable[redis]==0.8.0"
 ```
 
 Use [the complete Redis lifespan example](../README.md#quick-start)
-and a **test Redis instance**. The 0.7.2 compatibility matrix covers
+and a **test Redis instance**. The 0.8.0 compatibility matrix covers
 Python-conditional redis-py 4.6–8.1 clients and Redis servers 6.2/7.0/7.4/8.0;
 see [COMPATIBILITY.md](../COMPATIBILITY.md) and the
 [Redis research evidence](../audit/redis/REDIS_CLIENT_MATRIX_RESEARCH.md).
@@ -115,7 +116,7 @@ with LRU eviction and expired-entry reclamation. See the
   `Vary`, locale, tenant or custom-auth headers. Use a suitable
   custom key builder, or bypass caching until variation is proven safe.
   See [the header/Vary investigation](https://github.com/agustin18/fastapi-cache/issues/53).
-  **0.3.1, 0.4.1, 0.5.0, 0.6.0 and 0.7.2** bypass cache reads and writes when an endpoint
+  **0.3.1, 0.4.1, 0.5.0, 0.6.0 and 0.8.0** bypass cache reads and writes when an endpoint
   explicitly declares `Request` and uses the default builder; endpoints
   with a custom, identity-aware key builder still cache. This does not make
   hidden middleware/context variables safe for routes that do not declare
