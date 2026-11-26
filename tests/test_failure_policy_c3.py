@@ -14,6 +14,7 @@ import httpx
 import pytest
 from fastapi import FastAPI, Response
 from pydantic import BaseModel, ValidationError
+from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from fastapi_cache import (
@@ -27,7 +28,7 @@ from fastapi_cache import (
 )
 from fastapi_cache.app import _physical_key
 from fastapi_cache.backends.inmemory import InMemoryBackend
-from fastapi_cache.coder import Coder, PickleCoder
+from fastapi_cache.coder import CONVERTERS, Coder, PickleCoder
 from fastapi_cache.decorator import _etag_for, cache
 
 
@@ -450,5 +451,110 @@ def test_real_redis_strict_and_corruption(
             if closer is None:
                 closer = redis.close
             await closer()
+
+    asyncio.run(verify())
+
+
+def test_tag_converter_json_error_is_not_recovered(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def verify() -> None:
+        backend = InMemoryBackend()
+        config = CacheConfig(
+            backend, scope_id="tag", key_builder=_key,
+            failure_policy=CacheFailurePolicy(recover_json=True),
+        )
+        handle = CacheHandle(config)
+        app = FastAPI()
+        await handle.start(app)
+        calls = []
+
+        def converter(value: str) -> Any:
+            raise json.JSONDecodeError("synthetic converter error", value, 0)
+
+        monkeypatch.setitem(CONVERTERS, "synthetic", converter)
+        payload = b'{"__fastapi_cache_spec_type__":"synthetic","val":"x"}'
+        key = _physical_key(config, "", _key())
+        await backend.set(key, payload)
+
+        @app.get("/value")
+        @cache(scope="app")
+        async def value() -> str:
+            calls.append(1)
+            return "computed"
+
+        try:
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                with pytest.raises(json.JSONDecodeError, match="synthetic converter error"):
+                    await client.get("/value", headers={"If-None-Match": "*"})
+            assert not calls
+            assert await backend.get(key) == payload
+        finally:
+            await handle.aclose()
+
+    asyncio.run(verify())
+
+
+def test_scoped_direct_http_request_without_injected_response() -> None:
+    async def verify() -> None:
+        backend = InMemoryBackend()
+        config = CacheConfig(
+            backend, scope_id="direct", key_builder=_key,
+            failure_policy=CacheFailurePolicy(recover_json=True),
+        )
+        handle = CacheHandle(config)
+        app = FastAPI()
+        await handle.start(app)
+        key = _physical_key(config, "", _key())
+        await backend.set(key, b"{")
+
+        @cache(scope="app")
+        async def value() -> str:
+            return "computed"
+
+        request = Request({
+            "type": "http", "app": app, "method": "GET", "headers": [],
+            "path": "/value", "root_path": "",
+        })
+        try:
+            invoke: Any = value
+            assert await invoke(__fastapi_cache_request=request) == "computed"
+            assert await backend.get(key) == b"{"
+        finally:
+            await handle.aclose()
+
+    asyncio.run(verify())
+
+
+def test_explicit_revalidation_retains_normal_write_contract() -> None:
+    async def verify() -> None:
+        backend = InMemoryBackend()
+        config = CacheConfig(
+            backend, scope_id="revalidate", key_builder=_key,
+            failure_policy=CacheFailurePolicy(recover_json=True),
+        )
+        handle = CacheHandle(config)
+        app = FastAPI()
+        await handle.start(app)
+        key = _physical_key(config, "", _key())
+        await backend.set(key, b"{")
+
+        @app.get("/value")
+        @cache(scope="app")
+        async def value() -> str:
+            return "fresh"
+
+        try:
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                result = await client.get("/value", headers={"Cache-Control": "no-cache"})
+                assert result.json() == "fresh"
+                assert result.headers["X-FastAPI-Cache"] == "MISS"
+                assert "etag" in result.headers
+                assert await backend.get(key) == b'"fresh"'
+                assert (await client.get("/value")).headers["X-FastAPI-Cache"] == "HIT"
+        finally:
+            await handle.aclose()
 
     asyncio.run(verify())

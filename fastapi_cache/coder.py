@@ -245,9 +245,8 @@ class PickleCoder(Coder):
 
 def _decode_recoverable_json(coder: Type[Coder], value: bytes, *, type_: Any) -> Any:
     """Opt-in syntax recovery for exact built-ins; validators remain outside it."""
-    if coder is JsonCoder or coder is TypedJsonCoder:
-        result = _decode_json(value, recover_syntax=True)
-        if coder is TypedJsonCoder:
-            return TypedJsonCoder._validate_decoded_value(result, type_=type_)
-        return result
-    return coder.decode_as_type(value, type_=type_)
+    # The caller admits only exact JsonCoder/TypedJsonCoder classes.
+    result = _decode_json(value, recover_syntax=True)
+    if coder is TypedJsonCoder:
+        return TypedJsonCoder._validate_decoded_value(result, type_=type_)
+    return result
