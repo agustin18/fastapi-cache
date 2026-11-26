@@ -23,6 +23,14 @@ class KeyBuilder(Protocol):
 
 
 class Backend(abc.ABC):
+    """Legacy backend protocol; capabilities vary by concrete adapter.
+
+    No implicit resource ownership, automatic retry, or common exact TTL
+    sentinel is guaranteed. Cancellation and backend exceptions propagate
+    from direct calls; a failed write or clear may have had partial effects.
+    See the D4 backend contract for supported and experimental operations.
+    """
+
     @abc.abstractmethod
     async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
         raise NotImplementedError

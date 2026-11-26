@@ -11,6 +11,7 @@ from typing import Iterator, Optional, Type
 from starlette.applications import Starlette
 from starlette.requests import Request
 
+from fastapi_cache._backend_contract import Capability, backend_capabilities
 from fastapi_cache.coder import Coder, JsonCoder
 from fastapi_cache.key_builder import default_key_builder
 from fastapi_cache.types import Backend, KeyBuilder
@@ -104,15 +105,7 @@ def _validate_config(config: CacheConfig) -> None:
     if type(config.cache_status_header) is not str or not config.cache_status_header:
         raise CacheScopeError("Invalid cache configuration")
     _text_bytes(config.cache_status_header)
-    from fastapi_cache.backends.inmemory import InMemoryBackend
-
-    if type(config.backend) is InMemoryBackend:
-        return
-    try:
-        from fastapi_cache.backends.redis import RedisBackend
-    except ImportError:
-        raise CacheScopeError("Unsupported app cache backend") from None
-    if type(config.backend) is not RedisBackend or config.backend.is_cluster:
+    if backend_capabilities(config.backend).app_scope is not Capability.SUPPORTED:
         raise CacheScopeError("Unsupported app cache backend")
 
 
