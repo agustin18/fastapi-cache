@@ -8,6 +8,18 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.8.0](https://github.com/agustin18/fastapi-cache/tree/v0.8.0) - 2026-11-26
+
+### Features
+
+- Add opt-in HTTP application-scoped cache configuration and borrowed lifecycle handles for InMemory and standalone Redis, preserving the legacy singleton default. [#99](https://github.com/agustin18/fastapi-cache/issues/99)
+- Codify built-in backend capabilities and app-scope admission without changing legacy backend signatures, TTL semantics or ownership. [#111](https://github.com/agustin18/fastapi-cache/issues/111)
+- Add opt-in app-scoped cache failure policies for classified Redis read errors, conservative failed-write responses and uncached recovery from built-in JSON syntax errors. [#112](https://github.com/agustin18/fastapi-cache/issues/112)
+
+### Misc
+
+- Add installed-artifact application isolation and privacy evidence and a reproducible descriptive comparison against published 0.7.2; no performance certification. [#100](https://github.com/agustin18/fastapi-cache/issues/100)
+
 ## [0.7.2](https://github.com/agustin18/fastapi-cache/tree/v0.7.2) - 2026-11-25
 
 ### Improved Documentation

@@ -1,6 +1,6 @@
-# fastapi-cache-stable 0.8.0 — release notes (staging candidate)
+# fastapi-cache-stable 0.8.0 — release notes (promotion candidate)
 
-**Status:** staged for 0.8.0; not published. The version, release notes and
+**Status:** promotion candidate; not published. The version, release notes and
 risk record are being prepared for review. No tag, TestPyPI or PyPI artifact
 is authorized by this document.
 
@@ -30,7 +30,10 @@ default.
   change legacy `Backend` signatures or promote experimental providers.
 - **C4 evidence:** installed wheel/sdist isolation, privacy matrix,
   cross-process scope checks and a descriptive 0.7.2 comparison are recorded.
-  The comparison is **descriptive, not a performance certification**.
+  The 0.8.0 re-run did not reproduce the earlier 3.02x concurrent p50 outlier
+  (p50 -0.52%, p95 -1.00%, p99 -0.85%, throughput +0.55%); the ~9ms regime
+  moved to scoped-off. The comparison is **descriptive, not a performance
+  certification**.
 
 ## Explicitly not added
 
@@ -54,8 +57,9 @@ opt-in and distinct from legacy keys.
 authorization, locale or arbitrary request context. Use a validated
 identity-aware key builder or explicit bypass; the C4 evidence includes a
 negative hidden-context example. `#100` remains open: the C4 comparison is
-descriptive and includes an unresolved Redis/TCP concurrent p50 outlier; no
-latency, p95/p99, HA or no-regression claim is made. `#111`, `#112`, `#45`
+descriptive; the 0.8.0 re-run did not reproduce the earlier outlier, but no
+latency, p95/p99, HA or no-regression claim is made. The focused A/A remains
+optional and #100 stays open. `#111`, `#112`, `#45`
 and `#102` remain open for their broader residual scopes. Pickle requires
 trusted storage; an ETag is not integrity or authorization.
 

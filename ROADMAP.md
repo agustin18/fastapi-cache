@@ -25,16 +25,16 @@ The primary product advantage remains conservative migration from
 cache keys and safe default HTTP/private-response behavior.
 
 
-## 0.8.0 — staging candidate, not published
+## 0.8.0 — promotion candidate, not published
 
-0.8.0 stages the opt-in app-scoped configuration/lifecycle (C1), internal
+0.8.0 includes the opt-in app-scoped configuration/lifecycle (C1), internal
 built-in backend contracts (C2), opt-in failure/serialization policies (C3)
 and installed isolation/descriptive performance evidence (C4). Existing
 singleton behavior and the 0.7.2 published artifact remain unchanged. The
-staging records are [release notes](docs/releases/RELEASE_NOTES_0.8.0.md),
+promotion records are [release notes](docs/releases/RELEASE_NOTES_0.8.0.md),
 [candidate checklist](docs/releases/RELEASE_CANDIDATE_0.8.0.md) and
-[staging status](docs/releases/RELEASE_STATUS_0.8.0.md). Publication is
-pending the focused Redis/TCP diagnostic, final Phase B, security delta,
+[promotion status](docs/releases/RELEASE_STATUS_0.8.0.md). Publication is
+pending external verification of the C4 evidence, final Phase B, security delta,
 separate TestPyPI/PyPI authorization and final source freeze. `#53`, `#100`,
 `#111`, `#112`, `#45` and `#102` remain open residual scopes.
 
@@ -74,8 +74,8 @@ third-party security certification or hosted-docs requirement applies.
 
 ## Post-0.7.2 open work
 
-**0.8.0 staging:** C1–C4 are merged; the source is staged for review but not
-tagged or published. #99/#111/#112 implementation scopes are merged, while
+**0.8.0 promotion:** C1–C4 are merged; the source is in the promotion PR but
+not tagged or published. #99/#111/#112 implementation scopes are merged, while
 their broader residual issues remain open. #53 privacy and #100 descriptive
 performance evidence are cross-cutting; #96/#50/#103/#102 are outside 0.8
 core scope. See the [0.8.0 candidate checklist](docs/releases/RELEASE_CANDIDATE_0.8.0.md).
