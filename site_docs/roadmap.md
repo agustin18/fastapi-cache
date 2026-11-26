@@ -30,24 +30,11 @@ or threshold is inferred from that evidence. #100 remains open.
 
 [Historical 0.7.0 execution plan and evidence boundaries](plan-0-7.md).
 
-## Next priority: CPython 3.14 release staging
+## Next priority: 0.8 architecture design
 
-[#51](https://github.com/agustin18/fastapi-cache/issues/51) is the first
-technical track after 0.7.2. Diagnostic core, standalone Redis 7.4, wheel/sdist
-and installed security qualification passed in [#142](https://github.com/agustin18/fastapi-cache/pull/142).
-Compatibility-only 0.7.2 staging is in progress, conditional on exact-artifact
-release gates. Published 0.7.2 supports `>=3.8,<3.15`, including standard
-CPython 3.14; 3.8–3.10 remain functional legacy only.
+The next track is a reviewed design RFC for [#99](https://github.com/agustin18/fastapi-cache/issues/99), [#111](https://github.com/agustin18/fastapi-cache/issues/111) and [#112](https://github.com/agustin18/fastapi-cache/issues/112), with #53 privacy and #100 descriptive performance evidence. No new runtime API is approved or shipped.
 
-Memcached and DynamoDB remain experimental. Report optional-provider
-installation and test limitations rather than claiming parity. Security
-support on 3.14 requires separate passing installed dependency audit evidence;
-without it, any narrower functional-only claim needs explicit acceptance.
-Python 3.8–3.10 remain functional legacy targets. Free-threaded 3.14t and
-Python 3.15 are outside this candidate. No API, key, ETag or serialization
-change belongs in a compatibility patch; a material behavior or dependency
-major change requires re-scoping instead. Fresh exact release-artifact
-validation and separate publication approval remain mandatory.
+[#51](https://github.com/agustin18/fastapi-cache/issues/51) is completed for standard CPython 3.14 in published 0.7.2. Final Phase B passed 25/25 jobs; see the [release evidence](reference/releases.md). Python 3.8–3.10 remain functional legacy targets; 3.11–3.14 are the security target. Free-threaded 3.14t and 3.15 are outside scope; Memcached and DynamoDB remain experimental. Each future release still requires fresh exact-artifact evidence and separate authorization.
 
 ## Candidate scope — not a commitment
 
@@ -67,7 +54,7 @@ separate integration only if justified and independently qualified. Existing
 standalone Redis support is unchanged; no Cluster namespace-clear or HA claim.
 
 FIPS (#55) and experimental-provider corrections (#45) remain separate
-maintenance tracks, not automatic additions to 0.7.2. Local single-flight
+maintenance tracks, not automatic additions to 0.8. Local single-flight
 (#96) and events (#50) follow accepted contracts; outreach (#88) is separate.
 
 A *smaller*, evidence-backed next release is preferable to shipping unsafe
