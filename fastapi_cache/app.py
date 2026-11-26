@@ -95,6 +95,15 @@ def _validate_config(config: CacheConfig) -> None:
     _text_bytes(config.prefix)
     if not isinstance(config.enable, bool) or not isinstance(config.cache_authenticated, bool):
         raise CacheScopeError("Invalid cache configuration")
+    if config.expire is not None and type(config.expire) is not int:
+        raise CacheScopeError("Invalid cache configuration")
+    if not isinstance(config.coder, type) or not issubclass(config.coder, Coder):
+        raise CacheScopeError("Invalid cache configuration")
+    if not callable(config.key_builder):
+        raise CacheScopeError("Invalid cache configuration")
+    if type(config.cache_status_header) is not str or not config.cache_status_header:
+        raise CacheScopeError("Invalid cache configuration")
+    _text_bytes(config.cache_status_header)
     from fastapi_cache.backends.inmemory import InMemoryBackend
 
     if type(config.backend) is InMemoryBackend:

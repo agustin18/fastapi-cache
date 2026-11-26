@@ -97,6 +97,14 @@ def test_invalid_config_and_backend(monkeypatch: pytest.MonkeyPatch) -> None:
             object(),
             _config(InMemoryBackend(), "a", prefix="\ud800"),
             _config(InMemoryBackend(), "a", enable=None),
+            CacheConfig(InMemoryBackend(), scope_id="a", expire="60"),  # type: ignore[arg-type]
+            CacheConfig(InMemoryBackend(), scope_id="a", expire=True),
+            CacheConfig(InMemoryBackend(), scope_id="a", coder=object()),  # type: ignore[arg-type]
+            CacheConfig(InMemoryBackend(), scope_id="a", coder=object),  # type: ignore[arg-type]
+            CacheConfig(InMemoryBackend(), scope_id="a", key_builder=123),  # type: ignore[arg-type]
+            CacheConfig(InMemoryBackend(), scope_id="a", cache_status_header=123),  # type: ignore[arg-type]
+            CacheConfig(InMemoryBackend(), scope_id="a", cache_status_header=""),
+            CacheConfig(InMemoryBackend(), scope_id="a", cache_status_header="\ud800"),
             _config(Custom(), "a"),
         ]
         for config in configs:
