@@ -115,7 +115,7 @@ class CacheHandle:
         self._state = "NEW"
         self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._app: Optional[Starlette] = None
-        self._drained: Optional["asyncio.Future[None]"] = None
+        self._drained: Optional[asyncio.Future[None]] = None
         self._leases = 0
         self._binding_lost = False
 
@@ -126,7 +126,7 @@ class CacheHandle:
         _validate_config(self._config)
         if not isinstance(app, Starlette) or getattr(app.state, _SLOT, _ABSENT) is not _ABSENT:
             raise CacheScopeError("Cache app binding is unavailable")
-        drained: "asyncio.Future[None]" = loop.create_future()
+        drained: asyncio.Future[None] = loop.create_future()
         setattr(app.state, _SLOT, self)
         self._loop = loop
         self._app = app

@@ -33,7 +33,12 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.status import HTTP_304_NOT_MODIFIED
 
-from fastapi_cache import CacheConfig, CacheHandle, CacheScopeError, FastAPICache
+from fastapi_cache import (
+    CacheConfig,
+    CacheHandle,
+    CacheScopeError,
+    FastAPICache,
+)
 from fastapi_cache.app import _physical_key, _resolve_handle, _text_bytes
 from fastapi_cache.coder import Coder
 from fastapi_cache.key_builder import default_key_builder

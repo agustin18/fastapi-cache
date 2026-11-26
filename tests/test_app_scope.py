@@ -17,7 +17,12 @@ import pytest
 from fastapi import APIRouter, FastAPI
 from starlette.requests import Request
 
-from fastapi_cache import CacheConfig, CacheHandle, CacheScopeError, FastAPICache
+from fastapi_cache import (
+    CacheConfig,
+    CacheHandle,
+    CacheScopeError,
+    FastAPICache,
+)
 from fastapi_cache.app import _SLOT, _physical_key
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
@@ -110,8 +115,14 @@ def test_resolution_rejects_missing_conflict_foreign_closed_and_direct() -> None
         a, b = FastAPI(), FastAPI()
         config = _config(InMemoryBackend(), "a")
         first, second = CacheHandle(config), CacheHandle(_config(InMemoryBackend(), "b"))
-        direct: Any = cache(scope="app")(lambda: 1)
-        explicit: Any = cache(handle=first)(lambda: 2)
+        async def one() -> int:
+            return 1
+
+        async def two() -> int:
+            return 2
+
+        direct: Any = cache(scope="app")(one)
+        explicit: Any = cache(handle=first)(two)
 
         with pytest.raises(CacheScopeError):
             await direct()
@@ -426,7 +437,10 @@ def test_bad_builder_never_accesses_backend(bad: Any) -> None:
 
         handle = CacheHandle(_config(backend, "bad", key_builder=builder))
         await handle.start(app)
-        endpoint: Any = cache(scope="app", vary_headers=["X-Region"])(lambda: "bad")
+        async def value() -> str:
+            return "bad"
+
+        endpoint: Any = cache(scope="app", vary_headers=["X-Region"])(value)
         with pytest.raises(CacheScopeError):
             await endpoint(__fastapi_cache_request=_request(app))
         assert not backend._store
@@ -558,7 +572,7 @@ def test_cancellation_releases_every_operation_lease(
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                      base_url="http://app.test") as client:
             if operation == "clear":
-                task: "asyncio.Task[Any]" = asyncio.create_task(handle.clear())
+                task: asyncio.Task[Any] = asyncio.create_task(handle.clear())
             else:
                 task = asyncio.create_task(client.get("/value"))
             await asyncio.wait_for(entered.wait(), 5)
@@ -585,7 +599,7 @@ def test_sync_endpoint_cancellation_does_not_store_after_lease() -> None:
         release = threading.Event()
 
         @app.get("/sync")
-        @cache(scope="app")
+        @cache(scope="app")  # type: ignore[arg-type]
         def sync_endpoint() -> str:
             loop.call_soon_threadsafe(entered.set)
             try:

@@ -69,7 +69,16 @@ def test_cache_signature() -> None:
         "cache_authenticated",
         "infer_response_model",
         "vary_headers",
+        "scope",
+        "handle",
     ]
+    for name in list(params)[:8]:
+        assert params[name].kind is inspect.Parameter.POSITIONAL_OR_KEYWORD
+    assert params["scope"].kind is inspect.Parameter.KEYWORD_ONLY
+    assert params["handle"].kind is inspect.Parameter.KEYWORD_ONLY
+    assert params["scope"].default == "legacy"
+    assert params["handle"].default is None
+    assert params["vary_headers"].default is None
     assert params["expire"].default is None
     assert params["coder"].default is None
     assert params["key_builder"].default is None
