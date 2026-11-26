@@ -10,6 +10,7 @@ import argparse
 import asyncio
 import csv
 import importlib.metadata as metadata
+import importlib.util
 import json
 import math
 import platform
@@ -33,6 +34,21 @@ from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
+
+def _load_expected_version_reader():
+    # The workload runs with python -I, so the sibling helper is not importable
+    # through sys.path; load it from the exact script directory instead.
+    path = Path(__file__).with_name("c4_versions.py")
+    spec = importlib.util.spec_from_file_location("c4_versions", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("Cannot load C4 version helper")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.expected_distribution_version
+
+
+expected_distribution_version = _load_expected_version_reader()
+
 MODES = ("published", "candidate-legacy", "scoped-off", "scoped-on")
 SAMPLES = 120
 WARMUP = 20
@@ -44,11 +60,12 @@ def require(condition: bool, message: str) -> None:
         raise RuntimeError(message)
 
 
-def verify_install(mode: str) -> None:
+def verify_install(mode: str, candidate_version: str | None = None) -> None:
     location = Path(fastapi_cache.__file__).resolve()
     require("site-packages" in location.parts and location.is_relative_to(Path(sys.prefix)),
             "Expected isolated installed cache distribution")
-    require(metadata.version("fastapi-cache-stable") == "0.7.2", "Unexpected distribution metadata")
+    expected = expected_distribution_version(mode, candidate_version)
+    require(metadata.version("fastapi-cache-stable") == expected, "Unexpected distribution metadata")
     require(hasattr(fastapi_cache, "CacheFailurePolicy") == (mode != "published"),
             "Wrong wheel for requested comparison mode")
     try:
@@ -239,7 +256,7 @@ async def run_one(mode: str, backend_name: str, transport: str,
 
 
 async def main_async(args: argparse.Namespace) -> None:
-    verify_install(args.mode)
+    verify_install(args.mode, args.candidate_version)
     validate_redis(args.redis_url)
     raw: list[tuple[str, int, int]] = []
     cases: dict[str, Any] = {}
@@ -271,6 +288,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=MODES, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--candidate-version", default=None)
     parser.add_argument("--redis-url", default="redis://127.0.0.1:6379/15")
     asyncio.run(main_async(parser.parse_args()))
 
