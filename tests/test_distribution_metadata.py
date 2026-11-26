@@ -193,7 +193,7 @@ def test_redis_is_never_mandatory_without_an_extra() -> None:
 
 def test_packaged_readme_is_release_specific() -> None:
     package = metadata("fastapi-cache-stable")
-    description = package.get_payload()
+    description = package.get_payload()  # type: ignore[attr-defined]
     version = package["Version"]
     assert f"fastapi-cache-stable {version}" in description
     assert f"fastapi-cache-stable[redis]=={version}" in description
