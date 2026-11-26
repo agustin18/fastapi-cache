@@ -45,7 +45,7 @@ async def items():
 | `vary_headers: Optional[Sequence[str]]` | Explicit public request-header variants; not a substitute for tenant isolation |
 | `injected_dependency_namespace: str` | Namespace for injected request/response dependencies |
 | `scope: str` | `legacy` default; `app` requires a bound `CacheHandle` (0.8.0) |
-| `handle: Optional[CacheHandle]` | Explicit handle; implies app scope (0.8.0) |
+| `handle: Optional[CacheHandle]` | Explicit handle; implies app scope (0.8.0); cannot be combined with `scope="app"` |
 
 FastAPI route decorators must be **above** `@cache`. An HTTP `Vary`
 header by itself does not partition a cached object by identity.
@@ -88,10 +88,17 @@ and `vary_headers`. A second `start` or missing/conflicting binding raises
 `CacheFailurePolicy(strict_read=False, conservative_write=False,
 recover_json=False)` provides independent opt-ins; all default to the legacy
 behavior. `strict_read` classifies only Redis transport connection/timeout
-errors as `CacheBackendReadError`; authentication, configuration and programmer
-errors are not swallowed. `conservative_write` skips the cache write when
-encoding fails. `recover_json` recovers legacy JSON values. This is not a retry,
-repair or distributed-consistency API; see #112 for residual limits.
+errors as `CacheBackendReadError` (exact classes only). Other read errors,
+including authentication, configuration and programmer errors, retain the
+legacy fail-open recompute behavior. `conservative_write` handles a caught SET
+exception by returning the computed result with no-store (private where
+required), without library-generated ETag, 304 or freshness. A failed SET may
+have committed. Encoding failures propagate unchanged. `recover_json` permits
+one uncached recompute for invalid UTF-8 or JSON syntax with exact built-in
+JsonCoder or TypedJsonCoder; it never writes or clears the observed entry.
+Typed validation, tagged conversion, custom coder and Pickle errors are not
+recovered. This is not a retry, repair or distributed-consistency API; see
+[#112](https://github.com/agustin18/fastapi-cache/issues/112) for residual limits.
 
 ## InMemoryBackend — published 0.8.0
 
@@ -142,8 +149,9 @@ are not certified by the standalone service matrix.
   of conditional HTTP decoding requires its own security review.
 
 Malformed cached HIT bytes are decoded before a conditional
-`304` in published 0.8.0. Invalid JSON/UTF-8/typed data fails closed and does
-not automatically invalidate or retry. The broader corruption/retry policy
+`304` in published 0.8.0. By default, decode failures propagate and do not
+automatically invalidate or retry. The app-scoped `recover_json` opt-in has
+only the narrow uncached-recompute behavior described above. The broader corruption/retry policy
 remains open under [#112](https://github.com/agustin18/fastapi-cache/issues/112).
 
 **Related:** [compatibility](compatibility.md),

@@ -1,5 +1,4 @@
-# C4 — installed isolation and descriptive evidence (D8) — merged, staged for 0.8.0
-
+# C4 — installed isolation and descriptive evidence (D8) — published in 0.8.0
 Scope: C1–C3 merged in unreleased stable; C4 merged as `6352016`; #53 and
 #100 remain open. This is the preregistration and record of a **descriptive**
 hosted-runner experiment, not a numerical regression budget or a release

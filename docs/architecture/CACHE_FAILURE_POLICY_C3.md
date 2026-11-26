@@ -1,8 +1,7 @@
-# C3 / D5–D7 failure policy — merged, staged for 0.8.0, not published
-
+# C3 / D5–D7 failure policy — published in 0.8.0
 This records the C3 decision for #112, independently audited on
 29ff7f254c6643ab5fb801c8799ec170145fcb8e and merged as b57d320.
-It is staged for 0.8.0; publication requires separate authorization.
+It is published in 0.8.0; this is the original scoped decision record.
 No global configuration or default behavior changes.
 
 ```python
