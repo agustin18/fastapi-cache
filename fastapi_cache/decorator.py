@@ -49,6 +49,7 @@ from fastapi_cache.coder import (
 )
 from fastapi_cache.failure import CacheBackendReadError, _read_error_category
 from fastapi_cache.key_builder import default_key_builder
+from fastapi_cache.key_filter import filtered_key, validate_exclusions
 from fastapi_cache.types import KeyBuilder
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -407,6 +408,7 @@ def cache(
     *,
     scope: str = "legacy",
     handle: Optional[CacheHandle] = None,
+    exclude_params: Optional[Sequence[str]] = None,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -424,6 +426,10 @@ def cache(
         Explicit Request/default-builder bypass remains in effect. This is
         not automatic tenant/identity detection or an Authorization override.
 
+    :param exclude_params: opt-in exclusion of explicitly declared zero-argument
+        service Depends parameters only. Callers must ensure the dependency
+        cannot influence identity, authorization or response content.
+
     :return:
     """
 
@@ -435,6 +441,11 @@ def cache(
     if app_scoped:
         _text_bytes(namespace)
     normalized_vary_headers = _normalize_vary_headers(vary_headers)
+    if isinstance(exclude_params, (str, bytes)):
+        raise TypeError("exclude_params must be a sequence of parameter names")
+    exclusions = tuple(exclude_params) if exclude_params is not None else ()
+    if exclusions and key_builder is not None and key_builder is not default_key_builder:
+        raise ValueError("exclude_params requires the default key builder")
 
     injected_request = Parameter(
         name=f"{injected_dependency_namespace}_request",
@@ -459,6 +470,9 @@ def cache(
         # explicitly declared Request can be inspected by the endpoint itself,
         # including headers/state absent from the legacy args/kwargs cache key.
         explicit_request = request_param not in to_inject
+        explicit_response = response_param not in to_inject
+        if exclusions:
+            validate_exclusions(wrapped_signature, exclusions, request_param.name, response_param.name)
         return_type = get_typed_return_annotation(func)
 
         async def invoke(
@@ -549,23 +563,40 @@ def cache(
                 else None
             )
 
-            cache_key = effective_key_builder(
-                func,
-                f"{prefix}:{namespace}",
-                request=request,
-                response=response,
-                args=args,
-                kwargs=copy_kwargs,
-            )
-            if isawaitable(cache_key):
-                cache_key = await cache_key
+            cache_key: Union[str, Awaitable[str]]
+            if exclusions:
+                if (
+                    effective_key_builder is not default_key_builder
+                    or cache_authenticated_enabled
+                    or explicit_request
+                    or explicit_response
+                ):
+                    return await ensure_async_func(*args, **kwargs)
+                filtered = filtered_key(
+                    func, wrapped_signature, exclusions, f"{prefix}:{namespace}",
+                    request, args, copy_kwargs,
+                )
+                if filtered is None:
+                    return await ensure_async_func(*args, **kwargs)
+                cache_key = filtered
+            else:
+                cache_key = effective_key_builder(
+                    func,
+                    f"{prefix}:{namespace}",
+                    request=request,
+                    response=response,
+                    args=args,
+                    kwargs=copy_kwargs,
+                )
+                if isawaitable(cache_key):
+                    cache_key = await cache_key
             if config is not None:
                 if not cache_key:
                     raise CacheScopeError("Invalid logical cache key")
                 _text_bytes(cache_key)
             assert isinstance(cache_key, str)  # noqa: S101  # assertion is a type guard
 
-            if request is not None and effective_key_builder is default_key_builder:
+            if not exclusions and request is not None and effective_key_builder is default_key_builder:
                 scoped_key = _route_scoped_generated_key(
                     func, request, cache_key, f"{prefix}:{namespace}"
                 )
