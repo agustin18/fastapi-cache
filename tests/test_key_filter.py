@@ -7,7 +7,16 @@ from typing import Any, Dict, Generator, List
 
 import httpx
 import pytest
-from fastapi import Body, Cookie, Depends, FastAPI, Header, Path, Query, Security
+from fastapi import (
+    Body,
+    Cookie,
+    Depends,
+    FastAPI,
+    Header,
+    Path,
+    Query,
+    Security,
+)
 from fastapi.security import APIKeyHeader
 from starlette.requests import Request
 from starlette.responses import Response
