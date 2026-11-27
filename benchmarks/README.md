@@ -184,3 +184,14 @@ so the job tests reproducibility, correctness and observability, **not**
 speed superiority or a release GO. #100 remains OPEN for fixed independent
 hardware, prior-reviewed performance thresholds, fault/disconnect cases and
 candidate-vs-baseline OFF/ON profiling.
+
+
+## C4 isolation and descriptive comparison (0.9 development)
+
+The C4 isolation workflow keeps all seven installed wheel/sdist lanes on
+runtime changes. The separate [C4 descriptive performance workflow](../.github/workflows/c4-performance.yml)
+runs a one-round smoke on performance-sensitive PR paths. For a full
+four-round experiment, use Actions → C4 descriptive performance → Run
+workflow, select the reviewed ref, profile `full`, baseline `0.8.0`
+(active) or `0.7.2` (historical). No numerical timing gate or performance
+certification. See [C4 execution policy](../docs/architecture/C4_EVIDENCE_PROTOCOL.md).

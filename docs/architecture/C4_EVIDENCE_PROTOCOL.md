@@ -75,3 +75,30 @@ certification remains INCONCLUSIVE; independent hardware and approved
 budgets remain residual #100. Re-run on the final promoted release
 source if the independent release review requires it; do not reuse
 the candidate hash as publication evidence.
+
+
+## CI execution policy — post-0.8.0
+
+Keep the seven installed-isolation lanes on runtime PRs, with both wheel
+and sdist and the original correctness assertions unchanged. They are
+separate from the descriptive performance workflow. On PRs touching
+performance-sensitive paths, the latter runs a **smoke** profile (one
+round, four fresh processes, 4 serial warmups and 24 measured requests
+per case; both transports/backends). It reports p50 and throughput only:
+no tail-percentile or cross-round variance claim. It is descriptive, not
+a timing gate. Target 2–4 minutes including setup; validate on CI rather
+than promise a duration.
+
+Full retains four sequential rotated rounds, 20 warmups and 120 measured
+requests per case. Dispatch the separate C4 descriptive performance
+workflow manually on a reviewed candidate ref when release review calls
+for it, or for planned performance investigation. Default active baseline
+is published 0.8.0 wheel SHA-256
+`4a7d200744424f88bfaee2a4b1fc6958e138aa86236c1906964d3cda41861bd1`;
+0.7.2 remains an explicit historical dispatch choice. Old CLI defaults
+remain historical. Both versions are pinned and checked before install.
+Artifacts identify baseline, profile, source and wheel hashes; smoke and
+full are never aggregated together. No parallel full rounds or changed
+release/security gates. The common workload does not exercise K1/tags
+specifically; V1 must qualify those paths separately. #100 remains open
+for independent hardware, approved budgets and focused TCP A/A work.
