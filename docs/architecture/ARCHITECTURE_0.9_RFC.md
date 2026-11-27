@@ -17,7 +17,10 @@ Validate names against the original signature, reject variadic exclusions,
 duplicates, Request/Response parameters, and common identity/authorization
 names as a conservative guard, not universal semantic detection. The caller
 must ensure excluded dependencies do not change results, identity or access.
-Do not infer safe exclusions from annotations or dependency injection.
+Do not infer safe exclusions from annotations or dependency injection. The
+[K1 audit revision](KEY_FILTER_K1.md) narrows eligibility to explicit
+zero-argument service dependencies and adds conservative runtime bypasses;
+review that contract together with this RFC before merging K1.
 
 Bind the original signature and apply defaults; normalize positional and
 keyword spelling. For the first implementation, support exact scalar
