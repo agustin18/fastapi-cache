@@ -112,7 +112,7 @@ def _fixture(root: Path, profile: str, baseline: str, historical: bool = False) 
             (directory / "summary.json").write_text(json.dumps(summary), encoding="utf-8")
 
 
-@pytest.mark.parametrize("profile,baseline,historical", [
+@pytest.mark.parametrize(("profile", "baseline", "historical"), [
     ("full", "0.7.2", True), ("full", "0.8.0", False), ("smoke", "0.8.0", False),
 ])
 def test_aggregate_profile_contract(tmp_path: Path, profile: str, baseline: str, historical: bool) -> None:
