@@ -12,10 +12,20 @@ MODES = ("published", "candidate-legacy", "scoped-off", "scoped-on")
 ORDER = tuple(MODES[i:] + MODES[:i] for i in range(len(MODES)))
 
 
-def aggregate(root: Path) -> dict[str, Any]:
+def aggregate(
+    root: Path, profile: str = "full", baseline_version: str = "0.7.2",
+) -> dict[str, Any]:
+    if profile not in ("full", "smoke") or baseline_version not in ("0.7.2", "0.8.0"):
+        raise ValueError("Unsupported C4 comparison")
+    order = ORDER if profile == "full" else ORDER[:1]
+    samples = 120 if profile == "full" else 24
+    metrics_to_compare = (
+        ("p50_ms", "p95_ms", "p99_ms", "requests_per_second")
+        if profile == "full" else ("p50_ms", "requests_per_second")
+    )
     runs = {
         mode: [json.loads((root / f"round-{i + 1}" / mode / "summary.json").read_text(encoding="utf-8"))
-               for i in range(len(ORDER))]
+               for i in range(len(order))]
         for mode in MODES
     }
     cases = set(runs["published"][0]["cases"])
@@ -25,7 +35,9 @@ def aggregate(root: Path) -> dict[str, Any]:
         for item in summaries:
             if item["mode"] != mode or set(item["cases"]) != cases:
                 raise ValueError("Invalid comparison identity or missing case")
-            if any(case["samples"] < 120 for case in item["cases"].values()):
+            if item.get("profile", "full") != profile or item.get("baseline_version", "0.7.2") != baseline_version:
+                raise ValueError("Mismatched comparison profile or baseline")
+            if any(case["samples"] != samples for case in item["cases"].values()):
                 raise ValueError("Insufficient samples")
     result: dict[str, Any] = {}
     for case in sorted(cases):
@@ -36,7 +48,7 @@ def aggregate(root: Path) -> dict[str, Any]:
             ("scoped-off", "scoped-on"),
         ):
             metrics = {}
-            for metric in ("p50_ms", "p95_ms", "p99_ms", "requests_per_second"):
+            for metric in metrics_to_compare:
                 a = [float(run["cases"][case][metric]) for run in runs[left]]
                 b = [float(run["cases"][case][metric]) for run in runs[right]]
                 if min(a + b) <= 0:
@@ -47,12 +59,14 @@ def aggregate(root: Path) -> dict[str, Any]:
                     "candidate_median": statistics.median(b),
                     "paired_ratios": ratios,
                     "median_paired_ratio": statistics.median(ratios),
-                    "ratio_stdev": statistics.stdev(ratios),
+                    "ratio_stdev": statistics.stdev(ratios) if len(ratios) > 1 else None,
                 }
             comparisons[left + "_to_" + right] = metrics
         result[case] = comparisons
     return {
-        "schema": "c4-descriptive-v1", "order": ORDER, "cases": result,
+        "schema": "c4-descriptive-v1" if profile == "full" else "c4-smoke-v1",
+        "profile": profile, "baseline_version": baseline_version,
+        "order": order, "cases": result,
         "resources": {
             mode: [{k: run[k] for k in ("cpu_seconds", "wall_seconds", "peak_process_rss_kib", "lifecycle")}
                    for run in summaries]
@@ -65,8 +79,10 @@ def aggregate(root: Path) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", type=Path)
+    parser.add_argument("--profile", choices=("full", "smoke"), default="full")
+    parser.add_argument("--baseline-version", choices=("0.7.2", "0.8.0"), default="0.7.2")
     args = parser.parse_args()
-    result = aggregate(args.root)
+    result = aggregate(args.root, args.profile, args.baseline_version)
     (args.root / "comparison.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     for name in ("inmemory/asgi/hit-128", "redis/tcp/hit-128"):
         print(name)

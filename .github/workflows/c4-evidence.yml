@@ -1,4 +1,4 @@
-name: C4 installed isolation and descriptive performance
+name: C4 installed isolation
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
       - "fastapi_cache/**"
       - "tests/test_c4_isolation.py"
       - "tests/test_failure_policy_c3.py"
-      - "benchmarks/c4_*.py"
+      - "tests/test_app_scope.py"
       - ".github/workflows/c4-evidence.yml"
       - "pyproject.toml"
       - "poetry.lock"
@@ -71,80 +71,3 @@ jobs:
               "$py" -m pytest -q -rs -o 'markers=redis: real Redis integration'
             )
           done
-
-  performance:
-    name: C4 descriptive 0.7.2 vs candidate (four balanced rounds)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 35
-    services:
-      redis:
-        image: redis:7.4
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          persist-credentials: false
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
-        with:
-          python-version: "3.12"
-      - name: Verify baseline and build exact source wheel; match dependencies
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/c4-perf/{baseline,candidate,evidence}
-          python -m pip install build==1.2.2
-          python -m build --wheel --outdir /tmp/c4-perf/candidate
-          python -m pip download --no-deps --only-binary=:all: --dest /tmp/c4-perf/baseline fastapi-cache-stable==0.7.2
-          baseline=$(find /tmp/c4-perf/baseline -name '*.whl' -print -quit)
-          candidate=$(find /tmp/c4-perf/candidate -name '*.whl' -print -quit)
-          echo "31257d8de8e5b36b13f50d233c72bf3a53d99b8eb3376264112be9072abf5fa0  $baseline" | sha256sum -c -
-          sha256sum "$baseline" "$candidate" | tee /tmp/c4-perf/evidence/wheel-sha256.txt
-          git rev-parse HEAD > /tmp/c4-perf/evidence/source-sha.txt
-          lscpu > /tmp/c4-perf/evidence/cpu.txt
-          cat /proc/meminfo > /tmp/c4-perf/evidence/memory.txt
-          uname -a > /tmp/c4-perf/evidence/os.txt
-          docker exec "$(docker ps --filter ancestor=redis:7.4 --format '{{.ID}}' | head -1)" redis-server --version > /tmp/c4-perf/evidence/redis.txt
-          python -m venv /tmp/c4-perf/a
-          python -m venv /tmp/c4-perf/b
-          a=/tmp/c4-perf/a/bin/python
-          b=/tmp/c4-perf/b/bin/python
-          "$a" -m pip install "$baseline[redis]" fastapi==0.115.12 pydantic==2.8.2 httpx==0.27.0 redis==5.2.1 uvicorn==0.34.0
-          "$a" -m pip check
-          "$a" -m pip freeze --exclude fastapi-cache-stable > /tmp/c4-perf/evidence/dependencies.txt
-          "$b" -m pip install -r /tmp/c4-perf/evidence/dependencies.txt
-          "$b" -m pip install --no-deps "$candidate"
-          "$b" -m pip check
-          "$b" -m pip freeze --exclude fastapi-cache-stable > /tmp/c4-perf/evidence/candidate-dependencies.txt
-          diff -u /tmp/c4-perf/evidence/dependencies.txt /tmp/c4-perf/evidence/candidate-dependencies.txt
-          cp benchmarks/c4_workload.py benchmarks/c4_aggregate.py benchmarks/c4_versions.py /tmp/c4-perf/
-      - name: Run fresh processes in preregistered rotating order
-        run: |
-          set -euo pipefail
-          candidate_version=$(python scripts/release_contract.py version)
-          cd /tmp/c4-perf
-          modes=(published candidate-legacy scoped-off scoped-on)
-          for round in 0 1 2 3; do
-            for offset in 0 1 2 3; do
-              mode=${modes[$(((round + offset) % 4))]}
-              py=/tmp/c4-perf/b/bin/python
-              if [[ "$mode" == published ]]; then py=/tmp/c4-perf/a/bin/python; fi
-              "$py" -I /tmp/c4-perf/c4_workload.py --mode "$mode" \
-                --candidate-version "$candidate_version" \
-                --output "/tmp/c4-perf/evidence/round-$((round + 1))/$mode"
-            done
-          done
-          python /tmp/c4-perf/c4_aggregate.py /tmp/c4-perf/evidence
-      - name: Upload raw and aggregate evidence
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: c4-descriptive-evidence
-          path: /tmp/c4-perf/evidence/
-          if-no-files-found: error
-          retention-days: 30

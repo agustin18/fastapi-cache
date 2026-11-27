@@ -1,0 +1,132 @@
+name: C4 descriptive performance
+
+on:
+  pull_request:
+    branches: [stable]
+    paths:
+      - "fastapi_cache/decorator.py"
+      - "fastapi_cache/key_builder.py"
+      - "fastapi_cache/key_filter.py"
+      - "fastapi_cache/coder.py"
+      - "fastapi_cache/app.py"
+      - "fastapi_cache/__init__.py"
+      - "fastapi_cache/backends/**"
+      - "benchmarks/c4_*.py"
+      - ".github/workflows/c4-performance.yml"
+      - "pyproject.toml"
+      - "poetry.lock"
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "Smoke (one round) or full (four balanced rounds)"
+        type: choice
+        options: [full, smoke]
+        default: full
+        required: true
+      baseline:
+        description: "Published wheel (0.7.2 is historical)"
+        type: choice
+        options: ["0.8.0", "0.7.2"]
+        default: "0.8.0"
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c4-performance-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  performance:
+    name: C4 ${{ inputs.profile || 'smoke' }} ${{ inputs.baseline || '0.8.0' }} vs candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.profile == 'full' && 35 || 10 }}
+    env:
+      C4_PROFILE: ${{ inputs.profile || 'smoke' }}
+      C4_BASELINE: ${{ inputs.baseline || '0.8.0' }}
+    services:
+      redis:
+        image: redis:7.4
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Verify baseline and build exact source wheel; match dependencies
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/c4-perf/{baseline,candidate,evidence}
+          python -m pip install build==1.2.2
+          python -m build --wheel --outdir /tmp/c4-perf/candidate
+          case "$C4_BASELINE" in
+            0.7.2) baseline_digest=31257d8de8e5b36b13f50d233c72bf3a53d99b8eb3376264112be9072abf5fa0 ;;
+            0.8.0) baseline_digest=4a7d200744424f88bfaee2a4b1fc6958e138aa86236c1906964d3cda41861bd1 ;;
+            *) echo "Unsupported baseline" >&2; exit 1 ;;
+          esac
+          python -m pip download --no-deps --only-binary=:all: --dest /tmp/c4-perf/baseline "fastapi-cache-stable==$C4_BASELINE"
+          baseline=$(find /tmp/c4-perf/baseline -name '*.whl' -print -quit)
+          candidate=$(find /tmp/c4-perf/candidate -name '*.whl' -print -quit)
+          echo "$baseline_digest  $baseline" | sha256sum -c -
+          printf "%s\n" "$C4_BASELINE" > /tmp/c4-perf/evidence/baseline-version.txt
+          printf "%s\n" "$C4_PROFILE" > /tmp/c4-perf/evidence/profile.txt
+          sha256sum "$baseline" "$candidate" | tee /tmp/c4-perf/evidence/wheel-sha256.txt
+          git rev-parse HEAD > /tmp/c4-perf/evidence/source-sha.txt
+          lscpu > /tmp/c4-perf/evidence/cpu.txt
+          cat /proc/meminfo > /tmp/c4-perf/evidence/memory.txt
+          uname -a > /tmp/c4-perf/evidence/os.txt
+          docker exec "$(docker ps --filter ancestor=redis:7.4 --format '{{.ID}}' | head -1)" redis-server --version > /tmp/c4-perf/evidence/redis.txt
+          python -m venv /tmp/c4-perf/a
+          python -m venv /tmp/c4-perf/b
+          a=/tmp/c4-perf/a/bin/python
+          b=/tmp/c4-perf/b/bin/python
+          "$a" -m pip install "$baseline[redis]" fastapi==0.115.12 pydantic==2.8.2 httpx==0.27.0 redis==5.2.1 uvicorn==0.34.0
+          "$a" -m pip check
+          "$a" -m pip freeze --exclude fastapi-cache-stable > /tmp/c4-perf/evidence/dependencies.txt
+          "$b" -m pip install -r /tmp/c4-perf/evidence/dependencies.txt
+          "$b" -m pip install --no-deps "$candidate"
+          "$b" -m pip check
+          "$b" -m pip freeze --exclude fastapi-cache-stable > /tmp/c4-perf/evidence/candidate-dependencies.txt
+          diff -u /tmp/c4-perf/evidence/dependencies.txt /tmp/c4-perf/evidence/candidate-dependencies.txt
+          cp benchmarks/c4_workload.py benchmarks/c4_aggregate.py benchmarks/c4_versions.py /tmp/c4-perf/
+      - name: Run fresh processes in preregistered rotating order
+        run: |
+          set -euo pipefail
+          candidate_version=$(python scripts/release_contract.py version)
+          cd /tmp/c4-perf
+          modes=(published candidate-legacy scoped-off scoped-on)
+          case "$C4_PROFILE" in
+            smoke) rounds=1 ;;
+            full) rounds=4 ;;
+            *) echo "Unsupported profile" >&2; exit 1 ;;
+          esac
+          for ((round=0; round<rounds; round++)); do
+            for offset in 0 1 2 3; do
+              mode=${modes[$(((round + offset) % 4))]}
+              py=/tmp/c4-perf/b/bin/python
+              if [[ "$mode" == published ]]; then py=/tmp/c4-perf/a/bin/python; fi
+              "$py" -I /tmp/c4-perf/c4_workload.py --mode "$mode" \
+                --candidate-version "$candidate_version" --baseline-version "$C4_BASELINE" \
+                --profile "$C4_PROFILE" \
+                --output "/tmp/c4-perf/evidence/round-$((round + 1))/$mode"
+            done
+          done
+          python /tmp/c4-perf/c4_aggregate.py /tmp/c4-perf/evidence --profile "$C4_PROFILE" --baseline-version "$C4_BASELINE"
+      - name: Upload raw and aggregate evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: c4-${{ env.C4_PROFILE }}-${{ env.C4_BASELINE }}-evidence
+          path: /tmp/c4-perf/evidence/
+          if-no-files-found: error
+          retention-days: 30
