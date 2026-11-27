@@ -15,7 +15,7 @@ is descriptive and #100 remains open; no performance certification is claimed.
 The 25-job Phase B, TestPyPI/PyPI parity and provenance are recorded in the
 [release evidence](reference/releases.md).
 
-## 0.7.1 release status (2026-11-24)
+## Historical 0.7.1 release status (2026-11-24)
 
 | Track | Verified state | Unfinished acceptance |
 |---|---|---|
@@ -43,7 +43,6 @@ The next track is [#97](https://github.com/agustin18/fastapi-cache/issues/97) ta
 |---|---|---|
 | 0.8.0 (published 2026-11-26) | #99 app scope, #111 backend contracts, #112 failure policies and #53/#100 C4 evidence | Backward-compatible opt-in, explicit ownership, cancellation and no automatic tenant isolation |
 | 0.9 (proposed) | #97 tags and #49 safe filtering | Tenant-safe keys, bounded indexes, race/TTL tests and reviewed invalidation scope |
-| 0.9 | #97 tags and #49 safe filtering | Tenant-safe keys, race/TTL-index tests and independently reviewed invalidation scope |
 | Later, if justified | #98 bounded stale | Separate expiry, failure and cancellation contract; no stale-safety promise |
 | 1.0 | Public API and support-policy maturity | Explicit ongoing maintenance commitment and independent review |
 
@@ -55,7 +54,7 @@ separate integration only if justified and independently qualified. Existing
 standalone Redis support is unchanged; no Cluster namespace-clear or HA claim.
 
 FIPS (#55) and experimental-provider corrections (#45) remain separate
-maintenance tracks, not automatic additions to 0.8. Local single-flight
+maintenance tracks, not automatic additions to 0.9. Local single-flight
 (#96) and events (#50) follow accepted contracts; outreach (#88) is separate.
 
 A *smaller*, evidence-backed next release is preferable to shipping unsafe

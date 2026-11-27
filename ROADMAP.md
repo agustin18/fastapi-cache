@@ -71,7 +71,7 @@ application-owned hidden tenant/context/cardinality limitations and future
 reproducible package-controlled issues. No independent consumer quota,
 third-party security certification or hosted-docs requirement applies.
 
-## Post-0.7.2 open work
+## Post-0.8.0 open work
 
 **0.8.0 published:** C1–C4 are merged, tagged `v0.8.0` and published with exact Phase B, TestPyPI and PyPI evidence. #99/#111/#112 implementation scopes are merged, while
 their broader residual issues remain open. #53 privacy and #100 descriptive
@@ -241,7 +241,7 @@ fix can be shipped with verified compatibility.
 
 ## Post-0.5.0 backlog and legacy references
 
-Historical planning context only; the post-0.7.2 ordering above supersedes
+Historical planning context only; the post-0.8.0 ordering above supersedes
 older target versions and priorities in this section.
 
 These are candidates, not commitments. New public API work starts from a
@@ -333,16 +333,13 @@ Python-conditional Redis client range; unshipped source and Redis
    publish API and installed Python/dependency bounds before declaring
    new support. An issue is not a shipped feature.
 
-## Proposed PR order
+## Proposed PR order — 0.9.0
 
-1. Reconcile the completed 0.7 release records and roadmap in a docs-only PR.
-2. Open the #51 qualification PR against the reviewed, merged roadmap base;
-   recognition can begin in an isolated worktree without modifying `stable`.
-3. Only after the qualification is merged and green, stage 0.7.2 in a separate
-   PR with verified support metadata and release gates. Do not release if
-   the required compatibility scope fails.
-4. Begin the 0.8 architecture RFC (#99 with #111/#112); defer larger API
-   and distributed changes until the required contracts are accepted.
+1. Reconcile published 0.8.0 documentation and review the [0.9 design RFC](docs/architecture/ARCHITECTURE_0.9_RFC.md).
+2. K1: opt-in argument filtering (#49), with compatibility and privacy review.
+3. T1: app-scoped InMemory tag invalidation (#97); T2: standalone Redis, separately reviewed.
+4. V1: installed integration, concurrency, privacy, rollback and descriptive benchmarks against pinned published 0.8.0.
+5. Stage and promote only after all applicable gates pass. Preserve exact-artifact Phase B, fresh security delta and separate registry authorizations.
 
 Handle any proven package-owned #53 privacy defect immediately, regardless
 of this ordering. Investigate #45/#55 in standalone maintenance PRs when

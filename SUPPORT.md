@@ -14,7 +14,7 @@ fastapi-cache2.
 - `0.8.x`: `0.8.0` published **2026-11-26**; opt-in app scope/failure policies,
   legacy singleton default unchanged.
   Best-effort server-side CPython 3.11–3.14 security/critical correctness
-  maintenance targets **2027-11-25**, subject to capacity; 3.8–3.10 functional
+  maintenance targets **2027-11-26**, subject to capacity; 3.8–3.10 functional
   legacy only. See [0.8.0 release evidence](docs/releases/RELEASE_STATUS_0.8.0.md).
 - `0.7.2`: previous compatibility patch published 2026-11-25; CPython 3.14 support.
 - `0.7.1`: metadata-only predecessor of 0.7.2; historical.
@@ -38,7 +38,7 @@ fastapi-cache2.
 - Check [PyPI](https://pypi.org/project/fastapi-cache-stable/) and
   [CHANGELOG.md](CHANGELOG.md) for current versions. The published `0.4.x`
   and published `0.5.0`/`0.6.0`/`0.7.1` install on Python `>=3.8,<3.14`;
-  `0.8.0` installs on `>=3.8,<3.15`. Python 3.8–3.10 have a tested legacy
+  `0.7.2` and `0.8.0` install on `>=3.8,<3.15`. Python 3.8–3.10 have a tested legacy
   functional-compatibility lane, but receive no security-support commitment
   for EOL runtimes or dependency versions. A critical advisory applicable to
   package-controlled behavior must be mitigated before release. If it applies
@@ -51,7 +51,7 @@ fastapi-cache2.
 - Redis client support is Python-conditional: 4.x through 6.1.x on Python
   3.8, through 7.0.x on 3.9 and through 8.1.x on 3.10–3.14. Redis standalone
   is verified; TLS/Sentinel/Cluster/failover are not certified.
-- Python 3.14 is included in the published `0.8.0` metadata range; it remains
+- Python 3.14 is included in the published `0.7.2` and `0.8.0` metadata ranges; it remains
   outside the older `0.4.x`–`0.7.1` ranges.
 - `1.x` (planned): if and when `1.0.0` is released with a co-maintainer in
   place, security and critical correctness fixes for 24 months after that
@@ -67,7 +67,7 @@ Python 3.8–3.10 support is provided only to ease upgrades of existing
 dependency resolutions retain security advisories. The fork may not
 call the affected APIs, but consumer applications may. **Do not rely
 on this library to repair Starlette, AnyIO or other application
-dependencies automatically.** Prefer CPython 3.11–3.13 with current
+dependencies automatically.** Prefer CPython 3.11–3.14 with current
 compatible packages for production.
 
 See [the version/security matrix](COMPATIBILITY.md),

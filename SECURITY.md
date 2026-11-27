@@ -4,7 +4,7 @@
 policies, with standard CPython 3.14 support and `>=3.8,<3.15` metadata.
 The server-side security target is CPython 3.11–3.14, subject to the exact-artifact
 evidence in the [0.8.0 release status](docs/releases/RELEASE_STATUS_0.8.0.md).
-The published 0.8.0 support policy below applies; 0.7.1 remains historical.
+The published 0.8.0 support policy below applies; 0.7.2 and earlier releases remain historical.
 
 ## Supported versions
 
@@ -13,8 +13,11 @@ The published 0.8.0 support policy below applies; 0.7.1 remains historical.
   legacy functional only. See the [0.8.0 release status](docs/releases/RELEASE_STATUS_0.8.0.md)
   and [security ledger #126](https://github.com/agustin18/fastapi-cache/issues/126).
 
-- `0.7.1` is the previous published line (released **2026-11-24**); it has the
-  same runtime code as 0.8.0 and targeted server-side CPython 3.11–3.13.
+- `0.7.2` is the immediately preceding published release (2026-11-25);
+  it added standard CPython 3.14 compatibility with no runtime changes from
+  0.7.1. Its server-side security target was CPython 3.11–3.14.
+- `0.7.1` (2026-11-24) was a metadata-only correction of 0.7.0 and targeted
+  server-side CPython 3.11–3.13. 0.8.0 adds new opt-in runtime APIs.
 
 - `0.7.0` is the previous published line (released **2026-11-24**). It has the
   same runtime code as 0.7.1 and targets best-effort security and critical
@@ -32,7 +35,7 @@ The published 0.8.0 support policy below applies; 0.7.1 remains historical.
 - `0.3.0` and `0.3.1` remain the previous migration line, with the
   best-effort security/critical target recorded in
   [SUPPORT.md](SUPPORT.md) (until 2027-11-19).
-- Published `0.4.x`–`0.7.1` install on Python `>=3.8,<3.14`; `0.8.0` installs on
+- Published `0.4.x`–`0.7.1` install on Python `>=3.8,<3.14`; `0.7.2` and `0.8.0` install on
   `>=3.8,<3.15`. Python 3.8–3.10 are legacy functional-compatibility targets
   only and have no security-support commitment for EOL runtimes or dependencies.
 - On every maintained release, critical/high findings require a scoped
