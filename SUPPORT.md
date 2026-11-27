@@ -14,7 +14,7 @@ fastapi-cache2.
 - `0.8.x`: `0.8.0` published **2026-11-26**; opt-in app scope/failure policies,
   legacy singleton default unchanged.
   Best-effort server-side CPython 3.11–3.14 security/critical correctness
-  maintenance targets **2027-11-25**, subject to capacity; 3.8–3.10 functional
+  maintenance targets **2027-11-26**, subject to capacity; 3.8–3.10 functional
   legacy only. See [0.8.0 release evidence](docs/releases/RELEASE_STATUS_0.8.0.md).
 - `0.7.2`: previous compatibility patch published 2026-11-25; CPython 3.14 support.
 - `0.7.1`: metadata-only predecessor of 0.7.2; historical.
